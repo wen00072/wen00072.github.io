@@ -1,0 +1,9 @@
+---
+layout: page
+title: Categories
+footer: false
+---
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list">{% category_list counter:true %}</ul>
+</section>

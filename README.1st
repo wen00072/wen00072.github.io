@@ -1,0 +1,13 @@
+* Files in source/_posts are wrote by Wen Liao.
+ 
+     The files in source/_posts are licensed under a
+
+     Creative Commons Attribution-ShareAlike 4.0 International License.
+
+     You should have received a copy of the license along with this
+     work.  If not, see <http://creativecommons.org/licenses/by-nc/4.0/>. 
+
+* The reset files are under MIT License as mentioned in README.markdown 
+
+* category_cloud, category_list, and top_category_list are download from https://github.com/ctdk/octopress-category-list
+  The related URL is: http://time.to.pullthepl.ug/blog/2012/8/20/octopress-top-categories-plugin/
