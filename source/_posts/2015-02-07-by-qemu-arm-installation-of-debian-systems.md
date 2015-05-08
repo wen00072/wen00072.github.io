@@ -3,7 +3,7 @@ layout: post
 title: '在X86 Linux下透過Qemu安裝ARM的Debian系統'
 date: 2015-02-07 00:40
 comments: true
-categories: 
+categories: [ARM, Linux, Qemu] 
 ---
 安裝順序如下
 

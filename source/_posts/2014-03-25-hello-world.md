@@ -3,7 +3,7 @@ layout: post
 title: 'Hello World'
 date: 2014-03-25 17:10
 comments: true
-categories: 
+categories: [C, Linux]
 ---
 C語言學習者第一個程式
 

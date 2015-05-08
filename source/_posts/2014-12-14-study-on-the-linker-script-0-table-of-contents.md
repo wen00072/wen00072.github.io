@@ -3,7 +3,7 @@ layout: post
 title: 'GNU LD 手冊略讀  (0): 目錄和簡介'
 date: 2014-12-14 23:45
 comments: true
-categories: 
+categories: [binutils, linker script]
 ---
 關於一個程式的binary要怎麼存放其實是很有趣的問題，我以前都沒有去想這個問題。後來當組裝工久了以後就忍不住會想知道這些。隨便想一下就有很多問題，例如：
 

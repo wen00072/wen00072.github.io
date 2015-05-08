@@ -3,7 +3,7 @@ layout: post
 title: 'bash變數的字串替換'
 date: 2014-06-30 13:53
 comments: true
-categories: 
+categories: [Linux, shell_script]
 ---
 有時候會在command line或是script裏面需要極簡單的字串替換。bash有提供這樣的功能。這樣的功能是用以下的方式達成
 

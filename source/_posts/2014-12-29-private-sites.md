@@ -3,7 +3,7 @@ layout: post
 title: '私密景點'
 date: 2014-12-29 23:38
 comments: true
-categories: 
+categories: [感想]
 ---
 以前出遊和當地居民聊天聽到兩個故事。
 

@@ -3,7 +3,7 @@ layout: post
 title: '使用debootstrap 在本機中操作其他Ubuntu 版本 (命令列)'
 date: 2015-01-17 01:00
 comments: true
-categories: 
+categories: [Linux, debootstrap]
 ---
 好吧，這個標題我也不滿意，不過就將就一下吧。
 

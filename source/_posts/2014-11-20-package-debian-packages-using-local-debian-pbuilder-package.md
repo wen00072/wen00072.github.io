@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] pbuilder 中如何安裝自己打包的套件'
 date: 2014-11-20 16:20
 comments: true
-categories: [pbuilder]
+categories: [pbuilder, Debian]
 ---
 標題有點難下。直接講為什麼會有這樣的需求好了，[在這邊](http://wen00072-blog.logdown.com/posts/212087-package-debian-packages-discussion-on-pbuilder)介紹了使用pbuilder驗證單獨的套件。但是如果你要打包的套件需要先安裝另外一個自行先打包的套件就GG了。原因是因為pbuilder不知道去那邊找相依的套件以致於無法編譯你的套件。
 

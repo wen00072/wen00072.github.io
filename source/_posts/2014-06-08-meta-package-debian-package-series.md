@@ -3,7 +3,7 @@ layout: post
 title: '[Meta-Package] Debian 打包系列'
 date: 2014-06-08 06:56
 comments: true
-categories: 
+categories: Debian
 ---
 meta這個字眼好像找不到精確的中文名詞。基本上就是指和一個「主題」有關的「東西」。舉例來說，在多媒體播放當中，「metadata」指的是附於媒體本身的屬性，如影片解析度、作品名稱等。而「meta-programming」指的是寫程式執行輸出結果是另外一段的程式原始碼。
 

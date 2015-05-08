@@ -3,7 +3,7 @@ layout: post
 title: 'objdump -t 的欄位說明'
 date: 2014-12-09 23:24
 comments: true
-categories: 
+categories: [binutils, Linux]
 ---
 `objdump -t` 可以列出object檔案的symbol table內容，這是一個我們很熟練的C 語言 main()在symbol table存放範例。
 

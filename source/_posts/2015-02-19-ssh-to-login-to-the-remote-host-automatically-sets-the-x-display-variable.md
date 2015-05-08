@@ -3,7 +3,7 @@ layout: post
 title: 'ssh登入遠端主機自動設定X Display 變數'
 date: 2015-02-19 15:09
 comments: true
-categories: 
+categories: [Linux]
 ---
 
 ## 前言

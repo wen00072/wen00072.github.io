@@ -3,7 +3,7 @@ layout: post
 title: '對作者仁慈就是對讀者殘忍'
 date: 2014-12-27 01:31
 comments: true
-categories: 
+categories: [感想]
 ---
 沒人看得懂的文章，或是要用力猜測才能理解的文章，就是一篇失敗的作品。
 

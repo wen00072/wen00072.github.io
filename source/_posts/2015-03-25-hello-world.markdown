@@ -3,7 +3,7 @@ layout: post
 title: "Hello World"
 date: 2015-03-25 00:06:03 +0800
 comments: true
-categories: 
+categories: [C]
 ---
 ## hello.c
 ```c hello.c

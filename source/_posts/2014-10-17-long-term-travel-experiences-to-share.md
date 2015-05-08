@@ -3,7 +3,7 @@ layout: post
 title: '單人本地長期旅遊心得分享'
 date: 2014-10-17 16:37
 comments: true
-categories: 
+categories: 感想
 ---
 
 * 換洗衣物以快乾為考量。

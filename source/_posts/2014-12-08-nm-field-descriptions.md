@@ -3,7 +3,7 @@ layout: post
 title: 'nm 的欄位說明'
 date: 2014-12-08 14:45
 comments: true
-categories: 
+categories: [binutils, Linux]
 ---
 在閱讀ld手冊的時候看到symbol table突然想起來我nm只知道`t`、`U`這兩個flag而已。想起來真是慚愧，趕快問一下男人nm顯示出來的欄位意義。一個典型的nm輸出為：
 `00000000004005ed T main`

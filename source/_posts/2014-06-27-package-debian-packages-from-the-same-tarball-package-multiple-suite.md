@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] 從同一套tarball打包多個套件'
 date: 2014-06-27 07:25
 comments: true
-categories: 
+categories: [Debian]
 ---
 ## 緣由
 使用apt套件管理可以看到，安裝函式庫通常是使用apt-get install libxxx。但是如果編譯時就會需要額外安裝libxxx-**dev**套件。該套件通常就是多了靜態函式庫以及header files。由於libxxx和libxxx-dev應該從同一包tarball產生，好奇之餘整理一下如何從一包tarball產生多個套件的方式。

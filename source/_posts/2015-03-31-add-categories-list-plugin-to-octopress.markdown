@@ -3,7 +3,7 @@ layout: post
 title: "Add categories list plugin to Octopress"
 date: 2015-03-31 01:54:10 +0800
 comments: true
-categories: Octopress 
+categories: [Octopress] 
 ---
 安裝方式如下
 

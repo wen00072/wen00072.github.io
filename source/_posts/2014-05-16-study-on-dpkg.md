@@ -3,7 +3,7 @@ layout: post
 title: '使用dpkg 查詢套件資訊 '
 date: 2014-05-16 12:25
 comments: true
-categories: 
+categories: [Debian, Linux]
 ---
 `dpkg`全名是Debian package，望文生義可以知道就是Debian套件管理程式。使用過Ubuntu/Debian 應該看過`deb`檔案。這邊列出幾個常用的功能。測試環境是Ubuntu 12.04.4
 

@@ -3,7 +3,7 @@ layout: post
 title: 'Linux: 用Live CD跑硬碟裏面的Linux'
 date: 2015-01-03 13:05
 comments: true
-categories: 
+categories: [Linux, Live CD]
 ---
 我用這個救過過兩次grub GG的狀況，每次都要上網回想一下，趁著還記得的情況紀錄一下。
 

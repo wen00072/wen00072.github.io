@@ -3,7 +3,7 @@ layout: post
 title: '從CMake原始碼打包deb套件: 不嚴謹style'
 date: 2014-06-12 03:38
 comments: true
-categories: 
+categories: Debian
 ---
 先承認這是拖檯錢，本來以為用法會和autotool差很多，結果用法完全相同。所以下面的也是剪貼原來的文件。
 

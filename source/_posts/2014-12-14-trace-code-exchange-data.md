@@ -3,7 +3,7 @@ layout: post
 title: 'Trace code 交流會資料整理'
 date: 2014-12-14 20:37
 comments: true
-categories: 
+categories: presentation
 ---
 ## Wen Liao
 

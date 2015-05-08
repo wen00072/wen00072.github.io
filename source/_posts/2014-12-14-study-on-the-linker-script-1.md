@@ -3,7 +3,7 @@ layout: post
 title: 'GNU LD  手冊略讀  (1): Chapter 3 ~ Chapter 3.5'
 date: 2014-12-14 23:55
 comments: true
-categories: 
+categories: [binutils, linker script]
 ---
 [下一篇](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command)
 [回總目錄](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents)

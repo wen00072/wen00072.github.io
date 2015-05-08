@@ -3,7 +3,7 @@ layout: post
 title: 'quilt初探 -  使用quilt產生和管理patch'
 date: 2014-06-08 07:33
 comments: true
-categories: 
+categories: [quilt, patch]
 ---
 傳統的組裝的情況，常常會需要處理patch，然而當patch數量資料多到某種程度，加上時間推移原資料更動，套用patch會讓人生不如死。而quilt是Linux下面處理多個patch檔案的管理軟體。因為組裝軟體和打包Linux 套件會使用到，所以花點時間看一下整理一下。目前感覺有點像是先用git format-patch產生一些patch檔，另外一邊用git am 去merge這些patch檔。然後merge完可以用git reset HEAD^幾次來unmerge。
 

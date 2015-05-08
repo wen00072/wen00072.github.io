@@ -3,7 +3,7 @@ layout: post
 title: 'Libtool初探'
 date: 2014-05-18 05:15
 comments: true
-categories: 
+categories: [libtool]
 ---
 之前討論的[autotools](http://wen00072-blog.logdown.com/posts/198783-study-on-gnu-build-system-autotools)中，偷懶沒去看libtool。後來想到手上參考的資料沒有使用autotool產生shared library的方式。想要補充後發現和libtool有關。看來出來混還是要還的。
 

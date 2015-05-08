@@ -3,7 +3,7 @@ layout: post
 title: 'Trace 程式碼之皮投影片上線'
 date: 2014-11-24 17:00
 comments: true
-categories: 
+categories: [vim, presentation]
 ---
 非常簡單的介紹vim trace code時可以用到的功能
 

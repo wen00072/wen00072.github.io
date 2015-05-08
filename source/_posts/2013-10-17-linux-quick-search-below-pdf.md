@@ -3,7 +3,7 @@ layout: post
 title: 'Linux下面快速搜尋PDF的方式'
 date: 2013-10-17 07:04
 comments: true
-categories: 
+categories: [linux_utilities]
 ---
 有時候手上一堆PDF檔，不知道要查的資料在那個檔案，可以用下面的指令找出
 

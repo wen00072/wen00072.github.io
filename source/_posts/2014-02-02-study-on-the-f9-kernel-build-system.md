@@ -3,7 +3,7 @@ layout: post
 title: 'F9-Kernel初探 -  Build system'
 date: 2014-02-02 13:19
 comments: true
-categories: 
+categories: [F9, RTOS]
 ---
 ## MACRO
 ### Platform module

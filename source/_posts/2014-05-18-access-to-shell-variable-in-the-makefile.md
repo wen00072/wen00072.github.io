@@ -3,7 +3,7 @@ layout: post
 title: 'Makefile中Command敘述的Shell變數存取'
 date: 2014-05-18 07:18
 comments: true
-categories: [makefile]
+categories: [make]
 ---
 想說寫一個loop自動make變數內的目錄
 ```makefile 錯誤的Makefile

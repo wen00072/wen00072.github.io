@@ -3,7 +3,7 @@ layout: post
 title: 'gcc的幾個參數筆記'
 date: 2015-02-20 14:34
 comments: true
-categories: 
+categories: [C, Linux]
 ---
 整理一下，反正一定會忘記，就放在這邊，也許以後會再新增
 

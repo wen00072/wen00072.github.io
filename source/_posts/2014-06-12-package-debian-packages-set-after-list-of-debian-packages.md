@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] 設定好debian目錄後的打包'
 date: 2014-06-12 03:28
 comments: true
-categories: 
+categories: Debian
 ---
 這邊探討打包的工具。有dpkg-buildpackage, debuild, pbuilder, 和git-buildpackage等工具，分別討論如下：
 

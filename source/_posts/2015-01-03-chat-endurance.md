@@ -3,7 +3,7 @@ layout: post
 title: '閒聊：忍耐力'
 date: 2015-01-03 12:02
 comments: true
-categories: 
+categories: [感想]
 ---
 三四年前我聽過關於Linux下面中文輸入法的技術演講。技術內容忘得一乾二淨，然而印象最深刻的事講者說台灣人忍耐力太強，所以台灣中文輸入法就變成堪用，進度速度不夠快。
 　

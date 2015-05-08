@@ -3,7 +3,7 @@ layout: post
 title: 'GNU ld初探'
 date: 2014-03-14 10:14
 comments: true
-categories: 
+categories: [ld]
 ---
 以前一直以為ld單純就是把*.a, *.o轉成binary，簡單測試一下發現完全不是這樣。
 

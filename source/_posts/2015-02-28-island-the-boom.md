@@ -3,7 +3,7 @@ layout: post
 title: '島唄 - The boom'
 date: 2015-02-28 15:14
 comments: true
-categories: 
+categories: [感想] 
 ---
 這是一首反省二戰日本政府在沖繩島的決策造成大量當地人冤死悲劇的歌曲。
 

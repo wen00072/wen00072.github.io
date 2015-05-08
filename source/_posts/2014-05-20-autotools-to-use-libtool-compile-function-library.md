@@ -3,7 +3,7 @@ layout: post
 title: '在Autotools使用Libtool編譯函式庫'
 date: 2014-05-20 06:46
 comments: true
-categories: 
+categories: [autotools, libtool]
 ---
 前面討論了[Autotools](http://wen00072-blog.logdown.com/posts/198783-study-on-gnu-build-system-autotools)和[Libtool](http://wen00072-blog.logdown.com/posts/199470-study-on-the-libtool)，今天就來合體一下。其實只要把原本[Autotools](http://wen00072-blog.logdown.com/posts/198783-study-on-gnu-build-system-autotools)範例做少部份的修改就可以了。
 

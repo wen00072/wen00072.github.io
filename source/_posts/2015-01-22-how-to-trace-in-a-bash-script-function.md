@@ -3,7 +3,7 @@ layout: post
 title: '如何trace bash script中的function'
 date: 2015-01-22 22:35
 comments: true
-categories: 
+categories: [Linux]
 ---
 在組裝的過程中，常常會遇到用source去載入一個shell script，裏面通常是一組的環境變數。然而如果專案大到某個程度，這個script就會塞入很多複雜的function，例如某專案的build/envsetup.sh。這時候要去trace用肉眼去看實在是太過殘酷，最近為了這個問題想到了一招很簡單的方式，那就是：
 

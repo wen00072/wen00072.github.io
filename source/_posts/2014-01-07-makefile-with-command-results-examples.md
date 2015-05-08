@@ -3,7 +3,7 @@ layout: post
 title: 'Makefile結合Command Line輸出結果範例'
 date: 2014-01-07 02:49
 comments: true
-categories: [makefile]
+categories: [make]
 ---
 測試大檔案支援順手玩了一下Makefile撈command line 結果，整理如下
 

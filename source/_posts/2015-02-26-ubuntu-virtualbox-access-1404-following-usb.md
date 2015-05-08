@@ -3,7 +3,7 @@ layout: post
 title: 'Ubuntu 14.04 下面的VirtualBox存取USB設備'
 date: 2015-02-26 00:36
 comments: true
-categories: 
+categories: [VirtualBox]
 ---
 照慣例，列一下測試環境
 

@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] 使用pbuilder驗證套件'
 date: 2014-07-31 03:57
 comments: true
-categories: 
+categories: [Debian, pbuilder]
 ---
 之前的[文章](http://wen00072-blog.logdown.com/posts/205819-package-debian-packages-set-after-list-of-debian-packages)有提到使用pbuilder驗證套件。最近抽空玩了一下。整理到這邊。
 

@@ -3,7 +3,7 @@ layout: post
 title: 'Talking about information technology presentions in Taiwan'
 date: 2015-01-04 20:54
 comments: true
-categories: 
+categories: [感想]
 ---
 OK. This should be the first English article in my blog. I do hope this will also be the last one. English is not my mother tongue, so please bear with that. It should be clear to address my point of view although there should be some glitches throughout my article.
 

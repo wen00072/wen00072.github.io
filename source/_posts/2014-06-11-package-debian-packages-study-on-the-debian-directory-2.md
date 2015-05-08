@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] debian目錄初探 (2)'
 date: 2014-06-11 04:32
 comments: true
-categories: 
+categories: Debian
 ---
 在[[Debian套件打包] debian目錄初探 (1)](http://wen00072-blog.logdown.com/posts/205562-package-debian-packages-study-on-the-debian-directory)我整理了debian目錄下面主要的幾個檔案。主要是參考[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)的第五章。
 

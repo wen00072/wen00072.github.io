@@ -3,7 +3,7 @@ layout: post
 title: 'GNU Make, Autotools, CMake 簡介投影片上線'
 date: 2014-07-09 17:39
 comments: true
-categories: 
+categories: [autotools, make, CMake, Linux, presentation]
 ---
 * Slideshare
 

@@ -3,7 +3,7 @@ layout: post
 title: 'Linux中使用C語言載入data object 檔案資料 (續）'
 date: 2014-04-16 02:01
 comments: true
-categories: 
+categories: [Linux, C, bintuils]
 ---
 ## 動機
 [前面](http://wen00072-blog.logdown.com/posts/194317-loads-the-data-object-using-the-c-language-archives-data-in-linux)討論了Linux中使用C語言載入data object 檔案資料，裏面提到資料轉成object，裏面會有三個symbol: `_binary_objfile_start`, `_binary_objfile_end`, `_binary_objfile_size`。

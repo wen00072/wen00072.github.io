@@ -3,7 +3,7 @@ layout: post
 title: "Octopress 產生 About頁面"
 date: 2015-03-29 23:13:07 +0800
 comments: true
-categories: Octopress
+categories: [Octopress]
 ---
 
 順序如下

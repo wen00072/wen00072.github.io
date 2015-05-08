@@ -3,7 +3,7 @@ layout: post
 title: '尋找&quot;Hello World\n&quot; '
 date: 2014-12-23 20:16
 comments: true
-categories: 
+categories: [C, Linux]
 ---
 很多人應該知道學C語言第一個程式
 

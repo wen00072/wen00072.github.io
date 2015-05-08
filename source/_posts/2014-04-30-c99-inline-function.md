@@ -3,7 +3,7 @@ layout: post
 title: 'C99的inline function'
 date: 2014-04-30 23:02
 comments: true
-categories: 
+categories: [C, inline, C99]
 ---
 [inline function](http://en.wikipedia.org/wiki/Inline_function)是一個keyword，提醒compiler可以將function本體直接填入呼叫該function的位置。從[這邊](http://en.wikipedia.org/wiki/Inline_expansion)可以看到，優點為
 

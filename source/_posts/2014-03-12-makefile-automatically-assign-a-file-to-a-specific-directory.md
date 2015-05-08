@@ -3,7 +3,7 @@ layout: post
 title: 'Makefile 自動將產生的檔案指定到特定目錄'
 date: 2014-03-12 13:35
 comments: true
-categories: 
+categories: [make]
 ---
 **Mar/13/2014已更正錯誤：原本錯誤分析請看[這邊](http://wen00072-blog.logdown.com/posts/184950-makefile-pattern-rules-little-attention)**
 

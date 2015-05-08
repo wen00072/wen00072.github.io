@@ -3,7 +3,7 @@ layout: post
 title: '談談C語言的全域變數和 Linux object 檔案的關係'
 date: 2014-12-09 03:04
 comments: true
-categories: 
+categories: [C, bintuils, Linux]
 ---
 印象中以前學過C語言中跨檔案的全域變數是這樣宣告的。
 檔案一：`int g_var1;`

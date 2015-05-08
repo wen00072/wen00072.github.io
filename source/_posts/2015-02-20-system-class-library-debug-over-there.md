@@ -3,7 +3,7 @@ layout: post
 title: '系統函式庫的debug 資訊放在那邊？'
 date: 2015-02-20 17:17
 comments: true
-categories: 
+categories: [C, binutils, Linux]
 ---
 在查詢hello world中的`_start`呼叫`__libc_start_main`部份，使用到了反組譯工具。觀察反組譯的部份發現有可能需要看一下libc本身的`__libc_start_main`組合語言的行為。以前的經驗，這種情況先拉有debug 資訊的套件來看，所以拉了libc6-dbg下來，結果下來的結果，<font color="red">完全無法反組譯</font>。後來請教網友[Scott Tasi](http://scottt.tw/)才發現我錯很大。
 

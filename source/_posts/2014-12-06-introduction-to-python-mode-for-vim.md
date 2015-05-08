@@ -3,7 +3,7 @@ layout: post
 title: 'Python mode for vim簡介'
 date: 2014-12-06 13:49
 comments: true
-categories: 
+categories: [vim, python]
 ---
 [Python Mode](https://github.com/klen/python-mode)是一個vim下面關於Python 的plugin，快速整理一下以前看的文件。
 

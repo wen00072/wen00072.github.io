@@ -3,7 +3,7 @@ layout: post
 title: 'Debian打包準備套件和文件'
 date: 2014-05-16 10:08
 comments: true
-categories: [debian, C, Linux]
+categories: [Debian, C, Linux]
 ---
 看[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/start.en.html)順便整理一下Debain官方文件建議打包套件可以安裝的[套件](#pkg)和[文件](#doc)。
 

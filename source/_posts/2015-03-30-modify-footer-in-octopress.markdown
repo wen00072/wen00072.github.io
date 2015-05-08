@@ -3,7 +3,7 @@ layout: post
 title: "Modify footer in Octopress"
 date: 2015-03-30 00:23:43 +0800
 comments: true
-categories: Octopress 
+categories: [Octopress] 
 ---
 步驟如下：
 

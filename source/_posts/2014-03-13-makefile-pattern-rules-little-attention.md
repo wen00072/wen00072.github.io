@@ -3,7 +3,7 @@ layout: post
 title: 'Makefile的Pattern Rules小小注意事項'
 date: 2014-03-13 07:15
 comments: true
-categories: 
+categories: [make]
 ---
 在[Makefile 自動將產生的檔案指定到特定目錄](http://wen00072-blog.logdown.com/posts/184830-makefile-automatically-assign-a-file-to-a-specific-directory)中，我犯了一個錯誤，造成更動header檔案發生錯誤(原文已修復)。
 

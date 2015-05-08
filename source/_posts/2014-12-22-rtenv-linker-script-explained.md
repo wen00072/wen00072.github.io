@@ -3,7 +3,7 @@ layout: post
 title: 'rtenv的linker script解釋'
 date: 2014-12-22 19:18
 comments: true
-categories: 
+categories: [C, rtenv, Linux, ARM]
 ---
 [rtenv](https://github.com/southernbear/rtenv.git)是成功大學資訊工程系同學寫出來給CM3的小型作業系統，之前使用rtenv寫作業的時候曾經trace變數trace到C code裏面沒有，但是卻在linker script找到。可是那時候看的感覺就是一堆符號，所以就沒繼續追下去。這也是我想要了解linker script的起點。看完liner script語法後，自然要回來看一下是否可以了解他的描述，先看完整語法。
 

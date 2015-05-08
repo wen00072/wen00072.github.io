@@ -3,7 +3,7 @@ layout: post
 title: "加快Octopress 修改/新增文章發佈前 preview速度"
 date: 2015-04-01 00:12:13 +0800
 comments: true
-categories: Octopress
+categories: [Octopress]
 ---
 搬了一百多篇文章後，很明顯地發現Octopress產生頁面速度慢到爆炸，有多慢呢？大概下了`rake preview`指令後要幾十秒才能更新。我猜測`rake preview`實作上可能是把`source/_posts`全部都抓起來重新產生頁面造成的問題。
 

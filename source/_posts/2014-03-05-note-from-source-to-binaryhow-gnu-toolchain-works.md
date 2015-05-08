@@ -3,7 +3,7 @@ layout: post
 title: '筆記：from Source to Binary: How GNU Toolchain Works'
 date: 2014-03-05 03:25
 comments: true
-categories: 
+categories: 筆記
 ---
 ## 出處： [from Source to Binary: How GNU Toolchain Works](http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works)
 

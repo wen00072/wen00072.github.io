@@ -3,7 +3,7 @@ layout: post
 title: 'A Brief Introduction to Regular Expression with Python 2.7.3 Standard Library 投影片上線'
 date: 2014-06-16 16:08
 comments: true
-categories: 
+categories: [Regex, python, presentation]
 ---
 有點心虛，很多地方並不是全盤了解，請自行斟酌。有錯誤也請務必告知，謝謝！
 

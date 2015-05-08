@@ -3,7 +3,7 @@ layout: post
 title: '筆記：Priority Inversion on Mars'
 date: 2014-03-05 03:35
 comments: true
-categories: 
+categories: 筆記
 ---
 * [Priority Inversion on Mars投影片](http://www.slideshare.net/jserv/priority-inversion-30367388)
 

@@ -3,7 +3,7 @@ layout: post
 title: 'GNU Build System: Autotools 初探'
 date: 2014-05-13 10:43
 comments: true
-categories: [Linux, autotool]
+categories: [Linux, autotools]
 ---
 身為組裝工，常常執行下面的指令
 
