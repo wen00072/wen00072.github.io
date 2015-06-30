@@ -14,7 +14,7 @@ categories: Debian
 ---
 ## dpkg-buildpackage
 
-[從Autotools tarball打包deb套件: 不嚴謹style](http://wen00072-blog.logdown.com/posts/201844-package-deb-packages-loose-style)提到產生並設定好debian後，可以透過dpkg-buildpackage自動打包成deb檔案。而dpkg-buildpackage會做
+[從Autotools tarball打包deb套件: 不嚴謹style](http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style)提到產生並設定好debian後，可以透過dpkg-buildpackage自動打包成deb檔案。而dpkg-buildpackage會做
 
 * 套件大掃除 (debian/rules clean)
 * 整理source檔案如apply patch (dpkg-source -b)

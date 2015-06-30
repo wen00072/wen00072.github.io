@@ -140,7 +140,7 @@ categories: [Linux, autotools]
 <a name="auto_ex_prgs"></a>
 ### 測試程式
 
-[範例程式細節在這邊](http://wen00072-blog.logdown.com/posts/203304-dry-test-file-template)，檔案各別重新分配到`src`, `include`, `libs`這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。
+[範例程式細節在這邊](http://wen00072.github.io/blog/2014/06/07/dry-test-file-template)，檔案各別重新分配到`src`, `include`, `libs`這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。
 
 ```text 測試程式樹狀架構
 ├── include

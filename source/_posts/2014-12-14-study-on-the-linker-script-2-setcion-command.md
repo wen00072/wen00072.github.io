@@ -191,7 +191,7 @@ SECTIONS {
 <a name="sec-input-desc-comm"></a>
 ## 輸入object檔案的COMMOM section
 
-* [這邊](http://wen00072-blog.logdown.com/posts/245647-global-variables-from-common-symbol-on-the-c-programming-language#elf-concl)有提到common symbol存在的原因。手冊中更進一步的提到在輸出object檔案時的命令大概是這樣：
+* [這邊](http://wen00072.github.io/blog/2014/12/09/global-variables-from-common-symbol-on-the-c-programming-language#elf-concl)有提到common symbol存在的原因。手冊中更進一步的提到在輸出object檔案時的命令大概是這樣：
 
 ```c
 .bss { *(.bss) *(COMMON) }
@@ -320,20 +320,20 @@ SECTIONS {
 ## 輸出object檔案 Section LMA
 前情回顧
 
-* [VMA](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#bkg-layout)
-* [LMA](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#bkg-layout)
+* [VMA](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout)
+* [LMA](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout)
 
-設定輸出object檔案的[VMA](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#bkg-layout)是在[`address欄位`](#sec-output-addr)中指定。請比對[section描述格式](#sec-output-attr)的`address`。
+設定輸出object檔案的[VMA](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout)是在[`address欄位`](#sec-output-addr)中指定。請比對[section描述格式](#sec-output-attr)的`address`。
 
-而[LMA](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#bkg-layout)就是[section描述格式](#sec-output-attr)的`AT(lma)`和`AT>lma_region`這兩個部份了。這兩個指令是optional的。他們的差別是：
+而[LMA](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout)就是[section描述格式](#sec-output-attr)的`AT(lma)`和`AT>lma_region`這兩個部份了。這兩個指令是optional的。他們的差別是：
 
 * `AT(lma)`中間的lma是透過expression算出來的lma位址
 * `AT>lma_region`是指定`MEMORY`裏面描述的region
 
-如果你的section沒有指定[LMA](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#bkg-layout)的話，linker會使用下面的規則決定[LMA](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#bkg-layout)
+如果你的section沒有指定[LMA](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout)的話，linker會使用下面的規則決定[LMA](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout)
 
 * [`address欄位`](#sec-output-addr)中指定VMA，則LMA = VMA
-* section為[allocatable](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#fmt)，則LMA = VMA
+* section為[allocatable](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#fmt)，則LMA = VMA
 * 有設定region的情況在滿足下面的條件下，把VMA和LMA的差距會被設成該region裏面最後一個section中VMA和LMA的差距。
   * section滿足region條件(三小條件?)
   * 該region已經有最少一個section

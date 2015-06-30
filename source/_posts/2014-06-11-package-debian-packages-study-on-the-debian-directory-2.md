@@ -5,7 +5,7 @@ date: 2014-06-11 04:32
 comments: true
 categories: Debian
 ---
-在[[Debian套件打包] debian目錄初探 (1)](http://wen00072-blog.logdown.com/posts/205562-package-debian-packages-study-on-the-debian-directory)我整理了debian目錄下面主要的幾個檔案。主要是參考[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)的第五章。
+在[[Debian套件打包] debian目錄初探 (1)](http://wen00072.github.io/blog/2014/06/10/package-debian-packages-study-on-the-debian-directory)我整理了debian目錄下面主要的幾個檔案。主要是參考[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)的第五章。
 
 dh_make產生的範本除了產生control, copyright, changelog以及rules這個四檔案以外，還會產生deb的工具(debhelper)使用的一些設定檔範本。這些設定檔範本一般來說副檔名為ex。有些設定檔範本的檔名prefix會是你的原始套件名稱。舉例來說，我們要產生的套件為testautotools，那debian下面可以看到
 
@@ -38,9 +38,9 @@ dh_make產生的範本除了產生control, copyright, changelog以及rules這個
 * `NEWS`、`TODO`: 工具會自動安裝該檔案。
 * `postinst`, `preinst`, `postrm`, `prerm`: dpkg安裝、更新、移除套件時會呼叫的scripts。一般建議菜鳥不要亂動，很容易GG的。如果真的非要更動的話，請確認測試過您套件install,upgrade, remove, purge等操作。細節說明在[這邊](https://www.debian.org/doc/debian-policy/ch-maintainerscripts.html)。
 * `watch`: uscan這個程式會根據watch的資訊看upstream是否有新的release。
-* `source/format`: 顯示原始套件是原裝的(native)或是需要透過[quilt](http://wen00072-blog.logdown.com/posts/205375-study-on-the-quilt)管理patch。詳細說明可以man dpkg-source
+* `source/format`: 顯示原始套件是原裝的(native)或是需要透過[quilt](http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt)管理patch。詳細說明可以man dpkg-source
 * `source/local-options`:提供選項讓協助管理產生patch，例如請工具忽略autotool產生的configure.sub檔案。
-* ` patches/*`: 透過[quilt](http://wen00072-blog.logdown.com/posts/205375-study-on-the-quilt)產生的patch放在這邊。
+* ` patches/*`: 透過[quilt](http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt)產生的patch放在這邊。
 * `manpage.*`: 原始套件應該要付manpage，如果沒有dh_make會生一些範本 。
 	* `manpage.1.ex`: 使用manpage標準語法，1的部份需要根據您的套件性質更動。如一般API就需要改成3。詳細可以man man找section查詢數字代表的section。
   * dh_make也提供其他格式的manpage如xml和SGML，有興趣的請自行查詢[手冊](https://www.debian.org/doc/manuals/maint-guide/dother.en.html)。

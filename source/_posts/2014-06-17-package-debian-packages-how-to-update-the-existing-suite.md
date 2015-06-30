@@ -16,7 +16,7 @@ Debian New Maintainers' Guide提供了一些更新打包過的套件的建議:
 ## 修復錯誤的情況
 ### 需要更改原本套件中的程式碼
 
-* 透過[dquilt](http://wen00072-blog.logdown.com/posts/204026-joined-his-patch-package-for-debian-packages)整理成patch
+* 透過[dquilt](http://wen00072.github.io/blog/2014/06/10/joined-his-patch-package-for-debian-packages)整理成patch
 	* dquilt new 描述修正的檔名.patch
   * dquilt add 要修正的程式碼檔名
   * 修改要修正的程式碼檔內部程式碼
@@ -25,7 +25,7 @@ Debian New Maintainers' Guide提供了一些更新打包過的套件的建議:
 
 ### 需要更改原本套件中debian/patches的patch
 
-* 透過[dquilt](http://wen00072-blog.logdown.com/posts/204026-joined-his-patch-package-for-debian-packages)整理成patch
+* 透過[dquilt](http://wen00072.github.io/blog/2014/06/10/joined-his-patch-package-for-debian-packages)整理成patch
 	* dquilt pop 要修正的patch檔名
   		* dqulit會幫你**un-patch**
   * 修改要修正的patch檔名內部程式碼
@@ -50,7 +50,7 @@ Debian New Maintainers' Guide提供了一些更新打包過的套件的建議:
 
 接下來把舊版的debian目錄放置到新版的原始乾淨目錄中。debian目錄在打包的時候應該會單獨產生一個tarball，檔名為**套件名稱.debian.tar.gz**。做以下的更動
 
-* 照[以前](http://wen00072-blog.logdown.com/posts/201844-package-deb-packages-loose-style)格式將上游的tarball以`套件名稱.org.tar.gz`存檔。
+* 照[以前](http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style)格式將上游的tarball以`套件名稱.org.tar.gz`存檔。
 * 使用`dch -v 新版本號碼`更新debian/changelog
 	* 說明更新上游原始套件，如果有fix bug report的話也要加入`Close: 錯誤追蹤編號`
   * while dquilt push; do dquilt refresh; done

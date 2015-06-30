@@ -5,7 +5,7 @@ date: 2015-02-14 15:56
 comments: true
 categories: [C, Linux, binutil]
 ---
-記得很久以前聽說在Linux執行檔案時，真正的起始點並不是main，加上[之前](http://wen00072-blog.logdown.com/posts/188339-study-on-the-gnu-ld)有看到單純ld會幫你偷偷link一些沒看過的object檔案，所以這次就來看到底真相為何？
+記得很久以前聽說在Linux執行檔案時，真正的起始點並不是main，加上[之前](http://wen00072.github.io/blog/2014/03/14/study-on-the-gnu-ld)有看到單純ld會幫你偷偷link一些沒看過的object檔案，所以這次就來看到底真相為何？
 
 ## 測試環境
 因為~~很假掰~~想要順便接觸一下ARM的組語，所以這次測試就使用Qemu跑ARM的Debian。

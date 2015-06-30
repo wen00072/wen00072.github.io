@@ -54,7 +54,7 @@ MEMORY
 		* symbol名稱
 		* section名稱
 		* 檔案名稱
-  * 每塊region都要給個名字，這些名字可以給他取alias，這部份請參考[`REGION_ALIAS`命令](http://wen00072-blog.logdown.com/posts/246069-study-on-the-linker-script-1#cmd-alias)
+  * 每塊region都要給個名字，這些名字可以給他取alias，這部份請參考[`REGION_ALIAS`命令](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#cmd-alias)
 * `attr`
 	* optional
   * 告訴linker這塊記憶體有什麼值得注意的地方，一個region可以有多個屬性，列出如下
@@ -91,7 +91,7 @@ MEMORY
 }
 ```
 
-region和section的合體部份[前面](http://wen00072-blog.logdown.com/posts/246070-study-on-the-linker-script-2-setcion-command#sec-output-attr-region)有提過了。如果沒有指定region的話，linker會從目前region挑一個給你用。除此之外，你的section空間region塞不下的話linker會幫你偵測出來。
+region和section的合體部份[前面](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-output-attr-region)有提過了。如果沒有指定region的話，linker會從目前region挑一個給你用。除此之外，你的section空間region塞不下的話linker會幫你偵測出來。
 
 另外ORIGIN和LENGTH可以當作查詢region的資訊，範例如下
 
@@ -119,7 +119,7 @@ PHDRS
 ```
 
 * `name`
-	* 配合section命令使用，語法可以看[這邊](http://wen00072-blog.logdown.com/posts/246070-study-on-the-linker-script-2-setcion-command#sec-output-attr-output-phdr)
+	* 配合section命令使用，語法可以看[這邊](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-output-attr-output-phdr)
 	* segment名稱因為存放在另外的name space，所以不用擔心和symbol, 檔案, section衝突。
 * `type`
 	* 規範為
@@ -144,7 +144,7 @@ PHDRS
 		* `FILEHDR`：表示該segment應該內含ELF file header
 		* `PHDRS`：表示該segment應該內含ELF program header
 * `AT`
-	* 指定load 位址。和section的[AT](http://wen00072-blog.logdown.com/posts/246070-study-on-the-linker-script-2-setcion-command#sec-output-attr-lma)相同
+	* 指定load 位址。和section的[AT](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-output-attr-lma)相同
 * `FLAGS(數字)`
 	* 數字是ELF的`p_flags`。`man elf`可以查到`p_flags`定義，數值我猜要去看程式碼或是ELF規格了。
 		* `PF_X`: executable segment
@@ -451,7 +451,7 @@ SECTIONS
 	* `file3`的`.text` section
 * `file1`的`.text` section和`file2`的`.text` section中間相距1000
 * `file2`的`.text` section和`file3`的`.text` section中間也相距1000
-* 未始用到的空間請填入`0x12345678`，想要劇情回顧的請看[這邊](http://wen00072-blog.logdown.com/posts/246070-study-on-the-linker-script-2-setcion-command#sec-input-desc-ex)
+* 未始用到的空間請填入`0x12345678`，想要劇情回顧的請看[這邊](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-input-desc-ex)
 
 `.`雖然是location counter，然而在不同的區塊使用會有不同的意義。
 先看一個例子

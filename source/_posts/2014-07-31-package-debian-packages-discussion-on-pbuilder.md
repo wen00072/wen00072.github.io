@@ -5,7 +5,7 @@ date: 2014-07-31 03:57
 comments: true
 categories: [Debian, pbuilder]
 ---
-之前的[文章](http://wen00072-blog.logdown.com/posts/205819-package-debian-packages-set-after-list-of-debian-packages)有提到使用pbuilder驗證套件。最近抽空玩了一下。整理到這邊。
+之前的[文章](http://wen00072.github.io/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages)有提到使用pbuilder驗證套件。最近抽空玩了一下。整理到這邊。
 
 [回收以前文章]
 pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來產生並測是套件。如此一來可以確認是否debian目錄下面的設定是否真的可以在這些乾淨的環境被編譯和安裝。

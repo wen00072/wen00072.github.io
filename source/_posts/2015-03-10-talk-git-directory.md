@@ -335,7 +335,7 @@ f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
 
 <a name="gconf"></a>
 ## config
-其實這個是個大哉問，就值得專門開一個章節討論。所以我整理到[這個頁面](http://wen00072-blog.logdown.com/posts/256871-introduction-to-git-config)，請自行前往閱讀。
+其實這個是個大哉問，就值得專門開一個章節討論。所以我整理到[這個頁面](http://wen00072.github.io/blog/2015/03/08/introduction-to-git-config)，請自行前往閱讀。
 
 
 <a name="gorg_head"></a>

@@ -11,7 +11,7 @@ categories:
 
 由於前面一系列的文章都會用到同樣的測試程式碼，每次都要剪下貼上。加上之後打算整理的資料還是會用到這些測試程式，因此將它們獨立出來。
 
-最原始的出處：[Makefile header file dependency問題](http://wen00072-blog.logdown.com/posts/183770-makefile-header-file-dependency-issues)。這些測試程式的主體是liba.c和libb.c兩個檔案。liba.c提供兩個API
+最原始的出處：[Makefile header file dependency問題](http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues)。這些測試程式的主體是liba.c和libb.c兩個檔案。liba.c提供兩個API
 
 * from_liba()
 	* 印出呼叫的訊息

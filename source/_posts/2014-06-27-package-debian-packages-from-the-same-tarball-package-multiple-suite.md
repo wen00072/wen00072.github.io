@@ -16,7 +16,7 @@ categories: [Debian]
 	* 範例：debian/libxxx.install和debian/libxxx-dev.install
 
 ## 測試
-直接使用[之前的測試方法](http://wen00072-blog.logdown.com/posts/201844-package-deb-packages-loose-style)裏面的套件，照上面的方式修改。
+直接使用[之前的測試方法](http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style)裏面的套件，照上面的方式修改。
 
 ```text debian/control新增testautotools-dev套件
 16,21d15

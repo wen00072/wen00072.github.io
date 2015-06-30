@@ -5,7 +5,7 @@ date: 2014-11-20 16:20
 comments: true
 categories: [pbuilder, Debian]
 ---
-標題有點難下。直接講為什麼會有這樣的需求好了，[在這邊](http://wen00072-blog.logdown.com/posts/212087-package-debian-packages-discussion-on-pbuilder)介紹了使用pbuilder驗證單獨的套件。但是如果你要打包的套件需要先安裝另外一個自行先打包的套件就GG了。原因是因為pbuilder不知道去那邊找相依的套件以致於無法編譯你的套件。
+標題有點難下。直接講為什麼會有這樣的需求好了，[在這邊](http://wen00072.github.io/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder)介紹了使用pbuilder驗證單獨的套件。但是如果你要打包的套件需要先安裝另外一個自行先打包的套件就GG了。原因是因為pbuilder不知道去那邊找相依的套件以致於無法編譯你的套件。
 
 舉例來說，假設你現在要打包一個套件是顯示圖片的程式，我們把他叫`pkg_image`。而這個`pkg_image`套件使用了`lib_img`這套函式庫開發。不巧的是`lib_img`並不在debian官方套件中，所以你必須要先打包`lib_img`、`lib_img-dev`和`lib_dbg`這三個套件。接下來你要確定`lib_img-dev`套件安裝到你的系統中，你才能夠開始打包`pkg_img`。
 

@@ -385,8 +385,8 @@ SECTIONS
   * 要先知道symbol名稱
   * 在程式碼中extern該symbol，型態為char。
   * 要知道symbol只是一個位址，所以要存取就要取位址。
-  * 可以參考以前測試的[範例：Linux中使用C語言載入data object 檔案資料](http://wen00072-blog.logdown.com/posts/194317-loads-the-data-object-using-the-c-language-archives-data-in-linux)
-  * 另外有趣的是似乎section的symbol對應的位址不一定是只當位址使用。詳細測試在[這邊：Linux中使用C語言載入data object 檔案資料 (續）](http://wen00072-blog.logdown.com/posts/194370-load-linux-using-c-language-data-object-archives-data-continued)
+  * 可以參考以前測試的[範例：Linux中使用C語言載入data object 檔案資料](http://wen00072.github.io/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux)
+  * 另外有趣的是似乎section的symbol對應的位址不一定是只當位址使用。詳細測試在[這邊：Linux中使用C語言載入data object 檔案資料 (續）](http://wen00072.github.io/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued)
 * 我可以反方向從linker script摸程式碼的symbol
   * 不一定，不同的程式語言和編譯器有不同的變數和函數命名方式，也就是說你原始程式碼的symbol名稱**可能不是**最後存在輸出object檔案的symbol 名稱。
 

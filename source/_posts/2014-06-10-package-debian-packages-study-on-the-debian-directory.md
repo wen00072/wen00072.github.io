@@ -7,7 +7,7 @@ categories: Debian
 ---
 debian目錄存放描述deb套件的行為和資訊。也是從原始套件（通常是tarball)中產生deb套件檔案的重要資料。
 
-從[Autotools tarball打包deb套件: 不嚴謹style](http://wen00072-blog.logdown.com/posts/201844-package-deb-packages-loose-style)有提到透過執行dh_make在解壓縮目錄下面產生debian目錄。這次的主題是debian目錄下面的資訊，主要是參考[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)的第四章。
+從[Autotools tarball打包deb套件: 不嚴謹style](http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style)有提到透過執行dh_make在解壓縮目錄下面產生debian目錄。這次的主題是debian目錄下面的資訊，主要是參考[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)的第四章。
 
 Debian套件強制規定debian目錄下面要有control, copyright, changelog三個檔案以及rules這個執行檔。分別討論說明如下。
 ---
@@ -23,7 +23,7 @@ Debian套件強制規定debian目錄下面要有control, copyright, changelog三
 ---
 <a name="ctrl"></a>
 ## debian/control檔
-從[Autotools tarball打包deb套件: 不嚴謹style](http://wen00072-blog.logdown.com/posts/201844-package-deb-packages-loose-style)產生的control內容為：
+從[Autotools tarball打包deb套件: 不嚴謹style](http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style)產生的control內容為：
 ```text control
 Source: testautotools
 Section: unknown

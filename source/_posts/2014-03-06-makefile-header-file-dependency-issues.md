@@ -5,7 +5,7 @@ date: 2014-03-06 01:12
 comments: true
 categories: [make]
 ---
-自幹Makefile的時候常常忘記把header files加到Prerequisite然後編譯的時候就發生非預期的錯誤。之前整理[GNU: The C Preprocess導讀](http://wen00072-blog.logdown.com/posts/146624-talk-about-c-macros)有看到gcc/cpp(C Preprocessor)的`-MMD`參數，但是還不清楚怎麼使用。直到看到[Using g++ with -MMD in makefile to automatically generate dependencies](http://stackoverflow.com/questions/11855386/using-g-with-mmd-in-makefile-to-automatically-generate-dependencies)才知道怎麼玩。手癢自己也來弄一個驗證一下。
+自幹Makefile的時候常常忘記把header files加到Prerequisite然後編譯的時候就發生非預期的錯誤。之前整理[GNU: The C Preprocess導讀](http://wen00072.github.io/blog/2013/10/13/talk-about-c-macros)有看到gcc/cpp(C Preprocessor)的`-MMD`參數，但是還不清楚怎麼使用。直到看到[Using g++ with -MMD in makefile to automatically generate dependencies](http://stackoverflow.com/questions/11855386/using-g-with-mmd-in-makefile-to-automatically-generate-dependencies)才知道怎麼玩。手癢自己也來弄一個驗證一下。
 
 測試檔案及程式碼如下
 不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。

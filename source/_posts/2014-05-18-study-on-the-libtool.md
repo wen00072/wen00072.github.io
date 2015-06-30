@@ -5,7 +5,7 @@ date: 2014-05-18 05:15
 comments: true
 categories: [libtool]
 ---
-之前討論的[autotools](http://wen00072-blog.logdown.com/posts/198783-study-on-gnu-build-system-autotools)中，偷懶沒去看libtool。後來想到手上參考的資料沒有使用autotool產生shared library的方式。想要補充後發現和libtool有關。看來出來混還是要還的。
+之前討論的[autotools](http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools)中，偷懶沒去看libtool。後來想到手上參考的資料沒有使用autotool產生shared library的方式。想要補充後發現和libtool有關。看來出來混還是要還的。
 
 ## 目錄
 
@@ -64,7 +64,7 @@ autotool想要處理不同平台之間的移植性問題。而shared library部�
 <a name="ex-prg"></a>
 ### 測試程式碼
 
-[範例程式細節在這邊](http://wen00072-blog.logdown.com/posts/203304-dry-test-file-template)，檔案各別重新分配到`src`, `include`, `libs`這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。重點在[Makefile](#ex-mk)如何使用libtool的部份。
+[範例程式細節在這邊](http://wen00072.github.io/blog/2014/06/07/dry-test-file-template)，檔案各別重新分配到`src`, `include`, `libs`這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。重點在[Makefile](#ex-mk)如何使用libtool的部份。
 
 ```text 測試程式樹狀架構
 ├── include

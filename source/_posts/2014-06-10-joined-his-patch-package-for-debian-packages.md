@@ -5,7 +5,7 @@ date: 2014-06-10 03:24
 comments: true
 categories: Debian
 ---
-在打包Debian套件，有時候會需要從更改原本套件，也就是說需要在打包時自行apply patch。而Debian套件可以透過[quilt](http://logdown.com/account/posts/205375-study-on-the-quilt/edit)協助管理patch。[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)建議方式如下。
+在打包Debian套件，有時候會需要從更改原本套件，也就是說需要在打包時自行apply patch。而Debian套件可以透過[quilt](http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt)協助管理patch。[Debian New Maintainers' Guide](https://www.debian.org/doc/manuals/maint-guide/)建議方式如下。
 
 * 確認有安裝quilt
 * 修改`~/.bashrc`加入：

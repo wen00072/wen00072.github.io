@@ -62,7 +62,7 @@ Hello world
 <a name="entr"> </a>
 * `int main(int argc, char **argv)`
 
-從[前面文章](http://wen00072-blog.logdown.com/posts/188339-study-on-the-gnu-ld)可以看到gcc編譯時除了link library和本身的object 檔案外，還會多link一些binary，可以從這邊找看看main在那邊。
+從[前面文章](http://wen00072.github.io/blog/2014/03/14/study-on-the-linker-script)可以看到gcc編譯時除了link library和本身的object 檔案外，還會多link一些binary，可以從這邊找看看main在那邊。
 
 說明一下，nm顯示的資料中
 `U`：表示undefined symbol

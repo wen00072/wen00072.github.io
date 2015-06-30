@@ -7,7 +7,7 @@ categories: [ld]
 ---
 以前一直以為ld單純就是把*.a, *.o轉成binary，簡單測試一下發現完全不是這樣。
 
-測試的檔案除了Makefile以外，其他的和[這邊](http://wen00072-blog.logdown.com/posts/184830-makefile-automatically-assign-a-file-to-a-specific-directory)一樣
+測試的檔案除了Makefile以外，其他的和[這邊](http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory)一樣
 
 將原本的Makefile部份
 

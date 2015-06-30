@@ -5,7 +5,7 @@ date: 2014-11-29 08:27
 comments: true
 categories: [C, Linux, valgrind]
 ---
-接續[前一篇](http://wen00072-blog.logdown.com/posts/244936-catching-leakage-use-valgrind-checking-c-memory-leak)的話題。在查資料的時候看到valgrind可以和gdb合作，試了一下發現他的作法和我想的不一樣。原本以為是valgrind跑出來以後直接把漏掉的call stack和program counter傳給gdb，而gdb把他當成一種中斷點。結果完全不是，他的用法是：
+接續[前一篇](http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak)的話題。在查資料的時候看到valgrind可以和gdb合作，試了一下發現他的作法和我想的不一樣。原本以為是valgrind跑出來以後直接把漏掉的call stack和program counter傳給gdb，而gdb把他當成一種中斷點。結果完全不是，他的用法是：
 
 * 跑valgrind，參數指定要和gdb合體，還有你要抓漏的程式
 * 另外一邊執行gdb，載入你要抓漏的程式
@@ -14,7 +14,7 @@ categories: [C, Linux, valgrind]
 * 從gdb叫valgrind開始執行你要抓漏的程式，gdb將會中斷在你設置的中斷點
 * 在使用valgrind提供的指令，比對執行中斷點之前和之後是否有memory leak
 
-測試程式碼和測試環境和[前一篇](http://wen00072-blog.logdown.com/posts/244936-catching-leakage-use-valgrind-checking-c-memory-leak)一模一樣，所以就請自行看連結。
+測試程式碼和測試環境和[前一篇](http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak)一模一樣，所以就請自行看連結。
 
 ## 合體示範
 

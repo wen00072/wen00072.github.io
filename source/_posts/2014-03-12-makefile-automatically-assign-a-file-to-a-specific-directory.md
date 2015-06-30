@@ -5,11 +5,11 @@ date: 2014-03-12 13:35
 comments: true
 categories: [make]
 ---
-**Mar/13/2014已更正錯誤：原本錯誤分析請看[這邊](http://wen00072-blog.logdown.com/posts/184950-makefile-pattern-rules-little-attention)**
+**Mar/13/2014已更正錯誤：原本錯誤分析請看[這邊](http://wen00072.github.io/blog/2014/03/13/makefile-pattern-rules-little-attention)**
 
-[之前](http://wen00072-blog.logdown.com/posts/183770-makefile-header-file-dependency-issues)分享了Makefile header file dependency問題解決方式之一，裏面提到把*.o 和*.d 指定產生到特定目錄，而不是散落各處的改進方向。過了幾天網路上看到[別人的解法](https://github.com/southernbear/rtenv/blob/master/Makefile)，手癢自己也來玩一下。
+[之前](http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues)分享了Makefile header file dependency問題解決方式之一，裏面提到把*.o 和*.d 指定產生到特定目錄，而不是散落各處的改進方向。過了幾天網路上看到[別人的解法](https://github.com/southernbear/rtenv/blob/master/Makefile)，手癢自己也來玩一下。
 
-[範例程式細節在這邊](http://wen00072-blog.logdown.com/posts/203304-dry-test-file-template)，不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。
+[範例程式細節在這邊](http://wen00072.github.io/blog/2014/06/07/dry-test-file-template)，不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。
 
 <a name="tree"></a>
 
@@ -69,9 +69,9 @@ clean:
 
 參數說明如下
 
-* `-MMD`請參考[這邊](http://wen00072-blog.logdown.com/posts/183770-makefile-header-file-dependency-issues)
-* `shell`請參考[這邊](http://wen00072-blog.logdown.com/posts/174562-makefile-with-command-results-examples)
-* `patsubst`請參考[這邊](http://wen00072-blog.logdown.com/posts/183770-makefile-header-file-dependency-issues)
+* `-MMD`請參考[這邊](http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues)
+* `shell`請參考[這邊](http://wen00072.github.io/blog/2014/01/07/makefile-with-command-results-examples)
+* `patsubst`請參考[這邊](http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues)
 * `addprefix`，照字面就是加上prefix
 * `dir`，取得檔案的dir
 * `$@`

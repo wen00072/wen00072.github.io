@@ -199,7 +199,7 @@ categories: [Markdown, GitHub Flavored Markdown]
 - URL文字說明
 
 ```
- ```c 標題 http://wen00072-blog.logdown.com/ URL文字說明
+ ```c 標題 http://wen00072.github.io URL文字說明
  #include <stdio.h>
  int main(void)
  { 
@@ -208,7 +208,7 @@ categories: [Markdown, GitHub Flavored Markdown]
  }
  ```
 ```
-```c 標題 http://wen00072-blog.logdown.com/ URL文字說明
+```c 標題 http://wen00072.github.io URL文字說明
  #include <stdio.h>
  int main(void)
  { 
