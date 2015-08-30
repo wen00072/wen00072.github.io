@@ -60,8 +60,8 @@ SECTIONS
 
 而`sections-command`可以分為下面幾種功能
 
-* [ENTRY命令](#cmd)
-* [設定symbol的值](#assign)
+* [ENTRY命令](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#cmd)
+* [設定symbol的值](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#assign)
 * [描述輸出object檔案的setcion](#sec-output-desc)
 * Overlay描述 (不知道是三小)
 
@@ -89,7 +89,7 @@ section [address] [(type)] :
 
 其中`output-section-command`的功能有
 
-* [設定symbol的值](#assign)
+* [設定symbol的值](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#assign)
 * 描述輸入object檔案中的section要怎麼放到輸出object檔案的setcion
 * 輸出object檔案的setcion的資料存放格式如alignment等
 * 其他
@@ -109,7 +109,7 @@ section [address] [(type)] :
 <a name="sec-output-addr"></a>
 ## 輸出object檔案section 命令: address欄位
 
-address是[section](#sec-output-desc)的一個optional欄位，使用的記憶體空間為[VMA](#bkg-layout)。如果沒有指定的話，linker會依下面的方式設定輸出object檔案section 的VMA。該VMA會遵循section 的alignment規範。
+address是[section](#sec-output-desc)的一個optional欄位，使用的記憶體空間為[VMA](http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout)。如果沒有指定的話，linker會依下面的方式設定輸出object檔案section 的VMA。該VMA會遵循section 的alignment規範。
 
 * 有設定`region`的話就從region內剩餘空間開始位址
 * 有使用`MEMORY`命令定義硬體記憶區塊的話，從定義的區塊中挑**第一個**符合SECTION的區塊。再將address設成該區塊內剩餘空間開始位址

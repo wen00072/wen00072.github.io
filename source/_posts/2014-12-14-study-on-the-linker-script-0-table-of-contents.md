@@ -115,7 +115,7 @@ categories: [binutils, linker script]
 * text
   * 存放編譯過的執行機械碼的地方
 * data
-  * 存放沒有初始值全域變數的地方 ex: `int g_var = 0xdeadbeef;`
+  * 存放**有**初始值全域變數的地方 ex: `int g_var = 0xdeadbeef;`
 * locale counter
   * 代表目前輸出object檔案位置的最後端
 * region 
