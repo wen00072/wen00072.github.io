@@ -206,6 +206,7 @@ $ git ls-files | wc -l
 144
 ```
 有興趣的人可以把`| wc -l`去掉玩看看，基本上這個是在描述repository的目錄結構。也就是說，哪個檔案要放在那個目錄。更精確的來說，協助那個blob hash要放在哪個tree中。根據[這邊](http://schacon.github.io/gitbook/7_the_git_index.html)的說法，這個檔案可以協助
+
 * 提供產生tree object時需要的資料
 * 提供比對working directory和tree的資訊
 * merge產生衝突時，可以從index取得的資料協助解決衝突。不過這邊不是很懂，就單純字面翻譯了。

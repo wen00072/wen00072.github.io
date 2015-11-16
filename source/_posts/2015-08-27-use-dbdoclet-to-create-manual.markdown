@@ -5,6 +5,7 @@ date: 2015-08-27 21:48:07 +0800
 comments: true
 categories: javadoc, dbdoclet
 ---
+Sept/1/2015 更新：下面的方法有個問題，目錄的頁面會有從`ii`開始的羅馬數字頁碼。當known issue吧，猜測要從xsl修正，`/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl`應該有線索。
 
 ## 前言
 

@@ -3,7 +3,7 @@ layout: post
 title: "Using as 手冊筆記"
 date: 2015-05-24 20:48:02 +0800
 comments: true
-categories: [asm, Linux]
+categories: [Assembler, Assembly, Linux]
 ---
 **先承認我自己很不滿意這篇，太亂了。只能當工具查keyword用。不過as 手冊的確就是指令和語法。原本是以英文字母順序說明，我只是把這些用自認的方式重新分類。很多地方也真的只有句意翻譯。就把他當作看手冊的導讀，有找的需要的再進去看[手冊](https://sourceware.org/binutils/docs/as/index.html)吧。**
 
