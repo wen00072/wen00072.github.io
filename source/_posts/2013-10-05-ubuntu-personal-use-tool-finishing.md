@@ -1,6 +1,6 @@
 ---
 layout: post
-title: '[Ubuntu 12.04] 安裝完系統後新增工具整理'
+title: '[Ubuntu 14.04] 安裝完系統後新增工具整理'
 date: 2013-10-05 00:11
 comments: true
 categories: [ubuntu, Linux_Utilities]
@@ -14,6 +14,7 @@ categories: [ubuntu, Linux_Utilities]
      - [系統程式開發套件](#系統程式開發套件)
      - [程式開發輔助工具](#程式開發輔助工具)
      - [一般工具](#一般工具)
+     - [資安工具](#資安工具)
 
 <a name="懶人包"></a>
 ## 懶人包
@@ -33,7 +34,7 @@ sudo apt-get install tig
 sudo apt-get install meld
 sudo apt-get install cscope
 sudo apt-get install vim-gtk
-sudo apt-get install ttf-inconsolata
+sudo apt-get install fonts-inconsolata
 sudo apt-get install geany
 sudo apt-get install joe
 sudo apt-get install doxygen-gui
@@ -54,6 +55,10 @@ sudo apt-get install dict
 sudo apt-get install wireshark
 sudo apt-get install mtr
 sudo apt-get install pdfgrep
+sudo apt-get install sshfs
+
+sudo apt-get install fail2ban
+sudo apt-get install rkhunter
 ```
 <a name="工具分類及簡單說明"></a>
 ## 工具分類及簡單說明
@@ -86,7 +91,7 @@ sudo apt-get install pdfgrep
     - 追蹤程式碼工具，可以切入函數呼叫等功能。請配合vim服用
 - vim-gtk
     - vim和gvim兩個願望一次滿足
-- ttf-inconsolata
+- fonts-inconsolata
     - 給開發程式時的GUI編輯器使用，因為不希望因為粗體斜體等效果干擾字元對齊
 - geany
     - 簡單好用的GUI編輯
@@ -128,3 +133,13 @@ sudo apt-get install pdfgrep
     - 加強版的ping + tracert工具
 - pdfgrep
     - grep pdf檔案的工具
+- sshfs
+    - 可以透過ssh mount遠端的帳號
+    
+<a name="資安工具"></a>
+### 資安工具
+
+- rkhunter
+    - 掃rootkit 的工具
+- fail2ban
+    - 自動ban掉固定時間內重複嘗試連線ssh等的工具，[中文簡介](http://newtoypia.blogspot.tw/2016/04/fail2ban.html)

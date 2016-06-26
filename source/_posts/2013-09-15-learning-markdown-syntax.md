@@ -6,6 +6,7 @@ comments: true
 categories: [Markdown, GitHub Flavored Markdown]
 ---
 對於技術文件寫作來說，能夠省去複雜語法和繁複操作，同時又能方便的寫出好的架構和論述很重要。因此我需要
+
 - 直接在本文中加入簡單的Tag語法省去滑鼠操作時間
 - 明顯地文章段落顯示方式
 - 方便的支援巢狀條列語法
