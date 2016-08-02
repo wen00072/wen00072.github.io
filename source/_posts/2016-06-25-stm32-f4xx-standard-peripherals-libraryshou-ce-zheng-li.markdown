@@ -7,7 +7,7 @@ categories: [STM32, ARM]
 ---
 ## 前言
 
-以前在寫作業的時候，從來沒有想過那些週邊到底怎麼使用，只大概印象和[CMSIS](http://www.arm.com/products/processors/cortex-m/cortex-microcontroller-software-interface-standard.php)有關。後來想一想到底這些廠商提供的函式庫在軟體開發中扮演了什麼樣的角色？因此花了時間整理如下。
+以前在寫作業的時候，從來沒有想過那些週邊到底怎麼使用，只大概印象和[CMSIS](http://www.arm.com/products/processors/cortex-m/cortex-microcontroller-software-interface-standard.php)有關。後來想應該是要去了解到底這些廠商提供的函式庫在軟體開發中扮演了什麼樣的角色？因此花了時間整理如下。
 
 在使用之前，請自行到[官方網站](http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html)下載STM32F4 DSP and standard peripherals library。
 

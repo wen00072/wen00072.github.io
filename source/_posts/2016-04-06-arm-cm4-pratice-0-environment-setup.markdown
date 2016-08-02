@@ -191,7 +191,7 @@ make flash-demo檔案
 <a name="cm4-0-test-stflash"></a>
 ### 使用st-flash 開發版燒錄
 
-* `st-flash 軔體binary檔案名稱 0x8000000`
+* `st-flash write 軔體binary檔案名稱 0x8000000`
 
 為什麼是`0x800000`呢？可以查一下[手冊](http://www.st.com/web/en/resource/technical/document/datasheet/DM00071990.pdf)，上面有說這塊記憶體是分配給flash memory。
 
