@@ -11,7 +11,8 @@ categories: [Shell Script]
 
 1. 開了`processed_pictures`目錄，把改過的檔案存到該目錄
 2. 將新的圖案解析度寬度轉成1024
-3. 加入浮水印字串
+3. 將產生的圖片quality設成80%
+4. 加入浮水印字串
 
 ```bash
 #!/bin/sh
@@ -28,16 +29,22 @@ done
 
 要注意
 
-1. 本script假設目前目錄都是圖檔，所以不判斷檔名是否為`.jpg`或是`.png`。 
-2. 由於相片landscape 和 portrait的關係，浮水印的位址不一定會和你想的一樣，目前為止我不在意這個問題就是了。附上範例轉出的landscape 和 portrait照片各一張。
+1. 本script假設目前目錄都是圖檔，所以不判斷檔名是否為`.jpg`或是`.png`
+2. 無法處理檔名有空白的檔案
+3. 你需要自行安裝imagemagick
+4. 由於相片landscape 和 portrait的關係，浮水印的位址不一定會和你想的一樣，目前為止我不在意這個問題就是了。附上範例轉出的landscape 和 portrait照片各一張
 
-* Landscape
+
+
+
+#### Landscape
 
 <img src="/files/dog.jpg" title="landscape">
 
-* Portrait
+#### Portrait
 <img src="/files/cat.jpg" title="portrait">
 
-
 ## 參考資料
-* [Linux Journal: Easy Watermarking with ImageMagick](http://www.linuxjournal.com/content/easy-watermarking-imagemagick)
+
+* [Linux Journal Easy Watermarking with ImageMagick](http://www.linuxjournal.com/content/easy-watermarking-imagemagick)
+* [How to automatically watermark or batch watermark photos using ImageMagick](http://www.xoogu.com/2013/how-to-automatically-watermark-or-batch-watermark-photos-using-imagemagick/)
