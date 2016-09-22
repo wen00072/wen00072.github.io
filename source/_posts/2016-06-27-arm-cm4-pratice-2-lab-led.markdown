@@ -133,11 +133,13 @@ LDSCRIPT?=$(PRJ_ROOT)/conf/bared.ld
 ```
 
 * 指定開發平台
+
 ```Makefile
 PLATFORM = STM32F429_439xx
 ```
 
 * 設定header file路徑
+
 ```Makefile
 SPL_INC=$(STM_DIR)/inc
 CMSIS_COMMON_INC = $(CMSIS_DIR)/Include
@@ -145,11 +147,13 @@ CMSIS_STM32_INC  = $(CMSIS_DIR)/Device/ST/STM32F4xx/Include
 ```
 
 * 指令所有產生的檔案都放到build目錄
+
 ```Makefile
 OUT_DIR=$(PRJ_ROOT)/build
 ```
 
 * 設定start up檔案和system檔案路徑
+
 除非你要自己從flash搬資料到RAM、設定ISR vector、RCC等，不然一定會用到start up 檔案和system檔案。start up 檔案在SPL中有很多範本，我們使用了`gcc_ride7`這個版本，原因是其他的都沒有`gcc`這個字眼。
 ```Makefile
 CMSIS_STARTUP_SRC = $(CMSIS_DIR)/Device/ST/STM32F4xx/Source/Templates/gcc_ride7/startup_stm32f429_439xx.s
@@ -157,6 +161,7 @@ CMSIS_SYSTEM_SRC  = $(CMSIS_DIR)/Device/ST/STM32F4xx/Source/Templates/system_stm
 ```
 
 * 設定debug mode
+
 SPL提供assertion，使用USE_FULL_ASSERT打開。打開以後需要自行實作函數`void assert_failed(uint8_t* file, uint32_t line)`。
 
 ```Makefile
@@ -168,6 +173,7 @@ endif
 ```
 
 * CPU相關compile flags
+
 STM32F4使用Cotex M4。題外話，對於toolchain有興趣的可以用`arm-none-eabi-gcc -Q --help=target`查詢有支援哪些平台。
 ```Makefile
 ARCH_FLAGS = -mthumb -mcpu=cortex-m4
@@ -201,6 +207,7 @@ include $(PRJ_ROOT)/conf/build.def
 ```
 
 * 指定要編譯的SPL 檔案
+
 除了前面[前面](#STM_MK_COMM)提到的start up檔案、system檔、還有你自己的程式碼外，根據你的需求，還會需要SPL的驅動程式。這個專案我們需要`GPIO`和`RCC` (reset clock control)這兩個部份。一個是用來控制LED、另外一個用來計算時間產生以控制閃滅。
 ```Makefile
 SRCS  = $(CMSIS_STARTUP_SRC) $(CMSIS_SYSTEM_SRC)
@@ -210,6 +217,7 @@ SRCS += led.c
 ```
 
 * 檔名轉換
+
 上面的是source檔案，但是我們編譯需要把source檔案轉成object檔案並且存在./build目錄下。
 ```Makefile
 C_OBJS = $(patsubst %.c, %.o, $(SRCS))   # translate *.c to *.o
@@ -219,6 +227,7 @@ OUT_OBJS = $(addprefix $(OUT_DIR)/, $(OBJS))
 ```
 
 * 產生led.bin
+
 不要被符號嚇到，說明如下
 
     * 產生build/led.bin檔，前提是上面的object 檔案都編譯完成
@@ -236,6 +245,7 @@ $(OUT_DIR)/$(TARGET).bin: $(OUT_OBJS)
 ```
 
 * 編譯並產生object 檔案
+
 ```Makefile
 $(OUT_DIR)/%.o: %.s
 	@mkdir -p $(dir $@)
@@ -244,6 +254,23 @@ $(OUT_DIR)/%.o: %.s
 $(OUT_DIR)/%.o: %.c
 	@mkdir -p $(dir $@)
 	$(TOOL_CHAIN_PREFIX)-gcc -c $(CFLAGS) $< -o $@
+```
+
+* 燒錄
+
+可以下`make flash`燒錄。使用`openocd`的原因是因為`st-flash`偶爾會有寫燒錄完成但是實際上沒有燒進去的情況
+
+```Makefile
+flash: $(OUT_DIR)/$(TARGET).bin
+	openocd -f interface/stlink-v2.cfg  \
+            -f target/stm32f4x.cfg      \
+            -c "init"                   \
+            -c "reset init"             \
+            -c "stm32f2x unlock 0"      \
+            -c "flash probe 0"          \
+            -c "flash info 0"           \
+            -c "flash write_image erase $< 0x8000000" \
+            -c "reset run" -c shutdown
 ```
 
 * 以下不解釋
@@ -306,6 +333,7 @@ void setupLED(GPIO_InitTypeDef *LED_InitStruct)
 ```
 
 * 輸出資料到GPIO範例如下
+
 ```c 輸出資料到GPIO範例
     GPIO_WriteBit(GPIOG, GPIO_Pin_13 , 1);
 ```
@@ -315,6 +343,7 @@ void setupLED(GPIO_InitTypeDef *LED_InitStruct)
 要做的是
 
 * 設定timer interrupt 出現的週期，設定成nano second的程式碼如下
+
 ```c
     /* Setup timer interrupt interval to nano second */
     if(SysTick_Config(SystemCoreClock / 1000)) {
@@ -323,6 +352,7 @@ void setupLED(GPIO_InitTypeDef *LED_InitStruct)
 ```
 
 * time out的ISR，基本上就是計數counter加上busy waiting而已
+
 ```c
 static __IO uint32_t g_timeToWakeUp;
 void sleep(uint32_t nSec)
@@ -421,6 +451,7 @@ void assert_failed(uint8_t* file, uint32_t line)
 <a name="STM_LED_VERIFY"></a>
 ### 燒錄和測試
 * 直接在工作目錄下執行make
+
 ```text
 STM32F429-Discovery-Disco-Pratice/labs/0_led$ make
 arm-none-eabi-gcc -c -DUSE_FULL_ASSERT -g3 -mthumb -mcpu=cortex-m4 -I. -I../../libraries/STM32F4xx_DSP_StdPeriph_Lib_V1.6.1/Libraries/STM32F4xx_StdPeriph_Driver/inc -I../../libraries/
@@ -430,6 +461,7 @@ arm-none-eabi-objdump -S ../../build/led.elf > ../../build/led.list
 ```
 
 * 燒錄指令如下
+
 ```text
 STM32F429-Discovery-Disco-Pratice/labs/0_led$ st-flash write ../../build/led.bin  0x8000000 
 2016-07-25T11:31:28 INFO src/stlink-common.c: Loading device parameters....

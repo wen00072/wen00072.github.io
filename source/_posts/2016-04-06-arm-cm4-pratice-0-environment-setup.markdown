@@ -3,7 +3,7 @@ layout: post
 title: "ARM CM4 Pratice (0): Environment Setup"
 date: 2016-04-06 22:15:15 +0800
 comments: true
-categories: [ARM, STM32F4]
+categories: [ARM, STM32]
 ---
 很久以前買了[STM32F4 Disco的開發版](http://www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF259090)（[繁體中文資訊](http://wiki.csie.ncku.edu.tw/embedded/STM32F429)），最近開始想要學習ARM架構和硬體控制等技術。在設定目標，規劃進度前，一定要先把編譯和燒錄環境架設起來，整理如下：
 
