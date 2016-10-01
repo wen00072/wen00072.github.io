@@ -3,7 +3,7 @@ layout: post
 title: "空間母語 - 老街立面工法篇"
 date: 2015-11-29 00:11:13 +0800
 comments: true
-categories: 老建築
+categories: [老建築]
 ---
 
 以下為課程筆記，我沒有專業能力判斷是否有誤解，請自行斟酌。

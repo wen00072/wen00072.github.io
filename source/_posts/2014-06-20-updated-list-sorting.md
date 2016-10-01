@@ -3,7 +3,7 @@ layout: post
 title: '[隨時更新] 書單整理'
 date: 2014-06-20 01:25
 comments: true
-categories: 感想
+categories: [感想]
 ---
 ## 必看
 

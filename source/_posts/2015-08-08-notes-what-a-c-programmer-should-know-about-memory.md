@@ -3,7 +3,7 @@ layout: post
 title: '雜記: What a C programmer should know about memory'
 date: 2015-08-08 15:30
 comments: true
-categories: 
+categories: [C]
 ---
 出處: [What a C programmer should know about memory](http://marek.vavrusa.com/c/memory/2015/02/20/memory/)
 

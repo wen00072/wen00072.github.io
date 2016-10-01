@@ -3,7 +3,7 @@ layout: post
 title: "Linux Kernel Pratice 0: Buildroot (2/2) - 自行編譯kernel"
 date: 2016-10-01 09:40:54 +0800
 comments: true
-categories: [ARM, Buildroot, Linux_Kernel, qemu]
+categories: [ARM, Buildroot, Linux Kernel, qemu]
 ---
 ## 前情提要
 [上一篇](blog/2016/09/27/linux-kernel-pratice-0-buildroot-setup-with-qemu/)提到，設定實習環境的目標有：

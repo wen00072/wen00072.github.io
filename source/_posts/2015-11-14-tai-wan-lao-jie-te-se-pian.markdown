@@ -3,7 +3,7 @@ layout: post
 title: "空間母語 - 台灣老街特色篇"
 date: 2015-11-14 21:32:02 +0800
 comments: true
-categories: 老建築
+categories: [老建築]
 ---
 以下為課程筆記，我沒有專業能力判斷是否有誤解，請自行斟酌。
 

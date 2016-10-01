@@ -3,7 +3,7 @@ layout: post
 title: "Linux Kernel Pratice 0: Buildroot (1/2)"
 date: 2016-09-27 09:43:20 +0800
 comments: true
-categories: [ARM, Qemu, Linux_Kernel, Buildroot]
+categories: [ARM, Qemu, Linux Kernel, Buildroot]
 ---
 理論上不應該要邊移動邊開火，延長戰線。不過計劃趕不上變化，既來之則安之。
 

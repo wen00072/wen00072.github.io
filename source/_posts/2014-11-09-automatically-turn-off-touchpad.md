@@ -3,7 +3,7 @@ layout: post
 title: '[Linux] 自動關閉TouchPad'
 date: 2014-11-09 09:27
 comments: true
-categories: Linux
+categories: [Linux]
 ---
 **2015年3月29日更新**
 直接打開dconf-editor，選擇 "org"->"gnome"->"settings-daemon"->"peripherals"->"touchpad"，把裏面的

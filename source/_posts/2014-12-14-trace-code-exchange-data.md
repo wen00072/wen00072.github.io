@@ -3,11 +3,11 @@ layout: post
 title: 'Trace code 交流會資料整理'
 date: 2014-12-14 20:37
 comments: true
-categories: presentation
+categories: [presentation]
 ---
 ## Wen Liao
 
-* [C語言在Linux下組裝經驗分享]http://wen00072.github.io/blog/2013/11/29/c-language-assembler-under-linux-sharing)
+* [C語言在Linux下組裝經驗分享](http://wen00072.github.io/blog/2013/11/29/c-language-assembler-under-linux-sharing)
 
 現場只有live demo，vim的精華在這邊有整理投影片。
 <iframe src="//www.slideshare.net/slideshow/embed_code/41960022" width="425" height="355" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/trace-41960022" title="Trace 程式碼之皮" target="_blank">Trace 程式碼之皮</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div>

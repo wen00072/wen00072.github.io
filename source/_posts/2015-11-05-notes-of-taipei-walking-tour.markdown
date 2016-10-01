@@ -3,7 +3,7 @@ layout: post
 title: "台北城市散步 - 老房子的秘密筆記"
 date: 2015-11-05 23:05:37 +0800
 comments: true
-categories: 老建築
+categories: [老建築]
 ---
 * Nov/25/2015: 收到朱禹潔老師指導信件，補充及修正了部份內容。
 

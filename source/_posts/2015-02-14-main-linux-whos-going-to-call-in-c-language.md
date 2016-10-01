@@ -3,7 +3,7 @@ layout: post
 title: 'Linux中誰來呼叫C語言中的main?'
 date: 2015-02-14 15:56
 comments: true
-categories: [C, Linux, binutil]
+categories: [C, Linux, binutils]
 ---
 記得很久以前聽說在Linux執行檔案時，真正的起始點並不是main，加上[之前](http://wen00072.github.io/blog/2014/03/14/study-on-the-gnu-ld)有看到單純ld會幫你偷偷link一些沒看過的object檔案，所以這次就來看到底真相為何？
 

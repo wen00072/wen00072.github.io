@@ -3,7 +3,7 @@ layout: post
 title: '閱讀心得： Zen and the Art of Motorcycle Maintenance (CH1 ~ CH27)'
 date: 2014-07-06 02:48
 comments: true
-categories: 感想
+categories: [感想]
 ---
 書本資訊：[禪與摩托車維修的藝術 - 行人出版社](http://flaneur.tw/?p=1865)
 

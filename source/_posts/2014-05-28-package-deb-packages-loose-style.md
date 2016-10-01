@@ -3,7 +3,7 @@ layout: post
 title: '從Autotools tarball打包deb套件: 不嚴謹style'
 date: 2014-05-28 10:08
 comments: true
-categories: Debian
+categories: [Debian]
 ---
 deb 檔案是Debian系列安裝套件檔案格式。這次將示範使用不嚴謹的兩種方式將一個auto tool打包的tarball打包成deb檔案。這兩種方式的差別只有在產生套件相關的source code tarball的方式不同。
 

@@ -3,7 +3,7 @@ layout: post
 title: '談談git remote'
 date: 2015-03-06 07:15
 comments: true
-categories: git 
+categories: [git]
 ---
 在軟體專案開發常常會需要比對不同的repository。舉例來說，你可能在遠端有一套軟體專案，這個專案是從upstream fork 下來，那麼如果要把upstream 新的功能合併到專案，人肉合併往往是最容易出錯又最沒效率的方式。如果這兩個專案都有git，那麼git remote就是你的救星。針對剛才講的更詳細的use case可以看[Git Hub的範例](https://help.github.com/articles/configuring-a-remote-for-a-fork/)
 

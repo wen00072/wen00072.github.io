@@ -3,7 +3,7 @@ layout: post
 title: ' ProGit: Customizing Git - Git Configuration導讀'
 date: 2015-03-08 22:12
 comments: true
-categories: git 
+categories: [git]
 ---
 ## 目錄
 

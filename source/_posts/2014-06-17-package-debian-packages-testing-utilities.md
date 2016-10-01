@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] 打包的測試驗證工具簡介'
 date: 2014-06-17 06:36
 comments: true
-categories: Debian
+categories: [Debian]
 ---
 Debian New Maintainers' Guide提供了一些打包套件時出錯的建議
 

@@ -3,7 +3,7 @@ layout: post
 title: '筆記: [OpenStack] GIT Commit Good Practice'
 date: 2013-09-08 12:00
 comments: true
-categories: [git, Software_Development]
+categories: [git, Software Development]
 ---
 [出處：[OpenStack] GIT Commit Good Practice](https://wiki.openstack.org/wiki/GitCommitMessages)
 

@@ -3,7 +3,7 @@ layout: post
 title: '安裝unstable release Debian方式'
 date: 2014-05-21 11:20
 comments: true
-categories: Debian
+categories: [Debian]
 ---
 想安裝Unstable release Debian，跑去官方網站看，發現ISO檔只有stable和testing兩種。網路搜尋後發現原來unstable沒有ISO檔[*](#ref1)，後來決定從已經安裝的Debian系統切換過去。
 

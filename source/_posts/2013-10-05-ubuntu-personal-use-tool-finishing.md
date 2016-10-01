@@ -3,7 +3,7 @@ layout: post
 title: '[Ubuntu 14.04] 安裝完系統後新增工具整理'
 date: 2013-10-05 00:11
 comments: true
-categories: [ubuntu, Linux_Utilities]
+categories: [Ubuntu, Linux Utilities]
 ---
 安裝完作業系統後還需要裝一些平常使用的工具，順手整理一下
 

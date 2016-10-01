@@ -3,7 +3,7 @@ layout: post
 title: '談談.git  目錄'
 date: 2015-03-10 23:21
 comments: true
-categories: git 
+categories: [git]
 ---
 如果有使用git的朋友，可能會知道git是一個分散式版本控制系統。這表示repository會放一份在本機上面。仔細或是有看書的人，會知道這些repository沒有意外會放在工作目錄的`.git`下面。今天無聊來這個目錄戳戳看。
 

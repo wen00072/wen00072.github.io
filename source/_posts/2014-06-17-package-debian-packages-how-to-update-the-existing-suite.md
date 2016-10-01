@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] 如何更新現有套件並重新打包？'
 date: 2014-06-17 15:09
 comments: true
-categories: Debian
+categories: [Debian]
 ---
 Debian New Maintainers' Guide提供了一些更新打包過的套件的建議:
 分為

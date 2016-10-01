@@ -3,7 +3,7 @@ layout: post
 title: 'Shell Script: 番茄式時間管理法'
 date: 2013-09-13 13:20
 comments: true
-categories: [shell_script, Pomodoro_Technique]
+categories: [Shell Script, Pomodoro Technique]
 ---
 這是從The clean coder中文版看到的時間方式，本來想要找看看Ubuntun上面有沒有現成軟體可以用。後來看到[有人](http://navaneeth.github.io/blog/2010/12/19/simple-egg-timer-on-linux-for-pomodoro-technique/)使用Shell Script去弄一個。手癢也來做一個自己的版本。
 

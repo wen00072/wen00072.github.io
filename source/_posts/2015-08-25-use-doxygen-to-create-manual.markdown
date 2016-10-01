@@ -3,7 +3,7 @@ layout: post
 title: "Ubuntu 14.04下使用Doxygen 產生pdf手冊"
 date: 2015-08-25 23:13:44 +0800
 comments: true
-categories: Doxygen
+categories: [Doxygen]
 ---
 一個pdf程式SDK手冊，你會期待有
 

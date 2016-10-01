@@ -3,7 +3,7 @@ layout: post
 title: 'Linux中使用C語言載入data object 檔案資料'
 date: 2014-04-15 16:20
 comments: true
-categories: [Linux, C, bintuils]
+categories: [Linux, C, binutils]
 ---
 之前看[別人的程式](https://github.com/southernbear/rtenv)，看到作者在ROMFS實作時把資料轉成object檔案，然後在C語言中直接存取資料。他的作法是
 

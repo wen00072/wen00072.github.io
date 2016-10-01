@@ -3,7 +3,7 @@ layout: post
 title: '[Debian套件打包] debian目錄初探 (1)'
 date: 2014-06-10 04:26
 comments: true
-categories: Debian
+categories: [Debian]
 ---
 debian目錄存放描述deb套件的行為和資訊。也是從原始套件（通常是tarball)中產生deb套件檔案的重要資料。
 

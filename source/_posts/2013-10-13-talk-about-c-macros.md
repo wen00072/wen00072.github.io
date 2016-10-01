@@ -3,7 +3,7 @@ layout: post
 title: 'GNU: The C Preprocessor 導讀'
 date: 2013-10-13 05:13
 comments: true
-categories: [C, GCC, C_Preprocessor, MACRO]
+categories: [C, GCC, C Preprocessor, MACRO]
 ---
 C語言的前置處理(CPP: C preprocessor)是個很有趣的題目，知道在對的時機使用他們絕對能夠對於開發軟體有巨大的幫助。以下是我閱讀[GNU: The C Preprocessor](http://gcc.gnu.org/onlinedocs/cpp/index.html)的筆記。請注意這只是筆記，詳細資料請自行參考原本網頁。
 
