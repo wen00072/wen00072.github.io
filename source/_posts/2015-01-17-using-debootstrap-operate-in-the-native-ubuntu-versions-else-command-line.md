@@ -21,6 +21,7 @@ debootstrap --arch=你要跑的target平台 --variant=minbase 你要跑的版本
 而版本代號可以在任意一個Ubuntu archive中的ubuntu/dists/看到。[範例網頁](http://archive.ubuntu.com/ubuntu/dists)可以看到10.04 (lucid), 12.04 (precise)等。
 
 另外--variant問男人可以看到有
+
 * minbase
 	* 最少安裝
 * buildd

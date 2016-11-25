@@ -1,10 +1,13 @@
 ---
 layout: post
-title: "Linux Kernel Pratice 0: Buildroot (1/2)"
+title: "(過期) Linux Kernel Pratice 0: Buildroot (1/2)"
 date: 2016-09-27 09:43:20 +0800
 comments: true
-categories: [ARM, Qemu, Linux Kernel, Buildroot]
+categories: [過期]
 ---
+
+### <font color="red">感謝Scott 大大糾正，選錯平台，這篇使用了ARMv4指令集的測試平台。請大家忽略，正確的版本將會之後更新!</font>
+
 理論上不應該要邊移動邊開火，延長戰線。不過計劃趕不上變化，既來之則安之。
 
 最近因為特別因素開始學習Linux kernel，看能不能Linux kernel和STM32兩邊都不要漏掉。不管怎樣，學習和實習絕對分不開，所以還是從環境架設開始吧。這次的實習環境架設的目標是：
@@ -19,16 +22,16 @@ categories: [ARM, Qemu, Linux Kernel, Buildroot]
 
 ## 目錄
 
-* [測試環境](#lk0_env)
-* [安裝Buildroot](#lk0_ins)
-    * [下載Buildroot](#lk0_ins_dl)
-    * [設定ARM 環境](#lk0_ins_set)
-    * [編譯及輸出](#lk0_ins_build)
-* [測試](#lk0_test)
-* [參考資料](#lk0_ref)
-    * [下次準備看的資料](#lk0_ref_data)
+* [測試環境](#de_lk0_env)
+* [安裝Buildroot](#de_lk0_ins)
+    * [下載Buildroot](#de_lk0_ins_dl)
+    * [設定ARM 環境](#de_lk0_ins_set)
+    * [編譯及輸出](#de_lk0_ins_build)
+* [測試](#de_lk0_test)
+* [參考資料](#de_lk0_ref)
+    * [下次準備看的資料](#de_lk0_ref_data)
 
-<a name="lk0_env"></a>
+<a name="de_lk0_env"></a>
 ## 測試環境
 因為我已經裝過開發相關的套件，因此如果您是新手可能要自行摸索也許有需要另外安裝的套件如`git`。嘛，練習解讀錯誤訊息也是一種學習。
 
@@ -41,15 +44,15 @@ Release:	14.04
 Codename:	trusty
 </pre>
 
-<a name="lk0_ins"></a>
+<a name="de_lk0_ins"></a>
 ## 安裝Buildroot
 主要分成下面三個步驟
 
-* [下載Buildroot](#lk0_ins_dl)
-* [設定ARM 環境](#lk0_ins_set)
-* [編譯及輸出](#lk0_ins_build)
+* [下載Buildroot](#de_lk0_ins_dl)
+* [設定ARM 環境](#de_lk0_ins_set)
+* [編譯及輸出](#de_lk0_ins_build)
 
-<a name="lk0_ins_dl"></a>
+<a name="de_lk0_ins_dl"></a>
 ### 下載Buildroot
 直接看例子，剪下貼上就好
 
@@ -59,7 +62,7 @@ cd buildroot
 git clone git://git.buildroot.net/buildroot
 ```
 
-<a name="lk0_ins_set"></a>
+<a name="de_lk0_ins_set"></a>
 ### 設定ARM 環境
 網路上查到大部分都是從`make menuconfig`開始。不過我是很**明確地**要用`Qemu`跑ARM的系統。所以就找了一下發現有下面的指令
 
@@ -90,14 +93,14 @@ make qemu_arm_versatile_defconfig
 
 另外本來想要嘗試設定更動Kernel版本，但是發現需要更進一步的了解buildroot才能夠達成。當作下次目標吧。
 
-<a name="lk0_ins_build"></a>
+<a name="de_lk0_ins_build"></a>
 ### 編譯及輸出
 編譯只要下`make`就會幫你下載和編譯開機需要的
 
 1. 套件和一些常用工具，並封裝到`output/image/roofs.ext2`
 2. Kernel(預設4.7)，編譯成`zImage`，放在`output/image/zImage`
 
-<a name="lk0_test"></a>
+<a name="de_lk0_test"></a>
 ## 測試
 接下來也不難，可以參考`board/qemu/arm-versatile/readme.txt`
 簡單來說就是執行下面指令，開機完使用`root`登入不用密碼，使用`poweroff`後再手動離開qemu。
@@ -131,14 +134,14 @@ buildroot login: root
 #
 ```
 
-<a name="lk0_ref"></a>
+<a name="de_lk0_ref"></a>
 ## 參考資料
 * [The Buildroot user manual](https://buildroot.org/downloads/manual/manual.html)
     * 只有看部份，不過官方文件本來就是應該放在第一位
 * [Buildroot and QEMU – the quickest receipe for your own Linux](http://pressreset.net/2013/09/buildroot-and-qemu-the-quickest-receipe-for-your-own-linux/)
     * 東西弄完才看到的文章，入門好文
 
-<a name="lk0_ref_data"></a>
+<a name="de_lk0_ref_data"></a>
 ### 下次準備看的資料
 * [Qemu and the Kernel](http://www.linux-magazine.com/Online/Features/Qemu-and-the-Kernel)
     * 使用Qemu debug kernel的資料

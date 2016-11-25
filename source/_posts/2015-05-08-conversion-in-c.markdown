@@ -122,7 +122,7 @@ whatsoever = (double) 10 / 3;
 為什麼`3`不用型態轉換呢？你必須要比對C語言的[Operator precedence](http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B#Operator_precedence)，也就是運算元處理順序。可以知道C 語法會處理順序如下
 
 * `10` cast成`double`型態
-* 因為潛規則，`3`也會被promote成`doule`
+* 因為潛規則，`3`也會被promote成`double`
 * 計算`10 / 3`
 * 將結果assign給 `=` 左邊的變數
 
@@ -132,3 +132,7 @@ whatsoever = (double) 10 / 3;
 ```c
 float whatsoever = 3.14f;
 ```
+
+### 致謝
+
+* 2016/Oct/28: 感謝網友`Jeffery Chang`糾正typo

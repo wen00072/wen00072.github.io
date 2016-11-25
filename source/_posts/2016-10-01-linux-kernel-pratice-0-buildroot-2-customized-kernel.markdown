@@ -1,10 +1,13 @@
 ---
 layout: post
-title: "Linux Kernel Pratice 0: Buildroot (2/2) - 自行編譯kernel"
+title: "(過期) Linux Kernel Pratice 0: Buildroot (2/2) - 自行編譯kernel"
 date: 2016-10-01 09:40:54 +0800
 comments: true
-categories: [ARM, Buildroot, Linux Kernel, qemu]
+categories: [過期]
 ---
+### <font color="red">感謝Scott 大大糾正，選錯平台，這篇使用了ARMv4指令集的測試平台。請大家忽略，正確的版本將會之後更新!</font>
+
+
 ## 前情提要
 [上一篇](blog/2016/09/27/linux-kernel-pratice-0-buildroot-setup-with-qemu/)提到，設定實習環境的目標有：
 
@@ -21,21 +24,21 @@ categories: [ARM, Buildroot, Linux Kernel, qemu]
 3. 編譯出來的kernel binary可以順利的載入buildroot產生的rootfs，以及網路介面和相關設備
 
 ## 目錄
-* [測試環境](#lk0_1_env)
-* [下載Linux Kernel Source](#lk0_1_dl)
-* [設定和編譯](#lk0_1_conf)
-    * [切換版本](#lk0_1_conf_sw)
-    * [設定ARM Versatile預設config](#lk0_1_conf_arm_def)
-    * [設定Qemu VM支援的硬體](#lk0_1_conf_qemu)
-    * [編譯](#lk0_1_conf_build)
-        * [Buildroot](#lk0_1_conf_build_broot)
-        * [Linux kernel](#lk0_1_conf_build_lk)
-* [測試](#lk0_1_test)
-* [參考資料](#lk0_1_ref)
-* [附錄](#lk0_1_app)
-    * [使用Buildroot 內建套件指定編譯Linux kernel 4.2.2](#lk0_1_app_brot)
+* [測試環境](#lk0_1_del_env)
+* [下載Linux Kernel Source](#lk0_1_del_dl)
+* [設定和編譯](#lk0_1_del_conf)
+    * [切換版本](#lk0_1_del_conf_sw)
+    * [設定ARM Versatile預設config](#lk0_1_del_conf_arm_def)
+    * [設定Qemu VM支援的硬體](#lk0_1_del_conf_qemu)
+    * [編譯](#lk0_1_del_conf_build)
+        * [Buildroot](#lk0_1_del_conf_build_broot)
+        * [Linux kernel](#lk0_1_del_conf_build_lk)
+* [測試](#lk0_1_del_test)
+* [參考資料](#lk0_1_del_ref)
+* [附錄](#lk0_1_del_app)
+    * [使用Buildroot 內建套件指定編譯Linux kernel 4.2.2](#lk0_1_del_app_brot)
 
-<a name="lk0_1_env"></a>
+<a name="lk0_1_del_env"></a>
 ## 測試環境
 做組裝的最重要的原則之一就是要能夠reproduce，所以交代測試環境是一定要的
 
@@ -54,7 +57,7 @@ git version 2.10.0
 * buildroot 版本
     * commit hash: `14b24726a81b719b35fee70c8ba8be2d682a7313`
 
-<a name="lk0_1_dl"></a>
+<a name="lk0_1_del_dl"></a>
 ## 下載Linux Kernel Source
 沒啥好講的，就剪貼指令吧
 
@@ -62,7 +65,7 @@ git version 2.10.0
 git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 ```
 
-<a name="lk0_1_conf"></a>
+<a name="lk0_1_del_conf"></a>
 ## 設定和編譯
 東西下載完不是就閉著眼睛開幹，因為我們在開始編譯前需要
 
@@ -72,7 +75,7 @@ git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
 
 那麼就來見招拆招吧
 
-<a name="lk0_1_conf_sw"></a>
+<a name="lk0_1_del_conf_sw"></a>
 ### 切換版本
 非常簡單，先`git tag`，切過去就好。我要切到4.4.2就是
 
@@ -82,7 +85,7 @@ git checkout v4.4.2     # 切到tag
 git checkout -b v4.4.2  # 理論上會這邊改東改西，就先開branch吧
 ```
 
-<a name="lk0_1_conf_arm_def"></a>
+<a name="lk0_1_del_conf_arm_def"></a>
 ### 設定ARM Versatile預設config
 先講結論
 ```sh
@@ -99,13 +102,13 @@ make ARCH=arm versatile_defconfig
 1. Linux kernel source中有些平台會提供default config
 2. 透過`ARCH`可以讓make時自動參考這些檔案產生config
 
-<a name="lk0_1_conf_qemu"></a>
+<a name="lk0_1_del_conf_qemu"></a>
 ### 設定Qemu VM支援的硬體
 <font color="red">**建議不要把buildroot compile cache打開。我花了很多時間在kernel 編譯後Qemu還是沒有使用編譯後的kernel的問題，最後發現關閉buildroot compile cache問題就消失了。**</font>
 
-如果閉著眼睛開始[編譯](#lk0_1_conf_build)，你會很高興地發現可以開機了，但是接下來就會很失望的發現kernel panic，原因是認不出開機的disk。
+如果閉著眼睛開始[編譯](#lk0_1_del_conf_build)，你會很高興地發現可以開機了，但是接下來就會很失望的發現kernel panic，原因是認不出開機的disk。
 
-之所以會發生這樣的原因是因為Linux kernel 提供的default config選項和buildroot 給Qemu的kernel 選項不同([參考](#lk0_1_app_brot))，比對buildroot 開機畫面，會發現他們有偵測到兩個硬體，分別是
+之所以會發生這樣的原因是因為Linux kernel 提供的default config選項和buildroot 給Qemu的kernel 選項不同([參考](#lk0_1_del_app_brot))，比對buildroot 開機畫面，會發現他們有偵測到兩個硬體，分別是
 
 1. SCSI 控制器，用來辨認rootfs
 2. Realtek 8139 網路卡，不用我解釋吧
@@ -136,10 +139,10 @@ make ARCH=arm versatile_defconfig
 
 建議順便巡一下其他kernel選項，用不到的可以關一下。比如說`MTD`，一堆有的沒的網卡，音效支援之類的。
 
-<a name="lk0_1_conf_build"></a>
+<a name="lk0_1_del_conf_build"></a>
 ### 編譯
 
-<a name="lk0_1_conf_build_broot"></a>
+<a name="lk0_1_del_conf_build_broot"></a>
 #### Buildroot
 
 1. `make menuconfig`
@@ -147,7 +150,7 @@ make ARCH=arm versatile_defconfig
         * 改成你現在Linux 版本
 2. `make`
 
-<a name="lk0_1_conf_build_lk"></a>
+<a name="lk0_1_del_conf_build_lk"></a>
 #### Linux kernel
 指令如下
 
@@ -164,7 +167,7 @@ make CROSS_COMPILE=/tmp/buildroot/output/host/usr/bin/arm-buildroot-linux-gnueab
 * `V=1`
     * 身為組裝工，沒看到編譯指令訊息跳出來就會沒安全感
 
-<a name="lk0_1_test"></a>
+<a name="lk0_1_del_test"></a>
 ## 測試
 這邊卡關的原因是預設的buildroot (Linux kernel 4.7)使用qemu載入的時候需要指定device tree檔案。但是在Linux 4.4.2下面指定device tree檔案反而無法順利開機。我怎麼知道到的？撈git commit log去看的。
 
@@ -316,24 +319,24 @@ buildroot login: root
 random: nonblocking pool is initialized
 ```
 
-<a name="lk0_1_ref"></a>
+<a name="lk0_1_del_ref"></a>
 ## 參考資料
 * [Buildroot 官方手冊](https://buildroot.org/downloads/manual/manual.html)
 
-<a name="lk0_1_app"></a>
+<a name="lk0_1_del_app"></a>
 ## 附錄
 
-<a name="lk0_1_app_brot"></a>
+<a name="lk0_1_del_app_brot"></a>
 ### 使用Buildroot 內建套件指定編譯Linux kernel 4.2.2
 當初會去做這個主要是因為開始編譯獨立的Linux kernel前要先驗證buildroot自己編的Linux 4.4.2是否可以用qemu開機。另外的好處的就是buildroot編譯出來的kernel config (在output/build/linux-4.4.2/.config) 可以和你自己的kernel config比對。
 
 步驟如下
 
-1. [找出buildroot 4.4.x的kernel config](#lk0_1_app_brot_step1)
-2. [更改buildroot config指定使用Linux 4.4.2](#lk0_1_app_brot_step2)
-3. [測試驗證](#lk0_1_app_brot_step3)
+1. [找出buildroot 4.4.x的kernel config](#lk0_1_del_app_brot_step1)
+2. [更改buildroot config指定使用Linux 4.4.2](#lk0_1_del_app_brot_step2)
+3. [測試驗證](#lk0_1_del_app_brot_step3)
 
-<a name="lk0_1_app_brot_step1"></a>
+<a name="lk0_1_del_app_brot_step1"></a>
 ### 找出buildroot 4.4.x的kernel config
 
 前篇有[提到](blog/2016/09/27/linux-kernel-pratice-0-buildroot-setup-with-qemu/#lk0_ins_set)`make qemu_arm_versatile_defconfig`這個指令和`buildroot/board/qemu/arm-versatile`這個目錄。我們進一步去看一下這個目錄
@@ -366,7 +369,7 @@ Date:   Sun Feb 7 18:19:13 2016 -0300
 `/tmp/linux-4.4.config`
 
 
-<a name="lk0_1_app_brot_step2"></a>
+<a name="lk0_1_del_app_brot_step2"></a>
 ### 更改buildroot config指定使用Linux 4.4.2
 
 * make menuconfig
@@ -376,7 +379,7 @@ Date:   Sun Feb 7 18:19:13 2016 -0300
     * Kernel -> Configuration file path: 填`/tmp/linux-4.4.config`
 * make
 
-<a name="lk0_1_app_brot_step3"></a>
+<a name="lk0_1_del_app_brot_step3"></a>
 ### 測試驗證
 根據buildroot/board/qemu/arm-versatile中4.4.2版時的readme.txt，qemu指令執行如下，基本上就是不去載入device tree檔案。
 

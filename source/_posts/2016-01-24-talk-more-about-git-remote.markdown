@@ -3,7 +3,7 @@ layout: post
 title: "再談 git remote"
 date: 2016-01-24 20:30:32 +0800
 comments: true
-categories: 
+categories: [git remote]
 ---
 
 * 更新：
