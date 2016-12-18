@@ -7,6 +7,8 @@ categories: [C, vim, cscope, ctags, vundle, Vim Plugin]
 ---
 分享使用`vim` 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體`cscope`和`ctags`來trace C語言的程式碼。
 
+* 致謝，感謝網友[Scott](http://scottt.tw/)介紹vim register概念，[葉闆](http://yodalee.blogspot.tw/)介紹的tagbar，和Kyle Lin介紹的airline。
+
 ## 目錄
 
 * [測試環境](#vtr-env)
@@ -15,6 +17,9 @@ categories: [C, vim, cscope, ctags, vundle, Vim Plugin]
      *  [安裝Vundle](#vtr-set-insvd)
      *  [我安裝的Vundle Plugins](#vtr-set-vdplg)
         * [編輯器相關](#vtr-set-vdplg-ed)
+            * [airline](#vtr-set-vdplg-al)
+                * [安裝準備](#vtr-set-vdplg-al-pre)
+                * [設定airline](#vtr-set-vdplg-al-set)
             * [indentLine](#vtr-set-vdplg-ed-itl)
             * [vim-better-whitespace](#vtr-set-vdplg-vbw)
         * [Trace 程式碼相關](#vtr-set-vdplg-tr)
@@ -23,6 +28,7 @@ categories: [C, vim, cscope, ctags, vundle, Vim Plugin]
             * [taglist](#vtr-set-vdplg-tr-tl)
             * [nerdtree](#vtr-set-vdplg-tr-nd)
             * [Trinity](#vtr-set-vdplg-tr-tri)
+            * [tagbar](#vtr-set-vdplg-tr-tgb)
      *  [和Plugin 無關的設定](#vtr-set-misc)
         * [編輯器和顯示特殊字元相關設定](#vtr-set-misc-ed)
         * [Indent相關設定](#vtr-set-misc-ind)
@@ -68,7 +74,7 @@ VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Jan  2 2014 19:39:47)
 ### 安裝Vundle
 `Vundle`是vim plugin 管理工具，他可以透過URL, github, 以及local FS等方式安裝甚至更新Plugin。類似的工具還有不少，我只是挑看到的第一個而已。
 
-`Vundle`常用的指令如下，還蠻容易望文生義所以我就不解試了
+`Vundle`常用的指令如下，還蠻容易望文生義所以我就不解釋了
 
 * `:PluginList`
 * `:PluginInstall`
@@ -80,7 +86,7 @@ VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Jan  2 2014 19:39:47)
 * 首先你要下載`Vundle`，指令如下
 `git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim`
 
-* 接下來在你的.vimrc加入下面這段，我是從[官方網頁](https://github.com/VundleVim/Vundle.vim)改的，其實只是把他的範例Plugin幹掉並加上分隔線
+* 接下來在你的.vimrc加入下面這段，我是從[官方網頁](https://github.com/VundleVim/Vundle.vim)改的，其實只是把他的範例Plugin幹掉並加上分隔線及分隔線內的註解而已
 
 ```text .vimrc 要加的部份
 "====================================================================
@@ -104,11 +110,14 @@ Plugin 'VundleVim/Vundle.vim'
 "===============================================================
 Plugin 'Yggdroot/indentLine'
 Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'vim-airline/vim-airline'
+Plugin 'tpope/vim-fugitive'
 Plugin 'chazy/cscope_maps'
 Plugin 'vim-scripts/taglist.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'wesleyche/SrcExpl'
 Plugin 'wesleyche/Trinity'
+Plugin 'majutsushi/tagbar'
 
 "====================================================================
 " Run vundle
@@ -129,7 +138,7 @@ filetype plugin indent on    " required
 " Put your non-Plugin stuff after this line
 ```
 
-注意上面的這幾行statement，你要新增或移除Plugin就是改這個地方。這些Plugin將會在後面介紹。剛好我要安裝的Plugin都是在[GitHub](https://github.com)上開發或有mirror。而`Vundle`可以用直接指定Plugin 專案在GitHub相對路徑即可安裝。這些描述也是`Vundle`載入Plugin　的順序，沒寫對順序有可能有相依問題請自行注意。
+注意下面列出的這幾行statements，你要新增或移除Plugin就是改這個地方。這些Plugin將會在後面介紹。剛好我要安裝的Plugin都是在[GitHub](https://github.com)上開發或有mirror。而`Vundle`可以用直接指定Plugin 專案在GitHub相對路徑即可安裝。這些描述也是`Vundle`載入Plugin　的順序，沒寫對順序有可能有相依問題請自行注意。
 
 例如`https://github.com/Yggdroot/indentLine` 就寫成`Yggdroot/indentLine`
 
@@ -139,11 +148,14 @@ filetype plugin indent on    " required
 "===============================================================
 Plugin 'Yggdroot/indentLine'
 Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'vim-airline/vim-airline'
+Plugin 'tpope/vim-fugitive'
 Plugin 'chazy/cscope_maps'
 Plugin 'vim-scripts/taglist.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'wesleyche/SrcExpl'
 Plugin 'wesleyche/Trinity'
+Plugin 'majutsushi/tagbar'
 ```
 
 * 確定新增/刪除Plugin後，就可以執行vim/gvim，使用下面命令
@@ -157,12 +169,59 @@ Plugin 'wesleyche/Trinity'
 <a name="vtr-set-vdplg-ed"></a>
 #### 編輯器相關
 
+<a name="vtr-set-vdplg-al"></a>
+##### airline
+
+<a name="vtr-set-vdplg-al-pre"></a>
+###### 安裝準備
+先看圖，圖中最下方的那行就是airline，可以顯示一些有用的資訊
+<img src=/images/vim_ind11.jpg>
+
+由左到右我們可以看到Vim 模式，Git branch 等資訊。以及一些比較特別的符號，這表示我們需要
+
+* 讓airline取得git資訊
+* 讓airline取得特別符號
+
+也就是說，在安裝`airline`前要做一些前置動作如下
+
+* 讓airline取得git資訊
+    * 很簡單，安裝`vim-fugitive` plugin即可
+* 讓airline取得特別符號
+這也不難，就是安裝特殊字型，並且設定GUI時存取這些字型。方式如下
+
+**取得字型**
+
+```text
+git clone https://github.com/powerline/fonts
+```
+
+**安裝字型**
+
+```text
+cd fonts && ./install.sh
+```
+
+** .vimrc中指定安裝的字型 **
+
+```text
+set guifont=Inconsolata\ for\ Powerline\ 20
+```
+
+<a name="vtr-set-vdplg-al-set"></a>
+###### 設定airline
+把下面的資料放入`.vimrc`即可
+
+```text
+let g:airline_powerline_fonts = 1
+set laststatus=2
+```
+
 <a name="vtr-set-vdplg-ed-itl"></a>
 ##### indentLine
 當Ident為空白增加以下的Indent 對齊參考資線
 <img src=/images/vim_ind2.jpg>
 
-**注意此Plugin在Ident為tab同時又顯示tab時自動失效**
+**注意此Plugin在Ident為tab同時又加上顯示tab字元時自動失效，目前workaround就是顯示tab字元為`|`，接下來以`.`延伸作為辨別。範例如下：**
 <img src=/images/vim_ind1.jpg>
 
 <a name="vtr-set-vdplg-vbw"></a>
@@ -176,7 +235,7 @@ trailing-space-and-whats-the-difference-between-it-and-a-blank)顯示成明顯�
 
 <a name="vtr-set-vdplg-tr-cm"></a>
 ##### cscope_maps
-簡單來說，把cscope指令對應到Hot key
+簡單來說，就是把cscope指令對應到Hot key
 
 先列出find部份的指令
 ```text
@@ -242,6 +301,22 @@ nmap <F11> :TrinityToggleNERDTree<CR>
 以下是按下`F8` 的畫面
 <img src=/images/vim_ind8.jpg>
 
+<a name="vtr-set-vdplg-tr-tgb"></a>
+##### tagbar
+網友推荐的taglist改良版 plugin，為什麼不換掉taglist呢？因為我喜歡source explorer。除了安裝Plugin外，我也順便設定按下`F7`可以切換，設定如下。
+
+```
+"====================================================================
+" Tagbar Settings
+"====================================================================
+" Open and close the tagbar separately 
+nmap <F7> :TagbarToggle<CR> 
+```
+
+以下是按下`F7` 的畫面，可以注意右邊視窗會更進一步地顯示資料結構的成員名稱
+<img src=/images/vim_ind10.jpg>
+
+
 <a name="vtr-set-misc"></a>
 ### 和Plugin 無關的設定
 以下都加在`.vimrc中`，建議加到`Vundle`設定結束後以確保可能會用到的Plugin已經啟動
@@ -294,6 +369,10 @@ nmap <F11> :TrinityToggleNERDTree<CR>
 ## 參考資料
 
 * [Vundle Github](https://github.com/VundleVim/Vundle.vim)
+* [vim-airline](https://github.com/vim-airline/vim-airline)
+* [vim-fugitive](https://github.com/tpope/vim-fugitive)
+* [Powerline fonts](https://github.com/powerline/fonts)
+* [Tagbar](https://majutsushi.github.io/tagbar/)
 * [indentLine](https://github.com/Yggdroot/indentLine)
 * [Vim Better Whitespace Plugin](https://github.com/ntpeters/vim-better-whitespace)
 * [cscope maps](https://github.com/chazy/cscope_maps)
@@ -312,11 +391,13 @@ nmap <F11> :TrinityToggleNERDTree<CR>
 <a name="vtr-pkg"></a>
 ## 懶人包
 
-* 安裝相關軟體和Vundle
+* 安裝相關軟體，Vundle和airline字型
 
 ```text
 sudo apt-get install exuberant-ctags cscope vim-gtk git
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+git clone https://github.com/powerline/fonts
+cd fonts && ./install.sh
 ```
 
 * 剪貼下面的文字並放到 ~/.vimrc
@@ -343,11 +424,14 @@ Plugin 'VundleVim/Vundle.vim'
 "===============================================================
 Plugin 'Yggdroot/indentLine'
 Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'vim-airline/vim-airline'
+Plugin 'tpope/vim-fugitive'
 Plugin 'chazy/cscope_maps'
 Plugin 'vim-scripts/taglist.vim'
 Plugin 'scrooloose/nerdtree'
 Plugin 'wesleyche/SrcExpl'
 Plugin 'wesleyche/Trinity'
+Plugin 'majutsushi/tagbar'
 
 "====================================================================
 " Run vundle
@@ -368,6 +452,12 @@ filetype plugin indent on    " required
 " Put your non-Plugin stuff after this line
 
 "====================================================================
+" Tagbar Settings
+"====================================================================
+" Open and close the tagbar separately 
+nmap <F7> :TagbarToggle<CR> 
+
+"====================================================================
 " Trinity Settings
 "====================================================================
 " Open and close all the three plugins on the same time 
@@ -383,12 +473,18 @@ nmap <F10> :TrinityToggleTagList<CR>
 nmap <F11> :TrinityToggleNERDTree<CR> 
 
 "====================================================================
+" Airline settings
+"====================================================================
+let g:airline_powerline_fonts = 1
+set laststatus=2
+
+"====================================================================
 " Editor and display Settings
 "====================================================================
 colorscheme koehler         " Color for gvim
 
 set hlsearch                " Highlight search
-set guifont=inconsolata\ 20 " Font 
+set guifont=Inconsolata\ for\ Powerline\ 20 " Font 
 set cursorline              " Hight background at current cursor line
 set nu                      " Display line numbers
 
@@ -397,7 +493,7 @@ set colorcolumn=80
 highlight ColorColumn guibg=#202020
 
 " Show tabs
-set listchars=tab:»\ 
+set listchars=tab:\|.
 set list
 
 "====================================================================
@@ -415,7 +511,7 @@ vnoremap > >gv
 "====================================================================
 " MISC Settings
 "====================================================================
-" Shared with primary selection
+" Shared unamed regitered with primary selection
 set clipboard+=unnamed
 ```
 
