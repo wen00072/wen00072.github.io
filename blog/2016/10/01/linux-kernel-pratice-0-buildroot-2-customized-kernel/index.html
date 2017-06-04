@@ -1,0 +1,1199 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>(過期) Linux Kernel Pratice 0: Buildroot (2/2) - 自行編譯kernel - My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="感謝Scott 大大糾正，選錯平台，這篇使用了ARMv4指令集的測試平台。請大家忽略，正確的版本將會之後更新! 前情提要 上一篇提到，設定實習環境的目標有： 可以使用ARM 平台。一方面追求流行，一方面我不想再開x86這個副本
+可以方便地建立ARM平台的Linux Rootfs和kernel版本 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/blog/2016/10/01/linux-kernel-pratice-0-buildroot-2-customized-kernel/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">(過期) Linux Kernel Pratice 0: Buildroot (2/2) - 自行編譯kernel</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-10-01T09:40:54+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>9:40 am</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h3><font color="red">感謝Scott 大大糾正，選錯平台，這篇使用了ARMv4指令集的測試平台。請大家忽略，正確的版本將會之後更新!</font></h3>
+
+<h2>前情提要</h2>
+
+<p><a href="blog/2016/09/27/linux-kernel-pratice-0-buildroot-setup-with-qemu/">上一篇</a>提到，設定實習環境的目標有：</p>
+
+<ol>
+<li>可以使用ARM 平台。一方面追求流行，一方面我不想再開x86這個副本</li>
+<li>可以方便地建立ARM平台的Linux Rootfs和kernel版本</li>
+<li>可以方便地更改指定要編譯的Kernel版本</li>
+<li>透過Qemu ，使用2的Rootfs和kernel開機</li>
+<li>透過Qemu和搭配的工具可以分析Linux kernel的run time 行為</li>
+</ol>
+
+
+<p>今天就是來解決3 的項目。更細分的話，這次目標是</p>
+
+<ol>
+<li>使用官方Linux kernel 編譯Versatile</li>
+<li>編譯出來的kernel binary可以在Qemu上順利載入</li>
+<li>編譯出來的kernel binary可以順利的載入buildroot產生的rootfs，以及網路介面和相關設備</li>
+</ol>
+
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#lk0_1_del_env">測試環境</a></li>
+<li><a href="#lk0_1_del_dl">下載Linux Kernel Source</a></li>
+<li><a href="#lk0_1_del_conf">設定和編譯</a>
+
+<ul>
+<li><a href="#lk0_1_del_conf_sw">切換版本</a></li>
+<li><a href="#lk0_1_del_conf_arm_def">設定ARM Versatile預設config</a></li>
+<li><a href="#lk0_1_del_conf_qemu">設定Qemu VM支援的硬體</a></li>
+<li><a href="#lk0_1_del_conf_build">編譯</a>
+
+<ul>
+<li><a href="#lk0_1_del_conf_build_broot">Buildroot</a></li>
+<li><a href="#lk0_1_del_conf_build_lk">Linux kernel</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#lk0_1_del_test">測試</a></li>
+<li><a href="#lk0_1_del_ref">參考資料</a></li>
+<li><a href="#lk0_1_del_app">附錄</a>
+
+<ul>
+<li><a href="#lk0_1_del_app_brot">使用Buildroot 內建套件指定編譯Linux kernel 4.2.2</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="lk0_1_del_env"></a></p>
+
+<h2>測試環境</h2>
+
+<p>做組裝的最重要的原則之一就是要能夠reproduce，所以交代測試環境是一定要的</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.5 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ git --version
+</span><span class='line'>git version 2.10.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>buildroot 版本
+
+<ul>
+<li>commit hash: <code>14b24726a81b719b35fee70c8ba8be2d682a7313</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="lk0_1_del_dl"></a></p>
+
+<h2>下載Linux Kernel Source</h2>
+
+<p>沒啥好講的，就剪貼指令吧</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="lk0_1_del_conf"></a></p>
+
+<h2>設定和編譯</h2>
+
+<p>東西下載完不是就閉著眼睛開幹，因為我們在開始編譯前需要</p>
+
+<ol>
+<li>切換到你想要研究的版本</li>
+<li>如果不是x86，你需要指定平台</li>
+<li>細項Kernel config設定</li>
+</ol>
+
+
+<p>那麼就來見招拆招吧</p>
+
+<p><a name="lk0_1_del_conf_sw"></a></p>
+
+<h3>切換版本</h3>
+
+<p>非常簡單，先<code>git tag</code>，切過去就好。我要切到4.4.2就是</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>git tag                 <span class="c"># 找你要的版本</span>
+</span><span class='line'>git checkout v4.4.2     <span class="c"># 切到tag</span>
+</span><span class='line'>git checkout -b v4.4.2  <span class="c"># 理論上會這邊改東改西，就先開branch吧</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="lk0_1_del_conf_arm_def"></a></p>
+
+<h3>設定ARM Versatile預設config</h3>
+
+<p>先講結論</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>make <span class="nv">ARCH</span><span class="o">=</span>arm versatile_defconfig
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>開始<del>沒人要看</del>的解釋吧。基本上也亂看找出來的，簡單講一下當初的「脈絡」</p>
+
+<ol>
+<li>我知道我們平台是versatile，所以就<code>find | grep versatile</code>。從一堆檔案中我看到有趣的檔案<code>./arch/arm/configs/versatile_defconfig</code>。</li>
+<li>接下來就是要找make 的時候怎麼和這個檔案勾起來。網路上找一下會發現一個變數<code>ARCH</code>，剩下就試看看<code>make ARCH=arm versatile_defconfig</code>，能不能動，可以動所以打完收工。</li>
+</ol>
+
+
+<p>然後你就知道</p>
+
+<ol>
+<li>Linux kernel source中有些平台會提供default config</li>
+<li>透過<code>ARCH</code>可以讓make時自動參考這些檔案產生config</li>
+</ol>
+
+
+<p><a name="lk0_1_del_conf_qemu"></a></p>
+
+<h3>設定Qemu VM支援的硬體</h3>
+
+<p><font color="red"><strong>建議不要把buildroot compile cache打開。我花了很多時間在kernel 編譯後Qemu還是沒有使用編譯後的kernel的問題，最後發現關閉buildroot compile cache問題就消失了。</strong></font></p>
+
+<p>如果閉著眼睛開始<a href="#lk0_1_del_conf_build">編譯</a>，你會很高興地發現可以開機了，但是接下來就會很失望的發現kernel panic，原因是認不出開機的disk。</p>
+
+<p>之所以會發生這樣的原因是因為Linux kernel 提供的default config選項和buildroot 給Qemu的kernel 選項不同(<a href="#lk0_1_del_app_brot">參考</a>)，比對buildroot 開機畫面，會發現他們有偵測到兩個硬體，分別是</p>
+
+<ol>
+<li>SCSI 控制器，用來辨認rootfs</li>
+<li>Realtek 8139 網路卡，不用我解釋吧</li>
+</ol>
+
+
+<p>那麼我們這邊直接把這兩個加上去就收工沒錯吧？答案是對也不對，因為這兩個東西會和其他的部份有關。</p>
+
+<p>以下是我用笨方式一個一個試出來需要開啟的東西，不一定最簡潔甚至正確，但是他可以開機就是了。要注意不要編成module，編譯的細節我假設讀者都知道，如果完全不懂可能要找一下新手入門資訊了。另外我列出的選項是Kernel <code>4.4.2</code>下的選項，請自行斟酌。</p>
+
+<p>記得<strong>請用<code>make ARCH=arm menuconfig</code>更改設定</strong></p>
+
+<ol>
+<li>PCI bus，原因是SCSI控制器和網路卡是PCI bus介面，不開就沒有不會看到這些選項。</li>
+<li>SCSI 包括
+
+<ul>
+<li>SSCI device</li>
+<li>Disk</li>
+<li>我有開Generic，懶得關掉看會不會出問題了</li>
+<li>SCSI low-level drivers -> SYM53C8XX Version 2 SCSI support</li>
+</ul>
+</li>
+<li>Network device support
+
+<ul>
+<li>Ethernet driver suppor -> Realtek devices
+
+<ul>
+<li>RealTek RTL-8139 C+ PCI Fast Ethernet Adapter support</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>要支援buildroot預設的device node管理方式。有興趣的可以看<a href="https://buildroot.org/downloads/manual/manual.html#_dev_management">這邊</a>
+
+<ul>
+<li>Device Drivers -> Generic Driver Options ->
+
+<ul>
+<li>Maintain a devtmpfs filesystem to mount at /dev</li>
+<li>Automount devtmpfs at /dev, after the kernel mounted the rootfs</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>File system 要支援ext2，原因是buildroot產生的是ext2檔案格式</li>
+<li>tmpfs要開啟
+
+<ul>
+<li>File systems -> Pseudo filesystems
+
+<ul>
+<li>Tmpfs virtual memory file system support (former shm fs)</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+
+<p>建議順便巡一下其他kernel選項，用不到的可以關一下。比如說<code>MTD</code>，一堆有的沒的網卡，音效支援之類的。</p>
+
+<p><a name="lk0_1_del_conf_build"></a></p>
+
+<h3>編譯</h3>
+
+<p><a name="lk0_1_del_conf_build_broot"></a></p>
+
+<h4>Buildroot</h4>
+
+<ol>
+<li><code>make menuconfig</code>
+
+<ul>
+<li>Toolchain -> Custom kernel headers series
+
+<ul>
+<li>改成你現在Linux 版本</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>make</code></li>
+</ol>
+
+
+<p><a name="lk0_1_del_conf_build_lk"></a></p>
+
+<h4>Linux kernel</h4>
+
+<p>指令如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>make <span class="nv">CROSS_COMPILE</span><span class="o">=</span>/tmp/buildroot/output/host/usr/bin/arm-buildroot-linux-gnueabi- <span class="nv">ARCH</span><span class="o">=</span>arm <span class="nv">V</span><span class="o">=</span><span class="m">1</span> bzImage
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這其實就是<code>make bzImage</code>的囉唆版，多了</p>
+
+<ul>
+<li><code>ARCH=arm</code>
+
+<ul>
+<li>指定ARM平台</li>
+</ul>
+</li>
+<li><code>CROSS_COMPILE=..</code>
+
+<ul>
+<li>Cross compile prefix，既然我們使用buildroot內建toolchain，就用他們來編譯kernel</li>
+</ul>
+</li>
+<li><code>V=1</code>
+
+<ul>
+<li>身為組裝工，沒看到編譯指令訊息跳出來就會沒安全感</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="lk0_1_del_test"></a></p>
+
+<h2>測試</h2>
+
+<p>這邊卡關的原因是預設的buildroot (Linux kernel 4.7)使用qemu載入的時候需要指定device tree檔案。但是在Linux 4.4.2下面指定device tree檔案反而無法順利開機。我怎麼知道到的？撈git commit log去看的。</p>
+
+<p>剩下就剪貼了</p>
+
+<p><strong>我在buildroot top目錄執行的</strong>，你要嘛就切到buildroot目錄下，要嘛就指定<code>-drive file</code>到你自己rootfs的路徑</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>qemu-system-arm -M versatilepb -kernel /tmp/kernel/linux-stable/arch/arm/boot/zImage -drive <span class="nv">file</span><span class="o">=</span>output/images/rootfs.ext2,if<span class="o">=</span>scsi,format<span class="o">=</span>raw -append <span class="s2">&quot;root=/dev/sda console=ttyAMA0,115200&quot;</span> -serial stdio -net nic,model<span class="o">=</span>rtl8139 -net use
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>單純提出來一個參數表示這是我編譯出來的kernel而不是buildroot的</p>
+
+<ul>
+<li><code>-kernel /tmp/kernel/linux-stable/arch/arm/boot/zImage</code></li>
+</ul>
+
+
+<p>開機節錄畫面如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Uncompressing Linux... done, booting the kernel.
+</span><span class='line'>Booting Linux on physical CPU 0x0
+</span><span class='line'>Linux version 4.4.2 (user@host) (gcc version 4.8.5 (Buildroot 2016.11-git-00439-g14b2472) ) #2 Fri Sep 30 22:46:53 CST 2016
+</span><span class='line'>CPU: ARM926EJ-S [41069265] revision 5 (ARMv5TEJ), cr=00093177
+</span><span class='line'>CPU: VIVT data cache, VIVT instruction cache
+</span><span class='line'>Machine: ARM-Versatile PB
+</span><span class='line'>Memory policy: Data cache writeback
+</span><span class='line'>sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+</span><span class='line'>Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 32512
+</span><span class='line'>Kernel command line: root=/dev/sda console=ttyAMA0,115200
+</span><span class='line'>PID hash table entries: 512 (order: -1, 2048 bytes)
+</span><span class='line'>Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
+</span><span class='line'>Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
+</span><span class='line'>Memory: 125956K/131072K available (2780K kernel code, 148K rwdata, 776K rodata, 128K init, 79K bss, 5116K reserved, 0K cma-reserved)
+</span><span class='line'>Virtual kernel memory layout:
+</span><span class='line'>    vector  : 0xffff0000 - 0xffff1000   (   4 kB)
+</span><span class='line'>    fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
+</span><span class='line'>    vmalloc : 0xc8800000 - 0xff800000   ( 880 MB)
+</span><span class='line'>    lowmem  : 0xc0000000 - 0xc8000000   ( 128 MB)
+</span><span class='line'>    modules : 0xbf000000 - 0xc0000000   (  16 MB)
+</span><span class='line'>      .text : 0xc0008000 - 0xc038158c   (3558 kB)
+</span><span class='line'>      .init : 0xc0382000 - 0xc03a2000   ( 128 kB)
+</span><span class='line'>      .data : 0xc03a2000 - 0xc03c7300   ( 149 kB)
+</span><span class='line'>       .bss : 0xc03c7300 - 0xc03daf2c   (  80 kB)
+</span><span class='line'>NR_IRQS:224
+</span><span class='line'>VIC @f1140000: id 0x00041190, vendor 0x41
+</span><span class='line'>FPGA IRQ chip 0 &quot;SIC&quot; @ f1003000, 13 irqs, parent IRQ: 63
+</span><span class='line'>clocksource: timer3: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275 ns
+</span><span class='line'>Console: colour dummy device 80x30
+</span><span class='line'>Calibrating delay loop... 641.43 BogoMIPS (lpj=3207168)
+</span><span class='line'>pid_max: default: 32768 minimum: 301
+</span><span class='line'>Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>CPU: Testing write buffer coherency: ok
+</span><span class='line'>Setting up static identity map for 0x8400 - 0x8458
+</span><span class='line'>devtmpfs: initialized
+</span><span class='line'>VFP support v0.3: implementor 41 architecture 1 part 10 variant 9 rev 0
+</span><span class='line'>clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+</span><span class='line'>NET: Registered protocol family 16
+</span><span class='line'>DMA: preallocated 256 KiB pool for atomic coherent allocations
+</span><span class='line'>Serial: AMBA PL011 UART driver
+</span><span class='line'>dev:f1: ttyAMA0 at MMIO 0x101f1000 (irq = 44, base_baud = 0) is a PL011 rev1
+</span><span class='line'>console [ttyAMA0] enabled
+</span><span class='line'>dev:f2: ttyAMA1 at MMIO 0x101f2000 (irq = 45, base_baud = 0) is a PL011 rev1
+</span><span class='line'>dev:f3: ttyAMA2 at MMIO 0x101f3000 (irq = 46, base_baud = 0) is a PL011 rev1
+</span><span class='line'>fpga:09: ttyAMA3 at MMIO 0x10009000 (irq = 70, base_baud = 0) is a PL011 rev1
+</span><span class='line'>PCI core found (slot 11)
+</span><span class='line'>PCI host bridge to bus 0000:00
+</span><span class='line'>pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
+</span><span class='line'>pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff pref]
+</span><span class='line'>pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+</span><span class='line'>pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+</span><span class='line'>PCI: bus0: Fast back to back transfers disabled
+</span><span class='line'>pci 0000:00:0c.0: BAR 6: assigned [mem 0x60000000-0x6003ffff pref]
+</span><span class='line'>pci 0000:00:0d.0: BAR 2: assigned [mem 0x50000000-0x50001fff]
+</span><span class='line'>pci 0000:00:0d.0: BAR 1: assigned [mem 0x50002000-0x500023ff]
+</span><span class='line'>pci 0000:00:0c.0: BAR 0: assigned [io  0x1000-0x10ff]
+</span><span class='line'>pci 0000:00:0c.0: BAR 1: assigned [mem 0x50002400-0x500024ff]
+</span><span class='line'>pci 0000:00:0d.0: BAR 0: assigned [io  0x1400-0x14ff]
+</span><span class='line'>vgaarb: loaded
+</span><span class='line'>SCSI subsystem initialized
+</span><span class='line'>clocksource: Switched to clocksource timer3
+</span><span class='line'>NET: Registered protocol family 2
+</span><span class='line'>TCP established hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>TCP: Hash tables configured (established 1024 bind 1024)
+</span><span class='line'>UDP hash table entries: 256 (order: 0, 4096 bytes)
+</span><span class='line'>UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)
+</span><span class='line'>NET: Registered protocol family 1
+</span><span class='line'>NetWinder Floating Point Emulator V0.97 (double precision)
+</span><span class='line'>futex hash table entries: 256 (order: -1, 3072 bytes)
+</span><span class='line'>Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
+</span><span class='line'>io scheduler noop registered
+</span><span class='line'>io scheduler deadline registered
+</span><span class='line'>io scheduler cfq registered (default)
+</span><span class='line'>pl061_gpio dev:e4: PL061 GPIO chip @0x101e4000 registered
+</span><span class='line'>pl061_gpio dev:e5: PL061 GPIO chip @0x101e5000 registered
+</span><span class='line'>pl061_gpio dev:e6: PL061 GPIO chip @0x101e6000 registered
+</span><span class='line'>pl061_gpio dev:e7: PL061 GPIO chip @0x101e7000 registered
+</span><span class='line'>clcd-pl11x dev:20: PL110 rev0 at 0x10120000
+</span><span class='line'>clcd-pl11x dev:20: Versatile hardware, VGA display
+</span><span class='line'>Console: switching to colour frame buffer device 80x60
+</span><span class='line'>sym53c8xx 0000:00:0d.0: enabling device (0100 -&gt; 0103)
+</span><span class='line'>sym0: &lt;895a&gt; rev 0x0 at pci 0000:00:0d.0 irq 94
+</span><span class='line'>sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+</span><span class='line'>sym0: SCSI BUS has been reset.
+</span><span class='line'>scsi host0: sym-2.2.3
+</span><span class='line'>sym0: unknown interrupt(s) ignored, ISTAT=0x5 DSTAT=0x80 SIST=0x0
+</span><span class='line'>scsi 0:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.0. PQ: 0 ANSI: 5
+</span><span class='line'>scsi target0:0:0: tagged command queuing enabled, command queue depth 16.
+</span><span class='line'>scsi target0:0:0: Beginning Domain Validation
+</span><span class='line'>scsi target0:0:0: Domain Validation skipping write tests
+</span><span class='line'>scsi target0:0:0: Ending Domain Validation
+</span><span class='line'>scsi 0:0:2:0: CD-ROM            QEMU     QEMU CD-ROM      2.0. PQ: 0 ANSI: 5
+</span><span class='line'>scsi target0:0:2: tagged command queuing enabled, command queue depth 16.
+</span><span class='line'>scsi target0:0:2: Beginning Domain Validation
+</span><span class='line'>scsi target0:0:2: Domain Validation skipping write tests
+</span><span class='line'>scsi target0:0:2: Ending Domain Validation
+</span><span class='line'>sd 0:0:0:0: Attached scsi generic sg0 type 0
+</span><span class='line'>scsi 0:0:2:0: Attached scsi generic sg1 type 5
+</span><span class='line'>8139cp: 8139cp: 10/100 PCI Ethernet driver v1.3 (Mar 22, 2004)
+</span><span class='line'>8139cp 0000:00:0c.0: enabling device (0100 -&gt; 0103)
+</span><span class='line'>8139cp 0000:00:0c.0 eth0: RTL-8139C+ at 0xc8974400, 52:54:00:12:34:56, IRQ 93
+</span><span class='line'>sd 0:0:0:0: [sda] 12666 512-byte logical blocks: (6.48 MB/6.18 MiB)
+</span><span class='line'>sd 0:0:0:0: [sda] Write Protect is off
+</span><span class='line'>sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn&#39;t support DPO or FUA
+</span><span class='line'>sd 0:0:0:0: [sda] Attached SCSI disk
+</span><span class='line'>mousedev: PS/2 mouse device common for all mice
+</span><span class='line'>NET: Registered protocol family 17
+</span><span class='line'>input: AT Raw Set 2 keyboard as /devices/fpga:06/serio0/input/input0
+</span><span class='line'>input: ImExPS/2 Generic Explorer Mouse as /devices/fpga:07/serio1/input/input2
+</span><span class='line'>VFS: Mounted root (ext2 filesystem) readonly on device 8:0.
+</span><span class='line'>devtmpfs: mounted
+</span><span class='line'>Freeing unused kernel memory: 128K (c0382000 - c03a2000)
+</span><span class='line'>EXT2-fs (sda): warning: mounting unchecked fs, running e2fsck is recommended
+</span><span class='line'>Starting logging: OK
+</span><span class='line'>Initializing random number generator... random: dd urandom read with 48 bits of entropy available
+</span><span class='line'>done.
+</span><span class='line'>Starting network: 8139cp 0000:00:0c.0 eth0: link up, 100Mbps, full-duplex, lpa 0x05E1
+</span><span class='line'>udhcpc: started, v1.25.0
+</span><span class='line'>udhcpc: sending discover
+</span><span class='line'>udhcpc: sending select for 10.0.2.15
+</span><span class='line'>udhcpc: lease of 10.0.2.15 obtained, lease time 86400
+</span><span class='line'>deleting routers
+</span><span class='line'>adding dns 10.0.2.3
+</span><span class='line'>OK
+</span><span class='line'>
+</span><span class='line'>Welcome to Buildroot
+</span><span class='line'>buildroot login: root
+</span><span class='line'>#
+</span><span class='line'>random: nonblocking pool is initialized
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="lk0_1_del_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://buildroot.org/downloads/manual/manual.html">Buildroot 官方手冊</a></li>
+</ul>
+
+
+<p><a name="lk0_1_del_app"></a></p>
+
+<h2>附錄</h2>
+
+<p><a name="lk0_1_del_app_brot"></a></p>
+
+<h3>使用Buildroot 內建套件指定編譯Linux kernel 4.2.2</h3>
+
+<p>當初會去做這個主要是因為開始編譯獨立的Linux kernel前要先驗證buildroot自己編的Linux 4.4.2是否可以用qemu開機。另外的好處的就是buildroot編譯出來的kernel config (在output/build/linux-4.4.2/.config) 可以和你自己的kernel config比對。</p>
+
+<p>步驟如下</p>
+
+<ol>
+<li><a href="#lk0_1_del_app_brot_step1">找出buildroot 4.4.x的kernel config</a></li>
+<li><a href="#lk0_1_del_app_brot_step2">更改buildroot config指定使用Linux 4.4.2</a></li>
+<li><a href="#lk0_1_del_app_brot_step3">測試驗證</a></li>
+</ol>
+
+
+<p><a name="lk0_1_del_app_brot_step1"></a></p>
+
+<h3>找出buildroot 4.4.x的kernel config</h3>
+
+<p>前篇有<a href="blog/2016/09/27/linux-kernel-pratice-0-buildroot-setup-with-qemu/#lk0_ins_set">提到</a><code>make qemu_arm_versatile_defconfig</code>這個指令和<code>buildroot/board/qemu/arm-versatile</code>這個目錄。我們進一步去看一下這個目錄</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>ls -gG board/qemu/arm-versatile
+</span><span class='line'>total 8
+</span><span class='line'>-rw-rw-r-- <span class="m">1</span> <span class="m">890</span> Sep <span class="m">30</span> 21:32 linux-4.7.config
+</span><span class='line'>-rw-rw-r-- <span class="m">1</span> <span class="m">404</span> Sep <span class="m">30</span> 21:32 readme.txt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>直接破梗</p>
+
+<ul>
+<li>readme.txt 告訴你怎麼用qemu 開機</li>
+<li>linux-4.7.config 是Linux kernel config</li>
+</ul>
+
+
+<p>所以我會去<code>git log .</code>，撈看看有沒有Linux kernel 4.4.x的資料。果然給我看到一個commit</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>commit 93c640f00537d40fd25280c4c2c60f3b30808256
+</span><span class='line'>Author: Gustavo Zacarias &lt;gustavo@zacarias.com.ar&gt;
+</span><span class='line'>Date:   Sun Feb 7 18:19:13 2016 -0300
+</span><span class='line'>
+</span><span class='line'>    configs/qemu: bump to the latest linux versions
+</span><span class='line'>...
+</span><span class='line'>    arm_versatile           4.4.1           2.3.0   YES     OK
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>剩下就是使用git切到該commit，撈出資料，另存新檔。我把他存在
+<code>/tmp/linux-4.4.config</code></p>
+
+<p><a name="lk0_1_del_app_brot_step2"></a></p>
+
+<h3>更改buildroot config指定使用Linux 4.4.2</h3>
+
+<ul>
+<li>make menuconfig
+
+<ul>
+<li>Kernel -> Kernel version -> Custom version</li>
+<li>Kernel -> Kernel version: 填 4.4.2</li>
+<li>Kernel -> Kernel configuration -> Using a custom (def)config file</li>
+<li>Kernel -> Configuration file path: 填<code>/tmp/linux-4.4.config</code></li>
+</ul>
+</li>
+<li>make</li>
+</ul>
+
+
+<p><a name="lk0_1_del_app_brot_step3"></a></p>
+
+<h3>測試驗證</h3>
+
+<p>根據buildroot/board/qemu/arm-versatile中4.4.2版時的readme.txt，qemu指令執行如下，基本上就是不去載入device tree檔案。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>qemu-system-arm -M versatilepb -kernel output/images/zImage -drive <span class="nv">file</span><span class="o">=</span>output/images/rootfs.ext2,if<span class="o">=</span>scsi,format<span class="o">=</span>raw -append <span class="s2">&quot;root=/dev/sda console=ttyAMA0,115200&quot;</span> -serial stdio -net nic,model<span class="o">=</span>rtl8139 -net user
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>以下是開機畫面</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Uncompressing Linux... done, booting the kernel.
+</span><span class='line'>Booting Linux on physical CPU 0x0
+</span><span class='line'>Linux version 4.4.2 (user@host) (gcc version 4.8.5 (Buildroot 2016.11-git-00439-g14b2472) ) #1 Fri Sep 30 22:36:58 CST 2016
+</span><span class='line'>CPU: ARM926EJ-S [41069265] revision 5 (ARMv5TEJ), cr=00093177
+</span><span class='line'>CPU: VIVT data cache, VIVT instruction cache
+</span><span class='line'>Machine: ARM-Versatile PB
+</span><span class='line'>Memory policy: Data cache writeback
+</span><span class='line'>sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+</span><span class='line'>Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 32512
+</span><span class='line'>Kernel command line: root=/dev/sda console=ttyAMA0,115200
+</span><span class='line'>PID hash table entries: 512 (order: -1, 2048 bytes)
+</span><span class='line'>Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
+</span><span class='line'>Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
+</span><span class='line'>Memory: 125264K/131072K available (3246K kernel code, 158K rwdata, 880K rodata, 120K init, 198K bss, 5808K reserved, 0K cma-reserved)
+</span><span class='line'>Virtual kernel memory layout:
+</span><span class='line'>    vector  : 0xffff0000 - 0xffff1000   (   4 kB)
+</span><span class='line'>    fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
+</span><span class='line'>    vmalloc : 0xc8800000 - 0xff800000   ( 880 MB)
+</span><span class='line'>    lowmem  : 0xc0000000 - 0xc8000000   ( 128 MB)
+</span><span class='line'>    modules : 0xbf000000 - 0xc0000000   (  16 MB)
+</span><span class='line'>      .text : 0xc0008000 - 0xc040fdcc   (4128 kB)
+</span><span class='line'>      .init : 0xc0410000 - 0xc042e000   ( 120 kB)
+</span><span class='line'>      .data : 0xc042e000 - 0xc04559e0   ( 159 kB)
+</span><span class='line'>       .bss : 0xc04559e0 - 0xc04873a8   ( 199 kB)
+</span><span class='line'>SLUB: HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+</span><span class='line'>NR_IRQS:224
+</span><span class='line'>VIC @f1140000: id 0x00041190, vendor 0x41
+</span><span class='line'>FPGA IRQ chip 0 &quot;SIC&quot; @ f1003000, 13 irqs, parent IRQ: 63
+</span><span class='line'>clocksource: timer3: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275 ns
+</span><span class='line'>Console: colour dummy device 80x30
+</span><span class='line'>Calibrating delay loop... 637.74 BogoMIPS (lpj=3188736)
+</span><span class='line'>pid_max: default: 32768 minimum: 301
+</span><span class='line'>Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>CPU: Testing write buffer coherency: ok
+</span><span class='line'>Setting up static identity map for 0x8400 - 0x8458
+</span><span class='line'>devtmpfs: initialized
+</span><span class='line'>clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+</span><span class='line'>NET: Registered protocol family 16
+</span><span class='line'>DMA: preallocated 256 KiB pool for atomic coherent allocations
+</span><span class='line'>Serial: AMBA PL011 UART driver
+</span><span class='line'>dev:f1: ttyAMA0 at MMIO 0x101f1000 (irq = 44, base_baud = 0) is a PL011 rev1
+</span><span class='line'>console [ttyAMA0] enabled
+</span><span class='line'>dev:f2: ttyAMA1 at MMIO 0x101f2000 (irq = 45, base_baud = 0) is a PL011 rev1
+</span><span class='line'>dev:f3: ttyAMA2 at MMIO 0x101f3000 (irq = 46, base_baud = 0) is a PL011 rev1
+</span><span class='line'>fpga:09: ttyAMA3 at MMIO 0x10009000 (irq = 70, base_baud = 0) is a PL011 rev1
+</span><span class='line'>PCI core found (slot 11)
+</span><span class='line'>PCI host bridge to bus 0000:00
+</span><span class='line'>pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
+</span><span class='line'>pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff pref]
+</span><span class='line'>pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+</span><span class='line'>pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+</span><span class='line'>PCI: bus0: Fast back to back transfers disabled
+</span><span class='line'>pci 0000:00:0c.0: BAR 6: assigned [mem 0x60000000-0x6003ffff pref]
+</span><span class='line'>pci 0000:00:0d.0: BAR 2: assigned [mem 0x50000000-0x50001fff]
+</span><span class='line'>pci 0000:00:0d.0: BAR 1: assigned [mem 0x50002000-0x500023ff]
+</span><span class='line'>pci 0000:00:0c.0: BAR 0: assigned [io  0x1000-0x10ff]
+</span><span class='line'>pci 0000:00:0c.0: BAR 1: assigned [mem 0x50002400-0x500024ff]
+</span><span class='line'>pci 0000:00:0d.0: BAR 0: assigned [io  0x1400-0x14ff]
+</span><span class='line'>vgaarb: loaded
+</span><span class='line'>SCSI subsystem initialized
+</span><span class='line'>clocksource: Switched to clocksource timer3
+</span><span class='line'>NET: Registered protocol family 2
+</span><span class='line'>TCP established hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
+</span><span class='line'>TCP: Hash tables configured (established 1024 bind 1024)
+</span><span class='line'>UDP hash table entries: 256 (order: 0, 4096 bytes)
+</span><span class='line'>UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)
+</span><span class='line'>NET: Registered protocol family 1
+</span><span class='line'>futex hash table entries: 256 (order: -1, 3072 bytes)
+</span><span class='line'>Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
+</span><span class='line'>io scheduler noop registered
+</span><span class='line'>io scheduler deadline registered
+</span><span class='line'>io scheduler cfq registered (default)
+</span><span class='line'>clcd-pl11x dev:20: PL110 rev0 at 0x10120000
+</span><span class='line'>clcd-pl11x dev:20: Versatile hardware, VGA display
+</span><span class='line'>Console: switching to colour frame buffer device 80x30
+</span><span class='line'>sym53c8xx 0000:00:0d.0: enabling device (0100 -&gt; 0103)
+</span><span class='line'>sym0: &lt;895a&gt; rev 0x0 at pci 0000:00:0d.0 irq 94
+</span><span class='line'>sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+</span><span class='line'>sym0: SCSI BUS has been reset.
+</span><span class='line'>scsi host0: sym-2.2.3
+</span><span class='line'>sym0: unknown interrupt(s) ignored, ISTAT=0x5 DSTAT=0x80 SIST=0x0
+</span><span class='line'>scsi 0:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.0. PQ: 0 ANSI: 5
+</span><span class='line'>scsi target0:0:0: tagged command queuing enabled, command queue depth 16.
+</span><span class='line'>scsi target0:0:0: Beginning Domain Validation
+</span><span class='line'>scsi target0:0:0: Domain Validation skipping write tests
+</span><span class='line'>scsi target0:0:0: Ending Domain Validation
+</span><span class='line'>scsi 0:0:2:0: CD-ROM            QEMU     QEMU CD-ROM      2.0. PQ: 0 ANSI: 5
+</span><span class='line'>scsi target0:0:2: tagged command queuing enabled, command queue depth 16.
+</span><span class='line'>scsi target0:0:2: Beginning Domain Validation
+</span><span class='line'>scsi target0:0:2: Domain Validation skipping write tests
+</span><span class='line'>scsi target0:0:2: Ending Domain Validation
+</span><span class='line'>8139cp: 8139cp: 10/100 PCI Ethernet driver v1.3 (Mar 22, 2004)
+</span><span class='line'>8139cp 0000:00:0c.0: enabling device (0100 -&gt; 0103)
+</span><span class='line'>8139cp 0000:00:0c.0 eth0: RTL-8139C+ at 0xc8978400, 52:54:00:12:34:56, IRQ 93
+</span><span class='line'>sd 0:0:0:0: [sda] 12666 512-byte logical blocks: (6.48 MB/6.18 MiB)
+</span><span class='line'>sd 0:0:0:0: [sda] Write Protect is off
+</span><span class='line'>sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn&#39;t support DPO or FUA
+</span><span class='line'>mousedev: PS/2 mouse device common for all mice
+</span><span class='line'>sd 0:0:0:0: [sda] Attached SCSI disk
+</span><span class='line'>NET: Registered protocol family 10
+</span><span class='line'>sit: IPv6 over IPv4 tunneling driver
+</span><span class='line'>NET: Registered protocol family 17
+</span><span class='line'>input: AT Raw Set 2 keyboard as /devices/fpga:06/serio0/input/input0
+</span><span class='line'>input: ImExPS/2 Generic Explorer Mouse as /devices/fpga:07/serio1/input/input2
+</span><span class='line'>EXT4-fs (sda): couldn&#39;t mount as ext3 due to feature incompatibilities
+</span><span class='line'>EXT4-fs (sda): mounting ext2 file system using the ext4 subsystem
+</span><span class='line'>EXT4-fs (sda): mounted filesystem without journal. Opts: (null)
+</span><span class='line'>VFS: Mounted root (ext2 filesystem) readonly on device 8:0.
+</span><span class='line'>devtmpfs: mounted
+</span><span class='line'>Freeing unused kernel memory: 120K (c0410000 - c042e000)
+</span><span class='line'>EXT4-fs (sda): warning: mounting unchecked fs, running e2fsck is recommended
+</span><span class='line'>EXT4-fs warning (device sda): ext4_update_dynamic_rev:717: updating to rev 1 because of new feature flag, running e2fsck is recommended
+</span><span class='line'>EXT4-fs (sda): re-mounted. Opts: block_validity,barrier,user_xattr,errors=remount-ro
+</span><span class='line'>Starting logging: OK
+</span><span class='line'>Initializing random number generator... random: dd urandom read with 43 bits of entropy available
+</span><span class='line'>done.
+</span><span class='line'>Starting network: 8139cp 0000:00:0c.0 eth0: link up, 100Mbps, full-duplex, lpa 0x05E1
+</span><span class='line'>udhcpc: started, v1.25.0
+</span><span class='line'>udhcpc: sending discover
+</span><span class='line'>udhcpc: sending select for 10.0.2.15
+</span><span class='line'>udhcpc: lease of 10.0.2.15 obtained, lease time 86400
+</span><span class='line'>deleting routers
+</span><span class='line'>adding dns 10.0.2.3
+</span><span class='line'>OK
+</span><span class='line'>
+</span><span class='line'>Welcome to Buildroot
+</span><span class='line'>buildroot login: root
+</span><span class='line'>#
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Wen Liao</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-10-01T09:40:54+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>9:40 am</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/guo-qi/'>過期</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2016/10/01/linux-kernel-pratice-0-buildroot-2-customized-kernel/" data-via="" data-counturl="http://wen00072.github.io/blog/2016/10/01/linux-kernel-pratice-0-buildroot-2-customized-kernel/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/09/27/linux-kernel-pratice-0-buildroot-setup-with-qemu/" title="Previous Post: (過期) Linux Kernel Pratice 0: Buildroot (1/2)">&laquo; (過期) Linux Kernel Pratice 0: Buildroot (1/2)</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2016/10/03/locate-function-source-code-via-gdb/" title="Next Post: 使用gdb 靜態分析C 語言名稱和參數相同函數的原始檔位置">使用gdb 靜態分析C 語言名稱和參數相同函數的原始檔位置 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://wen00072.github.io/blog/2016/10/01/linux-kernel-pratice-0-buildroot-2-customized-kernel/';
+        var disqus_url = 'http://wen00072.github.io/blog/2016/10/01/linux-kernel-pratice-0-buildroot-2-customized-kernel/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

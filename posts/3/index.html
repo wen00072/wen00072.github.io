@@ -1,0 +1,2524 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="Banana Pi是一套ARMv7為處理器的開發版。一般來說照官方網頁把IMAGE燒到SD卡，外接鍵盤、滑鼠、HDMI螢幕，再通電即可透過GUI設定網路。 由於手上沒有任何外接設備，只有USB轉RS232線和USB WiFi。因此我只能在這樣的設備上設定網路，設定完成後就可以透過ssh &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/posts/3/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu/">在Banana Pi設定WPA2-PSK無線網路</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-12-03T20:50:34+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>8:50 pm</span></time>
+        
+           | <a href="/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Banana Pi是一套ARMv7為處理器的開發版。一般來說照官方網頁把IMAGE燒到SD卡，外接鍵盤、滑鼠、HDMI螢幕，再通電即可透過GUI設定網路。</p>
+
+<p>由於手上沒有任何外接設備，只有USB轉RS232線和USB WiFi。因此我只能在這樣的設備上設定網路，設定完成後就可以透過ssh server從外面連進去版子了。</p>
+
+<p>照例先描述環境</p>
+
+<p>HOST端</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ minicom --version
+</span><span class='line'>minicom version 2.7 (compiled Jan  1 2014)
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>設備端，假設你已經將系統燒入到SD卡中</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h2>接上TTY</h2>
+
+<p>首先你要有一條RS232轉USB的設備，上頭有TX/RX/GND/VCC，VCC在這邊用不到。
+<img src="/files/banana_pi/DSC_0026.jpg" title="RS232轉USB線"></p>
+
+<p>版子上面其實已經幫你把腳位標示好了，上面有TX/RX和GND如下：
+<img src="/files/banana_pi/DSC_0030.jpg" title="Banana Pi RS232接腳"></p>
+
+<p>剩下的就是把線路接起來。由於版子已經裝上外框，我有用鑷子協助連接線路。
+<img src="/files/banana_pi/DSC_0024.jpg" title="接上訊號線"></p>
+
+<p>線路接完後，將USB接上你的HOST，檢查下面幾項</p>
+
+<ul>
+<li>下<code>dmesg</code>確認HOST找到<code>/dev/ttyUSBn</code>（n為0開始的正整數）</li>
+<li>確認你的終端機（我用minicom）設備指定<code>/dev/ttyUSBn</code>（n為0開始的正整數）</li>
+<li>確認你的終端機（我用minicom）參數為115200 BPS，8N1，軟體硬體流量控制關閉</li>
+</ul>
+
+
+<p>開啟你的終端機軟體，然後版子通電。當終端機畫面進入提示符號，請輸入帳號密碼。Banana Pi有預設的帳號密碼請自行上網查詢。</p>
+
+<h2>設定無線網路</h2>
+
+<p>Ubuntu 是透過<code>/etc/network/interface</code>去設定網路介面。這邊我們可以分成兩個部份討論</p>
+
+<h3>設定無線網路介面</h3>
+
+<p>首先你要下<code>ifconfig -a</code>看看你的無線網路介面名稱是什麼。我這邊是<code>wlan2</code>，為什麼不是<code>wlan0</code>，不要問我。</p>
+
+<p>接下來就是修改<code>/etc/network/interface</code>，先貼上我網路參考的部份</p>
+
+<figure class='code'><figcaption><span>/etc/network/interface</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>auto wlan2
+</span><span class='line'>
+</span><span class='line'>allow-hotplug wlan2
+</span><span class='line'>iface wlan2 inet dhcp
+</span><span class='line'>wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>大概解釋一下</p>
+
+<ul>
+<li><code>auto</code>：<code>ifup</code>指令有<code>-a</code>參數會把有<code>auto</code>的網路介面全部bring up (bring up請自行估狗)</li>
+<li><code>allow-hotplug</code>：當kernel偵測到該網路介面被接上會自動bring up該網路介面，<a href="https://www.debian.org/doc/manuals/debian-reference/ch05.en.html">出處</a></li>
+<li><code>iface wlan2 inet dhcp</code>：指定網路介面<code>wlan2</code>使用<code>TCP/IP</code>，動態分配IP</li>
+<li><code>wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf</code>：找不到最原始出處，網路上就算是<a href="https://wiki.debian.org/WiFi/HowToUse">Debian官方文件</a>也直接拿來用而已，<code>man -K wpa-conf</code>也找不到。不過字面上不太難猜，就是指定wpa 會吃的config檔案路徑。</li>
+</ul>
+
+
+<h3>設定無線網路連線</h3>
+
+<p>前面有看到設定wpa的config檔案，接下來就來設定吧。我這邊是沒有該config檔，所以要自己新增一個。基本上就是設定SSID，密碼，加密方式，以及說明是否你要連的AP是否沒有broadcast SSID等。這邊我只是<a href="https://coderwall.com/p/v290ta/raspberry-pi-wifi-setup-with-wpa2-psk-aes">參考這邊</a>，有興趣的人可以自行鑽研。</p>
+
+<figure class='code'><figcaption><span>/etc/wpa_supplicant/wpa_supplicant.conf</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+</span><span class='line'>update_config=1
+</span><span class='line'>
+</span><span class='line'>network={
+</span><span class='line'>ssid=&quot;AP的SSID&quot;
+</span><span class='line'>scan_ssid=1 # 如果你的AP 是沒有broadcast SSID就要加這個
+</span><span class='line'>psk=&quot;你的AP 密碼(passphase)&quot;
+</span><span class='line'>proto=RSN
+</span><span class='line'>key_mgmt=WPA-PSK
+</span><span class='line'>pairwise=CCMP
+</span><span class='line'>auth_alg=OPEN
+</span><span class='line'>}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>設定完畢確認連線正常、有安裝sshd後，剩下就透過ssh操作版子了。祝好運！</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/11/29/notes-of-lao-jie-li-mian-gong-fa-pian/">空間母語 - 老街立面工法篇</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-11-29T00:11:13+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>12:11 am</span></time>
+        
+           | <a href="/blog/2015/11/29/notes-of-lao-jie-li-mian-gong-fa-pian/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/11/29/notes-of-lao-jie-li-mian-gong-fa-pian/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>以下為課程筆記，我沒有專業能力判斷是否有誤解，請自行斟酌。</p>
+
+<ul>
+<li>街屋立面產生原因
+
+<ul>
+<li>新建物</li>
+<li>街道拓寬舊的建築物被切掉</li>
+</ul>
+</li>
+<li>人造石材質卷草工法
+
+<ul>
+<li>開模</li>
+<li>泥塑(堆花）</li>
+</ul>
+</li>
+<li><a href="https://zh.wikipedia.org/zh-tw/%E4%B8%89%E8%A7%92%E7%AA%97">三角窗</a>有一段時期流行將轉角切成三等份。範例如下：</li>
+</ul>
+
+
+<iframe src="https://www.google.com/maps/embed?pb=!1m0!3m2!1sen!2stw!4v1448805405994!6m8!1m7!1snHu2mYfzaDlINYr4ESvzIA!2m2!1d25.05902974020674!2d121.512159091819!3f128.17169937491852!4f29.63316041627023!5f0.7820865974627469" width="600" height="450" frameborder="0" style="border:0" allowfullscreen></iframe>
+
+
+<ul>
+<li>日治時代唯二允許的廟會 (待查證）
+
+<ul>
+<li>北港朝天宮</li>
+<li>霞海城隍廟</li>
+</ul>
+</li>
+<li>大溪老街和大稻埕以及葉金塗宅是同一批團隊建造的。
+
+<ul>
+<li>陳旺來、陳三川兄弟</li>
+</ul>
+</li>
+<li>由於日治時期和之前台灣石材缺乏，因此使用人造石頻率高於日本。</li>
+<li>人造石材料來源
+
+<ul>
+<li>宜蘭石，天然碎石，圓潤無稜角</li>
+<li>大理石震碎</li>
+</ul>
+</li>
+<li>葉宅新砌磚和舊的差別可從磚頭之間收縫粗細判斷</li>
+<li>以前的建築計費方式是按實際工作日計工錢，所以耗工時可以慢工出細活。然而現在是一份工程一筆費用，也就是說如果可以愈快完成，那麼就可以把資訊空出來接下一筆工程，因此慢工出細活反而是違反利潤的事情。</li>
+<li>角木（不知道是啥，似乎屋頂疊瓦和樓層都有用到）</li>
+<li>建築物裝修目的
+
+<ul>
+<li>防災</li>
+<li>保護結構</li>
+<li>舒適度考量</li>
+<li>美觀</li>
+</ul>
+</li>
+<li>建物裝修工法
+
+<ul>
+<li>泥塑(堆花）下面兩種原料
+
+<ul>
+<li>水泥</li>
+<li>灰泥(比較不耐久）
+
+<ul>
+<li>白灰、稻殼混合</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>剪黏
+
+<ul>
+<li>使用灰泥以及鐵絲（後期使用不繡鋼線，銅線（銅線沒記是否後期））塑形，再使用瓦片黏上</li>
+<li>使用瓷片、後來也有人有嘗試使用壓克力和玻璃</li>
+<li>現代有量產版本，有外型成品如龍，匠師只要把瓷片黏上成品即完成</li>
+<li>早期瓷片是從真的碗取出，後來有單純剪黏用瓷碗。主要差別是剪黏用瓷碗不需要立起來，所以碗面和桌面接觸，確保力起來那個部份就不用做了</li>
+</ul>
+</li>
+<li>交趾陶</li>
+<li>人造石
+
+<ul>
+<li>做廟的團隊和做街屋的團隊可以是同一批</li>
+<li>立面山牆背面其實，你知道的</li>
+<li>洗石子
+
+<ul>
+<li>將細石和水泥還有其他塗料混合後，塗上平面，待快乾時使用水沖洗平面，露出石頭部份</li>
+<li>工法
+
+<ul>
+<li>平面</li>
+<li>泥塑</li>
+<li>開模</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>斬石子
+
+<ul>
+<li>將細石和水泥還有其他塗料混合後，塗上平面，待快乾時使用斬刀依工法塗抹平面，塑造不同石材的質感。</li>
+</ul>
+</li>
+<li>磨石子</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>其他</h2>
+
+<ul>
+<li>左官職人：日本泥水匠稱呼，日本的泥塑是由左官職人負責。台灣的剪黏師傅很多也包辦泥塑部份。</li>
+<li>丁蘭尺：陰宅使用</li>
+<li>門公尺：住家使用</li>
+<li>何金龍：佳里金唐殿</li>
+<li>蘇陽水：交趾陶</li>
+<li>洪坤福：大龍峒保安宮</li>
+<li>李重耀：維修過戰後總統府建築師</li>
+<li>中和圓通寺大象</li>
+<li>郭德蘭：泥塑匠師，郭三川之子</li>
+<li><a href="https://zh.wikipedia.org/zh-tw/%E5%9C%8B%E5%88%86%E7%9B%B4%E4%B8%80">國分直一</a></li>
+<li>桃園有圓頂加泥塑的建築，一個在大溪建成商行一個在桃園市，待查詢</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/11/16/tan-tan-strip/">談談strip</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-11-16T21:32:23+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:32 pm</span></time>
+        
+           | <a href="/blog/2015/11/16/tan-tan-strip/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/11/16/tan-tan-strip/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Strip，顧名思義，就是脫脫。有興趣的紳士可以估狗strip club。那麼在Linux的binutil中strip是要脫什麼呢？先來問一下男人</p>
+
+<figure class='code'><figcaption><span>man strip</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>STRIP(1)                                    GNU Development Tools                                    STRIP(1)
+</span><span class='line'>
+</span><span class='line'>NAME
+</span><span class='line'>       strip - Discard symbols from object files.
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>用中文說，就是從object 檔中把symbol丟掉。讓我們做幾個小實驗吧。</p>
+
+<ul>
+<li><a href="#strip_test1">測試一：Strip 執行檔</a></li>
+<li><a href="#strip_test2">測試二：Strip Object檔</a></li>
+<li><a href="#strip_test3">測試三：Strip debug 資訊</a></li>
+<li><a href="#strip_test4">測試四：Strip shared library</a></li>
+</ul>
+
+
+<h2>測試環境</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>測試程式</h2>
+
+<figure class='code'><figcaption><span>main_test.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="k">extern</span> <span class="nf">test</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">test</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>test.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">char</span> <span class="o">*</span><span class="n">g_myStr</span> <span class="o">=</span> <span class="s">&quot;Wen&quot;</span><span class="p">;</span>
+</span><span class='line'><span class="k">static</span> <span class="kt">char</span> <span class="o">*</span><span class="n">gp_myStr</span> <span class="o">=</span> <span class="s">&quot;Liao&quot;</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">static</span> <span class="kt">void</span> <span class="nf">s_test</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">g_myStr</span><span class="p">,</span> <span class="n">gp_myStr</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello &quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">s_test</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>
+</span><span class='line'><span class="nv">SRCS</span><span class="o">=</span>test.c main_test.c
+</span><span class='line'><span class="nv">OBJS</span><span class="o">=</span><span class="k">$(</span>patsubst  %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>
+</span><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-g
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OBJS</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$^</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>TARGET<span class="k">)</span> <span class="k">$(</span>OBJS<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="strip_test1"></a></p>
+
+<h2>測試一：Strip 執行檔</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make clean
+</span><span class='line'>rm -rf test  test.o  main_test.o
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>cc -g   -c -o test.o test.c
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g test.o main_test.o -o test
+</span><span class='line'>
+</span><span class='line'>$ ./test
+</span><span class='line'>Hello Wen Liao
+</span><span class='line'>
+</span><span class='line'>$ ls test -gG
+</span><span class='line'>-rwxrwxr-x 1 10217 Nov 16 22:33 test
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到產生出來的執行檔有<code>10217</code> bytes。我們進一步來看執行檔的symbol。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm test
+</span><span class='line'>0000000000601050 B __bss_start
+</span><span class='line'>...
+</span><span class='line'>0000000000601040 D g_myStr
+</span><span class='line'>00000000004003e0 T _init
+</span><span class='line'>...
+</span><span class='line'>0000000000601048 d gp_myStr
+</span><span class='line'>...
+</span><span class='line'>000000000040056d T main
+</span><span class='line'>                 U printf@@GLIBC_2.2.5
+</span><span class='line'>...
+</span><span class='line'>000000000040052d t s_test
+</span><span class='line'>0000000000400553 T test
+</span><span class='line'>0000000000601050 D __TMC_END__
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那麼來看看strip後的檔案size和symbol吧。你可以看到size變小而且symbol不見了。另外上面可以比對一下<code>t</code>、<code>T</code>、<code>d</code>、<code>D</code>和<code>s_test</code>、<code>test</code>、<code>gp_myStr</code>、<code>g_myStr</code>的關係。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ strip test
+</span><span class='line'>
+</span><span class='line'>$ ./test
+</span><span class='line'>Hello Wen Liao
+</span><span class='line'>
+</span><span class='line'>$ nm test
+</span><span class='line'>nm: test: no symbols
+</span><span class='line'>
+</span><span class='line'>$ ls -gG test
+</span><span class='line'>-rwxrwxr-x 1 6296 Nov 16 22:36 test
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="strip_test2"></a></p>
+
+<h2>測試二：Strip Object檔</h2>
+
+<p>因為strip就是把object file (執行檔也是一種object file)的symbol拿掉，所以在link time需要symbol時如果該object檔案被strip過，就會發生錯誤。範例如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make clean
+</span><span class='line'>rm -rf test  test.o  main_test.o
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>cc -g   -c -o test.o test.c
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g test.o main_test.o -o test
+</span><span class='line'>
+</span><span class='line'>$ nm -a test.o
+</span><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 D g_myStr
+</span><span class='line'>0000000000000008 d gp_myStr
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>                 U printf
+</span><span class='line'>0000000000000000 r .rodata
+</span><span class='line'>0000000000000000 t s_test
+</span><span class='line'>0000000000000026 T test
+</span><span class='line'>0000000000000000 a test.c
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>
+</span><span class='line'>$ ls -gG test.o
+</span><span class='line'>-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+</span><span class='line'>
+</span><span class='line'>$ strip test.o
+</span><span class='line'>
+</span><span class='line'>$ ls -gG test.o
+</span><span class='line'>-rw-rw-r-- 1 952 Nov 16 23:03 test.o
+</span><span class='line'>
+</span><span class='line'>$ nm test.o
+</span><span class='line'>nm: test.o: no symbols
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>cc -g test.o main_test.o -o test
+</span><span class='line'>/usr/bin/ld: error in test.o(.eh_frame); no .eh_frame_hdr table will be created.
+</span><span class='line'>main_test.o: In function `main&#39;:
+</span><span class='line'>/home/wen/tmp/sandbox/main_test.c:6: undefined reference to `test&#39;
+</span><span class='line'>collect2: error: ld returned 1 exit status
+</span><span class='line'>make: *** [test] Error 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這邊我<code>nm</code>下了<code>-a</code>參數，這會顯示出<strong>所有的symbol</strong>，預設的<code>nm</code>輸出如下提供比較。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm test.o
+</span><span class='line'>0000000000000000 D g_myStr
+</span><span class='line'>0000000000000008 d gp_myStr
+</span><span class='line'>                 U printf
+</span><span class='line'>0000000000000000 t s_test
+</span><span class='line'>0000000000000026 T test
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="strip_test3"></a></p>
+
+<h2>測試三：Strip debug 資訊</h2>
+
+<p>其實只是單純要介紹<code>-d</code>參數而已</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make clean
+</span><span class='line'>rm -rf test  test.o  main_test.o
+</span><span class='line'>
+</span><span class='line'>$ ls -gG test.o
+</span><span class='line'>-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>cc -g   -c -o test.o test.c
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g test.o main_test.o -o test
+</span><span class='line'>
+</span><span class='line'>$ ls -gG test.o
+</span><span class='line'>-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+</span><span class='line'>
+</span><span class='line'>$ strip -d test.o
+</span><span class='line'>
+</span><span class='line'>$ nm -a test.o
+</span><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 D g_myStr
+</span><span class='line'>0000000000000008 d gp_myStr
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>                 U printf
+</span><span class='line'>0000000000000000 r .rodata
+</span><span class='line'>0000000000000000 t s_test
+</span><span class='line'>0000000000000026 T test
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>cc -g test.o main_test.o -o test
+</span><span class='line'>
+</span><span class='line'>$ ./test
+</span><span class='line'>Hello Wen Liao
+</span><span class='line'>
+</span><span class='line'>$ ls -gG test test.o
+</span><span class='line'>-rwxrwxr-x 1 9737 Nov 16 23:01 test
+</span><span class='line'>-rw-rw-r-- 1 1896 Nov 16 23:01 test.o
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="strip_test4"></a></p>
+
+<h2>測試四：Strip shared library</h2>
+
+<p>這邊要幹的第一件事是修改Makefile如下。主要是把test.o包裝成shared library，這個Makefile很醜，我知道。</p>
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>
+</span><span class='line'><span class="nv">SRC</span><span class="o">=</span>main_test.c
+</span><span class='line'><span class="nv">OBJ</span><span class="o">=</span><span class="k">$(</span>patsubst  %.c, %.o, <span class="k">$(</span>SRC<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">LIB_SRC</span><span class="o">=</span>test.c
+</span><span class='line'><span class="nv">LIB_OBJ</span><span class="o">=</span><span class="k">$(</span>patsubst  %.c, %.o, <span class="k">$(</span>LIB_SRC<span class="k">))</span>
+</span><span class='line'><span class="nv">LIB_NAME</span><span class="o">=</span><span class="nb">test</span>
+</span><span class='line'><span class="nv">LIB</span><span class="o">=</span>lib<span class="k">$(</span>LIB_NAME<span class="k">)</span>.so
+</span><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-g
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OBJ</span><span class="k">)</span> <span class="k">$(</span><span class="nv">LIB</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$&lt;</span> -o <span class="nv">$@</span> -L./ -l<span class="k">$(</span>LIB_NAME<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(LIB)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">LIB_OBJ</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -shared -Wl,-soname,<span class="k">$(</span>LIB<span class="k">)</span>.0 <span class="nv">$^</span> -o <span class="nv">$@</span>
+</span><span class='line'>  rm <span class="k">$(</span>LIB<span class="k">)</span>.0 <span class="o">&amp;&amp;</span> ln -sf <span class="k">$(</span>LIB<span class="k">)</span> <span class="k">$(</span>LIB<span class="k">)</span>.0
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(LIB_OBJ)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">LIB_SRC</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> -c -fPIC <span class="nv">$^</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>TARGET<span class="k">)</span> <span class="k">$(</span>OBJ<span class="k">)</span> <span class="k">$(</span>LIB_OBJ<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>自幹shared library執行程式的時候不要忘記加上<code>LD_LIBRARY_PATH</code>環境變數：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make clean
+</span><span class='line'>rm -rf test  main_test.o  test.o
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g -c -fPIC test.c
+</span><span class='line'>cc -shared -Wl,-soname,libtest.so.0 test.o -o libtest.so
+</span><span class='line'>rm libtest.so.0 &amp;&amp; ln -sf libtest.so libtest.so.0
+</span><span class='line'>cc -g main_test.o -o test -L./ -ltest
+</span><span class='line'>
+</span><span class='line'>$ LD_LIBRARY_PATH=`pwd` ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>現在來比較strip前後的shared library 差異吧。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm -a libtest.so
+</span><span class='line'>0000000000000000 a
+</span><span class='line'>0000000000201048 b .bss
+</span><span class='line'>0000000000201048 B __bss_start
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000201048 b completed.6973
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>                 w __cxa_finalize@@GLIBC_2.2.5
+</span><span class='line'>0000000000201030 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000650 t deregister_tm_clones
+</span><span class='line'>00000000000006c0 t __do_global_dtors_aux
+</span><span class='line'>0000000000200df0 t __do_global_dtors_aux_fini_array_entry
+</span><span class='line'>0000000000201030 d __dso_handle
+</span><span class='line'>0000000000200e00 d .dynamic
+</span><span class='line'>0000000000200e00 d _DYNAMIC
+</span><span class='line'>0000000000000398 r .dynstr
+</span><span class='line'>0000000000000230 r .dynsym
+</span><span class='line'>0000000000201048 D _edata
+</span><span class='line'>00000000000007c0 r .eh_frame
+</span><span class='line'>000000000000079c r .eh_frame_hdr
+</span><span class='line'>0000000000201050 B _end
+</span><span class='line'>000000000000077c T _fini
+</span><span class='line'>000000000000077c t .fini
+</span><span class='line'>0000000000200df0 t .fini_array
+</span><span class='line'>0000000000000700 t frame_dummy
+</span><span class='line'>0000000000200de8 t __frame_dummy_init_array_entry
+</span><span class='line'>0000000000000840 r __FRAME_END__
+</span><span class='line'>0000000000201000 d _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>                 w __gmon_start__
+</span><span class='line'>0000000000201038 D g_myStr
+</span><span class='line'>00000000000001f0 r .gnu.hash
+</span><span class='line'>000000000000045c r .gnu.version
+</span><span class='line'>0000000000000480 r .gnu.version_r
+</span><span class='line'>0000000000200fd0 d .got
+</span><span class='line'>0000000000201000 d .got.plt
+</span><span class='line'>0000000000201040 d gp_myStr
+</span><span class='line'>00000000000005f0 T _init
+</span><span class='line'>00000000000005f0 t .init
+</span><span class='line'>0000000000200de8 t .init_array
+</span><span class='line'>                 w _ITM_deregisterTMCloneTable
+</span><span class='line'>                 w _ITM_registerTMCloneTable
+</span><span class='line'>0000000000200df8 d .jcr
+</span><span class='line'>0000000000200df8 d __JCR_END__
+</span><span class='line'>0000000000200df8 d __JCR_LIST__
+</span><span class='line'>                 w _Jv_RegisterClasses
+</span><span class='line'>00000000000001c8 r .note.gnu.build-id
+</span><span class='line'>0000000000000610 t .plt
+</span><span class='line'>                 U printf@@GLIBC_2.2.5
+</span><span class='line'>0000000000000680 t register_tm_clones
+</span><span class='line'>00000000000004a0 r .rela.dyn
+</span><span class='line'>00000000000005a8 r .rela.plt
+</span><span class='line'>0000000000000785 r .rodata
+</span><span class='line'>0000000000000735 t s_test
+</span><span class='line'>0000000000000760 T test
+</span><span class='line'>0000000000000000 a test.c
+</span><span class='line'>0000000000000650 t .text
+</span><span class='line'>0000000000201048 d __TMC_END__
+</span><span class='line'>
+</span><span class='line'>$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 9275 Nov 16 23:47 libtest.so
+</span><span class='line'>
+</span><span class='line'>$ strip libtest.so
+</span><span class='line'>
+</span><span class='line'>$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 6104 Nov 16 23:47 libtest.so
+</span><span class='line'>
+</span><span class='line'>$ nm -a libtest.so
+</span><span class='line'>nm: libtest.so: no symbols
+</span><span class='line'>
+</span><span class='line'>$ LD_LIBRARY_PATH=`pwd` ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這邊變成有新的作業，dynamic link的時候沒有shared library沒有symbol怎麼拿到function address和全域變數？下次有看到再來解釋吧。</p>
+
+<h2>補充</h2>
+
+<p>如果編譯的程式碼有加入debug資訊，objdump在反組譯的時候可以加入<code>-S</code>參數比對原始碼對應的機械碼，對於想要研究系統細節的人應該有所幫助。簡單範例如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'> x$ make clean
+</span><span class='line'>rm -rf test  test.o  main_test.o
+</span><span class='line'>$ make
+</span><span class='line'>cc -g   -c -o test.o test.c
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g test.o main_test.o -o test
+</span><span class='line'>
+</span><span class='line'>$ objdump -S -d test
+</span><span class='line'>
+</span><span class='line'>test:     file format elf64-x86-64
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .init:
+</span><span class='line'>
+</span><span class='line'>00000000004003e0 &lt;_init&gt;:
+</span><span class='line'>  4003e0: 48 83 ec 08             sub    $0x8,%rsp
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>0000000000400553 &lt;test&gt;:
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>void test(void)
+</span><span class='line'>{
+</span><span class='line'>  400553: 55                      push   %rbp
+</span><span class='line'>  400554: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'>    printf(&quot;Hello &quot;);
+</span><span class='line'>  400557: bf 24 06 40 00          mov    $0x400624,%edi
+</span><span class='line'>  40055c: b8 00 00 00 00          mov    $0x0,%eax
+</span><span class='line'>  400561: e8 aa fe ff ff          callq  400410 &lt;printf@plt&gt;
+</span><span class='line'>    s_test();
+</span><span class='line'>  400566: e8 c2 ff ff ff          callq  40052d &lt;s_test&gt;
+</span><span class='line'>}
+</span><span class='line'>  40056b: 5d                      pop    %rbp
+</span><span class='line'>  40056c: c3                      retq
+</span><span class='line'>
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li>Binary Hacks：駭客秘傳技巧一百招</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/11/14/tai-wan-lao-jie-te-se-pian/">空間母語 - 台灣老街特色篇</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-11-14T21:32:02+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:32 pm</span></time>
+        
+           | <a href="/blog/2015/11/14/tai-wan-lao-jie-te-se-pian/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/11/14/tai-wan-lao-jie-te-se-pian/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>以下為課程筆記，我沒有專業能力判斷是否有誤解，請自行斟酌。</p>
+
+<ul>
+<li>早期職業主要分為士農工商。而
+
+<ul>
+<li>士農住三合院或四合院</li>
+<li>工商住在市區內，主要是街屋</li>
+</ul>
+</li>
+<li>本次活動主要討論街屋，三合院、四合院不在討論範圍。</li>
+<li>早期街屋考量風水，會在街道前後左右出入口安排在廟宇、山川、牆等位置，希望氣不要漏掉。</li>
+<li>台灣靠海風大、北部雨多，在這些地區會看到<a href="https://zh.wikipedia.org/zh-tw/%E4%B8%8D%E8%A6%8B%E5%A4%A9%E8%A1%97">不見天街</a>。</li>
+<li>街道的兩側的立面就像是臉一樣，各種的裝飾就像面具一樣，發揮自己的個性。</li>
+<li>樓井的樓梯入口一般來說不會面對入口方向，原因是風水考量不希望氣跑掉。</li>
+<li>過水：兩進(兩落)之間的空間，一般廚房、水井安排在這邊。</li>
+<li>陳旺來、陳三川(郭三川)：日治時期的土水師傅，曾經參與大溪老街、迪化街老街街屋、葉金塗宅立面工程。</li>
+<li>街屋中，單拱的難度比較高，沒有處理好會出現裂縫。</li>
+<li>圓形磚造柱子會使用弧線磚，該磚頭是大正年間才有產出。</li>
+<li>弧線立面是巴洛克建築元素之一。</li>
+<li>立面工法之一：使用以焦炭為主的材料，捏成丸狀，往特定區域砸，造出凹凸不平的效果。此工法可以去斗六看。</li>
+<li>立面工法之二：將黏性物質糊在平面上，再覆蓋上紙。等待一段時間後用力撕開紙張，造出凹凸不平的效果。</li>
+<li><a href="http://vr.theatre.ntu.edu.tw/fineart/architect-wt/palladio/palladio.htm">Palladio建築</a></li>
+<li>台灣工匠受日本影響
+
+<ul>
+<li>刨刀和中國不同，沒有兩邊的握柄。另外操作刨刀方向是朝身體內側刨，而不是朝身體外側刨。</li>
+<li>鋸子兩邊都有齒，一邊是粗的，用來鋸和木頭紋理同方向；而細的齒則是用來橫鋸木頭紋理方向。傳統的情況，是會有兩個鋸子，一個是粗的，另外一個是細的。</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://www.facebook.com/kjmu.foundation/photos/a.438258032864411.95777.433151266708421/961818460508363/?type=3&amp;theater">活動資訊</a></li>
+<li><a href="http://twinhall.org/">新埔鎮雙堂屋</a></li>
+<li><a href="http://nrch.culture.tw/twpedia.aspx?id=9055">台灣大百科全書：陳旺來</a></li>
+<li><a href="https://zh.wikipedia.org/zh-tw/%E5%A4%A7%E6%BA%AA%E8%80%81%E8%A1%97">Wikipedia: 大溪老街</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/11/10/lu-gang-cai-kuang-rou/">鹿港蔡爌肉</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-11-10T22:40:57+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:40 pm</span></time>
+        
+           | <a href="/blog/2015/11/10/lu-gang-cai-kuang-rou/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/11/10/lu-gang-cai-kuang-rou/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><img src="/files/lukang/P1160656.JPG" title="招牌"></p>
+
+<p>因為對於爌肉的好奇心，徵得在鹿港蔡爌肉的小岳的同意後寫出這篇訪問。小岳的攤位位置在果菜市場，從入口進入後靠文聖街方向第二間攤位。</p>
+
+<p><img src="/files/lukang/P1160405.JPG">
+<img src="/files/lukang/P1160668.JPG">
+<img src="/files/lukang/P1160669.JPG"></p>
+
+<p>小岳的長輩原本是做外燴辦桌生意，到了父親這代在鹿港頂番婆這個地方開始了爌肉生意，後來才把攤位搬到鹿港。目前攤位除了有爌肉飯、豬腳外、也有提供各式配菜和肉燥飯等料理。</p>
+
+<p>在「<a href="https://www.facebook.com/ZhangHuaXiaoShiJi/">彰化小食記</a>」這本書有提到正統的彰化爌肉是使用腿庫、三層肉部份只是備料給少數喜歡三層肉的客人。這樣的觀察可以在蔡爌肉的料理中完全驗證。接下來我們來看看爌肉的料理方式吧。</p>
+
+<p>凌晨四點多小岳一家就要起床準備開張，他們就在攤位現場料理，使用了非常先進的開放廚房概念。開張以後就開始料理菜色，大概五點多就可以點菜了。一般來說市場大概早上七點前會比較忙碌，如果估計第二天備料不足的時候，就要在早上七點多和肉商拿肉。主要是腿庫（豬大腿）、三層、還有腹部等部位的連皮肥肉。接下來把這些肉帶回後，要做料理前的處理。</p>
+
+<p>首先第一步要川燙：
+<img src="/files/lukang/P1160655.JPG" title="川燙生肉"></p>
+
+<p>川燙的時候要隨時小心不要被濺起來的滾水燙到。</p>
+
+<p><img src="/files/lukang/P1160665.JPG" title="滾燙的熱水"></p>
+
+<p>什麼時候可以起鍋也是全憑經驗。
+<img src="/files/lukang/P1160662.JPG" title="起鍋"></p>
+
+<p>起鍋後先浸冷水稍微冷卻一下後放置在另外一個臉盆內。
+<img src="/files/lukang/P1160408.JPG" title="冷卻後的豬肉"></p>
+
+<p>冷卻完畢後，就可以進入下一個切塊階段。</p>
+
+<p>切塊主要要處理三個部份</p>
+
+<h2>腿庫</h2>
+
+<ul>
+<li><p>將帶皮肥肉和瘦肉使用竹籤固定
+<img src="/files/lukang/P1160418.JPG" title="使用竹籤固定帶皮肥肉和瘦肉"></p></li>
+<li><p>帶皮肥肉不一定和瘦肉不一定是同一塊部位。照「<a href="https://www.facebook.com/ZhangHuaXiaoShiJi/">彰化小食記</a>」的說法，這樣有一個多的好處，那就是可以隨意調整肥瘦比例
+<img src="/files/lukang/P1160416.JPG" title="分開的帶皮肥肉和瘦肉1">
+<img src="/files/lukang/P1160415.JPG" title="分開的帶皮肥肉和瘦肉2"></p></li>
+</ul>
+
+
+<p>這邊有幾個特殊的部位可以介紹</p>
+
+<ul>
+<li>圈仔（摳ㄚ)
+
+<ul>
+<li>腿庫膝關節那端的部位，一隻腿庫只有兩個。
+<img src="/files/lukang/P11604081.JPG" title="圈仔部位">
+<img src="/files/lukang/P1160410.JPG" title="圈仔1">
+<img src="/files/lukang/P1160411.JPG" title="圈仔2"></li>
+</ul>
+</li>
+<li>離緣
+
+<ul>
+<li>大腿的某個部位，由肥肉包圍的含脂肪瘦肉部位，一隻腿庫只有一個。
+<img src="/files/lukang/P1160414.JPG" title="離緣"></li>
+</ul>
+</li>
+<li>腳筋
+
+<ul>
+<li>一隻腿庫只有一個。
+<img src="/files/lukang/P1160412.JPG" title="腳筋"></li>
+</ul>
+</li>
+</ul>
+
+
+<h2>三層</h2>
+
+<p><img src="/files/lukang/P1160421.JPG" title="三層肉">
+切成片狀後以竹籤固定。固定部份沒有照片。另外小岳媽媽推荐的部位照片中有標示，腿庫的離緣紋路和這邊標示很類似。</p>
+
+<h2>肉燥原料</h2>
+
+<p>直接看照片就知道了。</p>
+
+<p><img src="/files/lukang/P1160666.JPG">
+<img src="/files/lukang/P1160422.JPG">
+<img src="/files/lukang/P1160423.JPG"></p>
+
+<h2>成品欣賞時間</h2>
+
+<p>接下來就是隔天凌晨的料理時間了。因為料理如作戰不方便打擾，加上我爬不起來就跳過了。那麼就讓我們來欣賞最後的成品囉。</p>
+
+<ul>
+<li><p>爌肉加上肉燥飯
+<img src="/files/lukang/P1160401.JPG"></p></li>
+<li><p>紅糟肉飯
+<img src="/files/lukang/P1160406.JPG"></p></li>
+<li><p>腳筋
+<img src="/files/lukang/P1160659.JPG"></p></li>
+</ul>
+
+
+<h2>致謝：</h2>
+
+<p>感謝小岳慷慨允許我問東問西並且拍照、親切的小岳媽媽介紹我不同的爌肉部位、以及熱情活潑的小岳妹妹現場示範食材準備。</p>
+
+<h2>地圖</h2>
+
+<iframe width="425" height="350" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://www.openstreetmap.org/export/embed.html?bbox=120.43901950120926%2C24.04772790157008%2C120.44106870889665%2C24.04907262074934&amp;layer=mapnik&amp;marker=24.048399038221437%2C120.44004410505295" style="border: 1px solid black"></iframe>
+
+
+<p><br/><small><a href="http://www.openstreetmap.org/?mlat=24.04840&amp;mlon=120.44004#map=19/24.04840/120.44004">查看更大的地圖</a></small></p>
+
+<h2>街景</h2>
+
+<iframe src="https://www.google.com/maps/embed?pb=!1m0!3m2!1sen!2stw!4v1447339986486!6m8!1m7!1s5PniXxMM2gj_2PzE3x1w9A!2m2!1d24.04833167925234!2d120.4400708108823!3f5.490853916829565!4f-12.669155551196823!5f0.7820865974627469" width="600" height="450" frameborder="0" style="border:0" allowfullscreen></iframe>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/11/05/notes-of-taipei-walking-tour/">台北城市散步 - 老房子的秘密筆記</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-11-05T23:05:37+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:05 pm</span></time>
+        
+           | <a href="/blog/2015/11/05/notes-of-taipei-walking-tour/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/11/05/notes-of-taipei-walking-tour/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><ul>
+<li>Nov/25/2015: 收到朱禹潔老師指導信件，補充及修正了部份內容。</li>
+</ul>
+
+
+<p>感謝朱禹潔老師詳細的說明、不厭其煩地回答我的問題、和在整理筆記時提供協助。整理資料如下：</p>
+
+<h2>歷史建物定義、維護的相關法規</h2>
+
+<ul>
+<li>亞洲和西方老建物最大的差別是亞洲以木構造為主的亞洲建築物，因木材本身易損壞且須更換，與石造為主的西方建築物差別很大。1994年「奈良真實性文件」就是世界遺產組織修正以石造建築為主的真實性認定方式。</li>
+<li>台灣<strong>建築</strong>相關文化資產分類
+
+<ul>
+<li>古蹟
+
+<ul>
+<li>建築更動彈性差，就算要加入一個釘子需要成立審查委員會</li>
+</ul>
+</li>
+<li>歷史建築</li>
+<li>聚落</li>
+<li>文化景觀</li>
+<li>遺址</li>
+</ul>
+</li>
+<li>其他文化資產還有
+
+<ul>
+<li>傳統藝術</li>
+<li>民俗及有關文物</li>
+<li>古物</li>
+<li>自然地景</li>
+</ul>
+</li>
+<li>老建築管理法規有文化資產保存法和都市規劃法這兩個法規</li>
+<li>建物修復保存流程
+
+<ul>
+<li>反應/申請</li>
+<li>成立審議委員會</li>
+<li>評估條件
+
+<ul>
+<li>代表性</li>
+<li>價值</li>
+<li>建築物價值</li>
+<li>住過的人造就建築物的價值
+
+<ul>
+<li>這幾年來逐漸增多，一些名人故居指定為古蹟，或登錄為歷史建築會基於這樣的理由如蔡瑞月舞蹈研究社</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>指定為古蹟/歷史建築</li>
+<li>古蹟修復及再利用規範，整理自古蹟修復及再利用辦法
+
+<ul>
+<li>修復或再利用計畫</li>
+<li>規劃設計</li>
+<li>施工</li>
+<li>監造</li>
+<li>工作報告書</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>保存和維護是不同的面相</li>
+<li>文化資產修復的建築師事務所及營造廠原本不多，造成寡佔市場。2008年開放許多建築師事務所及營造廠具有修復設計及工程承攬資格，造成修復品質良莠不齊。曾經有廠商因為不知道量測木頭含水量而造成修復後木頭龜裂，最後只好重做。而原本的修復也是難以評估品質</li>
+</ul>
+
+
+<h2>日治時代建築特色</h2>
+
+<ul>
+<li>日本使用鋼筋混凝土時間早於米國。1923年關東大地震過後，磚造承重牆的建築被淘汰，鋼筋混凝土逐漸普及。 當初使用的鐵筋，密度和網格與今日不同 ，目前台灣文學館有樣本供人參考比對。。</li>
+<li>現在修復日式建築的紅檜是從日本進口，只是那些進口的紅檜也是台灣紅檜出口轉內銷，而且還需要特殊管道才能取得。</li>
+<li>日治時代建築分類
+
+<ul>
+<li>新藝術、式樣</li>
+<li>擬洋風/和洋風</li>
+<li>現代(指構造、建材）</li>
+<li>純日式</li>
+</ul>
+</li>
+<li>日治時代以台灣作為建築設計的實驗場，所以可以看到不同的嘗試，可行後再拿回日本使用。所以同樣的日本設計師可能在台灣的設計風格和之後在日本的設計風格差異很大。</li>
+<li>在日本一般溼度約60%，但是在台灣溼度超過60%比比皆是，甚至可以到90%。造成使用日本傳統工法的建築在台灣容易損毀。因此日治時期針對台灣潮溼的氣候在建築上的改變有
+
+<ul>
+<li>抬高地基隔絕溼氣</li>
+<li>加寬加深陽台</li>
+</ul>
+</li>
+<li>日式木造建築特點
+
+<ul>
+<li>雨淋板</li>
+<li>編竹夾泥</li>
+<li>鬼瓦/黑瓦</li>
+</ul>
+</li>
+<li>日式木造建築建造順序
+
+<ul>
+<li>磚石建立基底</li>
+<li>梁柱</li>
+<li>屋頂</li>
+<li>壁體
+
+<ul>
+<li>編竹夾泥</li>
+<li>編竹夾泥上灰</li>
+<li>雨淋板</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>鳥居分類三種
+
+<ul>
+<li>神明鳥居</li>
+<li>明神鳥居</li>
+<li>稻禾鳥居</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>其他</h2>
+
+<ul>
+<li>抿石子：山海樓使用的工法</li>
+<li>噴蛭石：米國前在台領事館有使用到的施工方式之一</li>
+<li>UNESCO：<a href="https://zh.wikipedia.org/zh-tw/%E8%81%94%E5%90%88%E5%9B%BD%E6%95%99%E8%82%B2%E3%80%81%E7%A7%91%E5%AD%A6%E5%8F%8A%E6%96%87%E5%8C%96%E7%BB%84%E7%BB%87">聯合國教育、科學及文化組織</a></li>
+<li><a href="https://zh.wikipedia.org/zh-tw/%E4%B8%89%E6%A9%8B%E7%94%BA">三橋町</a>
+
+<ul>
+<li>日治時代重要人物如乃木希典總督之母、日本總督明石元二郎和日本人的墓地，約在林森公園、康樂公園附近。戰後為臨時居住地，整頓後目前有保留兩座鳥居置於林森公園內。當初成立公園時有抗爭運動、可惜沒有保留墓地的聲音。</li>
+<li>有學員補充臨時居留區以林森北路為界，西邊為戰後新住民加上原住民配偶為主，而東邊為戰前住民北上時的聚落。</li>
+<li><a href="https://zh.wikipedia.org/zh-tw/%E6%98%8E%E7%9F%B3%E5%85%83%E4%BA%8C%E9%83%8E">明石元二郎</a>
+
+<ul>
+<li>在他任內創立台灣電力株式會社、架設縱貫鐵路、以及建立各地職業學校。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li>朱禹潔老師的補充資料</li>
+<li><a href="http://law.moj.gov.tw/LawClass/LawAll.aspx?PCode=H0170001">全國法規資料庫：文化資產保存法</a></li>
+<li><a href="http://www.moc.gov.tw/information_309_19988.html">文化部：古蹟修復及再利用辦法</a></li>
+<li><a href="http://www.taipei-walkingtour.tw/#!t-tours82/c328">台北城市散步 - 老房子的秘密導覽活動</a></li>
+<li><a href="http://alexpankimo.pixnet.net/blog/post/260474513-%E6%8A%BF%E7%9F%B3%E5%AD%90%E5%85%A9%E4%B8%89%E4%BA%8B">抿石子兩三事@ ㄚ潘的家!自建的漫漫長路! :: 痞客邦PIXNET ::</a></li>
+<li><a href="https://www.youtube.com/watch?v=tEw1eboHDTA">Youtube: 室內裝修●泥作師傅如何施作抿石子</a></li>
+<li><a href="https://zh.wikipedia.org/zh-tw/%E8%9B%AD%E7%9F%B3">Wikipedia： 蛭石</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/09/20/kai-fang-jie-tu-zi-zhu-lu-xing-de-hao-bang-shou/">開放街圖 自助旅行的好幫手投影片上線</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-09-20T00:33:25+08:00'><span class='date'><span class='date-month'>Sep</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>12:33 am</span></time>
+        
+           | <a href="/blog/2015/09/20/kai-fang-jie-tu-zi-zhu-lu-xing-de-hao-bang-shou/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/09/20/kai-fang-jie-tu-zi-zhu-lu-xing-de-hao-bang-shou/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/key/4SPxqlHI6W9za3" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/ss-52900264" title="開放街圖 自助旅行的好幫手" target="_blank">開放街圖 自助旅行的好幫手</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="8d6935b9c3014b949c05effa288d4a7b" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/08/30/zhu-jie-zhong-shi-yong-javadoc-tag/">註解中使用Javadoc Tag並將其轉成pdf 說明文件</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-08-30T14:02:01+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>2:02 pm</span></time>
+        
+           | <a href="/blog/2015/08/30/zhu-jie-zhong-shi-yong-javadoc-tag/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/30/zhu-jie-zhong-shi-yong-javadoc-tag/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>目錄</h2>
+
+<ul>
+<li><a href="#jdoc-preface">前言</a></li>
+<li><a href="#jdoc-example">測試環境和程式</a></li>
+<li><a href="#jdoc-comments">javadoc 專用註解</a>
+
+<ul>
+<li><a href="#jdoc-comments-tags">javadoc 專用註解tag節錄</a></li>
+<li><a href="#jdoc-comments-ex">套用 javadoc 範例</a></li>
+</ul>
+</li>
+<li><a href="#jdoc-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="jdoc-preface"></a></p>
+
+<h2>前言</h2>
+
+<p><a href="http://www.oracle.com/technetwork/articles/java/index-jsp-135444.html">javadoc</a> 是一套java程式碼文件產工具。它透過在程式碼註解置入javadoc專用的tag，讓自動產出的文件內容提供更詳細的資訊和美觀的呈現方式。這邊整理資訊如下</p>
+
+<p>在開始加入前，我們可以想一下你要看SDK文件會想看什麼，我自己會想到</p>
+
+<ul>
+<li>方塊圖/元件簡介</li>
+<li>函數詳細說明如
+
+<ul>
+<li>函數名稱</li>
+<li>函數功用</li>
+<li>函數參數說明</li>
+<li>函數回傳值</li>
+<li>函數使用注意事項</li>
+<li>和函數功能相關的其他函數。比如說看到<code>play</code>你會想看<code>open</code>、<code>pause</code>、<code>stop</code>、<code>seek</code>等。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>接下來看看我查到的javadoc工具能夠幫我們做到那邊吧？</p>
+
+<p>註：時間和能力有限，有些功能也許沒找到是因為自己沒看到而不代表javadoc辦不到，請讀者自行斟酌。</p>
+
+<p><a name="jdoc-example"></a></p>
+
+<h2>測試環境和程式</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>檔案和目錄結構</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree
+</span><span class='line'>.
+</span><span class='line'>├── com
+</span><span class='line'>│   └── test
+</span><span class='line'>│       └── test.java
+</span><span class='line'>├── config.properties
+</span><span class='line'>├── Makefile
+</span><span class='line'>└── pdfdoclet-1.0.3
+</span><span class='line'>    ├── build.xml
+</span><span class='line'>       ....
+</span><span class='line'>    └── jar
+</span><span class='line'>        └── pdfdoclet-1.0.3-all.jar</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>Makefile</h3>
+
+<p>就單純編譯一個java檔，以及對應的pdf文件，並使用Ubuntu 上面預設的pdf閱讀程式開啟之。pdf文件使用<a href="http://pdfdoclet.sourceforge.net/">pdfdoclet</a>產生。該套件需自行下載，我將下載的pdfdoclet解壓縮到測試程式同一層目錄中。</p>
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">SRC_PATH</span><span class="o">=</span>com/test
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="k">$(</span>SRC_PATH<span class="k">)</span>/test
+</span><span class='line'><span class="nv">SRC_FILE</span><span class="o">=</span><span class="k">$(</span>addsuffix .java, <span class="k">$(</span>TARGET<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">SRC_FILE</span><span class="k">)</span>
+</span><span class='line'>  javac <span class="nv">$^</span>
+</span><span class='line'>  javadoc -docletpath pdfdoclet-1.0.3/jar/pdfdoclet-1.0.3-all.jar <span class="se">\</span>
+</span><span class='line'>            -doclet com.tarsec.javadoc.pdfdoclet.PDFDoclet <span class="nv">$^</span> -verbose <span class="se">\</span>
+</span><span class='line'>            -pdf <span class="nv">$@</span>.pdf -config config.properties
+</span><span class='line'>  evince <span class="k">$(</span>TARGET<span class="k">)</span>.pdf
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>SRC_PATH<span class="k">)</span>/*.class <span class="k">$(</span>TARGET<span class="k">)</span>.pdf
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h3>pdfdoclet config檔案</h3>
+
+<figure class='code'><figcaption><span>config.properties</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'># Prints @author tags if set to &quot;yes&quot;.
+</span><span class='line'>tag.author=yes
+</span><span class='line'>
+</span><span class='line'># Prints @version tags if set to &quot;yes&quot;.
+</span><span class='line'>tag.version=yes
+</span><span class='line'>
+</span><span class='line'># Prints @since tags if set to &quot;yes&quot;.
+</span><span class='line'>tag.since=yes
+</span><span class='line'>
+</span><span class='line'># Show the Summary Tables if set to &quot;yes&quot;.
+</span><span class='line'>summary.table=yes
+</span><span class='line'>
+</span><span class='line'># Encrypts the document if set to &quot;yes&quot;.
+</span><span class='line'>encrypted=yes
+</span><span class='line'>
+</span><span class='line'># The following property is ignored
+</span><span class='line'># if &quot;encrypted&quot; is not set to yes.
+</span><span class='line'>allow.printing=yes
+</span><span class='line'>
+</span><span class='line'># Creates hyperlinks if set to &quot;yes&quot;.
+</span><span class='line'># For print documents, use &quot;no&quot;, so
+</span><span class='line'># there will be no underscores.
+</span><span class='line'>create.links=yes
+</span><span class='line'>
+</span><span class='line'># Creates an alphabetical index of all
+</span><span class='line'># classes and members at the end of the
+</span><span class='line'># document if set to &quot;yes&quot;.
+</span><span class='line'>create.index=yes
+</span><span class='line'>
+</span><span class='line'># Creates a navigation frame (or PDF
+</span><span class='line'># outline tree) if set to &quot;yes&quot;.
+</span><span class='line'>create.frame=yes
+</span><span class='line'>
+</span><span class='line'># Creates a title page at the beginning
+</span><span class='line'># of the document if set to &quot;yes&quot;.
+</span><span class='line'>api.title.page=yes
+</span><span class='line'>
+</span><span class='line'># Defines the title on the title page if
+</span><span class='line'># no external HTML page is used.
+</span><span class='line'>api.title=Test pdfdoeclet
+</span><span class='line'>
+</span><span class='line'># Defines the author text on the
+</span><span class='line'># title page.
+</span><span class='line'>api.author=by Wen Liao
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>測試原始碼</h3>
+
+<p>印出九九乘法表，我不會Java，更不會OO。這個程式示範了在class中呼叫另外一個class method。如果有人有發現寫不好的請指正，感恩！</p>
+
+<figure class='code'><figcaption><span>com/test/test.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">test</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">test</span> <span class="o">{</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">mul</span> <span class="o">{</span>
+</span><span class='line'>        <span class="kd">public</span> <span class="kt">int</span> <span class="nf">multiply</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">,</span> <span class="kt">int</span> <span class="n">j</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">i</span> <span class="o">*</span> <span class="n">j</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">MAX_NUM</span> <span class="o">=</span> <span class="mi">9</span><span class="o">;</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">test</span> <span class="n">my_test</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">test</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">my_test</span><span class="o">.</span><span class="na">hello</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">hello</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">mul</span> <span class="n">my_mul</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">mul</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">MAX_NUM</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">MAX_NUM</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">i</span> <span class="o">+</span> <span class="s">&quot; x &quot;</span> <span class="o">+</span> <span class="n">j</span> <span class="o">+</span> <span class="s">&quot; = &quot;</span> <span class="o">+</span> <span class="n">my_mul</span><span class="o">.</span><span class="na">multiply</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="n">j</span><span class="o">));</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="jdoc-comments"></a></p>
+
+<h2>javadoc 專用註解說明</h2>
+
+<p>還沒加入javadoc註解的pdf檔<a href="/files/javadoc-20150830/test_init.pdf">如link，應該沒病毒吧?</a>。接下來讓我們開始吧。</p>
+
+<p>要引入javadoc的註解，要加入javadoc的註解專用格式如下。</p>
+
+<figure class='code'><figcaption><span>javadoc註解</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">* 兩個星號開頭的註解，這行的第一個*可以省略</span>
+</span><span class='line'><span class="cm">*/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在介紹tag前，從參考資料中整理了一些注意事項</p>
+
+<ol>
+<li>一個javadoc 註解可以大概分成兩個部份
+
+<ul>
+<li>主要文字描述部份，描述特定的class, interface, method是做什麼，操作時有哪些需要注意的事項。</li>
+<li>tag section，除了註解開頭的<code>*</code>外，一行以<code>@</code>開頭的javadoc tag註解。所有的主要文字描述<strong>必須</strong>要放在tag section前面。
+
+<ul>
+<li>tag又可以分為
+
+<ul>
+<li>block tag，就是上面講的<code>@</code>放在行首的情形</li>
+<li>inline tag，以<code>{@java_tag_名稱 參數}</code>表示</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>第一個<code>@</code>符號出現在單行最開頭之前的所有註解，視為該註解往下最接近的method說明。</li>
+<li>註解中兩個段落以<code>&lt;p&gt;</code>間隔。</li>
+<li>javadoc註解的開頭使用簡潔的語句描述下面實體如class/method等。想像成git commit log第一行對於git log的重要性。</li>
+<li>註解中可以插入HTML語法，包括<code>&lt;a href...&gt;</code>、<code>&lt;img src=...&gt;</code>和<code>&lt;pre&gt;...&lt;/pre&gt;</code>。因為這樣，要顯示<code>&lt;</code>，<code>&amp;</code>之類字元的要使用<a href="http://www.w3schools.com/html/html_entities.asp">HTML Entities</a>如<code>&amp;amp</code>。</li>
+<li>javadoc註解文件分類
+
+<ul>
+<li>doc 文件，在class, interface, method等宣告前的註解，用來解釋該class、interface等。</li>
+<li>overview 文件，整個產出文件的簡介說明。</li>
+<li>package 文件，單個package的簡介文件。</li>
+</ul>
+</li>
+</ol>
+
+
+<p>以下是典型的javadoc 註解範例</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm">* 說明你的method</span>
+</span><span class='line'><span class="cm">* @param 參數說明，這就是一個javadoc tag，*可有可無。</span>
+</span><span class='line'><span class="cm">*/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上列第一項的規範，引起另外兩個問題：</p>
+
+<ul>
+<li>一個package的要怎麼說明呢？</li>
+<li>更大的狀況，整個套件有多個package要怎麼說明呢？</li>
+</ul>
+
+
+<p>關於上面的情況，參考文件有提到：</p>
+
+<ul>
+<li>package的說明有兩種，請二擇一
+
+<ul>
+<li>寫在package同目錄中的 <code>package-info.java</code></li>
+<li>寫在package同目錄中的 <code>package.html</code>
+
+<ul>
+<li>請把javadoc的註解格式放在<code>&lt;body&gt;&lt;/body&gt;</code>之間</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>整個套件的說明有兩種，需要寫一個html檔案，把你的說明放在裏面。並且在執行<code>javadoc</code>加入<code>-overview 你的套件html檔名</code></li>
+</ul>
+
+
+<p>很複雜嘛？看個範例，更改上面的範例</p>
+
+<ul>
+<li>Makefile，新增參數是指定<code>-overview</code>的檔案</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>新增package和overview文件的 Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">SRC_PATH</span><span class="o">=</span>com/test
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="k">$(</span>SRC_PATH<span class="k">)</span>/test
+</span><span class='line'><span class="nv">SRC_FILE</span><span class="o">=</span><span class="k">$(</span>addsuffix .java, <span class="k">$(</span>TARGET<span class="k">))</span>
+</span><span class='line'><span class="nv">SRC_FILE</span><span class="o">+=</span>package-info.java
+</span><span class='line'><span class="nv">OVERVIEW_FILE</span><span class="o">=</span>overview.html
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">SRC_FILE</span><span class="k">)</span>
+</span><span class='line'>  javac <span class="nv">$^</span>
+</span><span class='line'>  javadoc -docletpath pdfdoclet-1.0.3/jar/pdfdoclet-1.0.3-all.jar <span class="se">\</span>
+</span><span class='line'>            -doclet com.tarsec.javadoc.pdfdoclet.PDFDoclet <span class="nv">$^</span> -verbose <span class="se">\</span>
+</span><span class='line'>            -pdf <span class="nv">$@</span>.pdf -overview <span class="k">$(</span>OVERVIEW_FILE<span class="k">)</span> -config config.properties
+</span><span class='line'>  evince <span class="k">$(</span>TARGET<span class="k">)</span>.pdf
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>SRC_PATH<span class="k">)</span>/*.class <span class="k">$(</span>TARGET<span class="k">)</span>.pdf
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>新增兩個檔案</p>
+
+<ul>
+<li>overview.html</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>overview.html</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='html'><span class='line'><span class="nt">&lt;html&gt;</span>
+</span><span class='line'><span class="nt">&lt;body&gt;</span>
+</span><span class='line'>This a overview document for testing. It should supports javadoc overview tags. However, somehow my pdfdoclet did not get javadoc tag to work while javadoc generated file has no problem at all. There might some missing actions.
+</span><span class='line'>
+</span><span class='line'><span class="nt">&lt;/body&gt;</span>
+</span><span class='line'><span class="nt">&lt;/html&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>package-info.java</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>package-info.java</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * This is a page to describe your package</span>
+</span><span class='line'><span class="cm"> */</span>
+</span><span class='line'>
+</span><span class='line'><span class="kn">package</span> <span class="n">test</span><span class="o">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>現在產出的pdf檔<a href="/files/javadoc-20150830/test_overview_package_info.pdf">如link，應該沒病毒吧?</a></p>
+
+<p><a name="jdoc-comments-tags"></a></p>
+
+<h3>javadoc 專用註解tag節錄</h3>
+
+<p>偷懶不列support 版本，需要自行找尋相關資料</p>
+
+<table border="1">
+<tr>
+<th>tag名稱</th>
+<th>功能</th>
+</tr>
+<tr>
+<td>@author 作者名稱</td>
+<td>請望文生義，預設不會放在產出網頁，需要透過command line才會出現在文件中</td>
+</tr>
+<tr>
+<td>{@code 程式碼}</td>
+<td>塞入程式碼</td>
+</tr>
+<tr>
+<td>{@docRoot}</td>
+<td>將會被展開替換成文件的最上層目錄，需要link到本機相對路徑檔案時很好用</td>
+</tr>
+<tr>
+<td>@deprecated 作廢說明文字</td>
+<td>作廢的API說明</td>
+</tr>
+<tr>
+<td>{@inheritDoc}</td>
+<td>當函數宣告的參數、回傳值或是expcetion沒說明時，這邊可以指定從那邊繼承。這些繼承關係也有些預設選項，一言難盡。這邊先跳過，有興趣的請自行找資料。</td>
+</tr>
+<tr>
+<td>@param 參數名稱 說明</td>
+<td>請望文生義</td>
+</tr>
+<tr>
+<td>@return 回傳值說明</td>
+<td>請望文生義</td>
+</tr>
+<tr>
+<td>@{value}</td>
+<td>顯示註解下方變數的常數</td>
+</tr>
+<tr>
+<td nowrap="nowrap">@since 文字，通常是版號</td>
+<td>指出該method, package, class等在哪個版號後有效</td>
+</tr>
+</table>
+
+
+<p>由於有些tag放到表格不易閱讀，獨立說明如下</p>
+
+<ul>
+<li><code>{@link package_名稱.class_名稱#member_函數名稱 顯示在文件的字串}</code>
+
+<ul>
+<li>在文件中產生package<em>名稱.class</em>名稱#member_函數名稱的link</li>
+</ul>
+</li>
+<li><code>{@linkplain package_名稱.class_名稱#member_函數名稱 顯示在文件的字串}</code>
+
+<ul>
+<li>在文件中產生package<em>名稱.class</em>名稱#member_函數名稱的link。但是顯示的文字不會有link</li>
+</ul>
+</li>
+<li><code>@exception class-名稱 exception_說明</code>
+
+<ul>
+<li>應該可以望文生義，另外@throw 也是同樣效果</li>
+</ul>
+</li>
+<li><code>@see</code> 家族，有三種
+
+<ul>
+<li><code>@see "字串"</code>
+
+<ul>
+<li>請讀者參考字串</li>
+</ul>
+</li>
+<li><code>@see &lt;a href="URL#value"&gt;Link顯示名稱&lt;/a&gt;</code>
+
+<ul>
+<li>請讀者參考連結</li>
+</ul>
+</li>
+<li> <code>@see package_名稱.class_名稱#member_函數名稱 顯示名稱</code>
+
+<ul>
+<li>建立本地連結到package<em>名稱.class</em>名稱#member_函數名稱</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="jdoc-comments-ex"></a></p>
+
+<h3>套用 javadoc 範例</h3>
+
+<figure class='code'><figcaption><span>最後的檔案和目錄結構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ tree
+</span><span class='line'>.
+</span><span class='line'>├── com
+</span><span class='line'>│   └── test
+</span><span class='line'>│       └── test.java
+</span><span class='line'>├── config.properties
+</span><span class='line'>├── Makefile
+</span><span class='line'>├── overview.html
+</span><span class='line'>├── package-info.java
+</span><span class='line'>└── pdfdoclet-1.0.3
+</span><span class='line'>    ├── build.xml
+</span><span class='line'>       ....
+</span><span class='line'>    └── jar
+</span><span class='line'>        └── pdfdoclet-1.0.3-all.jar
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>加了javadoc的程式碼</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='java'><span class='line'><span class="kn">package</span> <span class="n">com</span><span class="o">.</span><span class="na">test</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/**</span>
+</span><span class='line'><span class="cm"> * A example to test javadoc tags</span>
+</span><span class='line'><span class="cm"> * &lt;p&gt;</span>
+</span><span class='line'><span class="cm"> * @see mul</span>
+</span><span class='line'><span class="cm"> * @see test.mul#multiply</span>
+</span><span class='line'><span class="cm">*/</span>
+</span><span class='line'><span class="kd">public</span> <span class="kd">class</span> <span class="nc">test</span> <span class="o">{</span>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * multiply class, used by {@link test class test}</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">class</span> <span class="nc">mul</span> <span class="o">{</span>
+</span><span class='line'>        <span class="cm">/**</span>
+</span><span class='line'><span class="cm">         * @param i operand 1</span>
+</span><span class='line'><span class="cm">         * @param j operand 2</span>
+</span><span class='line'><span class="cm">         * @return result of i * j</span>
+</span><span class='line'><span class="cm">        */</span>
+</span><span class='line'>        <span class="kd">public</span> <span class="kt">int</span> <span class="nf">multiply</span><span class="o">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">,</span> <span class="kt">int</span> <span class="n">j</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">i</span> <span class="o">*</span> <span class="n">j</span><span class="o">;</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>    <span class="cm">/**</span>
+</span><span class='line'><span class="cm">     * Number of loop in multiplication: {@value}</span>
+</span><span class='line'><span class="cm">    */</span>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">MAX_NUM</span> <span class="o">=</span> <span class="mi">9</span><span class="o">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">test</span> <span class="n">my_test</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">test</span><span class="o">();</span>
+</span><span class='line'>        <span class="n">my_test</span><span class="o">.</span><span class="na">hello</span><span class="o">();</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">hello</span><span class="o">()</span> <span class="o">{</span>
+</span><span class='line'>        <span class="n">mul</span> <span class="n">my_mul</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">mul</span><span class="o">();</span>
+</span><span class='line'>        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">MAX_NUM</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>            <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">MAX_NUM</span><span class="o">;</span> <span class="n">j</span><span class="o">++)</span> <span class="o">{</span>
+</span><span class='line'>                <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">i</span> <span class="o">+</span> <span class="s">&quot; x &quot;</span> <span class="o">+</span> <span class="n">j</span> <span class="o">+</span> <span class="s">&quot; = &quot;</span> <span class="o">+</span> <span class="n">my_mul</span><span class="o">.</span><span class="na">multiply</span><span class="o">(</span><span class="n">i</span><span class="o">,</span> <span class="n">j</span><span class="o">));</span>
+</span><span class='line'>            <span class="o">}</span>
+</span><span class='line'>        <span class="o">}</span>
+</span><span class='line'>    <span class="o">}</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>最終產出的pdf檔<a href="/files/javadoc-20150830/test_final.pdf">如link，應該沒病毒吧?</a></p>
+
+<p><a name="jdoc-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://docs.oracle.com/javase/7/docs/technotes/tools/solaris/javadoc.html">javadoc - The Java API Documentation Generator</a></li>
+<li><a href="http://www.oracle.com/technetwork/articles/java/index-137868.html">How to Write Doc Comments for the Javadoc Tool</a></li>
+<li><a href="http://pdfdoclet.sourceforge.net/running.html">Running pdfdoclet</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/08/30/using-as-slide-is-online/">GNU as 投影片上線</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-08-30T11:44:36+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:44 am</span></time>
+        
+           | <a href="/blog/2015/08/30/using-as-slide-is-online/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/30/using-as-slide-is-online/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/key/vAKND86uAQxxJj" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/gnu-as" title="GNU AS簡介" target="_blank">GNU AS簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="161641ad32e84a3893c81b2c65437720" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/08/30/upnp-slide-is-online/">UPnP 投影片上線</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-08-30T11:32:31+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:32 am</span></time>
+        
+           | <a href="/blog/2015/08/30/upnp-slide-is-online/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/30/upnp-slide-is-online/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/key/2NbiO9hlIL8aXu" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/upnp-10" title="UPnP 1.0 簡介" target="_blank">UPnP 1.0 簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="0461edaf0ae947e8b989cfb9ef670ab0" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/posts/4">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/posts/2">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,396 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Gettext | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/gettext/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[C語言中使用gettext投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/06/07/in-the-c-programming-language-using-gettext-slide-on-the-line/"/>
+    <updated>2014-06-07T05:21:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/06/07/in-the-c-programming-language-using-gettext-slide-on-the-line</id>
+    <content type="html"><![CDATA[<p><a href="http://wen00072.github.io/blog/2014/05/30/study-on-gettext">這一份</a>文件的整理出來的投影片</p>
+
+<script async class="speakerdeck-embed" data-id="1f7aa860cdd40131e1da2aa9d004a740" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[C語言中使用gettext]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/30/study-on-gettext/"/>
+    <updated>2014-05-30T07:17:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/30/study-on-gettext</id>
+    <content type="html"><![CDATA[<p>gettext 是1990年代Sun推出的軟體，用於處理Unix下面<strong>程式訊息的多國語言問題</strong>。後來GNU協會也推出了GNU gettext。本文以GNU的gettext為主。</p>
+
+<hr />
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#ov">概論</a></li>
+<li><a href="#ex">範例</a>
+
+<ul>
+<li><a href="#ex1">套用gettext到C語言程式碼</a></li>
+<li><a href="#ex2">產生pot檔</a></li>
+<li><a href="#ex3">產生正體中文po檔</a>
+
+<ul>
+<li><a href="#ex3-1">po檔補充</a></li>
+</ul>
+</li>
+<li><a href="#ex4">產生mo檔</a></li>
+<li><a href="#ex5">範例結果</a></li>
+</ul>
+</li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="ov"></a></p>
+
+<h2>概論</h2>
+
+<p><a href="http://en.wikipedia.org/wiki/File:Gettext.svg">這張圖</a>和<a href="https://www.gnu.org/software/gettext/manual/html_node/Overview.html#Overview">這張圖</a>很清楚地說明整個流程。文字解釋如下：</p>
+
+<ul>
+<li>使用者在程式碼中加料，讓gettext工具可以認出來要處理的訊息</li>
+<li>執行<code>xgettext</code>，將程式碼中要處理的訊息抽出存到<code>pot</code> (Portable Object Template)檔</li>
+<li>執行<code>msginit</code>，指定需要的語系如正體中文、日文、法文等。程式會將<code>pot</code>檔案轉成對應的<code>po</code>(Portable Object)檔</li>
+<li>執行<code>msgfmt</code>吃<code>po</code>檔產生和平台相關的文字訊息的<code>mo</code>(machine object)檔</li>
+<li>接下來如果程式碼又有新的加料訊息，就不是用<code>msginit</code><strong>產生</strong><code>pot</code>檔，而是透過<code>msgmerge</code>來<strong>更新</strong><code>pot</code>檔</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex"></a></p>
+
+<h2>範例</h2>
+
+<ul>
+<li>測試環境
+
+<ul>
+<li>Ubuntu 12.04 LTS</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex1"></a></p>
+
+<h3>套用gettext到C語言程式碼</h3>
+
+<p>講一下程式碼</p>
+
+<ul>
+<li>要include <code>locale.h</code>和<code>libintl.h</code></li>
+<li>加入<code>#define _(String) gettext(String)</code>，當有需要翻譯轉換的訊息使用。也可以直接使用<code>char * gettext (const char * msgid);</code></li>
+<li>初始部份
+
+<ul>
+<li><code>setlocale(LC_ALL, "");</code>:根據環境變數設定locale，有興趣的可以<code>man locale</code></li>
+<li><code>bindtextdomain(PACKAGE, LOCALEDIR);</code>: PACKAGE, LOCALEDIR由外部傳入的巨集，請參考下面的Makefile。想像成namespace概念，基本上就是引導系統去特定目錄去取得<code>LOCALEDIR/LC_MESSAGE/PACKAGE.mo</code>檔。有興趣的可以<code>man bindtextdomain</code>
+
+<ul>
+<li>一般來說系統上是存放在<code>/usr/share/locale</code>，然而這不是硬性規定。所以本次的Makefile故意放在local的po目錄之中，建議一定要看一下。</li>
+</ul>
+</li>
+<li><code>textdomain(PACKAGE);</code>:讀取mo檔案，讓後面的gettext可以取得LC_ALL設定對應的訊息。</li>
+</ul>
+</li>
+<li>請注意有些註解是<code>/*-</code>，和一般的不一樣，之後執行<code>xgettext</code>時可以下<code>--add-comments=-</code>抽出註解放到<code>pot</code>檔</li>
+<li>為了易讀性，拔掉錯誤檢查</li>
+</ul>
+
+
+<pre><code class="c test_gettext.c 拔掉錯誤檢查">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include &lt;locale.h&gt;
+#include &lt;libintl.h&gt;
+#define MAX_CHAR (32)
+
+int main(int argc, char **argv)
+{
+    char dest[MAX_CHAR];
+    char transport[MAX_CHAR];
+
+    /* Init gettext related APIs*/
+    setlocale(LC_ALL, "");
+    bindtextdomain(PACKAGE, LOCALEDIR);
+    textdomain(PACKAGE);
+
+    /*- Set up strings */
+    strncpy(dest, gettext("Taipei"), MAX_CHAR);
+    strncpy(transport, gettext("bus"), MAX_CHAR);
+
+    /*- Let's print out some message */
+    printf(gettext("I will go to %s by %s.\n"), dest, transport);
+
+    return 0;
+}
+</code></pre>
+
+<pre><code class="makefile Makefile">TARGET=test_gettext
+LOCALE=zh_TW
+PO_DIR=$(shell pwd)/po
+CFLAGS=-Wall -Werror -g -DPACKAGE=\"$(TARGET)\" -DLOCALEDIR=\"$(PO_DIR)\"
+OBJS=$(patsubst %, %.o, $(TARGET))
+
+all: $(TARGET).pot $(LOCALE).po $(TARGET).mo $(TARGET)
+
+$(TARGET).pot: $(TARGET).c
+    if [ ! -f $(TARGET).pot ] ; then                                \
+        xgettext -o $(TARGET).pot --add-comments=- -k_ $(TARGET).c; \
+    fi
+
+$(LOCALE).po: $(TARGET).pot
+    if [ -f $(LOCALE).po ] ; then                               \
+        msgmerge $(LOCALE).po $(TARGET).pot ;                   \
+    else                                                        \
+        msginit --locale=$(LOCALE) --input=$^ --no-translator ; \
+    fi
+
+$(TARGET).mo: $(LOCALE).po
+    mkdir -p $(PO_DIR)/$(LOCALE)/LC_MESSAGES
+    msgfmt $^ -o $(PO_DIR)/$(LOCALE)/LC_MESSAGES/$@
+
+
+%.o: %.c
+    $(CC) -o $(patsubst %.o, %, $@) $^
+
+clean:
+    rm -f *.o *~ $(TARGET) *.po *.pot *.mo
+    @echo To remove po directory, use: rm -rf $(PO_DIR)
+</code></pre>
+
+<hr />
+
+<p><a name="ex2"></a></p>
+
+<h3>產生pot檔</h3>
+
+<ul>
+<li>Makefile中的<code>xgettext -o $(TARGET).pot --add-comments=- -k_ $(TARGET).c</code>會產生pot檔。產生的pot如下，我們可以看到剛才<code>/*-</code>抽出來的註解會被加入pot檔內。另外不要忘記更改template中的metadata。</li>
+</ul>
+
+
+<p>如果是多個C檔怎麼辦呢？請用<code>-D</code>　指定目錄或是<code>-f</code>指定多個檔案</p>
+
+<pre><code class="pot test_gettext.pot"># SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR &lt;EMAIL@ADDRESS&gt;, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-05-30 23:11+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME &lt;EMAIL@ADDRESS&gt;\n"
+"Language-Team: LANGUAGE &lt;LL@li.org&gt;\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. - Set up strings
+#: test_gettext.c:22
+msgid "Taipei"
+msgstr ""
+
+#: test_gettext.c:23
+msgid "bus"
+msgstr ""
+
+#. - Let's print out some message
+#: test_gettext.c:26
+#, c-format
+msgid "I will go to %s by %s\n"
+msgstr ""
+</code></pre>
+
+<hr />
+
+<p><a name="ex3"></a></p>
+
+<h3>產生正體中文po檔</h3>
+
+<p>兩種情況</p>
+
+<ul>
+<li>還沒有po檔產生
+
+<ul>
+<li><code>msginit --locale=$(LOCALE) --input=$^ --no-translator</code>
+
+<ul>
+<li>locale會根據指定locale產生對應的po檔，以我們例子就是zh_TW.po</li>
+</ul>
+</li>
+<li><code>--no-translator</code>單純是我懶得回答互動問題，這個可有可無。</li>
+</ul>
+</li>
+<li>產生po檔，就可以分配給專業的翻譯者處理
+
+<ul>
+<li>已經翻譯過了，但是又有新的pot檔產生的話。此時需要合併以經翻譯的po檔案，產生新的po檔。新的po檔會有已經翻譯過的訊息己及新的未翻譯訊息。
+
+<ul>
+<li><code>msgmerge $(LOCALE).po $(TARGET).pot</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>這邊的翻譯過後po檔如下，幾點要注意的</p>
+
+<ul>
+<li>charset要設成<code>UTF-8</code></li>
+<li>由於語言特性，參數有可能會和英文順序不同。所以<code>I will go to Taipei by bus</code>換成正體中文可以轉成<code>我搭乘公車到台北</code>。因此，請注意gettext po檔訊息可以指定參數順序。</li>
+</ul>
+
+
+<pre><code class="po test_gettext.po"># Chinese translations for PACKAGE package.
+# Copyright (C) 2014 THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# Automatically generated, 2014.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2014-05-30 23:03+0800\n"
+"PO-Revision-Date: 2014-05-30 23:03+0800\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. - Set up strings
+#: test_gettext.c:22
+msgid "Taipei"
+msgstr "台北"
+
+#: test_gettext.c:23
+msgid "bus"
+msgstr "公車"
+
+#. - Let's print out some message
+#: test_gettext.c:26
+#, c-format
+msgid "I will go to %s by %s.\n"
+msgstr "我搭乘%2$s到%1$s。\n"
+</code></pre>
+
+<hr />
+
+<p><a name="ex3-1"></a></p>
+
+<h4>po檔補充</h4>
+
+<p>po檔主要是<code>msgid</code>和<code>msgstr</code>成對，翻譯的文字放在<code>msgstr</code>這邊。而註解以<code>#</code>開頭。</p>
+
+<p>另外gettext的工具在分析時也會使用特殊註解格式輔助產生正確的mo檔案，他們以<code>,</code>開頭，可以串接在同一行註解。列舉一些如下：</p>
+
+<ul>
+<li><code>, fuzzy</code>: 顯示翻譯可能不正確，可由翻譯者或是在<code>msgmerge</code>時產生。翻譯者review確定翻譯沒有問題需要把該註解拿掉。</li>
+<li><code>, c-format</code>：表示訊息會用到C的print format，如<code>%s</code>, <code>%d</code>等。</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex4"></a></p>
+
+<h3>產生mo檔</h3>
+
+<p>請參考Makefile部份描述：</p>
+
+<pre><code>$(TARGET).mo: $(LOCALE).po
+    mkdir -p $(PO_DIR)/$(LOCALE)/LC_MESSAGES
+    msgfmt $^ -o $(PO_DIR)/$(LOCALE)/LC_MESSAGES/$@
+</code></pre>
+
+<ul>
+<li>$^表示prerequisite而$@表示target。</li>
+<li>一開始我們先建立local的<code>$(PO_DIR)/$(LOCALE)/LC_MESSAGES/</code>，將mo黨產生在該目錄。而<code>$(PO_DIR)/$(LOCALE)</code>目錄也是一開始傳給測試原始碼的定義。</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex5"></a></p>
+
+<h3>範例結果</h3>
+
+<p>注意LC_ALL可以從<code>locale -a</code>指令列出系統支援的語系，所以這邊我們用<code>zh_TW.utf8</code>而不是<code>zh_TW</code>，有興趣的人可以自行改為<code>zh_TW</code>將會發現不會有中文顯示，有加錯誤檢查還會出現檔案找不到的錯誤訊息。</p>
+
+<p><code>text LC_ALL="en_US.utf8"
+$ LC_ALL="en_US.utf8" ./test_gettext
+I will go to Taipei by bus.
+</code></p>
+
+<p><code>text LC_ALL="zh_TW.utf8"
+$ LC_ALL="zh_TW.UTF8" ./test_gettext
+我搭乘公車到台北。
+</code></p>
+
+<p>而關於<code>, fuzzy</code>我們可以做更多的實驗。我們把zh_TW.po的Taipei更改加入<code>, fuzzy</code></p>
+
+<p><code>``text 加入</code>, fuzzy`</p>
+
+<h1>, fuzzy</h1>
+
+<p>msgid &ldquo;Taipei&rdquo;
+msgstr &ldquo;台北&rdquo;
+&#8220;`</p>
+
+<p>跑起來就結果變成</p>
+
+<pre><code>$ LC_ALL="zh_TW.utf8" ./test_gettext
+test_gettext
+我搭乘公車到Taipei。
+</code></pre>
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Gettext">Wikipedia: gettext</a></li>
+<li><a href="http://www.gnu.org/software/gettext/manual/gettext.html">gettext手冊</a></li>
+<li><a href="http://blog.roodo.com/rocksaying/archives/15171511.html">Vala with GNU gettext </a></li>
+<li><a href="http://fedoraproject.org/wiki/How_to_do_I18N_through_gettext">How to do I18N through gettext</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

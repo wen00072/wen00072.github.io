@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Getopt | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/getopt/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Linux下面的C語言使用getopt Parse Command Line參數]]></title>
+    <link href="http://wen00072.github.io/blog/2013/12/29/using-getopt-parse-command-line-parameter/"/>
+    <updated>2013-12-29T16:24:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/12/29/using-getopt-parse-command-line-parameter</id>
+    <content type="html"><![CDATA[<p>在Linux下面的C語言可以透過getopt去parse從command line傳過來的參數</p>
+
+<p><strong>使用方式基本上就是重複讀取getopt回傳option字元直到回傳-1。</strong></p>
+
+<p><strong>請注意：這只是蓋略說明，很多細節仍然需要參考manpage，例如哪些是Gnu的特別功能還有一些細節的參數操作等。</strong></p>
+
+<p>進一步細節如下：</p>
+
+<h2>大綱</h2>
+
+<ul>
+<li><a href="#%E5%8F%83%E6%95%B8%E4%BB%A5%E5%8F%8A%E8%AE%8A%E6%95%B8%E8%AA%AA%E6%98%8E">參數以及變數說明</a></li>
+<li><a href="#%E7%AF%84%E4%BE%8B%E7%A8%8B%E5%BC%8F">範例程式</a></li>
+<li><a href="#%E5%9F%B7%E8%A1%8C%E7%B5%90%E6%9E%9C">執行結果</a></li>
+<li><a href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99">參考資料</a></li>
+</ul>
+
+
+<p><a name="參數以及變數說明"></a></p>
+
+<h2>參數以及變數說明</h2>
+
+<ul>
+<li>參數
+
+<ul>
+<li><code>int argc</code>: main的argument count</li>
+<li><code>char **argv</code>: main的argument vector</li>
+<li><code>const char optstring</code>: 你的程式要支援的option及格式
+
+<ul>
+<li>option以<code>-</code>開頭，後面為單一個字元，可接參數</li>
+<li>格式
+
+<ul>
+<li>單一字元</li>
+<li>單一字元後接<code>:</code>
+
+<ul>
+<li>該option 支援參數</li>
+</ul>
+</li>
+<li>單一字元後接<code>::</code>
+
+<ul>
+<li>該option 可接參數也可不接</li>
+<li>ex: option <code>-a</code>, 參數<code>arg1</code>，下命令會是<code>./cmd -aarg1</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>範例: 支援<code>-a</code>, <code>-b</code>, <code>-c 參數</code>, <code>-d 參數</code>，<code>-e optional 參數</code>
+
+<ul>
+<li><code>"abc:d:e::"</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>變數 <strong>(僅列舉)</strong>
+
+<ul>
+<li><code>optopt</code>
+
+<ul>
+<li>如果遇到不支援的option或是不合語法的option操作，getopt會回傳<code>?</code>，然後把出問題的option放在<code>optopt</code>這個變數內</li>
+</ul>
+</li>
+<li><code>optind</code>
+
+<ul>
+<li>option index，表示getopt下一個要處理的參數。當getopt回傳<code>-1</code>後記得比較<code>optind</code>和<code>argc</code>看看還有沒有非option的參數要處理
+
+<ul>
+<li>範例 <code>./cmd -a -b 123 456</code>，跑完getopt後還有123 456要處理。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="範例程式"></a></p>
+
+<h2>範例程式</h2>
+
+<pre><code class="c test_getopt.c">#include &lt;unistd.h&gt;  /* getopt */
+#include &lt;stdio.h&gt;
+
+int main(int argc, char **argv)
+{
+    int cmd_opt = 0;
+
+    fprintf(stderr, "argc:%d\n", argc);
+    while(1) {
+        fprintf(stderr, "proces index:%d\n", optind);
+        cmd_opt = getopt(argc, argv, "abc:d:e::");
+
+        /* End condition always first */
+        if (cmd_opt == -1) {
+            break;
+        }
+
+        /* Print option when it is valid */
+        if (cmd_opt != '?') {
+            fprintf(stderr, "option:-%c\n", cmd_opt);
+        }
+
+        /* Lets parse */
+        switch (cmd_opt) {
+            /* No args */
+            case 'a':
+            case 'b':
+                break;
+
+            /* Single arg */
+            case 'c':
+            case 'd':
+                fprintf(stderr, "option arg:%s\n", optarg);
+                break;
+
+            /* Optional args */
+            case 'e':
+                if (optarg) {
+                    fprintf(stderr, "option arg:%s\n", optarg);
+                }
+                break;
+
+
+            /* Error handle: Mainly missing arg or illegal option */
+            case '?':
+                fprintf(stderr, "Illegal option:-%c\n", isprint(optopt)?optopt:'#');
+                break;
+            default:
+                fprintf(stderr, "Not supported option\n");
+                break;
+        }
+    }
+
+    /* Do we have args? */
+    if (argc &gt; optind) {
+        int i = 0;
+        for (i = optind; i &lt; argc; i++) {
+            fprintf(stderr, "argv[%d] = %s\n", i, argv[i]);
+        }
+    }
+
+    return 0;
+}
+</code></pre>
+
+<p><a name="執行結果"></a></p>
+
+<h2>執行結果</h2>
+
+<pre><code class="text result">$ ./test_getopt -a -emy_args -c dddd  123 456 7890 -b -f -d
+argc:11
+proces index:1
+option:-a
+proces index:2
+option:-e
+option arg:my_args
+proces index:3
+option:-c
+option arg:dddd
+proces index:5
+option:-b
+proces index:9
+./test_getopt: invalid option -- 'f'
+Illegal option:-f
+proces index:10
+./test_getopt: option requires an argument -- 'd'
+Illegal option:-d
+proces index:11
+argv[8] = 123
+argv[9] = 456
+argv[10] = 7890
+</code></pre>
+
+<p><a name="參考資料"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>man 3 getopt</li>
+<li>The Linux Programming Interface: Appendix B</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

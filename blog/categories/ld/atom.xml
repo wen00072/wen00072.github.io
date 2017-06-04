@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Ld | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/ld/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[GNU Ld初探]]></title>
+    <link href="http://wen00072.github.io/blog/2014/03/14/study-on-the-gnu-ld/"/>
+    <updated>2014-03-14T10:14:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/03/14/study-on-the-gnu-ld</id>
+    <content type="html"><![CDATA[<p>以前一直以為ld單純就是把<em>.a, </em>.o轉成binary，簡單測試一下發現完全不是這樣。</p>
+
+<p>測試的檔案除了Makefile以外，其他的和<a href="http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory">這邊</a>一樣</p>
+
+<p>將原本的Makefile部份</p>
+
+<pre><code class="makefile 原本的Makefile準備更動的部份">$(OUT_DIR)/$(TARGET): $(OUT_OBJS)
+    $(CC) -o $@ $^
+</code></pre>
+
+<p>改成
+<code>makefile $(CC)改成ld
+$(OUT_DIR)/$(TARGET): $(OUT_OBJS)
+    ld -o $@ $^
+</code></p>
+
+<p>一跑make就出現錯誤
+<code>text make log
+$ make
+mkdir -p build/libs/
+cc -g -MMD -I ./include -c libs/liba.c -o build/libs/liba.o
+mkdir -p build/libs/
+cc -g -MMD -I ./include -c libs/libb.c -o build/libs/libb.o
+mkdir -p build/
+cc -g -MMD -I ./include -c test.c -o build/test.o
+ld -o build/test build/libs/liba.o build/libs/libb.o build/test.o
+ld: warning: cannot find entry symbol _start; defaulting to 00000000004000b0
+build/libs/liba.o: In function `from_liba':
+./libs/liba.c:11: undefined reference to `puts'
+build/libs/libb.o: In function `from_libb':
+./libs/libb.c:11: undefined reference to `puts'
+build/test.o: In function `main':
+./test.c:10: undefined reference to `malloc'
+make: *** [build/test] Error 1
+</code></p>
+
+<p>ld 這邊再加上-lc又有其他的錯誤，看來的確是有東西隱藏在背面。因此需要有對照組，這時候<code>gcc -v</code>就可以出場了</p>
+
+<pre><code class="text gcc -v log節錄">$ gcc -v -o build/test build/libs/liba.o build/libs/libb.o build/test.o 
+Using built-in specs.
+...
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/collect2 --sysroot=/ --build-id --no-add-needed --as-needed --eh-frame-hdr -m elf_x86_64 --hash-style=gnu -dynamic-linker /lib64/ld-linux-x86-64.so.2 -z relro -o build/test /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../.. build/libs/liba.o build/libs/libb.o build/test.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o
+</code></pre>
+
+<p>可以看到gcc呼叫<a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/12">collect2</a>，而collect2會呼叫ld</p>
+
+<pre><code class="text strace collect2結果節錄">$ strace -e execve -f gcc -o build/test build/libs/liba.o build/libs/libb.o build/test.o 
+execve("/usr/bin/gcc", ["gcc", "-o", "build/test",...
+...
+execve("/usr/lib/gcc/x86_64-linux-gnu/4.6/collect2",..., "--sysroot=/",...
+...
+execve("/usr/bin/ld", ["/usr/bin/ld", "--sysroot=/", ...
+</code></pre>
+
+<p>最後的Makefile版本變成
+<figure class='code'><figcaption><span>ld最後參數</p></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">&lt;h1&gt;LD_FLAGS&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nv">LD_FLAGS</span><span class="o">=</span> <span class="se">\</span>
+</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span><span class="nv">sysroot</span><span class="o">=</span>/ <span class="se">\</span>
+</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span>build-id <span class="se">\</span>
+</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span>no-add-needed <span class="p">&amp;</span>ndash<span class="p">;</span>as-needed <span class="p">&amp;</span>ndash<span class="p">;</span>eh-frame-hdr <span class="se">\</span>
+</span><span class='line'>    -m elf_x86_64 <span class="p">&amp;</span>ndash<span class="p">;</span><span class="nb">hash</span>-style<span class="o">=</span>gnu <span class="se">\</span>
+</span><span class='line'>    -dynamic-linker /lib64/ld-linux-x86-64.so.2 <span class="se">\</span>
+</span><span class='line'>    -z relro /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o<span class="se">\</span>
+</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o <span class="se">\</span>
+</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o <span class="se">\</span>
+</span><span class='line'>    -L/usr/lib/gcc/x86_64-linux-gnu/4.6 <span class="se">\</span>
+</span><span class='line'>    -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu <span class="se">\</span>
+</span><span class='line'>    -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib <span class="se">\</span>
+</span><span class='line'>    -L/lib/x86_64-linux-gnu <span class="se">\</span>
+</span><span class='line'>    -L/lib/../lib -L/usr/lib/x86_64-linux-gnu <span class="se">\</span>
+</span><span class='line'>    -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../..<span class="se">\</span>
+</span><span class='line'>    -lgcc <span class="p">&amp;</span>ndash<span class="p">;</span>as-needed -lgcc_s <span class="p">&amp;</span>ndash<span class="p">;</span>no-as-needed -lc -lgcc <span class="p">&amp;</span>ndash<span class="p">;</span>as-needed -lgcc_s <span class="se">\</span>
+</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span>no-as-needed <span class="se">\</span>
+</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o <span class="se">\</span>
+</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Build</span> <span class="err">Rules&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'><span class="nf">&lt;p&gt;$(OUT_DIR)/$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
+</span><span class='line'>    ld -o <span class="nv">$@</span> <span class="nv">$^</span> <span class="k">$(</span>LD_FLAGS<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>結論如下</p>
+
+<ol>
+<li>gcc在build code默默處理掉很多細節</li>
+<li>gcc -v可以協助顯示更多編譯細節</li>
+</ol>
+
+
+<h2>參考資料:</h2>
+
+<p><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works">from Source to Binary: How GNU Toolchain Works</a></p>
+]]></content>
+  </entry>
+  
+</feed>

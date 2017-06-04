@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Gstreamer | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/gstreamer/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[GStreamer Application Development Manual 導讀 第一章到第十章 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/16/gstreamer-application-development-manual-introduction-to-powerpoint-in-chapters-i-to-the-tenth-line/"/>
+    <updated>2014-05-16T21:26:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/16/gstreamer-application-development-manual-introduction-to-powerpoint-in-chapters-i-to-the-tenth-line</id>
+    <content type="html"><![CDATA[<iframe src="http://www.slideshare.net/slideshow/embed_code/34371927" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px">  </div></p>
+
+<p>跑手冊Hello world範例程式如果是自行編譯Gstreamer的環境的話，要注意</p>
+
+<ul>
+<li>最少要再編譯Gstreamer-plugin-base</li>
+<li>編譯plugin時，執行<code>autogen.sh</code>或是<code>configure</code>要看一下log，找出哪些沒有被編譯的plugin還有錯誤訊息，否則Hello workd會編得過但是因為沒有相對的plugin造成無法執行。</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

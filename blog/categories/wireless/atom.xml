@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Wireless | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/wireless/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Ubuntu 12.04下面無線網路無法ifconfig Wlan0 Up的檢查]]></title>
+    <link href="http://wen00072.github.io/blog/2013/10/29/ubuntu-wireless-networks-cant-ifconfig-wlan0-up-below-to-check/"/>
+    <updated>2013-10-29T00:48:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/10/29/ubuntu-wireless-networks-cant-ifconfig-wlan0-up-below-to-check</id>
+    <content type="html"><![CDATA[<h2>錯誤訊息</h2>
+
+<pre><code>$ifconfig wlan0 up
+SIOCSIFFLAGS: Operation not possible due to RF-kill
+</code></pre>
+
+<h2>解決方式</h2>
+
+<ul>
+<li>列出RF的block狀態，如果是硬體關掉請自行打開RF開關
+
+<ul>
+<li><code>rfkill list all</code></li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code>$ rfkill list all
+8: phy1: Wireless LAN
+    Soft blocked: yes
+    Hard blocked: yes
+9: hci0: Bluetooth
+    Soft blocked: yes
+    Hard blocked: no
+</code></pre>
+
+<ul>
+<li>從軟體上面打開WIFI
+
+<ul>
+<li><code>rfkill unblock wifi</code></li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

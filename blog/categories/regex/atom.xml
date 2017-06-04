@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Regex | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/regex/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[A Brief Introduction to Regular Expression With Python 2.7.3 Standard Library 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/06/16/regular-expression-with-python-standard-library-273-slides-on-line/"/>
+    <updated>2014-06-16T16:08:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/06/16/regular-expression-with-python-standard-library-273-slides-on-line</id>
+    <content type="html"><![CDATA[<p>有點心虛，很多地方並不是全盤了解，請自行斟酌。有錯誤也請務必告知，謝謝！</p>
+
+<p>2014/Jun/18: 修正Lookahead assertion和Lookbehind assertion寫反的錯誤</p>
+
+<ul>
+<li>Speaker Deck</li>
+</ul>
+
+
+<script async class="speakerdeck-embed" data-id="4d12aea0d792013122527a02c15ca02c" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+
+<ul>
+<li>Slide Share</li>
+</ul>
+
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/35927113" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/zzz00072/regular-expression-with-python-standard-library-35927113" title="Regular Expression with Python Standard Library 2.7.3" target="_blank">Regular Expression with Python Standard Library 2.7.3</a> </strong> from <strong><a href="http://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+]]></content>
+  </entry>
+  
+</feed>

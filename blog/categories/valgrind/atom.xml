@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Valgrind | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/valgrind/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[抓漏 - Gdb 和 Valgrind 合體技]]></title>
+    <link href="http://wen00072.github.io/blog/2014/11/29/catch-the-leak-gdb-and-valgrind-siamese-juggling/"/>
+    <updated>2014-11-29T08:27:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/11/29/catch-the-leak-gdb-and-valgrind-siamese-juggling</id>
+    <content type="html"><![CDATA[<p>接續<a href="http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak">前一篇</a>的話題。在查資料的時候看到valgrind可以和gdb合作，試了一下發現他的作法和我想的不一樣。原本以為是valgrind跑出來以後直接把漏掉的call stack和program counter傳給gdb，而gdb把他當成一種中斷點。結果完全不是，他的用法是：</p>
+
+<ul>
+<li>跑valgrind，參數指定要和gdb合體，還有你要抓漏的程式</li>
+<li>另外一邊執行gdb，載入你要抓漏的程式</li>
+<li>gdb 連到valgrind</li>
+<li>從gdb中設<strong>懷疑漏掉</strong>的中斷點</li>
+<li>從gdb叫valgrind開始執行你要抓漏的程式，gdb將會中斷在你設置的中斷點</li>
+<li>在使用valgrind提供的指令，比對執行中斷點之前和之後是否有memory leak</li>
+</ul>
+
+
+<p>測試程式碼和測試環境和<a href="http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak">前一篇</a>一模一樣，所以就請自行看連結。</p>
+
+<h2>合體示範</h2>
+
+<ul>
+<li>跑valgrind，參數指定要和gdb合體，還有你要抓漏的程式
+
+<ul>
+<li><code>valgrind --vgdb=yes --vgdb-error=0 ./你要抓漏的程式</code></li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code>$ valgrind --vgdb=yes --vgdb-error=0 ./leak
+==28450== Memcheck, a memory error detector
+==28450== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==28450== Using Valgrind-3.10.0.SVN and LibVEX; rerun with -h for copyright info
+==28450== Command: ./leak
+==28450== 
+==28450== (action at startup) vgdb me ... 
+==28450== 
+==28450== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==28450==   /path/to/gdb ./leak
+==28450== and then give GDB the following command
+==28450==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=28450
+==28450== --pid is optional if only one valgrind process is running
+==28450== 
+</code></pre>
+
+<ul>
+<li><p>另外一邊執行gdb，載入你要抓漏的程式
+<code>
+$ gdb ./leak
+GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
+Copyright (C) 2014 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-linux-gnu".
+Type "show configuration" for configuration details.
+For bug reporting instructions, please see:
+&lt;http://www.gnu.org/software/gdb/bugs/&gt;.
+Find the GDB manual and other documentation resources online at:
+&lt;http://www.gnu.org/software/gdb/documentation/&gt;.
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./leak...done.
+(gdb)
+</code></p></li>
+<li><p>gdb 連到valgrind</p>
+
+<ul>
+<li><code>target remote | vgdb</code></li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code>(gdb)  target remote | vgdb
+Remote debugging using | vgdb
+relaying data between gdb and process 28450
+Reading symbols from /lib64/ld-linux-x86-64.so.2...Reading symbols from /usr/lib/debug//lib/x86_64-linux-gnu/ld-2.19.so...done.
+done.
+Loaded symbols for /lib64/ld-linux-x86-64.so.2
+0x00000000040012d0 in _start () from /lib64/ld-linux-x86-64.so.2
+(gdb) 
+</code></pre>
+
+<ul>
+<li>從gdb中設<strong>懷疑漏掉</strong>的中斷點</li>
+</ul>
+
+
+<pre><code>(gdb) b 47
+Breakpoint 1 at 0x400703: file leak.c, line 47.
+(gdb) b 48
+Breakpoint 2 at 0x400708: file leak.c, line 48.
+</code></pre>
+
+<p>47, 48行內容是
+<code>c
+47      leak1();
+48      ch_ptr = leak2();
+</code></p>
+
+<ul>
+<li>從gdb叫valgrind開始執行你要抓漏的程式，gdb將會中斷在你設置的中斷點</li>
+</ul>
+
+
+<pre><code>(gdb) c
+Continuing.
+
+Breakpoint 1, main () at leak.c:47
+47      leak1();
+(gdb)
+</code></pre>
+
+<ul>
+<li>在使用valgrind提供的指令，比對執行中斷點之前和之後是否有memory leak
+
+<ul>
+<li>詳細指令可以在gdb中打<code>help monitor</code>查詢</li>
+</ul>
+</li>
+</ul>
+
+
+<p>執行中斷點前</p>
+
+<pre><code>(gdb) monitor leak_check full reachable any
+==28450== All heap blocks were freed -- no leaks are possible
+==28450== 
+</code></pre>
+
+<p>執行下一步後再檢查</p>
+
+<pre><code>(gdb) n
+
+Breakpoint 2, main () at leak.c:48
+48      ch_ptr = leak2();
+(gdb) monitor leak_check full reachable any
+==28450== 100 bytes in 1 blocks are still reachable in loss record 1 of 1
+==28450==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==28450==    by 0x40065E: leak1 (leak.c:11)
+==28450==    by 0x400707: main (leak.c:47)
+==28450== 
+==28450== LEAK SUMMARY:
+==28450==    definitely lost: 0 bytes in 0 blocks
+==28450==    indirectly lost: 0 bytes in 0 blocks
+==28450==      possibly lost: 0 bytes in 0 blocks
+==28450==    still reachable: 100 bytes in 1 blocks
+==28450==         suppressed: 0 bytes in 0 blocks
+</code></pre>
+
+<p>多執行幾步後再看看leak情況</p>
+
+<pre><code>(gdb) n
+49      if(ch_ptr) {
+(gdb) n
+50          printf("%s", ch_ptr);
+(gdb) n
+53      lk_ptr = leak3();
+(gdb) n
+54      if(lk_ptr) {
+(gdb) monitor leak_check full reachable any
+==28450== 8 bytes in 1 blocks are still reachable in loss record 2 of 5
+==28450==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==28450==    by 0x4006C3: leak3 (leak.c:33)
+==28450==    by 0x400732: main (leak.c:53)
+==28450== 
+==28450== 14 bytes in 1 blocks are still reachable in loss record 3 of 5
+==28450==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==28450==    by 0x4EC02B9: strdup (strdup.c:42)
+==28450==    by 0x400687: leak2 (leak.c:20)
+==28450==    by 0x40070C: main (leak.c:48)
+==28450== 
+==28450== 14 bytes in 1 blocks are still reachable in loss record 4 of 5
+==28450==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==28450==    by 0x4EC02B9: strdup (strdup.c:42)
+==28450==    by 0x4006E2: leak3 (leak.c:37)
+==28450==    by 0x400732: main (leak.c:53)
+==28450== 
+==28450== 100 bytes in 1 blocks are definitely lost in loss record 5 of 5
+==28450==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==28450==    by 0x40065E: leak1 (leak.c:11)
+==28450==    by 0x400707: main (leak.c:47)
+==28450== 
+==28450== LEAK SUMMARY:
+==28450==    definitely lost: 100 bytes in 1 blocks
+==28450==    indirectly lost: 0 bytes in 0 blocks
+==28450==      possibly lost: 0 bytes in 0 blocks
+==28450==    still reachable: 36 bytes in 3 blocks
+==28450==         suppressed: 0 bytes in 0 blocks
+==28450== 
+</code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://billiob.net/blog/20140330_vgdb.html">gdb + valgrind - (billiob&rsquo;s blog)</a></li>
+<li><code>man valgrind</code></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[抓漏 - 使用valgrind檢查C語言memory Leak]]></title>
+    <link href="http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak/"/>
+    <updated>2014-11-29T07:51:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak</id>
+    <content type="html"><![CDATA[<p>使用C 語言，memory leak的問題是最棘手的狀況之一，茫茫code海要一個一個比對簡直是大海撈針。幸好Linux下面有好的的工具可以救你一命。簡單介紹一下希望對大家有幫助。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#env">測試環境</a></li>
+<li><a href="#ex-prg">測試程式</a></li>
+<li><a href="#ex-run">執行方式</a></li>
+<li><a href="#ex-res">執行結果</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="env"></a></p>
+
+<h2>測試環境</h2>
+
+<ul>
+<li>valgrind 在Ubuntu下面可以直接用<code>sudo apt-get install valgrind</code>安裝。
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID: Ubuntu
+</span><span class='line'>Description:    Ubuntu 14.04.1 LTS
+</span><span class='line'>Release:    14.04
+</span><span class='line'>Codename:   trusty&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ valgrind &amp;ndash;version
+</span><span class='line'>valgrind-3.10.0.SVN
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><a name="ex-prg"></a></p>
+
+<h2>測試程式</h2>
+
+<p>這邊準備了幾個典型的memory leak程式，應該是很簡單看出哪邊有leak，所以我就不多做說明了。</p>
+
+<pre><code class="c leak.c">#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+struct leak_example {
+    char *ptr;
+};
+
+void leak1(void)
+{
+    int *ptr = (int *)malloc(100);
+
+    if (!ptr) {
+        printf("Oops, malloc fail!\n");
+    }
+}
+
+char *leak2(void)
+{
+    char *ptr = strdup("Hey Hey Hey!\n");
+
+    if (!ptr) {
+        printf("Oops, strdup fail!\n");
+        return 0;
+    }
+    return ptr;
+}
+
+struct leak_example *leak3(void)
+{
+    struct leak_example *ptr = 0;
+
+    ptr = (struct leak_example *) malloc(sizeof(struct leak_example));
+    if (!ptr) {
+        printf("Oops, malloc fail!\n");
+    }
+    ptr-&gt;ptr = strdup("Hey Hey Hey!\n");
+
+    return ptr;
+}
+
+int main()
+{
+    struct leak_example *lk_ptr;
+    char * ch_ptr = 0;
+
+    leak1();
+
+    ch_ptr = leak2();
+    if(ch_ptr) {
+        printf("%s", ch_ptr);
+    }
+
+    lk_ptr = leak3();
+    if(lk_ptr) {
+        printf("%s", lk_ptr-&gt;ptr);
+        free(lk_ptr);
+    }
+
+    return 0;
+}
+</code></pre>
+
+<p>因為只是單一檔案，我懶得寫Makefile，編譯指令如下:</p>
+
+<pre><code>$ CFLAGS="-g" make leak
+</code></pre>
+
+<p>這行指令可以去找Makefile中<code>Implicit Rules</code>得到解答。</p>
+
+<p><a name="ex-run"></a></p>
+
+<h2>執行方式</h2>
+
+<p>最簡單的方式就是用下面的方式
+<code>
+$ valgrind 你的執行檔
+</code></p>
+
+<p>然而這樣只會顯示出有漏掉多少的空間，因此要詳細地列出memory leak細節我會使用:</p>
+
+<pre><code>$ valgrind --leak-check=full --show-leak-kinds=all --verbose 你的程式檔
+</code></pre>
+
+<p>這些選項應該是可以望文生義，所以就不解釋了。想知道細節可以問男人<code>man valgrind</code></p>
+
+<p><a name="ex-res"></a></p>
+
+<h2>執行結果</h2>
+
+<ul>
+<li>節錄重點，我們可以看到valgrind不但找出洩漏多少空間，也明確地列出未釋放的記憶體被分配時的callstack，真是佛心來者。</li>
+</ul>
+
+
+<pre><code class="text ">$ valgrind --leak-check=full --show-leak-kinds=all --verbose
+...
+==26518== HEAP SUMMARY:
+==26518==     in use at exit: 128 bytes in 3 blocks
+==26518==   total heap usage: 4 allocs, 1 frees, 136 bytes allocated
+==26518== 
+==26518== Searching for pointers to 3 not-freed blocks
+==26518== Checked 78,136 bytes
+==26518== 
+==26518== 14 bytes in 1 blocks are definitely lost in loss record 1 of 3
+==26518==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26518==    by 0x4EC02B9: strdup (strdup.c:42)
+==26518==    by 0x400687: leak2 (leak.c:20)
+==26518==    by 0x40070C: main (leak.c:48)
+==26518== 
+==26518== 14 bytes in 1 blocks are definitely lost in loss record 2 of 3
+==26518==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26518==    by 0x4EC02B9: strdup (strdup.c:42)
+==26518==    by 0x4006E2: leak3 (leak.c:37)
+==26518==    by 0x400732: main (leak.c:53)
+==26518== 
+==26518== 100 bytes in 1 blocks are definitely lost in loss record 3 of 3
+==26518==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26518==    by 0x40065E: leak1 (leak.c:11)
+==26518==    by 0x400707: main (leak.c:47)
+==26518== 
+==26518== LEAK SUMMARY:
+==26518==    definitely lost: 128 bytes in 3 blocks
+==26518==    indirectly lost: 0 bytes in 0 blocks
+==26518==      possibly lost: 0 bytes in 0 blocks
+==26518==    still reachable: 0 bytes in 0 blocks
+==26518==         suppressed: 0 bytes in 0 blocks
+</code></pre>
+
+<ul>
+<li>詳細結果</li>
+</ul>
+
+
+<pre><code class="text ">$ CFLAGS= -g make leak
+cc  -g    leak.c   -o leak
+
+$ valgrind --leak-check=full --show-leak-kinds=all --verbose ./leak
+==26518== Memcheck, a memory error detector
+==26518== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
+==26518== Using Valgrind-3.10.0.SVN and LibVEX; rerun with -h for copyright info
+==26518== Command: ./leak
+==26518== 
+--26518-- Valgrind options:
+--26518--    --leak-check=full
+--26518--    --show-leak-kinds=all
+--26518--    --verbose
+--26518-- Contents of /proc/version:
+--26518--   Linux version 3.13.0-40-generic (buildd@comet) (gcc version 4.8.2 (Ubuntu 4.8.2-19ubuntu1) ) #69-Ubuntu SMP Thu Nov 13 17:53:56 UTC 2014
+--26518-- Arch and hwcaps: AMD64, amd64-cx16-rdtscp-sse3-avx
+--26518-- Page sizes: currently 4096, max supported 4096
+--26518-- Valgrind library directory: /usr/lib/valgrind
+--26518-- Reading syms from /home/wen/work/practice/Linux_Programming_Practice/15_leak/leak
+--26518-- Reading syms from /lib/x86_64-linux-gnu/ld-2.19.so
+--26518--   Considering /lib/x86_64-linux-gnu/ld-2.19.so ..
+--26518--   .. CRC mismatch (computed 4cbae35e wanted 8d683c31)
+--26518--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/ld-2.19.so ..
+--26518--   .. CRC is valid
+--26518-- Reading syms from /usr/lib/valgrind/memcheck-amd64-linux
+--26518--   Considering /usr/lib/valgrind/memcheck-amd64-linux ..
+--26518--   .. CRC mismatch (computed 37cdde19 wanted adc367dd)
+--26518--    object doesn't have a symbol table
+--26518--    object doesn't have a dynamic symbol table
+--26518-- Scheduler: using generic scheduler lock implementation.
+--26518-- Reading suppressions file: /usr/lib/valgrind/default.supp
+==26518== embedded gdbserver: reading from /tmp/vgdb-pipe-from-vgdb-to-26518-by-wen-on-???
+==26518== embedded gdbserver: writing to   /tmp/vgdb-pipe-to-vgdb-from-26518-by-wen-on-???
+==26518== embedded gdbserver: shared mem   /tmp/vgdb-pipe-shared-mem-vgdb-26518-by-wen-on-???
+==26518== 
+==26518== TO CONTROL THIS PROCESS USING vgdb (which you probably
+==26518== don't want to do, unless you know exactly what you're doing,
+==26518== or are doing some strange experiment):
+==26518==   /usr/lib/valgrind/../../bin/vgdb --pid=26518 ...command...
+==26518== 
+==26518== TO DEBUG THIS PROCESS USING GDB: start GDB like this
+==26518==   /path/to/gdb ./leak
+==26518== and then give GDB the following command
+==26518==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=26518
+==26518== --pid is optional if only one valgrind process is running
+==26518== 
+--26518-- REDIR: 0x4019ca0 (strlen) redirected to 0x38068331 (???)
+--26518-- Reading syms from /usr/lib/valgrind/vgpreload_core-amd64-linux.so
+--26518--   Considering /usr/lib/valgrind/vgpreload_core-amd64-linux.so ..
+--26518--   .. CRC mismatch (computed 329d6860 wanted c0186920)
+--26518--    object doesn't have a symbol table
+--26518-- Reading syms from /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so
+--26518--   Considering /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so ..
+--26518--   .. CRC mismatch (computed 1fb85af8 wanted 2e9e3c16)
+--26518--    object doesn't have a symbol table
+==26518== WARNING: new redirection conflicts with existing -- ignoring it
+--26518--     old: 0x04019ca0 (strlen              ) R-&gt; (0000.0) 0x38068331 ???
+--26518--     new: 0x04019ca0 (strlen              ) R-&gt; (2007.0) 0x04c2e1a0 strlen
+--26518-- REDIR: 0x4019a50 (index) redirected to 0x4c2dd50 (index)
+--26518-- REDIR: 0x4019c70 (strcmp) redirected to 0x4c2f2f0 (strcmp)
+--26518-- REDIR: 0x401a9c0 (mempcpy) redirected to 0x4c31da0 (mempcpy)
+--26518-- Reading syms from /lib/x86_64-linux-gnu/libc-2.19.so
+--26518--   Considering /lib/x86_64-linux-gnu/libc-2.19.so ..
+--26518--   .. CRC mismatch (computed e7228afa wanted 93ff6981)
+--26518--   Considering /usr/lib/debug/lib/x86_64-linux-gnu/libc-2.19.so ..
+--26518--   .. CRC is valid
+--26518-- REDIR: 0x4ec47e0 (strcasecmp) redirected to 0x4a25720 (_vgnU_ifunc_wrapper)
+--26518-- REDIR: 0x4ec6ad0 (strncasecmp) redirected to 0x4a25720 (_vgnU_ifunc_wrapper)
+--26518-- REDIR: 0x4ec3fb0 (memcpy@GLIBC_2.2.5) redirected to 0x4a25720 (_vgnU_ifunc_wrapper)
+--26518-- REDIR: 0x4ec2240 (rindex) redirected to 0x4c2da30 (rindex)
+--26518-- REDIR: 0x4eba1d0 (malloc) redirected to 0x4c2ab10 (malloc)
+--26518-- REDIR: 0x4ec0540 (strlen) redirected to 0x4c2e0e0 (strlen)
+--26518-- REDIR: 0x4ec9200 (__GI_memcpy) redirected to 0x4c2fc90 (__GI_memcpy)
+--26518-- REDIR: 0x4ecb540 (strchrnul) redirected to 0x4c319b0 (strchrnul)
+Hey Hey Hey!
+Hey Hey Hey!
+--26518-- REDIR: 0x4eba870 (free) redirected to 0x4c2bd80 (free)
+==26518== 
+==26518== HEAP SUMMARY:
+==26518==     in use at exit: 128 bytes in 3 blocks
+==26518==   total heap usage: 4 allocs, 1 frees, 136 bytes allocated
+==26518== 
+==26518== Searching for pointers to 3 not-freed blocks
+==26518== Checked 78,136 bytes
+==26518== 
+==26518== 14 bytes in 1 blocks are definitely lost in loss record 1 of 3
+==26518==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26518==    by 0x4EC02B9: strdup (strdup.c:42)
+==26518==    by 0x400687: leak2 (leak.c:20)
+==26518==    by 0x40070C: main (leak.c:48)
+==26518== 
+==26518== 14 bytes in 1 blocks are definitely lost in loss record 2 of 3
+==26518==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26518==    by 0x4EC02B9: strdup (strdup.c:42)
+==26518==    by 0x4006E2: leak3 (leak.c:37)
+==26518==    by 0x400732: main (leak.c:53)
+==26518== 
+==26518== 100 bytes in 1 blocks are definitely lost in loss record 3 of 3
+==26518==    at 0x4C2AB80: malloc (in /usr/lib/valgrind/vgpreload_memcheck-amd64-linux.so)
+==26518==    by 0x40065E: leak1 (leak.c:11)
+==26518==    by 0x400707: main (leak.c:47)
+==26518== 
+==26518== LEAK SUMMARY:
+==26518==    definitely lost: 128 bytes in 3 blocks
+==26518==    indirectly lost: 0 bytes in 0 blocks
+==26518==      possibly lost: 0 bytes in 0 blocks
+==26518==    still reachable: 0 bytes in 0 blocks
+==26518==         suppressed: 0 bytes in 0 blocks
+==26518== 
+==26518== ERROR SUMMARY: 3 errors from 3 contexts (suppressed: 0 from 0)
+==26518== ERROR SUMMARY: 3 errors from 3 contexts (suppressed: 0 from 0)
+</code></pre>
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><code>$ man valgrind</code></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

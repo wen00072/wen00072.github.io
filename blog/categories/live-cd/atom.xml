@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Live Cd | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/live-cd/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Linux: 用Live CD跑硬碟裏面的Linux]]></title>
+    <link href="http://wen00072.github.io/blog/2015/01/03/with-a-live-cd-running-hard-disk-linux/"/>
+    <updated>2015-01-03T13:05:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/01/03/with-a-live-cd-running-hard-disk-linux</id>
+    <content type="html"><![CDATA[<p>我用這個救過過兩次grub GG的狀況，每次都要上網回想一下，趁著還記得的情況紀錄一下。</p>
+
+<ul>
+<li>用Live CD開機。你的Live CD要和你硬碟的Linux distribution相同。</li>
+<li>想辦法開終端機</li>
+<li>輸入以下的<del>咒語</del>指令，假設你的硬碟root filesystem partition放在/dev/sda2</li>
+</ul>
+
+
+<pre><code class="bash">sudo mount /dev/sda2 /mnt
+sudo mount --bind /dev /mnt/dev
+sudo mount --bind /dev/pts /mnt/dev/pts
+sudo mount --bind /proc /mnt/proc
+sudo mount --bind /sys /mnt/sys
+sudo chroot /mnt
+</code></pre>
+
+<p>剩下就是處理grub問題了，請自己估狗。</p>
+
+<h2><strong>注意！grub是bootloader，沒弄好有可能會讓你的硬碟資料GG。操作有風險，操作前應詳閱相關文件資料。如果你不知道boot loader，grub，root file system，mount，chroot是什麼的話，請找熟悉的碰友幫你處理。</strong></h2>
+
+<ul>
+<li>參考資料
+
+<ul>
+<li><a href="http://howtoubuntu.org/how-to-repair-restore-reinstall-grub-2-with-a-ubuntu-live-cd">How to Repair, Restore, or Reinstall Grub 2 with a Ubuntu Live CD or USB</a></li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

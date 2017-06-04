@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Gnu | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/gnu/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[筆記 - GNU Coding Style]]></title>
+    <link href="http://wen00072.github.io/blog/2016/12/18/review-gnu-coding-style/"/>
+    <updated>2016-12-18T21:34:23+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/12/18/review-gnu-coding-style</id>
+    <content type="html"><![CDATA[<p>這是沒事亂看的，主要找和C 語言相關的描述，就不要在意文章組織和可讀性了。</p>
+
+<p>閱讀版本：<code>July 25, 2016</code></p>
+
+<h2>CH 3</h2>
+
+<ul>
+<li>要保證C程式碼可移植性，compile flag可以使用<code>--ansi</code>, <code>--posix</code>, <code>--compatible</code></li>
+<li>可以使用下面的方式取代原本的巨集條件編譯，現在的gcc已經可以產生一樣的結果了。</li>
+</ul>
+
+
+<pre><code class="c 原本程式碼">#ifdef HAS_FOO
+...
+#else
+...
+#endif
+</code></pre>
+
+<pre><code class="c 建議使用方式">if (HAS_FOO)
+...
+else
+...
+</code></pre>
+
+<h2>Ch 4</h2>
+
+<ul>
+<li><code>--pedantic</code>：產生所有ISO C和ISO C++規範的警告訊息，並將所有C的extension退貨</li>
+<li>冷門：POSIX 2.0規範du/df的unit是512 bytes</li>
+</ul>
+
+
+<h3>4.2 Writing Robust Programs</h3>
+
+<ul>
+<li>使用動態配置資料方式避免資料長度限制，包含檔案名稱長度、一行長度等</li>
+<li>讀檔案時不得丟棄<code>NUL</code>字元以及不可列印字元，並需相容多位元編碼方式如<code>UTF-8</code></li>
+<li>除非要刻意忽略錯誤，使用system call必定檢查回傳值，並使用<code>perror</code>或<code>strerror</code>等方式列印出錯誤訊息</li>
+<li>使用<code>mallic</code>及<code>relloc</code>一定要檢查回傳值是否為NULL。當使用<code>relloc</code>要求分配比原本空間更小時更需要注意，因為實作關係可能最後分配的空間block可能和原本的不同</li>
+<li>使用<code>free</code>後就不要留戀還在裏面的資料了吧</li>
+<li>一旦<code>malloc</code>出現錯誤時，非互動程式請將他視為嚴重錯誤。互動程式就儘早自殺(<code>abort()</code>)吧</li>
+<li>使用<code>getopt_long</code>處理命令列參數</li>
+<li>避免操作低階UNIX介面，以減少相容性問題</li>
+<li>在程式中檢查到不可能發生的狀況，直接給他死。既然不可能發生了，顯然那邊出大問題，儘早發現儘早處理。因為就是不可能發生，而死掉一定從這邊找起，寫程式時就在這邊提供更多註解和資訊吧</li>
+<li>使用全域變數或static 變數儘量給初值。（不確定是否有看懂，<a href="https://www.gnu.org/prep/standards/html_node/Semantics.html#Semantics">出處</a>）</li>
+<li>不要從回傳值傳回發生錯誤的次數，因為只有256個狀態而已，很容易overflow的。</li>
+<li>使用存放暫存檔到<code>$TMP_DIR</code>環境變數而不是閉著眼睛寫到<code>/tmp</code>下面</li>
+<li>同樣的，暫存檔請將權限設為0600確保資訊不會洩漏</li>
+</ul>
+
+
+<h3>CH 4.3 Library Behavior</h3>
+
+<ul>
+<li>儘量讓函數reentrant</li>
+<li>Name covention 很重要，因為library是給別人用，粗心大意就出現name conflict 的問題，以下是GNU的建議
+
+<ul>
+<li>external 函數和變數需加<code>prefix</code>，prefix為兩個字元以上（後面英文太爛看不懂）</li>
+<li>external 但是不想讓使用者看到（或是文件不會提到的）的函數以<code>_</code>開頭加上prefix用來辨識這是內部函數</li>
+<li>內部static 就請自便</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>CH 4.4 Formatting Error Messages</h3>
+
+<ul>
+<li>錯誤訊息格式，我只挑一個，有興趣看全文請參考<a href="https://www.gnu.org/prep/standards/html_node/Errors.html#Errors">這邊</a>
+
+<ul>
+<li><code>sourcefile:lineno: message</code></li>
+</ul>
+</li>
+</ul>
+
+
+<h3><a href="https://www.gnu.org/prep/standards/html_node/User-Interfaces.html#User-Interfaces">CH 4.5 Standards for Interfaces Generally</a></h3>
+
+<p>很奇怪的，單字句子都看懂，就是不懂他要表達啥。只能猜測說不要生出一堆很功能類似的執行檔，而是用最少執行檔加上參數取代。以及執行檔儘量device independent</p>
+
+<h3>4.12 File Usage</h3>
+
+<p>檔案有可能會存放在readonly FS，如果要寫東西寫到必定是可寫的目錄如<code>/var</code>或是<code>/tmp</code>目錄中</p>
+
+<h2>Writing C</h2>
+
+<ul>
+<li>單行最多79個字元</li>
+</ul>
+
+
+<h3>註解</h3>
+
+<ul>
+<li>檔案開頭請加註解說明該檔案的用途</li>
+<li>用英文寫註解</li>
+<li>每個函數都要說明該函數的用法，參數，回傳值等資訊</li>
+<li><code>#endif</code> 後加上對應的<code>#ifdef</code>或<code>#ifndef</code> 說明，範例如下：</li>
+</ul>
+
+
+<pre><code class="c">#ifdef ASDF
+...
+#else  /* ASDF */
+...
+#endif /* not ASDF */
+
+#ifnef QWER
+...
+#endif /* not QWER */
+</code></pre>
+
+<h3>Clean Use of C Constructs</h3>
+
+<ul>
+<li>所有的宣告都要明確，例如不要因為預設回傳值是<code>int</code>就省略要回傳<code>int</code>的函數對應宣告</li>
+<li>視情況自行決定是否要使用嚴格的語法檢查如<code>-Wall</code>，編譯器是我們的奴隸，你自己清楚要做什麼就好。不要為了避免嚴格語法檢查硬上一些奇怪的語法導致可讀性變差</li>
+<li><code>extern</code> 要嘛全部放在C檔案的同一塊地方，要嘛集中到header file，不要東一撮西一撮。更嚴禁在函數內使用</li>
+<li>不要在函數中重複使用一些無意義名稱的變數如<code>tmp</code>之類的，個別變數就給予個別有意義的變數名稱，不要偷懶。也可以在需要的最小scope宣告變數增加可讀性。</li>
+<li>變數要注意是否和global 變數或是更大scope名稱相同，您可以開啟<code>-Wshadow</code>協助偵測這類的錯誤</li>
+<li>多個變數就個別宣告型態，一方面增加可註解的空間，一方面可讀性也較佳。範例如下</li>
+</ul>
+
+
+<pre><code class="c">/* Bad */
+int i_am_bad, i_am_super_bad;
+
+/* Good */
+int i_am_good   = 0;
+int i_am_better = 0;
+</code></pre>
+
+<ul>
+<li>不要在判斷式加入assign，這樣很容易出錯，範例如下</li>
+</ul>
+
+
+<pre><code class="c">    /* Bad */
+    if ((my_id = get_id(my_record)) != NONE) {
+        /* Prcess data */
+    }
+    else {
+        return NO_DATA;
+    }
+</code></pre>
+
+<pre><code class="c">    /* Good */
+    my_id = get_id(my_record);
+    if (my_id == NONE) {
+        return NO_DATA;
+    }
+    /* Prcess data */
+</code></pre>
+
+<h3>Naming Variables, Functions, and Files</h3>
+
+<ul>
+<li>Global name 要有意義，不要亂取。
+
+<ul>
+<li>ps: 個人會加個<code>g</code> prefix提醒一下</li>
+</ul>
+</li>
+<li>縮寫如src等可以使用。但是請確定讀者可以知道該縮寫或是該縮寫可能造成讀者模糊混淆</li>
+<li>使用常數時儘量用<code>enum</code>取代巨集</li>
+</ul>
+
+
+<h3>Portability between CPUs</h3>
+
+<p><strong><font color="red">完全看不懂，抱歉</font></strong></p>
+
+<h3>剩下的是平台相容性和國際化字元等，沒興趣所以跳過</h3>
+
+<h3>參考資料</h3>
+
+<ul>
+<li><a href="https://www.gnu.org/prep/standards/html_node/">GNU Coding Standards</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Richard Stallman: A Free Digital Society 台北演講筆記]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/19/richard-stallmana-taipei-free-digital-society-lecture-notes/"/>
+    <updated>2014-05-19T14:39:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/19/richard-stallmana-taipei-free-digital-society-lecture-notes</id>
+    <content type="html"><![CDATA[<p><a href="http://gcc.gnu.org/">GCC</a>、<a href="http://www.gnu.org/">GNU</a> OS和<a href="http://www.fsf.org/">FSF</a>協會的創辦人<a href="http://en.wikipedia.org/wiki/Richard_Stallman">Richard Stallman (RMS)</a>在2014年五月在台灣大學發表演講，題目為：「 Free Digital Society 」。用兩光的英聽整理一下演講重點，應該有聽錯的部份，請自行斟酌：</p>
+
+<p>先把數位自由的部份從裏面提出來，因為要了解RMS的<code>自由</code>概念，才能夠理解他從這樣的理念提出的看法。RMS認為軟體和使用者的關係要嘛是使用者控制操作軟體，或是被軟體控制操作；而<code>自由</code>指的是使用者控制操作的情況。所以他定義了使用者自由操作的四種要素：</p>
+
+<ul>
+<li>零. 使用者可以不受限制的執行的執行程式。</li>
+<li>壹. 使用者有研讀修改的權力。你可以隨意地更改程式碼。</li>
+</ul>
+
+
+<p>以上兩個要素只能確保個人的控制軟體能力，但是各自單獨修改的力量和進步程度當然比不上合作修改還來大。因此他又加上兩項權利。</p>
+
+<ul>
+<li>貳. 重製散佈的權利。</li>
+<li>參. 更正，改進並散佈的權利。</li>
+</ul>
+
+
+<hr />
+
+<h2>現代數位自由威脅面向</h2>
+
+<ul>
+<li>網路監控
+
+<ul>
+<li>只要資料被蒐集，就有可能被濫用。</li>
+<li>在非自由設備下，資料就有可能被監控。就算使用自由設備，基礎設備也可能被用來監控。</li>
+<li>網路監控會讓匿名揭露者身份曝光，因而妨礙言論發表，進而危害民主。</li>
+<li>對於安全理由而安裝攝影機監控必須要有夠強烈的理由，並且要保證時間內要刪除資料。</li>
+<li>網路付費應該要有匿名付費方式以避免特定團體或政府追蹤資金來源作為政治報復手段。</li>
+</ul>
+</li>
+<li>網路審查</li>
+<li>數位資料格式
+
+<ul>
+<li>Proprietary 格式、DRM、和有專利的資料格式，都會妨礙數位自由。因為你這妨礙讓你無法自由的使用數位內容。</li>
+</ul>
+</li>
+<li>Proprietary軟體
+
+<ul>
+<li>惡意軟體形式
+
+<ul>
+<li>內含監控、資料蒐集、以及間諜目的的軟體</li>
+<li>限制數位自由如妨礙分享的軟體</li>
+<li>後門軟體</li>
+</ul>
+</li>
+<li>Proprietary軟體的問題是你不知道他binary內部到底放什麼意思，無從認知他是否是惡意軟體。</li>
+<li>GPLv3針對<a href="http://en.wikipedia.org/wiki/Binary_large_object">blob</a>有加強要求要能夠讓使用者可以自行取代原本軟體內的可執行binary。(未查證)</li>
+</ul>
+</li>
+<li>網站威脅
+
+<ul>
+<li>網站的Javascript常常會安裝Proprietary軟體。</li>
+<li>網站的資料蒐集以及要求填寫個人資料。</li>
+<li>雲端運算服務也有不可控制的特性。</li>
+</ul>
+</li>
+<li>數位政治選舉 (Public vote)
+
+<ul>
+<li>太容易作假又極度難以防弊，這會威脅民主。</li>
+</ul>
+</li>
+<li>資訊分享爭議
+
+<ul>
+<li>RMS提出可以想辦法平衡藝術創作收入和分享的金錢關係。例如計算數位分享次數，由政府從歲收中依比例付給藝術家。甚至可以調整付款公式計算讓最高的收入和一般收入不要差距到幾千幾萬倍。</li>
+<li>可以降低專利保護期限讓知識更快流通。</li>
+</ul>
+</li>
+<li>數位權利
+
+<ul>
+<li>現在的問題是基礎建設都是握在私人公司中，也就是說數位權利是有可能被商業掌控。因此政府不喜歡的網站一般存取就會被限制。</li>
+<li>RMS提出common carrier system的概念防止上面的問題。</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>相關資料：</h2>
+
+<ul>
+<li><a href="https://archive.org/details/RMS-Taipei-2014">Richard Stallman - A Free Digital Society - Taipei (May 10, 2014)</a></li>
+<li><a href="http://rms.kktix.cc/events/2014-taipei">活動訊息： 台北 Richard Stallman 演講－A Free Digital Society</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Richard_Stallman">Wikipedia: Richard Stallman</a></li>
+<li><a href="http://blog.kuoe0.tw/posts/2014/05/19/your-freedom-and-privacy-dr-richard-stallman">KuoE0&rsquo;s Dots: Your freedom and privacy - Dr. Richard Stallman (Richard Stallman: 高雄演講)</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

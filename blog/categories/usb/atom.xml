@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Usb | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/usb/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[透過 Virtualbox 安裝Linux到USB Disk上]]></title>
+    <link href="http://wen00072.github.io/blog/2015/04/03/boot-linux-form-usb-and-vm/"/>
+    <updated>2015-04-03T19:21:01+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/04/03/boot-linux-form-usb-and-vm</id>
+    <content type="html"><![CDATA[<p>想說裝個Ubuntu 到USB 3.0 Disk上，隨手紀錄一下</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#usb_prepare">事先準備</a></li>
+<li><a href="#usb_env">測試環境</a></li>
+<li><a href="#usb_install">使用Virtualbox 安裝Linux 到 USB disk</a></li>
+<li><a href="#usb_boot">使用Virtualbox 從USB Disk 開機</a></li>
+<li><a href="#usb_setup">安裝後設定</a></li>
+<li><a href="#usb_ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="usb_prepare"></a></p>
+
+<h2>事先準備</h2>
+
+<ul>
+<li>USB 3.0 Disk，寫入速度愈快愈好。另外你要看你喜歡的Linux Distribution決定USB空間大小。我是隨便買個299號稱寫入速度20MB的16G USB Disk。</li>
+<li>安裝VirtualBox</li>
+<li>你喜歡的 Linux Distribution iso檔案</li>
+<li>USB 插槽要2.0，很遺憾3.0目前為止Virtual Box不支援。不用鐵齒，我在這邊浪費三小時生命。</li>
+</ul>
+
+
+<p><a name="usb_env"></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.2 LTS
+Release:    14.04
+Codename:   trusty
+
+$ vboxmanage --version
+4.3.26r98988
+</code></pre>
+
+<p><a name="usb_install"></a></p>
+
+<h2>使用Virtualbox 安裝Linux 到 USB disk</h2>
+
+<ul>
+<li>Virtualbox 新增machine，只要把光碟設成ISO檔。不用新增硬碟。</li>
+<li>開機Virtualbox machine，出現GUI後，到Virtualbox machine　的 Device -> USB 挑你要安裝的USB volume。</li>
+<li>開始安裝。因為USB disk有寫入次數限制，所以我不開swap。剩下就是下一步下一步，除非你玩Arch Linux或是Ubuntu server。順帶一題，我安裝Ubuntu server 到USB失敗kerker。</li>
+</ul>
+
+
+<p><a name="usb_boot"></a></p>
+
+<h2>使用Virtualbox 從USB Disk 開機</h2>
+
+<p>這邊有幾個要注意的地方</p>
+
+<ul>
+<li>你要有USB 的對應partition 的device node權限。精確的來說，你要在<code>disk</code>的group中。請用下面的指令
+
+<ul>
+<li><code>sudo usermod -G -a disk $USER</code></li>
+<li><font color="red">血的教訓，<code>usermod -G</code>一定要加<code>-a</code>，不然你group就會只有<code>disk</code>，如果剛好你的帳號是唯一在<code>sudo</code>group的話，就只好拿rescue disk開機救回了。</font></li>
+<li>目前我只能logout session重新login才能更新group。</li>
+</ul>
+</li>
+<li>你要讓virtualbox 可以直接用USB disk對應的partition 開機。請用下面的指令。
+
+<ul>
+<li><code>VBoxManage internalcommands createrawvmdk -filename /path/to/file.vmdk -rawdisk /dev/sdx</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>接下來就是開另外一個新的Virtualbox machine，指定該檔案。打完收工！</p>
+
+<p><a name="usb_setup"></a></p>
+
+<h2>安裝後設定</h2>
+
+<p>主要是要減少寫入Disk的機會，目前找到的方式有</p>
+
+<ul>
+<li>關掉瀏覽器的cache</li>
+<li>mount disk option加入noatime</li>
+<li>安裝zram-config</li>
+<li>把/tmp改成tmpfs</li>
+</ul>
+
+
+<p><a name="usb_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://raspberrypi.stackexchange.com/questions/169/how-can-i-extend-the-life-of-my-sd-card">stackexchange: How can I extend the life of my SD card?</a></li>
+<li><a href="https://www.virtualbox.org/manual/ch09.html#rawdisk">Virtualbox manual: 9.9.1.1. Access to entire physical hard disk</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

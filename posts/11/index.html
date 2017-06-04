@@ -1,0 +1,3023 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="debian目錄存放描述deb套件的行為和資訊。也是從原始套件（通常是tarball)中產生deb套件檔案的重要資料。 從Autotools tarball打包deb套件: 不嚴謹style有提到透過執行dh_make在解壓縮目錄下面產生debian目錄。這次的主題是debian目錄下面的資訊， &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/posts/11/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/10/package-debian-packages-study-on-the-debian-directory/">[Debian套件打包] Debian目錄初探 (1)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-10T04:26:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>4:26 am</span></time>
+        
+           | <a href="/blog/2014/06/10/package-debian-packages-study-on-the-debian-directory/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/10/package-debian-packages-study-on-the-debian-directory/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>debian目錄存放描述deb套件的行為和資訊。也是從原始套件（通常是tarball)中產生deb套件檔案的重要資料。</p>
+
+<p>從<a href="http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style">Autotools tarball打包deb套件: 不嚴謹style</a>有提到透過執行dh_make在解壓縮目錄下面產生debian目錄。這次的主題是debian目錄下面的資訊，主要是參考<a href="https://www.debian.org/doc/manuals/maint-guide/">Debian New Maintainers&#8217; Guide</a>的第四章。</p>
+
+<h2>Debian套件強制規定debian目錄下面要有control, copyright, changelog三個檔案以及rules這個執行檔。分別討論說明如下。</h2>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#ctrl">debian/control檔</a>
+
+<ul>
+<li><a href="#ctrl-rel">和其他相關套件的關係描述</a></li>
+</ul>
+</li>
+<li><a href="#crt">debian/copyright檔</a></li>
+<li><a href="#cl">debian/changelog檔</a></li>
+<li><a href="#rl">debian/rules執行檔</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="ctrl"></a></p>
+
+<h2>debian/control檔</h2>
+
+<p>從<a href="http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style">Autotools tarball打包deb套件: 不嚴謹style</a>產生的control內容為：</p>
+
+<figure class='code'><figcaption><span>control</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Source: testautotools
+</span><span class='line'>Section: unknown
+</span><span class='line'>Priority: extra
+</span><span class='line'>Maintainer: unknown &lt;user@unknown&gt;
+</span><span class='line'>Build-Depends: debhelper (&gt;= 8.0.0), autotools-dev
+</span><span class='line'>Standards-Version: 3.9.2
+</span><span class='line'>Homepage: &lt;insert the upstream URL, if relevant&gt;
+</span><span class='line'>#Vcs-Git: git://git.debian.org/collab-maint/testautotools.git
+</span><span class='line'>#Vcs-Browser: http://git.debian.org/?p=collab-maint/testautotools.git;a=summary
+</span><span class='line'>
+</span><span class='line'>Package: testautotools
+</span><span class='line'>Architecture: any
+</span><span class='line'>Depends: ${shlibs:Depends}, ${misc:Depends}
+</span><span class='line'>Description: &lt;insert up to 60 chars description&gt;
+</span><span class='line'> &lt;insert long description, indented with spaces&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>詳細檔案規範可以參考：<a href="https://www.debian.org/doc/debian-policy/ch-controlfields.html">Debian Policy Manual Chapter 5 - Control files and their fields</a>。這邊只列出幾點說明</p>
+
+<ul>
+<li><code>Source</code>: 套件名稱</li>
+<li><code>Section</code>: Debian套件分類有兩層
+
+<ul>
+<li>第一層
+
+<ul>
+<li><code>main</code> : 自由軟體，一般來說沒有特別指定的預設值。也就是說如果是<code>main/devel</code>直接使用<code>devel</code>就可以了。</li>
+<li><code>non-free</code></li>
+<li><code>contrib</code> : 基於<code>non-free</code>軟體衍生的軟體</li>
+</ul>
+</li>
+<li>第二層
+
+<ul>
+<li><code>admin</code></li>
+<li><code>devel</code></li>
+<li><code>doc</code></li>
+<li><code>libs</code></li>
+<li><code>mail</code></li>
+<li><code>net</code></li>
+<li><code>x11</code></li>
+<li>&hellip;</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>Priority</code>:上傳時管理者有權限修改套件的優先權。
+
+<ul>
+<li><code>required</code></li>
+<li><code>important</code></li>
+<li><code>standard</code></li>
+<li><code>optional</code>: 新的套件<strong>不和上面優先權套件衝突</strong>時通常使用該權限。</li>
+<li><code>extra</code>: 新的套件<strong>和上面優先權套件衝突</strong>時使用該權限。</li>
+</ul>
+</li>
+<li><code>Maintainer</code>: Bug tracking system發生錯誤時聯絡的信件。</li>
+<li><code>Build-Depends</code>: 從原始碼編譯成binary時需要的套件，例如libtool或是autoconf等。</li>
+<li><code>Standards-Version</code>: 遵循的Debian Policy Manual版本</li>
+<li><code>Homepage</code>:不解釋</li>
+<li><code>Package</code>: 套件名稱</li>
+<li><code>Architecture</code>:
+
+<ul>
+<li><code>any</code>: 任何平台皆可，通常是需要編譯的套件。</li>
+<li><code>all</code>: 套件和平台無關，可能是文件、圖片會是直譯式的語言套件。</li>
+</ul>
+</li>
+<li><code>Description</code>: 80字元寬度，總字數不建議超過60字元。</li>
+<li>套件原始碼VCS: 以git為例
+
+<ul>
+<li><code>Vcs-Git</code>: Git repository URL</li>
+<li><code>Vcs-browser</code>: 瀏覽器可瀏覽的Git repository URL</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ctrl-rel"></a></p>
+
+<h3>和其他相關套件的關係描述</h3>
+
+<ul>
+<li><code>Depends</code>: Must have.</li>
+<li><code>Recommends</code>: Nice to have. 安裝套件程式如apt-get或是dpkg會出現提示訊息詢問使用者是否安裝<code>Recommends</code>的套件。</li>
+<li><code>Suggests</code>: apt-get或是dpkg不會提示這些套件，但是aptitude會詢問。</li>
+<li><code>Pre-Depends</code>: 少用的關係描述，比<code>Depends</code>強。</li>
+<li><code>Conflicts</code>: 除非衝突的套件有被反安裝，否則不與安裝。</li>
+<li><code>Breaks</code>: 安裝該套件將會把<code>Breaks</code>裏面的套件搞爛。通常表示<code>Breaks</code>裏面的套件該被更新到新的版本。</li>
+<li><code>Provides</code>: 因為版本相容考量或是其他因素，一個系統中可以由不同套件提供相同功能。這就是<a href="https://www.debian.org/doc/debian-policy/ch-binary.html#s-virtual_pkg">Virtual packages</a>概念。不同的套件可以透過<code>Provides</code>提供類似的功能。</li>
+<li><code>Replaces</code></li>
+<li>和其他相關套件的關係表示法為：</li>
+<li><code>&lt;&lt;</code>: 低於</li>
+<li><code>&lt;=</code>: 低於或等於</li>
+<li><code>=</code> : 等於</li>
+<li><code>&gt;=</code>: 高於或等於</li>
+<li><code>&gt;&gt;</code>: 高於</li>
+<li>範例：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>control</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Depends: foo (&gt;= 1.2), libbar1 (= 1.3.4)
+</span><span class='line'>Conflicts: baz
+</span><span class='line'>Recommends: libbaz4 (&gt;&gt; 4.0.7)
+</span><span class='line'>Suggests: quux
+</span><span class='line'>Replaces: quux (&lt;&lt; 5), quux-foo (&lt;= 7.6)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<ul>
+<li>另外 ${shlibs:Depends}, ${perl:Depends}, ${misc:Depends}這樣的描述是給debhelper呼叫相對的計算相依性程式。有興趣的人可以<code>man dh_shlibdeps</code>或是<code>man dh_perl</code>等取得更多資訊。</li>
+</ul>
+
+
+<hr />
+
+<p><a name="crt"></a></p>
+
+<h2>debian/copyright檔</h2>
+
+<p>原始套件的版權聲明。除了版權聲明外，還有一些maintain資訊。maintainer可以直接修改dh_make產生的範本。</p>
+
+<p>常見的版權可以透過<code>dh_make --copyright 版權(ex: gpl2, bsd)</code>自動產生debian/copyright檔。如果沒有原本套件的版本，可以搜尋<code>/usr/share/common-licenses/</code>下面是否有符合的版權宣告。再沒有就必須手動修正該檔了。</p>
+
+<figure class='code'><figcaption><span>dh_make產生的範本</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Format: http://dep.debian.net/deps/dep5
+</span><span class='line'>Upstream-Name: testautotools
+</span><span class='line'>Source: &lt;url://example.com&gt;
+</span><span class='line'>
+</span><span class='line'>Files: *
+</span><span class='line'>Copyright: &lt;years&gt; &lt;put author&#39;s name and email here&gt;
+</span><span class='line'>           &lt;years&gt; &lt;likewise for another author&gt;
+</span><span class='line'>License: &lt;special license&gt;
+</span><span class='line'> &lt;Put the license of the package here indented by 1 space&gt;
+</span><span class='line'> &lt;This follows the format of Description: lines in control file&gt;
+</span><span class='line'> .
+</span><span class='line'> &lt;Including paragraphs&gt;
+</span><span class='line'>
+</span><span class='line'># If you want to use GPL v2 or later for the /debian/* files use
+</span><span class='line'># the following clauses, or change it to suit. Delete these two lines
+</span><span class='line'>Files: debian/*
+</span><span class='line'>Copyright: 2014 unknown &lt;user@unknown&gt;
+</span><span class='line'>License: GPL-2+
+</span><span class='line'> This package is free software; you can redistribute it and/or modify
+</span><span class='line'> it under the terms of the GNU General Public License as published by
+</span><span class='line'> the Free Software Foundation; either version 2 of the License, or
+</span><span class='line'> (at your option) any later version.
+</span><span class='line'> .
+</span><span class='line'> This package is distributed in the hope that it will be useful,
+</span><span class='line'> but WITHOUT ANY WARRANTY; without even the implied warranty of
+</span><span class='line'> MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+</span><span class='line'> GNU General Public License for more details.
+</span><span class='line'> .
+</span><span class='line'> You should have received a copy of the GNU General Public License
+</span><span class='line'> along with this program. If not, see &lt;http://www.gnu.org/licenses/&gt;
+</span><span class='line'> .
+</span><span class='line'> On Debian systems, the complete text of the GNU General
+</span><span class='line'> Public License version 2 can be found in &quot;/usr/share/common-licenses/GPL-2&quot;.
+</span><span class='line'>
+</span><span class='line'># Please also look if there are files or directories which have a
+</span><span class='line'># different copyright/license attached and list them here.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="cl"></a></p>
+
+<h2>debian/changelog檔</h2>
+
+<p>dpkg或是其他套件管理工具會參考這檔案取得版本號碼等資訊。另外這個檔案會被存放到<code>/usr/share/doc/套件名稱/changelog.Debian.gz</code>。</p>
+
+<p>詳細規範可以參考<a href="https://www.debian.org/doc/debian-policy/ch-source.html#s-dpkgchangelog">Debian Policy Manual, 4.4 &ldquo;debian/changelog&rdquo;</a>。簡單說明如下</p>
+
+<ul>
+<li>第一行提供下面資訊:
+
+<ul>
+<li>套件名稱。</li>
+<li>套件版本。</li>
+<li>套件應該上傳到FTP的dists的哪個目錄，如unstable或是testing，新的套件通常是unstable。</li>
+<li>緊急度：新的套件通常是low  。</li>
+</ul>
+</li>
+<li>接下來是以<code>＊</code>開頭的更動說明。第一次的更動，可以看到<code>ITP</code>。ITP是Intent To Package，新的套件會在<a href="https://www.debian.org/Bugs/">Debian bug tracking system</a>發出需求。所以會有對應的issue number。詳細可以參考<a href="https://www.debian.org/devel/wnpp/">Work-Needing and Prospective Packages</a>需要maintainer或是期望的新套件認領流程。</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>dh_make產生的範本</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>testautotools (0-1) unstable; urgency=low
+</span><span class='line'>
+</span><span class='line'>  * Initial release (Closes: #nnnn)  &lt;nnnn is the bug number of your ITP&gt;
+</span><span class='line'>
+</span><span class='line'> -- unknown &lt;user@unknown&gt;  Tue, 10 Jun 2014 12:42:30 +0800
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="rl"></a></p>
+
+<h2>debian/rules執行檔</h2>
+
+<p>這是dpkg-buildpackage會呼叫到的script，這些script本質上就是Makefiles。需提供下面的target:</p>
+
+<ul>
+<li>必備target
+
+<ul>
+<li>clean</li>
+<li>build</li>
+<li>build-arch</li>
+<li>build-indep</li>
+<li>binary</li>
+<li>binary-arch</li>
+<li>binary-indep</li>
+</ul>
+</li>
+<li>可有可無的target
+
+<ul>
+<li>install
+
+<ul>
+<li>get-orig-source</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>很恐怖嗎？基本上dh_make完在debian就會順便幫你產生一個預設的rules執行檔範例。基本上就是呼叫dh執行檔，列出如下</p>
+
+<figure class='code'><figcaption><span>debian/rules</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="c">#!/usr/bin/make -f</span>
+</span><span class='line'><span class="c"># -*- makefile -*-</span>
+</span><span class='line'><span class="c"># Sample debian/rules that uses debhelper.</span>
+</span><span class='line'><span class="c"># This file was originally written by Joey Hess and Craig Small.</span>
+</span><span class='line'><span class="c"># As a special exception, when this file is copied by dh-make into a</span>
+</span><span class='line'><span class="c"># dh-make output file, you may use that output file without restriction.</span>
+</span><span class='line'><span class="c"># This special exception was added by Craig Small in version 0.37 of dh-make.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Uncomment this to turn on verbose mode.</span>
+</span><span class='line'><span class="c">#export DH_VERBOSE=1</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">%</span><span class="o">:</span>
+</span><span class='line'>  dh <span class="nv">$@</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>dh是一個wrapper，會根據參數呼叫其他的script如dh_testdir, dh_auto_clean, dh_clean等。另外產生binary時手冊上面使用<code>fakeroot</code>模擬root權限，主要是將要安裝到系統的執行檔、函式庫、設定檔等安裝到<strong>假的</strong>root filesystem然後打包成deb檔。手冊的範例如下：</p>
+
+<ul>
+<li><code>fakeroot debian/rules binary</code></li>
+<li><code>fakeroot debian/rules binary-arch</code></li>
+</ul>
+
+
+<p>請注意的dh_make產生的rules範本在面對複雜的套件可能會有非預期的錯誤，此時人肉修改rules script將會是無可避免的事。</p>
+
+<p><strong>關於rules和dh的詳細用法這邊偷懶省略，請讀者自行參考手冊。</strong></p>
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://www.debian.org/doc/manuals/maint-guide/">Debian New Maintainers&#8217; Guide</a></li>
+<li><a href="https://www.debian.org/doc/debian-policy/ch-controlfields.html">Debian Policy Manual Chapter 5 - Control files and their fields</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/10/joined-his-patch-package-for-debian-packages/">打包Debian 套件時加入自己的Patch方式</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-10T03:24:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>3:24 am</span></time>
+        
+           | <a href="/blog/2014/06/10/joined-his-patch-package-for-debian-packages/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/10/joined-his-patch-package-for-debian-packages/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在打包Debian套件，有時候會需要從更改原本套件，也就是說需要在打包時自行apply patch。而Debian套件可以透過<a href="http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt">quilt</a>協助管理patch。<a href="https://www.debian.org/doc/manuals/maint-guide/">Debian New Maintainers&#8217; Guide</a>建議方式如下。</p>
+
+<ul>
+<li>確認有安裝quilt</li>
+<li>修改<code>~/.bashrc</code>加入：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>~/.bashrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">alias </span><span class="nv">dquilt</span><span class="o">=</span><span class="s2">&quot;quilt --quiltrc=${HOME}/.quiltrc-dpkg&quot;</span>
+</span><span class='line'><span class="nb">complete</span> -F _quilt_completion <span class="nv">$_quilt_complete_opt</span> dquilt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>新增<code>~/.quiltrc-dpkg</code></li>
+</ul>
+
+
+<figure class='code'><figcaption><span>~/.quiltrc-dpkg</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>d=. ; while [ ! -d $d/debian -a $(readlink -e $d) != / ]; do d=$d/..; done
+</span><span class='line'>
+</span><span class='line'>if [ -d $d/debian ] &amp;&amp; [ -z $QUILT_PATCHES ]; then
+</span><span class='line'>  ## if in Debian packaging tree with unset $QUILT_PATCHES
+</span><span class='line'>    QUILT_PATCHES=&quot;debian/patches&quot;
+</span><span class='line'>    QUILT_PATCH_OPTS=&quot;--reject-format=unified&quot;
+</span><span class='line'>    QUILT_DIFF_ARGS=&quot;-p ab --no-timestamps --no-index --color=auto&quot;
+</span><span class='line'>    QUILT_REFRESH_ARGS=&quot;-p ab --no-timestamps --no-index&quot;
+</span><span class='line'>    QUILT_COLORS=&quot;diff_hdr=1;32:diff_add=1;34:diff_rem=1;31:diff_hunk=1;33:diff_ctx=35:diff_cctx=33&quot;
+</span><span class='line'>    if ! [ -d $d/debian/patches ]; then mkdir $d/debian/patches; fi
+</span><span class='line'>fi
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>打包Debian產生patch時使用<code>dquilt</code>而不是quilt</li>
+</ul>
+
+
+<hr />
+
+<h2><code>~/.quiltrc-dpkg</code>說明</h2>
+
+<p>不要被這堆符號嚇到（先承認我一開使有被嚇到）。這邊可以看到為什麼要把quilt打包成quilt:</p>
+
+<ul>
+<li><code>QUILT_PATCHES</code>：產生的patch會放在<strong>debian/patches</strong>目錄而不是預設的patches目錄</li>
+<li><code>QUILT_PATCH_OPTS</code>：讓quilt呼叫patch執行檔apply patch時被退貨要使用unified格式</li>
+<li><code>QUILT_REFRESH_ARGS</code>和<code>QUILT_DIFF_ARGS</code>：讓quilt呼叫diff執行檔指定
+
+<ul>
+<li><code>-p ab</code>：使用<code>a/file b/file</code>的diff格式而不是<code>dir.orig/file dir/file</code>的表示方法</li>
+<li>產生patch檔案內不包含timestamp及index的資訊</li>
+</ul>
+</li>
+<li><code>QUILT_COLORS</code>：不用解釋吧</li>
+</ul>
+
+
+<hr />
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://www.debian.org/doc/manuals/maint-guide/">Debian New Maintainers&#8217; Guide</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/08/study-on-the-quilt/">Quilt初探 - 使用quilt產生和管理patch</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-08T07:33:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>7:33 am</span></time>
+        
+           | <a href="/blog/2014/06/08/study-on-the-quilt/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>傳統的組裝的情況，常常會需要處理patch，然而當patch數量資料多到某種程度，加上時間推移原資料更動，套用patch會讓人生不如死。而quilt是Linux下面處理多個patch檔案的管理軟體。因為組裝軟體和打包Linux 套件會使用到，所以花點時間看一下整理一下。目前感覺有點像是先用git format-patch產生一些patch檔，另外一邊用git am 去merge這些patch檔。然後merge完可以用git reset HEAD^幾次來unmerge。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#usage">透過quilt產生patch</a>
+
+<ul>
+<li><a href="#files">quilt產生的檔案</a></li>
+</ul>
+</li>
+<li><a href="#apply">透過quilt管理patch</a></li>
+<li><a href="#rc">~/.quiltrc</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p>quilt的格式是<code>quilt 命令</code>，<strong>而它處理的對象是stack</strong>，也就是說你可以使用push, pop。沒有特別指定的話，command處理的對象是stack top。</p>
+
+<hr />
+
+<p><a name="usage"></a></p>
+
+<h2>透過quilt產生patch</h2>
+
+<ul>
+<li><code>quilt new 產生的patch檔案名稱</code></li>
+<li><code>quilt add 要監督那個檔案</code></li>
+<li>更動檔案。</li>
+<li><code>quilt refresh</code>產生patch</li>
+</ul>
+
+
+<p>重複前面動作會再產生新的patch，置於stack的top。可以透過<code>quilt series</code>觀察stack的狀態。另外有兩點值得注意：</p>
+
+<ul>
+<li>假設都是重複更動同一份檔案，<code>quilt refresh</code>就是單純和最原始的檔案diff。舉例來說，下了<code>quilt add</code>後修改了三行再執行<code>quilt refresh</code>產生patch，之後再修改另外五行後執行<code>quilt refresh</code>原本的patch檔案會有第一次改的那三行再加上後來改的那五行。</li>
+<li>一個檔案a，經過<code>quilt new</code> ,<code>quilt add</code>, <code>quilt refresh</code>後，再用quilt產生另外一份檔案的patch後。要再修改檔案a會需要經過<code>quilt new</code> ,<code>quilt add</code>, <code>quilt refresh</code>產生另外全新的patch檔案。</li>
+<li>可以使用<code>quilt header -e</code>去編輯patch檔的詳細說明。另外也可以用<code>quilt header -e patch名稱</code>指定編輯特定patch名稱的詳細說明。</li>
+</ul>
+
+
+<p>quilt會將產生的patch放在目前目錄下的<code>patches</code>目錄，這部份可以透過更改<code>QUILT_PATCHES</code>的變數更改名稱。</p>
+
+<hr />
+
+<p><a name="files"></a></p>
+
+<h3>quilt產生的檔案</h3>
+
+<p><code>quilt new 要產生的patch檔案</code>被執行後會產生</p>
+
+<ul>
+<li>pactches目錄
+
+<ul>
+<li>紀錄patch 順序的series檔案</li>
+</ul>
+</li>
+<li>.pc目錄
+
+<ul>
+<li>applied-patches，和series相同</li>
+<li><code>要產生的patch檔案名稱</code>的目錄</li>
+</ul>
+</li>
+</ul>
+
+
+<p><code>quilt add 要監督那個檔案</code>被執行後會產生
+* .pc目錄/要產生的patch檔案名稱的目錄/監督檔案路徑/監督檔案
+    * ex: ./pc/fix_err_no_27113/libs/liba.c</p>
+
+<p><code>quilt refresh</code>產生patch</p>
+
+<ul>
+<li>.pc目錄/要產生的patch檔案名稱的目錄/.timestamp</li>
+<li>patches/要產生的patch檔案名稱</li>
+</ul>
+
+
+<p><strong>我們可以觀察發現<code>quilt add</code>後quilt會將未修改的原始檔複製一份到.pc目錄/要產生的patch檔案名稱的目錄/監督檔案路徑/監督檔案。之後<code>quilt refresh</code>就是單純的diff產生結果</strong></p>
+
+<hr />
+
+<p><a name="apply"></a></p>
+
+<h2>透過quilt管理patch</h2>
+
+<p>apply patch並管理的步驟是。</p>
+
+<ul>
+<li>取得未apply patch的原始套件目錄。</li>
+<li>將前面產生出來的patches目錄複製到未apply patch的原始的套件目錄當中。</li>
+<li>透過quilt 操作並管理patch</li>
+</ul>
+
+
+<p>假設你有了patches目錄，你可以做以下操作</p>
+
+<ul>
+<li>查詢
+
+<ul>
+<li><code>quilt series</code>查詢有哪些patch</li>
+<li><code>quilt applied</code>查詢已經applied那些patch</li>
+<li><code>quilt unapplied</code>查詢還沒apply那些patch</li>
+<li><code>quilt next</code>查詢下一個要apply的patch</li>
+<li><code>quilt next</code>查詢前一個已經applied的patch</li>
+<li><code>quilt header</code>顯示目前stack top的註解說明資訊及要patch的檔案</li>
+<li><code>quilt header patch名稱</code>顯示目前stack中patch名稱的註解說明資訊及要patch的檔案</li>
+</ul>
+</li>
+<li>套用/還原patch
+
+<ul>
+<li><code>quilt push</code>依照stack反順序apply patch
+
+<ul>
+<li><code>quilt push -a</code>可以一口氣apply patch</li>
+<li><code>quilt push patch名稱</code></li>
+</ul>
+</li>
+<li><code>quilt pop</code>undo 一次已經applied的patch。
+
+<ul>
+<li><code>quilt pop -a</code>可以一口氣apply patch</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>舉例來說，假設patches目錄stack有<code>01_fix</code>, <code>02_fix</code>和<code>03_fix</code>。將該目錄複製到未patch的目錄中，下兩次<code>quilt push</code>會分別patch <code>01_fix</code>, <code>02_fix</code>。之後再<code>quilt pop</code>會變成只有apply <code>01_fix</code>而已。</p>
+
+<hr />
+
+<p><a name="rc"></a></p>
+
+<h2>~/.quiltrc</h2>
+
+<p>使用者透過<code>~/.quiltrc</code>自訂quilt的行為，列舉如下</p>
+
+<ul>
+<li>QUILT_PATCHES：指定產生的patch存放的目錄，預設為patches目錄</li>
+<li>QUILT_PATCH_OPTS：讓quilt呼叫patch執行檔apply patch時傳遞的參數</li>
+<li>QUILT_REFRESH_ARGS和QUILT_DIFF_ARGS：讓quilt呼叫diff執行檔時傳遞的參數</li>
+<li>QUILT_COLORS：不用解釋吧</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>quilt手冊： /usr/share/doc/quilt/quilt.pdf.gz</li>
+<li><a href="http://raphaelhertzog.com/2012/08/08/how-to-use-quilt-to-manage-patches-in-debian-packages/">How to use quilt to manage patches in Debian packages (推)</a></li>
+<li><a href="https://wiki.debian.org/UsingQuilt">UsingQuilt</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Quilt_%28software%29">Wikipedia: Quilt</a></li>
+<li><a href="http://wiki.openwrt.org/doc/devel/patches">OpenWrt Wiki: Working with patches</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/08/meta-package-debian-package-series/">[Meta-Package] Debian 打包系列</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-08T06:56:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>6:56 am</span></time>
+        
+           | <a href="/blog/2014/06/08/meta-package-debian-package-series/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/08/meta-package-debian-package-series/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>meta這個字眼好像找不到精確的中文名詞。基本上就是指和一個「主題」有關的「東西」。舉例來說，在多媒體播放當中，「metadata」指的是附於媒體本身的屬性，如影片解析度、作品名稱等。而「meta-programming」指的是寫程式執行輸出結果是另外一段的程式原始碼。</p>
+
+<p>而在Debian套件中meta package就是該套件本身不會包含任何套件，但是該套件會需要相依於一個或多個套件，因而安裝當該meta package就是安裝完一組套件。</p>
+
+<p>回到主題，最近為了解Debian套件的產生方式做了一些study，因此整理相關連結放在這份文件當中。這樣應該也是一種meta package的概念吧。</p>
+
+<h2>Debian套件資源</h2>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/05/16/debian-package-preparation-kit-and-document/">Debian打包準備套件和文件</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/05/16/study-on-dpkg/">使用dpkg 查詢套件資訊</a></li>
+</ul>
+
+
+<h2>編譯自動化</h2>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools/">GNU Build System: Autotools 初探</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/05/18/study-on-the-libtool/">Libtool初探</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/05/20/autotools-to-use-libtool-compile-function-library/">在Autotools使用Libtool編譯函式庫</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/01/study-on-cmake/">CMake 初探</a></li>
+</ul>
+
+
+<h2>打包方式</h2>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style/">從Autotools tarball打包deb套件: 不嚴謹style</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/12/cmake-from-source-packages-deb-package-loose-style/">從CMake原始碼打包deb套件: 不嚴謹style</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/10/package-debian-packages-study-on-the-debian-directory/">[Debian套件打包] debian目錄初探 (1)</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/11/package-debian-packages-study-on-the-debian-directory-2/">[Debian套件打包] debian目錄初探 (2)</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages/">[Debian套件打包] 設定好debian目錄後的打包</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/17/package-debian-packages-testing-utilities/">[Debian套件打包] 打包的測試驗證工具簡介</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/17/package-debian-packages-how-to-update-the-existing-suite/">[Debian套件打包] 如何更新現有套件並重新打包？</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/27/package-debian-packages-from-the-same-tarball-package-multiple-suite/">[Debian套件打包] 從同一套tarball打包多個套件</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/">[Debian套件打包] 使用pbuilder驗證套件 </a></li>
+<li><a href="http://wen00072.github.io/blog/2014/11/20/package-debian-packages-using-local-debian-pbuilder-package/">[Debian套件打包] pbuilder 中如何安裝自己打包</a></li>
+</ul>
+
+
+<h2>其他</h2>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/06/07/in-the-c-programming-language-using-gettext-slide-on-the-line/">C語言中使用gettext</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt/">quilt初探</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/06/10/joined-his-patch-package-for-debian-packages/">打包Debian 套件時加入自己的Patch方式</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/07/in-the-c-programming-language-using-gettext-slide-on-the-line/">C語言中使用gettext投影片上線</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-07T05:21:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>5:21 am</span></time>
+        
+           | <a href="/blog/2014/06/07/in-the-c-programming-language-using-gettext-slide-on-the-line/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/07/in-the-c-programming-language-using-gettext-slide-on-the-line/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://wen00072.github.io/blog/2014/05/30/study-on-gettext">這一份</a>文件的整理出來的投影片</p>
+
+<script async class="speakerdeck-embed" data-id="1f7aa860cdd40131e1da2aa9d004a740" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/07/dry-test-file-template/">DRY: 測試檔案Template</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-07T04:05:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>4:05 am</span></time>
+        
+           | <a href="/blog/2014/06/07/dry-test-file-template/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/07/dry-test-file-template/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>本頁存在的目的單純是提供其他網頁參考同樣的測試程式使用，不知道算不算是一種metadata?</strong></p>
+
+<p><a href="http://en.wikipedia.org/wiki/Don%27t_repeat_yourself">DRY: Don&rsquo;t Repeat Your Self</a>，字面上的解釋就是不要一直做重複的事。</p>
+
+<p>由於前面一系列的文章都會用到同樣的測試程式碼，每次都要剪下貼上。加上之後打算整理的資料還是會用到這些測試程式，因此將它們獨立出來。</p>
+
+<p>最原始的出處：<a href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues">Makefile header file dependency問題</a>。這些測試程式的主體是liba.c和libb.c兩個檔案。liba.c提供兩個API</p>
+
+<ul>
+<li>from_liba()
+
+<ul>
+<li>印出呼叫的訊息</li>
+</ul>
+</li>
+<li>test_liba()
+
+<ul>
+<li>呼叫lib.c中的from_libb()</li>
+</ul>
+</li>
+</ul>
+
+
+<p>libb.c的API只是把上面的API中的liba改成libb而已。</p>
+
+<h2>liba.h</h2>
+
+<figure class='code'><figcaption><span>liba.h</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#ifndef LIBA_H_2013</span>
+</span><span class='line'><span class="cp">#define LIBA_H_2013</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_liba</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_liba</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>liba.c</h2>
+
+<figure class='code'><figcaption><span>liba.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;libb.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_liba</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">from_libb</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_liba</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>libb.h</h2>
+
+<figure class='code'><figcaption><span>libb.h</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#ifndef LIBB_H_2013</span>
+</span><span class='line'><span class="cp">#define LIBB_H_2013</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_libb</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_libb</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>libb.c</h2>
+
+<figure class='code'><figcaption><span>libb.c  </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;liba.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_libb</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">from_liba</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_libb</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>test.c</h2>
+
+<figure class='code'><figcaption><span>test.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;libb.h&quot;</span>
+</span><span class='line'><span class="cp">#include &quot;liba.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">test_liba</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">test_libb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/01/study-on-cmake/">CMake 初探</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-01T05:06:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>5:06 am</span></time>
+        
+           | <a href="/blog/2014/06/01/study-on-cmake/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/01/study-on-cmake/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>目錄</h2>
+
+<ul>
+<li><a href="#ov">概論</a></li>
+<li><a href="#cmx-syntax">CMakeLists.txt語法簡介</a>
+
+<ul>
+<li><a href="#cmx-syntax-str">字串和list</a></li>
+<li><a href="#cmx-syntax-flow">流程控制</a></li>
+<li><a href="#cmx-syntax-macro">巨集和函數</a></li>
+<li><a href="#cmx-syntax-quo">Quotation</a></li>
+<li><a href="#cmx-syntax-install">專案產生檔案安裝</a></li>
+</ul>
+</li>
+<li><a href="#ex">範例: 產生執行檔和函式庫</a>
+
+<ul>
+<li><a href="#ex-prg">範例程式</a>
+
+<ul>
+<li><a href="#ex-1">第一版：單一程式沒有函數庫</a></li>
+</ul>
+</li>
+<li><a href="#ex-2">第二版：加入編譯函式庫</a></li>
+<li><a href="#ex-3">第三版：每個目錄單獨編譯</a></li>
+<li><a href="#ex-4">第四版：加入安裝產生的檔案描述</a></li>
+</ul>
+</li>
+<li><a href="#concl">總結</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="ov"></a></p>
+
+<h2>概論</h2>
+
+<p>CMake是1999年推出的開源自由軟體計劃，目的是提供不同平台之間共同的編譯環境。他的特點有：</p>
+
+<ul>
+<li>支援不同平台。</li>
+<li><strong>可以</strong>將Build和原本程式碼分開。不分開稱為in-place build，而分開的情況稱為out-place build。out-place build的附加功能就是同樣一包套件可以同時編譯成不同平台的binary並且分別放在不同的目錄中。</li>
+<li>支援cache加快編譯速度。</li>
+</ul>
+
+
+<p>CMake的執行流程簡單來說是</p>
+
+<ul>
+<li>開發者使用CMake語法寫編譯描述，存到CMakeLists.txt。</li>
+<li>使用者執行cmake，cmake首先會根據開發描述的規格產生該平台對應的編譯環境檔案如Makefile等。</li>
+<li>使用者執行make或是平台上的編譯方法產生最後的結果。</li>
+<li>使用者執行cmake install安裝軟體。</li>
+</ul>
+
+
+<p>另外一點值得注意的是cmake本身沒有提供uninstall功能。</p>
+
+<hr />
+
+<p><a name="cmx-syntax"></a></p>
+
+<h2>CMakeLists.txt 語法簡介</h2>
+
+<p>CMake語法的格式為<code>命令字串(參數)</code>，而相關規範可以分為「list和字串」、「變數」、「流程控制」、「Quotation」。分別討論如下：</p>
+
+<hr />
+
+<p><a name="cmx-syntax-str"></a></p>
+
+<h3>list和字串</h3>
+
+<p>CMake的基本單位是字串，而多個字串可以透過空白或是<code>;</code>組合成字串list。</p>
+
+<p>有興趣的可以直接剪貼下面程式存成CMakeLists.txt後下cmake .看看結果。</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">xxx</span> <span class="s">a</span> <span class="s">b</span> <span class="s">c</span> <span class="s">d</span><span class="p">)</span>
+</span><span class='line'><span class="nb">message</span><span class="p">(</span><span class="o">${</span><span class="nv">xxx</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">xxx</span> <span class="s">e;f;g;h</span><span class="p">)</span>
+</span><span class='line'><span class="nb">message</span><span class="p">(</span><span class="o">${</span><span class="nv">xxx</span><span class="o">}</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="cmx-syntax-var"></a></p>
+
+<h3>變數</h3>
+
+<p>變數使用<code>set</code>命令設定，格式為<code>set(變數名稱　指定的值)</code>。使用<code>${變數名稱}</code>取值。</p>
+
+<p>有興趣的可以直接剪貼下面程式存成CMakeLists.txt後下cmake .看看結果。</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">xxx</span> <span class="s">a</span> <span class="s">b</span> <span class="s">c</span> <span class="s">d</span><span class="p">)</span>
+</span><span class='line'><span class="nb">message</span><span class="p">(</span><span class="o">${</span><span class="nv">xxx</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">xxx</span> <span class="s">e;f;g;h</span><span class="p">)</span>
+</span><span class='line'><span class="nb">message</span><span class="p">(</span><span class="o">${</span><span class="nv">xxx</span><span class="o">}</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>另外<a href="http://www.cmake.org/Wiki/CMake_Useful_Variables">這邊</a>也列出了CMake內建好用的變數。</p>
+
+<hr />
+
+<p><a name="cmx-syntax-flow"></a></p>
+
+<h3>流程控制</h3>
+
+<p>流程控制又可以分成條件執行、迴圈、和巨集等情況討論：</p>
+
+<hr />
+
+<h4>條件執行</h4>
+
+<p>直接看範例，這個範例單純從command line吃變數值，做字串比對。</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">if</span> <span class="p">(</span> <span class="s">NOT</span> <span class="s">DEFINED</span> <span class="s">test</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="s2">&quot;Use: cmake -Dtest:STRING=val to test&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">elseif</span><span class="p">(</span><span class="o">${</span><span class="nv">test</span><span class="o">}</span> <span class="s">STREQUAL</span> <span class="s">yes</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="s2">&quot;if: ${test}&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">elseif</span><span class="p">(</span><span class="o">${</span><span class="nv">test</span><span class="o">}</span> <span class="s">STREQUAL</span> <span class="s">test1</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="s2">&quot;else if: ${test}&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">else</span><span class="p">()</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="s2">&quot;else: ${test}&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">endif</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>有幾點需要說明：</p>
+
+<ul>
+<li><code>DEFINED</code>判斷是否該變數有被定義。</li>
+<li>command透過<code>-D變數名稱：變數型態=變數值</code>來設定CMakeList.txt內部的變數。</li>
+<li>條件判斷方法順序可以參考<a href="http://www.cmake.org/cmake/help/v2.8.7/cmake.html#command:if">這邊</a>。簡單翻譯一下：
+
+<ul>
+<li>先處理：EXISTS, COMMAND, DEFINED</li>
+<li>再來是：EQUAL, LESS, GREATER, STRLESS, STRGREATER, STREQUAL, MATCHES</li>
+<li>接下來是：NOT</li>
+<li>最後才是：AND, OR</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<h5>cache的補充</h5>
+
+<p>我們第一次 <strong>不從command 帶參數</strong> 執行結果:</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">$</span> <span class="err">cmake</span>  <span class="err">.</span>
+</span><span class='line'><span class="err">--</span> <span class="err">The</span> <span class="err">C</span> <span class="err">compiler</span> <span class="err">identification</span> <span class="err">is</span> <span class="err">GNU</span>
+</span><span class='line'><span class="err">...</span>
+</span><span class='line'><span class="err">Use:</span> <span class="err">cmake</span> <span class="err">-Dtest:STRING=val</span> <span class="err">to</span> <span class="err">test</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來我們從command <strong>帶參數</strong> 重新執行一次：</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">$</span> <span class="err">cmake</span>  <span class="err">.</span> <span class="err">-Dtest:STRING=yes</span>
+</span><span class='line'><span class="err">if:</span> <span class="err">yes</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然後 <strong>不從command 帶參數</strong> 再執行會發現test變數變成yes了</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">$</span> <span class="err">cmake</span>  <span class="err">.</span>
+</span><span class='line'><span class="err">if:</span> <span class="err">yes</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>看一下目前目錄會發現新的檔案<code>CMakeCache.txt</code>，找一下裏面的字串<code>test</code>會看到</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">$</span> <span class="err">grep</span> <span class="err">test</span> <span class="err">CMakeCache.txt</span>
+</span><span class='line'><span class="err">...</span>
+</span><span class='line'><span class="err">test:STRING=yes</span>
+</span><span class='line'><span class="err">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>結論就是CMake的確有cache，而且不小心cache會影響到執行的結果。</strong>另外其實<code>set(..)</code>裏面也可以cache行為的相關參數，這邊就先跳過不談。</p>
+
+<hr />
+
+<h4>迴圈</h4>
+
+<p>兩種為主，<code>foreach</code>和<code>while</code>，直接看範例。</p>
+
+<ul>
+<li><code>foreach</code>
+為何有<code>cmake_minimum_required(VERSION 2.8)</code>呢？因為不打執行<code>cmake .</code>會產生警告。有興趣的可以打<code>cmake --help-policy CMP0000</code>看說明。</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">xxx</span> <span class="s">e;f;g;h</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">foreach</span><span class="p">(</span><span class="s">i</span> <span class="o">${</span><span class="nv">xxx</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="o">${</span><span class="nv">i</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">endforeach</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>執行結果如下：</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">$</span> <span class="err">cmake</span> <span class="err">.</span>
+</span><span class='line'><span class="err">e</span>
+</span><span class='line'><span class="err">f</span>
+</span><span class='line'><span class="err">g</span>
+</span><span class='line'><span class="err">h</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>while
+一個0~9的迴圈，需要透過<a href="http://www.cmake.org/cmake/help/v2.8.7/cmake.html#command:math">math command</a>做四則運算。</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">i</span> <span class="s">0</span><span class="p">)</span>
+</span><span class='line'><span class="nb">while</span><span class="p">(</span><span class="s">i</span> <span class="s">LESS</span> <span class="s">10</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="o">${</span><span class="nv">i</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">math</span><span class="p">(</span><span class="s">EXPR</span> <span class="s">i</span> <span class="s2">&quot;${i} + 1&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">endwhile</span><span class="p">()</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="cmx-syntax-macro"></a></p>
+
+<h4>巨集和函數</h4>
+
+<p>這兩個差別是<strong>在函數內產生的變數scope只存在函數內，而巨集是全域的。</strong>直接看範例，範例中的巨集和函數都是在內部產生變數並且印出傳進來的參數。可以仔細看輸出結果的確函數內的變數呼叫完後就消失了。</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span>
+</span><span class='line'><span class="nb">macro</span><span class="p">(</span><span class="s">mac_print</span> <span class="s">msg</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">set</span><span class="p">(</span><span class="s">mac</span> <span class="s2">&quot;macro&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="s2">&quot;${mac}: ${msg}&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">endmacro</span><span class="p">(</span><span class="s">mac_print</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">function</span><span class="p">(</span><span class="s">func_print</span> <span class="s">msg</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">set</span> <span class="p">(</span><span class="s">func</span> <span class="s2">&quot;func&quot;</span><span class="p">)</span>
+</span><span class='line'>    <span class="nb">message</span><span class="p">(</span><span class="s2">&quot;${func}: ${msg}&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">endfunction</span><span class="p">(</span><span class="s">func_print</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">mac_print</span><span class="p">(</span><span class="s2">&quot;test macro&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">message</span><span class="p">(</span><span class="s2">&quot;check var in macro: ${mac}&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">func_print</span><span class="p">(</span><span class="s2">&quot;test function&quot;</span><span class="p">)</span>
+</span><span class='line'><span class="nb">message</span><span class="p">(</span><span class="s2">&quot;check var in function: ${func}&quot;</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>執行結果如下</p>
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">$</span> <span class="err">cmake</span> <span class="err">.</span>
+</span><span class='line'><span class="err">macro:</span> <span class="err">test</span> <span class="err">macro</span>
+</span><span class='line'><span class="err">check</span> <span class="err">var</span> <span class="err">in</span> <span class="err">macro:</span> <span class="err">macro</span>
+</span><span class='line'><span class="err">func:</span> <span class="err">test</span> <span class="err">function</span>
+</span><span class='line'><span class="err">check</span> <span class="err">var</span> <span class="err">in</span> <span class="err">function:</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="cmx-syntax-quo"></a></p>
+
+<h3>Quotation</h3>
+
+<ul>
+<li>字串可以用成對的<code>"</code>表示</li>
+<li>支援C語言型態控制字元如<code>\n``\t</code></li>
+<li>可以使用跳脫字元顯示特殊意義符號如<code>\${var}</code>印出來就是<code>${VAR}</code></li>
+</ul>
+
+
+<p>&ndash;
+<a name="cmx-syntax-install"></a></p>
+
+<h3>專案產生檔案安裝</h3>
+
+<p>簡單的語法如下，詳細資料請參考<a href="http://www.cmake.org/Wiki/CMake:Install_Commands">這邊</a></p>
+
+<ul>
+<li>執行檔安裝(一般安裝目錄路徑：bin)
+
+<ul>
+<li><code>install(TARGETS 執行檔名稱 DESTINATION 安裝目錄路徑)</code></li>
+</ul>
+</li>
+<li>函式庫安裝(一般安裝目錄路徑：lib)
+
+<ul>
+<li><code>install(TARGETS 函式庫名稱 LIBRARY DESTINATION 安裝目錄路徑)</code></li>
+</ul>
+</li>
+<li>Header 檔安裝(一般安裝目錄路徑：include)
+
+<ul>
+<li><code>install(FILES Header檔名稱 DESTINATION 安裝目錄路徑)</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>這些安裝描述都是允許多個檔案。另外你可以在執行cmake帶<code>-DCMAKE_INSTALL_PREFIX=安裝目錄</code>指定安裝的top目錄，或是<code>make DESTDIR=安裝目錄</code>也有同樣效果。</p>
+
+<hr />
+
+<p><a name="ex"></a></p>
+
+<h2>範例: 產生執行檔和函式庫</h2>
+
+<p>前面有提到<strong>in-place</strong>和<strong>out-place</strong>的編譯方式。他們方式的差別是：</p>
+
+<ul>
+<li>in-place: 直接在CMakeLists.txt那層下<code>cmake . &amp;&amp; make</code></li>
+<li>out-place: 直接在CMakeLists.txt那層下<code>mkdir build &amp;&amp; cd build &amp;&amp; cmake ../ &amp;&amp; make</code>
+
+<ul>
+<li>build是慣用名稱，不需要強制使用。</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex-prg"></a></p>
+
+<h3>範例程式</h3>
+
+<p><a href="http://wen00072.github.io/blog/2014/06/07/dry-test-file-template">範例程式細節在這邊</a>，檔案各別分配到<code>src</code>, <code>include</code>, <code>libs</code>這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。</p>
+
+<ul>
+<li>測試環境：Ubuntu 12.04</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>原始測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   └── libb.c
+</span><span class='line'>└── src
+</span><span class='line'>    └── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ex-1"></a></p>
+
+<h3>第一版：單一程式沒有函數庫</h3>
+
+<p>先暖身一下，只要在project最上層放一個CMakeLists.txt就好了。</p>
+
+<p>這版本CMakeLists.txt不難理解，就做</p>
+
+<ul>
+<li>填寫project資訊描述。</li>
+<li>設定project相關header file路徑。</li>
+<li>指定編譯要顯示細節，這是個人偏好習慣。</li>
+<li>設定共用編譯參數，CMake可以更進一步地指定release mocde或debug mode的參數，以及指定套用這些參數檔案。</li>
+<li>指定要編譯哪些檔案。</li>
+<li>指定要編譯成執行檔</li>
+</ul>
+
+
+<p>top 目錄的CMakeLists.txt如下：</p>
+
+<figure class='code'><figcaption><span>top 目錄的CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Project data</span>
+</span><span class='line'><span class="nb">project</span><span class="p">(</span><span class="s">testcmake</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Directories</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">SRC_DIR</span> <span class="s">src</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">LIB_DIR</span> <span class="s">libs</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">INC_DIR</span> <span class="s">include</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Release mode</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_BUILD_TYPE</span> <span class="s">Debug</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Compile flags</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_C_FLAGS</span> <span class="s2">&quot;-Wall -Werror&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># I like verbose, must after project, do not know why</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_VERBOSE_MAKEFILE</span> <span class="s">true</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Where to include?</span>
+</span><span class='line'><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">INC_DIR</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Files to compile</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">test_SRCS</span> <span class="o">${</span><span class="nv">SRC_DIR</span><span class="o">}</span><span class="s">/test.c</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/liba.c</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/libb.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_executable</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="o">${</span><span class="nv">test_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這邊可以看到和原本的差別只有多了CMakeLists.txt檔而已。</p>
+
+<figure class='code'><figcaption><span>top 目錄的CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">include</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">liba.h</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">└──</span> <span class="err">libb.h</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">libs</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">liba.c</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">└──</span> <span class="err">libb.c</span>
+</span><span class='line'><span class="err">└──</span> <span class="err">src</span>
+</span><span class='line'> <span class="err">  </span> <span class="err">└──</span> <span class="err">test.c</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ex-2"></a></p>
+
+<h3>第二版：加入編譯函式庫</h3>
+
+<p>要編譯函式庫，要在top目錄下的CMakeLists.txt做以下的修改</p>
+
+<ul>
+<li><code>add_library(檔案名稱 函式庫名稱)</code>告訴CMake要搬把哪些檔案編譯函式庫
+
+<ul>
+<li>改成<code>add_library(檔案名稱 SHARED 函式庫名稱)</code>就變成shared library了。</li>
+</ul>
+</li>
+<li><code>target_link_libraries(執行檔名稱 函式庫名稱)</code>
+
+<ul>
+<li>告訴系統最後link要把函式庫一起link進來。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>top 目錄的CMakeLists.txt如下：</p>
+
+<figure class='code'><figcaption><span>top 目錄的CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Project data</span>
+</span><span class='line'><span class="nb">project</span><span class="p">(</span><span class="s">testcmake</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Directories</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">SRC_DIR</span> <span class="s">src</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">LIB_DIR</span> <span class="s">libs</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">INC_DIR</span> <span class="s">include</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Release mode</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_BUILD_TYPE</span> <span class="s">Debug</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Compile flags</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_C_FLAGS</span> <span class="s2">&quot;-Wall -Werror&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># I like verbose, must after project, do not know why</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_VERBOSE_MAKEFILE</span> <span class="s">true</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Where to include?</span>
+</span><span class='line'><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">INC_DIR</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Build libraries</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">liba_SRCS</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/liba.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">libb_SRCS</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/libb.c</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">add_library</span><span class="p">(</span><span class="s">a</span> <span class="s">SHARED</span> <span class="o">${</span><span class="nv">liba_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_library</span><span class="p">(</span><span class="s">b</span> <span class="s">SHARED</span> <span class="o">${</span><span class="nv">libb_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Build binary</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">test_SRCS</span> <span class="o">${</span><span class="nv">SRC_DIR</span><span class="o">}</span><span class="s">/test.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_executable</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="o">${</span><span class="nv">test_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">target_link_libraries</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="s">a</span> <span class="s">b</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ex-3"></a></p>
+
+<h3>第三版：每個目錄單獨編譯</h3>
+
+<p>要做的事情很簡單，就是</p>
+
+<ul>
+<li>在<code>src</code>和<code>libs</code>下面加入CMakeLists.txt，描述編譯行為</li>
+<li>把根目錄的對應編譯行為搬到子目錄的CMakeLists.txt</li>
+<li>使用<code>add_subdirectory(子目錄名稱)</code>把要編譯的子目錄加進去</li>
+</ul>
+
+
+<p>所以我們現在目錄樹狀結構會變成src和lib目錄都有CMakeLists.txt</p>
+
+<figure class='code'><figcaption><span>top 目錄的CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">include</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">liba.h</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">└──</span> <span class="err">libb.h</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">libs</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">liba.c</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">└──</span> <span class="err">libb.c</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">readme.txt</span>
+</span><span class='line'><span class="err">└──</span> <span class="err">src</span>
+</span><span class='line'> <span class="err">  </span> <span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err"> </span> <span class="err"> </span> <span class="err">└──</span> <span class="err">test.c</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>每個目錄的CMakeLists.txt列出如下</p>
+
+<ul>
+<li>CMakeLists.txt</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span>
+</span><span class='line'><span class="c"># Project data</span>
+</span><span class='line'><span class="nb">project</span><span class="p">(</span><span class="s">testcmake</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Directories</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">SRC_DIR</span> <span class="s">src</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">LIB_DIR</span> <span class="s">libs</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">INC_DIR</span> <span class="s">include</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Release mode</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_BUILD_TYPE</span> <span class="s">Debug</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Compile flags</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_C_FLAGS</span> <span class="s2">&quot;-Wall -Werror&quot;</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># I like verbose, must after project, do not know why</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_VERBOSE_MAKEFILE</span> <span class="s">true</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Where to include?</span>
+</span><span class='line'><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">INC_DIR</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Build library in libs directory or not?</span>
+</span><span class='line'><span class="c"># Dive into libs directory</span>
+</span><span class='line'><span class="nb">add_subdirectory</span><span class="p">(</span><span class="o">${</span><span class="nv">SRC_DIR</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_subdirectory</span><span class="p">(</span><span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>libs/CMakeLists.txt</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>libs/CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="c"># Build binary, inherit setting from parent</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">liba_SRCS</span> <span class="s">liba.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">libb_SRCS</span> <span class="s">libb.c</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nb">add_library</span><span class="p">(</span><span class="s">a</span> <span class="o">${</span><span class="nv">liba_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_library</span><span class="p">(</span><span class="s">b</span> <span class="o">${</span><span class="nv">libb_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>src/CMakeLists.txt</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>src/CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="c"># Build binary</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">test_SRCS</span> <span class="s">test.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_executable</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="o">${</span><span class="nv">test_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">target_link_libraries</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="s">a</span> <span class="s">b</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ex-4"></a></p>
+
+<h2>第四版：加入安裝產生的檔案描述</h2>
+
+<p>這邊就是單純把前面的install()命令套用到每一個目錄下的CMakeLists.txt。由於我們也要安裝header檔，所以在include目錄下面會新增CMakeLists.txt描述安裝header的細節。</p>
+
+<p>所以我們現在目錄樹狀結構會變成每個目錄都有CMakeLists.txt</p>
+
+<figure class='code'><figcaption><span>src/CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">include</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">liba.h</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">└──</span> <span class="err">libb.h</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">libs</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">├──</span> <span class="err">liba.c</span>
+</span><span class='line'><span class="err">│  </span> <span class="err">└──</span> <span class="err">libb.c</span>
+</span><span class='line'><span class="err">├──</span> <span class="err">readme.txt</span>
+</span><span class='line'><span class="err">└──</span> <span class="err">src</span>
+</span><span class='line'> <span class="err">  </span> <span class="err">├──</span> <span class="err">CMakeLists.txt</span>
+</span><span class='line'><span class="err"> </span> <span class="err"> </span> <span class="err">└──</span> <span class="err">test.c</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>而各CMakeLists.txt新增的描述為</p>
+
+<ul>
+<li>CMakeLists.txt</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">add_subdirectory</span><span class="p">(</span><span class="o">${</span><span class="nv">INC_DIR</span><span class="o">}</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>libs/CMakeLists.txt</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>libs/CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">install</span><span class="p">(</span><span class="s">TARGETS</span> <span class="s">a</span> <span class="s">b</span> <span class="s">LIBRARY</span> <span class="s">DESTINATION</span> <span class="s">lib</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>src/CMakeLists.txt</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>src/CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">install</span><span class="p">(</span><span class="s">TARGETS</span> <span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="s">DESTINATION</span> <span class="s">bin</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>include/CMakeLists.txt</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>include/CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">install</span><span class="p">(</span><span class="s">FILES</span> <span class="s">liba.h</span> <span class="s">libb.h</span> <span class="s">DESTINATION</span> <span class="s">include</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h4>第四版執行結果</h4>
+
+<figure class='code'><figcaption><span>第四版執行結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cmake  ../  -DCMAKE_INSTALL_PREFIX=`pwd`/test &amp;&amp; make &amp;&amp; make install
+</span><span class='line'>...
+</span><span class='line'>$ tree test
+</span><span class='line'>test/
+</span><span class='line'>├── bin
+</span><span class='line'>│   └── testcmake
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>└── lib
+</span><span class='line'>    ├── liba.so
+</span><span class='line'>    └── libb.so
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="concl"></a></p>
+
+<h2>結論</h2>
+
+<p>本篇文章簡單介紹了CMake的語法，以及示範用CMake產生執行檔和函式庫。但是CMake還有太多東西值得去注意，例如把字串代換到程式碼，config.h的建立，搜尋depend 套件等。這部份以後有緣份會用到再跟各位分享。</p>
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://www.cmake.org/">CMake 官方網站</a></li>
+<li><a href="https://github.com/TheErk/CMake-tutorial">CMake-tutorial 投影片，強力推荐</a></li>
+<li><a href="http://www.cmake.org/cmake/help/syntax.html">CMake Syntax</a></li>
+<li><a href="http://blog.linux.org.tw/~jserv/archives/001991.html">「貓也會的 CMake」簡報上線</a></li>
+<li><a href="http://www.cmake.org/Wiki/CMake">cmake 官方網站 wiki</a></li>
+<li><a href="http://www.cmake.org/cmake/help/cmake_tutorial.html">CMake 官方網站:Tutorial</a></li>
+<li><a href="http://en.wikipedia.org/wiki/CMake">Wikipedia: CMake</a></li>
+<li><a href="http://www.cs.swarthmore.edu/~adanner/tips/cmake.php">CMake Howto</a></li>
+<li><a href="http://zh.wikibooks.org/zh-tw/CMake_%E5%85%A5%E9%96%80/%E9%81%8B%E7%AE%97%E5%AD%90">CMake 入門/運算子</a></li>
+<li><a href="http://stackoverflow.com/questions/12896988/passing-the-argument-to-cmake-via-command-prompt">Stackoverflow: Passing the argument to CMAKE via command prompt</a></li>
+<li><a href="http://www.cmake.org/Wiki/CMake_Useful_Variables">CMake: Useful variables</a></li>
+<li><a href="http://www.cmake.org/Wiki/CMake:Install_Commands">CMake: Install_Commands</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/05/30/study-on-gettext/">C語言中使用gettext</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-05-30T07:17:00+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>7:17 am</span></time>
+        
+           | <a href="/blog/2014/05/30/study-on-gettext/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/05/30/study-on-gettext/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>gettext 是1990年代Sun推出的軟體，用於處理Unix下面<strong>程式訊息的多國語言問題</strong>。後來GNU協會也推出了GNU gettext。本文以GNU的gettext為主。</p>
+
+<hr />
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#ov">概論</a></li>
+<li><a href="#ex">範例</a>
+
+<ul>
+<li><a href="#ex1">套用gettext到C語言程式碼</a></li>
+<li><a href="#ex2">產生pot檔</a></li>
+<li><a href="#ex3">產生正體中文po檔</a>
+
+<ul>
+<li><a href="#ex3-1">po檔補充</a></li>
+</ul>
+</li>
+<li><a href="#ex4">產生mo檔</a></li>
+<li><a href="#ex5">範例結果</a></li>
+</ul>
+</li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="ov"></a></p>
+
+<h2>概論</h2>
+
+<p><a href="http://en.wikipedia.org/wiki/File:Gettext.svg">這張圖</a>和<a href="https://www.gnu.org/software/gettext/manual/html_node/Overview.html#Overview">這張圖</a>很清楚地說明整個流程。文字解釋如下：</p>
+
+<ul>
+<li>使用者在程式碼中加料，讓gettext工具可以認出來要處理的訊息</li>
+<li>執行<code>xgettext</code>，將程式碼中要處理的訊息抽出存到<code>pot</code> (Portable Object Template)檔</li>
+<li>執行<code>msginit</code>，指定需要的語系如正體中文、日文、法文等。程式會將<code>pot</code>檔案轉成對應的<code>po</code>(Portable Object)檔</li>
+<li>執行<code>msgfmt</code>吃<code>po</code>檔產生和平台相關的文字訊息的<code>mo</code>(machine object)檔</li>
+<li>接下來如果程式碼又有新的加料訊息，就不是用<code>msginit</code><strong>產生</strong><code>pot</code>檔，而是透過<code>msgmerge</code>來<strong>更新</strong><code>pot</code>檔</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex"></a></p>
+
+<h2>範例</h2>
+
+<ul>
+<li>測試環境
+
+<ul>
+<li>Ubuntu 12.04 LTS</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex1"></a></p>
+
+<h3>套用gettext到C語言程式碼</h3>
+
+<p>講一下程式碼</p>
+
+<ul>
+<li>要include <code>locale.h</code>和<code>libintl.h</code></li>
+<li>加入<code>#define _(String) gettext(String)</code>，當有需要翻譯轉換的訊息使用。也可以直接使用<code>char * gettext (const char * msgid);</code></li>
+<li>初始部份
+
+<ul>
+<li><code>setlocale(LC_ALL, "");</code>:根據環境變數設定locale，有興趣的可以<code>man locale</code></li>
+<li><code>bindtextdomain(PACKAGE, LOCALEDIR);</code>: PACKAGE, LOCALEDIR由外部傳入的巨集，請參考下面的Makefile。想像成namespace概念，基本上就是引導系統去特定目錄去取得<code>LOCALEDIR/LC_MESSAGE/PACKAGE.mo</code>檔。有興趣的可以<code>man bindtextdomain</code>
+
+<ul>
+<li>一般來說系統上是存放在<code>/usr/share/locale</code>，然而這不是硬性規定。所以本次的Makefile故意放在local的po目錄之中，建議一定要看一下。</li>
+</ul>
+</li>
+<li><code>textdomain(PACKAGE);</code>:讀取mo檔案，讓後面的gettext可以取得LC_ALL設定對應的訊息。</li>
+</ul>
+</li>
+<li>請注意有些註解是<code>/*-</code>，和一般的不一樣，之後執行<code>xgettext</code>時可以下<code>--add-comments=-</code>抽出註解放到<code>pot</code>檔</li>
+<li>為了易讀性，拔掉錯誤檢查</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>test_gettext.c 拔掉錯誤檢查</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;locale.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;libintl.h&gt;</span>
+</span><span class='line'><span class="cp">#define MAX_CHAR (32)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">dest</span><span class="p">[</span><span class="n">MAX_CHAR</span><span class="p">];</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">transport</span><span class="p">[</span><span class="n">MAX_CHAR</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Init gettext related APIs*/</span>
+</span><span class='line'>    <span class="n">setlocale</span><span class="p">(</span><span class="n">LC_ALL</span><span class="p">,</span> <span class="s">&quot;&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">bindtextdomain</span><span class="p">(</span><span class="n">PACKAGE</span><span class="p">,</span> <span class="n">LOCALEDIR</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">textdomain</span><span class="p">(</span><span class="n">PACKAGE</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/*- Set up strings */</span>
+</span><span class='line'>    <span class="n">strncpy</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">gettext</span><span class="p">(</span><span class="s">&quot;Taipei&quot;</span><span class="p">),</span> <span class="n">MAX_CHAR</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">strncpy</span><span class="p">(</span><span class="n">transport</span><span class="p">,</span> <span class="n">gettext</span><span class="p">(</span><span class="s">&quot;bus&quot;</span><span class="p">),</span> <span class="n">MAX_CHAR</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/*- Let&#39;s print out some message */</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="n">gettext</span><span class="p">(</span><span class="s">&quot;I will go to %s by %s.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">),</span> <span class="n">dest</span><span class="p">,</span> <span class="n">transport</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">TARGET</span><span class="o">=</span>test_gettext
+</span><span class='line'><span class="nv">LOCALE</span><span class="o">=</span>zh_TW
+</span><span class='line'><span class="nv">PO_DIR</span><span class="o">=</span><span class="k">$(</span>shell <span class="nb">pwd</span><span class="k">)</span>/po
+</span><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-Wall -Werror -g -DPACKAGE<span class="o">=</span><span class="se">\&quot;</span><span class="k">$(</span>TARGET<span class="k">)</span><span class="se">\&quot;</span> -DLOCALEDIR<span class="o">=</span><span class="se">\&quot;</span><span class="k">$(</span>PO_DIR<span class="k">)</span><span class="se">\&quot;</span>
+</span><span class='line'><span class="nv">OBJS</span><span class="o">=</span><span class="k">$(</span>patsubst %, %.o, <span class="k">$(</span>TARGET<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">all</span><span class="o">:</span> <span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">pot</span> <span class="k">$(</span><span class="nv">LOCALE</span><span class="k">)</span>.<span class="n">po</span> <span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">mo</span> <span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET).pot</span><span class="o">:</span> <span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">c</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">[</span> ! -f <span class="k">$(</span>TARGET<span class="k">)</span>.pot <span class="o">]</span> <span class="p">;</span> <span class="k">then</span>                                <span class="se">\</span>
+</span><span class='line'>      xgettext -o <span class="k">$(</span>TARGET<span class="k">)</span>.pot --add-comments<span class="o">=</span>- -k_ <span class="k">$(</span>TARGET<span class="k">)</span>.c<span class="p">;</span> <span class="se">\</span>
+</span><span class='line'>  <span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(LOCALE).po</span><span class="o">:</span> <span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">pot</span>
+</span><span class='line'>  <span class="k">if</span> <span class="o">[</span> -f <span class="k">$(</span>LOCALE<span class="k">)</span>.po <span class="o">]</span> <span class="p">;</span> <span class="k">then</span>                               <span class="se">\</span>
+</span><span class='line'>      msgmerge <span class="k">$(</span>LOCALE<span class="k">)</span>.po <span class="k">$(</span>TARGET<span class="k">)</span>.pot <span class="p">;</span>                   <span class="se">\</span>
+</span><span class='line'><span class="cp"> else                                                        \</span>
+</span><span class='line'><span class="cp">     msginit --locale=$(LOCALE) --input=$^ --no-translator ; \</span>
+</span><span class='line'><span class="cp"> fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET).mo</span><span class="o">:</span> <span class="k">$(</span><span class="nv">LOCALE</span><span class="k">)</span>.<span class="n">po</span>
+</span><span class='line'>  mkdir -p <span class="k">$(</span>PO_DIR<span class="k">)</span>/<span class="k">$(</span>LOCALE<span class="k">)</span>/LC_MESSAGES
+</span><span class='line'>  msgfmt <span class="nv">$^</span> -o <span class="k">$(</span>PO_DIR<span class="k">)</span>/<span class="k">$(</span>LOCALE<span class="k">)</span>/LC_MESSAGES/<span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nf">%.o</span><span class="o">:</span> %.<span class="n">c</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="k">$(</span>patsubst %.o, %, <span class="nv">$@</span><span class="k">)</span> <span class="nv">$^</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -f *.o *~ <span class="k">$(</span>TARGET<span class="k">)</span> *.po *.pot *.mo
+</span><span class='line'>  @echo To remove po directory, use: rm -rf <span class="k">$(</span>PO_DIR<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ex2"></a></p>
+
+<h3>產生pot檔</h3>
+
+<ul>
+<li>Makefile中的<code>xgettext -o $(TARGET).pot --add-comments=- -k_ $(TARGET).c</code>會產生pot檔。產生的pot如下，我們可以看到剛才<code>/*-</code>抽出來的註解會被加入pot檔內。另外不要忘記更改template中的metadata。</li>
+</ul>
+
+
+<p>如果是多個C檔怎麼辦呢？請用<code>-D</code>　指定目錄或是<code>-f</code>指定多個檔案</p>
+
+<figure class='code'><figcaption><span>test_gettext.pot</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='pot'><span class='line'><span class="c1"># SOME DESCRIPTIVE TITLE.</span>
+</span><span class='line'><span class="c1"># Copyright (C) YEAR THE PACKAGE&#39;S COPYRIGHT HOLDER</span>
+</span><span class='line'><span class="c1"># This file is distributed under the same license as the PACKAGE package.</span>
+</span><span class='line'><span class="c1"># FIRST AUTHOR &lt;EMAIL@ADDRESS&gt;, YEAR.</span>
+</span><span class='line'><span class="c1">#</span>
+</span><span class='line'><span class="kt">#, fuzzy</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Project-Id-Version:</span><span class="s"> PACKAGE VERSION\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Report-Msgid-Bugs-To:</span><span class="s"> \n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">POT-Creation-Date:</span><span class="s"> 2014-05-30 23:11+0800\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">PO-Revision-Date:</span><span class="s"> YEAR-MO-DA HO:MI+ZONE\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Last-Translator:</span><span class="s"> FULL NAME &lt;EMAIL@ADDRESS&gt;\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Language-Team:</span><span class="s"> LANGUAGE &lt;LL@li.org&gt;\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Language:</span><span class="s"> \n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">MIME-Version:</span><span class="s"> 1.0\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Content-Type:</span><span class="s"> text/plain; charset=CHARSET\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Content-Transfer-Encoding:</span><span class="s"> 8bit\n&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#. - Set up strings</span>
+</span><span class='line'><span class="kd">#: test_gettext.c:22</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;Taipei&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">#: test_gettext.c:23</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;bus&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#. - Let&#39;s print out some message</span>
+</span><span class='line'><span class="kd">#: test_gettext.c:26</span>
+</span><span class='line'><span class="kt">#, c-format</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;I will go to %s by %s\n&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ex3"></a></p>
+
+<h3>產生正體中文po檔</h3>
+
+<p>兩種情況</p>
+
+<ul>
+<li>還沒有po檔產生
+
+<ul>
+<li><code>msginit --locale=$(LOCALE) --input=$^ --no-translator</code>
+
+<ul>
+<li>locale會根據指定locale產生對應的po檔，以我們例子就是zh_TW.po</li>
+</ul>
+</li>
+<li><code>--no-translator</code>單純是我懶得回答互動問題，這個可有可無。</li>
+</ul>
+</li>
+<li>產生po檔，就可以分配給專業的翻譯者處理
+
+<ul>
+<li>已經翻譯過了，但是又有新的pot檔產生的話。此時需要合併以經翻譯的po檔案，產生新的po檔。新的po檔會有已經翻譯過的訊息己及新的未翻譯訊息。
+
+<ul>
+<li><code>msgmerge $(LOCALE).po $(TARGET).pot</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>這邊的翻譯過後po檔如下，幾點要注意的</p>
+
+<ul>
+<li>charset要設成<code>UTF-8</code></li>
+<li>由於語言特性，參數有可能會和英文順序不同。所以<code>I will go to Taipei by bus</code>換成正體中文可以轉成<code>我搭乘公車到台北</code>。因此，請注意gettext po檔訊息可以指定參數順序。</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>test_gettext.po</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='po'><span class='line'><span class="c1"># Chinese translations for PACKAGE package.</span>
+</span><span class='line'><span class="c1"># Copyright (C) 2014 THE PACKAGE&#39;S COPYRIGHT HOLDER</span>
+</span><span class='line'><span class="c1"># This file is distributed under the same license as the PACKAGE package.</span>
+</span><span class='line'><span class="c1"># Automatically generated, 2014.</span>
+</span><span class='line'><span class="c1">#</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Project-Id-Version:</span><span class="s"> PACKAGE VERSION\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Report-Msgid-Bugs-To:</span><span class="s"> \n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">POT-Creation-Date:</span><span class="s"> 2014-05-30 23:03+0800\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">PO-Revision-Date:</span><span class="s"> 2014-05-30 23:03+0800\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Last-Translator:</span><span class="s"> Automatically generated\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Language-Team:</span><span class="s"> none\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Language:</span><span class="s"> zh_TW\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">MIME-Version:</span><span class="s"> 1.0\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Content-Type:</span><span class="s"> text/plain; charset=UTF-8\n&quot;</span>
+</span><span class='line'><span class="s">&quot;</span><span class="py">Content-Transfer-Encoding:</span><span class="s"> 8bit\n&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#. - Set up strings</span>
+</span><span class='line'><span class="kd">#: test_gettext.c:22</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;Taipei&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;台北&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kd">#: test_gettext.c:23</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;bus&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;公車&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">#. - Let&#39;s print out some message</span>
+</span><span class='line'><span class="kd">#: test_gettext.c:26</span>
+</span><span class='line'><span class="kt">#, c-format</span>
+</span><span class='line'><span class="nv">msgid</span> <span class="s">&quot;I will go to %s by %s.\n&quot;</span>
+</span><span class='line'><span class="nv">msgstr</span> <span class="s">&quot;我搭乘%2$s到%1$s。\n&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ex3-1"></a></p>
+
+<h4>po檔補充</h4>
+
+<p>po檔主要是<code>msgid</code>和<code>msgstr</code>成對，翻譯的文字放在<code>msgstr</code>這邊。而註解以<code>#</code>開頭。</p>
+
+<p>另外gettext的工具在分析時也會使用特殊註解格式輔助產生正確的mo檔案，他們以<code>,</code>開頭，可以串接在同一行註解。列舉一些如下：</p>
+
+<ul>
+<li><code>, fuzzy</code>: 顯示翻譯可能不正確，可由翻譯者或是在<code>msgmerge</code>時產生。翻譯者review確定翻譯沒有問題需要把該註解拿掉。</li>
+<li><code>, c-format</code>：表示訊息會用到C的print format，如<code>%s</code>, <code>%d</code>等。</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex4"></a></p>
+
+<h3>產生mo檔</h3>
+
+<p>請參考Makefile部份描述：</p>
+
+<figure class='code'><figcaption><span>test_gettext.po</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='po'><span class='line'><span class="err">$(TARGET).mo: $(LOCALE).po</span>
+</span><span class='line'><span class="err">    mkdir -p $(PO_DIR)/$(LOCALE)/LC_MESSAGES</span>
+</span><span class='line'><span class="err">    msgfmt $^ -o $(PO_DIR)/$(LOCALE)/LC_MESSAGES/$@</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>$^表示prerequisite而$@表示target。</li>
+<li>一開始我們先建立local的<code>$(PO_DIR)/$(LOCALE)/LC_MESSAGES/</code>，將mo黨產生在該目錄。而<code>$(PO_DIR)/$(LOCALE)</code>目錄也是一開始傳給測試原始碼的定義。</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex5"></a></p>
+
+<h3>範例結果</h3>
+
+<p>注意LC_ALL可以從<code>locale -a</code>指令列出系統支援的語系，所以這邊我們用<code>zh_TW.utf8</code>而不是<code>zh_TW</code>，有興趣的人可以自行改為<code>zh_TW</code>將會發現不會有中文顯示，有加錯誤檢查還會出現檔案找不到的錯誤訊息。</p>
+
+<figure class='code'><figcaption><span>LC_ALL=&#8221;en_US.utf8&#8221;</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ LC_ALL=&quot;en_US.utf8&quot; ./test_gettext
+</span><span class='line'>I will go to Taipei by bus.
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>LC_ALL=&#8221;zh_TW.utf8&#8221;</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ LC_ALL=&quot;zh_TW.UTF8&quot; ./test_gettext
+</span><span class='line'>我搭乘公車到台北。
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>而關於<code>, fuzzy</code>我們可以做更多的實驗。我們把zh_TW.po的Taipei更改加入<code>, fuzzy</code></p>
+
+<figure class='code'><figcaption><span>加入`, fuzzy`</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>#, fuzzy
+</span><span class='line'>msgid &quot;Taipei&quot;
+</span><span class='line'>msgstr &quot;台北&quot;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>跑起來就結果變成</p>
+
+<figure class='code'><figcaption><span>加入`, fuzzy`</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ LC_ALL=&quot;zh_TW.utf8&quot; ./test_gettext
+</span><span class='line'>test_gettext
+</span><span class='line'>我搭乘公車到Taipei。
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Gettext">Wikipedia: gettext</a></li>
+<li><a href="http://www.gnu.org/software/gettext/manual/gettext.html">gettext手冊</a></li>
+<li><a href="http://blog.roodo.com/rocksaying/archives/15171511.html">Vala with GNU gettext </a></li>
+<li><a href="http://fedoraproject.org/wiki/How_to_do_I18N_through_gettext">How to do I18N through gettext</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/05/28/package-deb-packages-loose-style/">從Autotools Tarball打包deb套件: 不嚴謹style</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-05-28T10:08:00+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>28</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:08 am</span></time>
+        
+           | <a href="/blog/2014/05/28/package-deb-packages-loose-style/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>deb 檔案是Debian系列安裝套件檔案格式。這次將示範使用不嚴謹的兩種方式將一個auto tool打包的tarball打包成deb檔案。這兩種方式的差別只有在產生套件相關的source code tarball的方式不同。</p>
+
+<p><strong>注意，這些方法完全沒有去更動Debain相關設定檔，也就是說很多細節都被省略而使用預設設定</strong></p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#ov">概論</a></li>
+<li><a href="#m1">方法一</a></li>
+<li><a href="#m2">方法二</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="ov"></a></p>
+
+<h2>概論</h2>
+
+<p>簡單敘述產生deb套件流程如下</p>
+
+<ul>
+<li>取得tarball，依照Debian規範設定目錄名稱</li>
+<li>解壓縮後，執行<code>dh_make</code>在解壓縮目錄下面產生debian目錄</li>
+<li>更改debian目錄下面的設定</li>
+<li>執行<code>dpkg-buildpackage</code>產生deb檔和其他檔案</li>
+</ul>
+
+
+<p>debian目錄下面雖然我測試時偷懶都不改，不過還是值得提一下。</p>
+
+<ul>
+<li>重要檔案
+
+<ul>
+<li>control – 套件metadata如相依性，套件官方網站，套件描述等</li>
+<li>rules – 編譯套件的規範</li>
+<li>copyright – 版權宣告，預設為GPL2。可以自行更動。另外dh-make可以下參數指定版權宣告如bsd等</li>
+<li>changelog – 套件更動訊息</li>
+</ul>
+</li>
+<li>其他如安裝script，想要apply的patch等</li>
+</ul>
+
+
+<p>從一個autotool的tarball xxx.tar.gz經過打包工具後最少要產生下面四個檔案：</p>
+
+<ul>
+<li>xxx_原始套件版本號-Debian套件版本號.dsc
+
+<ul>
+<li>套件的metadata</li>
+</ul>
+</li>
+<li>xxx_原始套件版本號.orig.tar.gz
+
+<ul>
+<li>原始tarball</li>
+</ul>
+</li>
+<li>xxx_原始套件版本號-Debian套件版本號.debian.tar.gz
+
+<ul>
+<li>前面dh_make產生的debian目錄壓縮檔</li>
+</ul>
+</li>
+<li>xxx<em>原始套件版本號-Debian套件版本號</em>平台.deb
+
+<ul>
+<li>生成的套件</li>
+</ul>
+</li>
+<li>xxx<em>原始套件版本號-Debian套件版本號</em>平台.changes
+
+<ul>
+<li>描述整個產生的檔案資訊，要上傳到Debian套件主機會用到。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>以下是使用<a href="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools">之前</a>的auto tools為範例產生出來的檔案列表：這邊我們可以看到</p>
+
+<ul>
+<li>原始套件版本號為<code>0</code></li>
+<li>Debian套件版本號為<code>1</code></li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Two level tree view</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ tree -L 2
+</span><span class='line'>.
+</span><span class='line'>├── testautotools-0
+</span><span class='line'>│   ├── aclocal.m4
+</span><span class='line'>│   ├── config.guess
+</span><span class='line'>│   ├── config.h
+</span><span class='line'>│   ├── config.h.in
+</span><span class='line'>│   ├── config.log
+</span><span class='line'>│   ├── config.status
+</span><span class='line'>│   ├── config.sub
+</span><span class='line'>│   ├── configure
+</span><span class='line'>│   ├── configure.ac
+</span><span class='line'>│   ├── debian
+</span><span class='line'>│   ├── depcomp
+</span><span class='line'>│   ├── include
+</span><span class='line'>│   ├── install-sh
+</span><span class='line'>│   ├── libs
+</span><span class='line'>│   ├── libtool
+</span><span class='line'>│   ├── ltmain.sh
+</span><span class='line'>│   ├── Makefile
+</span><span class='line'>│   ├── Makefile.am
+</span><span class='line'>│   ├── Makefile.in
+</span><span class='line'>│   ├── missing
+</span><span class='line'>│   ├── src
+</span><span class='line'>│   └── stamp-h1
+</span><span class='line'>├── testautotools_0-1_amd64.changes
+</span><span class='line'>├── testautotools_0-1_amd64.deb
+</span><span class='line'>├── testautotools_0-1.debian.tar.gz
+</span><span class='line'>├── testautotools_0-1.dsc
+</span><span class='line'>└── testautotools_0.orig.tar.gz
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="m1"></a></p>
+
+<h2>方法一</h2>
+
+<ul>
+<li>在原本的auto tools開發套件目錄中<code>make dist</code>產生tarball，搬移到測試的空目錄</li>
+<li>把tarball 從xxx.tar.gz更改成xxx_版本號.orig.tar.gz</li>
+<li>解壓縮</li>
+<li><strong>務必要確認目錄名稱要符合<code>xxx-原始套件版本號</code>的格式！不符合請自行rename</strong></li>
+<li>切換到解壓縮目錄</li>
+<li><code>echo -e "\n" | dh_make -s</code>
+
+<ul>
+<li><code>-s</code>表示tarball產生全部的binary都會放在同一份deb檔案</li>
+<li>執行完畢會產生debian目錄，存放和套件有關的metadata，應該要手動確認修改資料，如套件說明、原來軟體官方網頁、聯絡方式等。</li>
+</ul>
+</li>
+<li><code>dpkg-buildpackage</code>
+
+<ul>
+<li>產生套件相關檔案，因為無法sign所以不嚴謹。更嚴謹可以使用<code>debuild</code>，它會做許多額外的檢查，這種情況下我的測試tarball是無法通過<code>debuild</code>檢查的。自用可以加入<code>-uc -us</code>參數省略sign。</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="m2"></a></p>
+
+<h2>方法二</h2>
+
+<ul>
+<li>在原本的auto tools開發套件目錄中<code>make dist</code>產生tarball</li>
+<li>直接解壓縮tarball 到測試的空目錄</li>
+<li><strong>務必要確認目錄名稱要符合<code>xxx-原始套件版本號</code>的格式！不符合請自行rename</strong></li>
+<li>切換到解壓縮目錄</li>
+<li><code>echo -e "\n" | dh_make -s --createorig</code>
+
+<ul>
+<li><code>-s</code>表示tarball產生全部的binary都會放在同一份deb檔案</li>
+<li><code>--createorig</code>會讓工具幫你產生orig的tarball</li>
+<li>執行完畢會產生debian目錄，存放和套件有關的metadata，應該要手動確認修改資料，如套件說明、原來軟體官方網頁、聯絡方式等。</li>
+</ul>
+</li>
+<li><code>dpkg-buildpackage</code>
+
+<ul>
+<li>產生套件相關檔案，因為無法sign所以不嚴謹。更嚴謹可以使用<code>debuild</code>，它會做許多額外的檢查，這種情況下我的測試tarball是無法通過<code>debuild</code>檢查的。自用可以加入<code>-uc -us</code>參數省略sign。</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://www.debian.org/doc/packaging-manuals/packaging-tutorial/packaging-tutorial">Debian Packaging Tutorial (PDF)</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Deb_%28file_format%29">deb (file format)</a></li>
+<li><a href="http://wiki.ubuntu-tw.org/index.php?title=DebPackaging">DebPackaging(正體中文)</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/05/21/install-unstable-release-debian/">安裝unstable Release Debian方式</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-05-21T11:20:00+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>21</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>11:20 am</span></time>
+        
+           | <a href="/blog/2014/05/21/install-unstable-release-debian/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/05/21/install-unstable-release-debian/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>想安裝Unstable release Debian，跑去官方網站看，發現ISO檔只有stable和testing兩種。網路搜尋後發現原來unstable沒有ISO檔<a href="#ref1">*</a>，後來決定從已經安裝的Debian系統切換過去。</p>
+
+<p>測試環境：Debian “wheezy” 7.5</p>
+
+<p>如果您的系統是stable release的話，第一步要把release從stable切換到testing。切換方式為</p>
+
+<ul>
+<li>把<code>/etc/apt/sources.list</code>中的<code>wheezy</code>更換成<code>jessie</code></li>
+<li><code>sudo apt-get update</code></li>
+<li><code>sudo apt-get dist-upgrade</code></li>
+<li><code>sudo reboot</code></li>
+</ul>
+
+
+<p>如果您已經是testing或是從stable切換到testing的話，也是做類似的事情。</p>
+
+<ul>
+<li>把<code>/etc/apt/sources.list</code>中的下面描述</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>deb http://ftp.debian.org/debian jessie main
+</span><span class='line'>deb-src http://ftp.debian.org/debian jessie main</span></code></pre></td></tr></table></div></figure>
+
+
+<p>換成</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>deb http://ftp.debian.org/debian sid main
+</span><span class='line'>deb-src http://ftp.debian.org/debian sid main</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>請注意URL不一定會相同，但是<code>jessie main</code>以及<code>sid main</code>會相同</strong>
+至於為何不全部換呢？請看<a href="#src-list">這邊</a>解釋。</p>
+
+<p>然後執行
+* <code>sudo apt-get update</code>
+* <code>sudo apt-get dist-upgrade</code>
+* <code>sudo reboot</code>
+* 重開後從終端機執行<code>lsb_release -a</code>結果應為</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Distributor ID:  Debian
+</span><span class='line'>Description:  Debian GNU/Linux unstable (sid)
+</span><span class='line'>Release:  unstable
+</span><span class='line'>Codename: sid</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="src-list"></a></p>
+
+<h2>sid 的sources.list分析</h2>
+
+<p><code>/etc/apt/sources.list</code>存放APT套件管理系統存取遠端套件資訊。裏面的格式為</p>
+
+<ul>
+<li><code>type url 目錄名稱 元件</code>
+
+<ul>
+<li>範例<code>deb http://ftp.debian.org/debian jessie main contrib non-free</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>根據<a href="https://wiki.debian.org/RepositoryFormat#A.22Release.22_files">這邊</a>的描述，遠端資料是放在主機URL的<code>dists</code>下面(<a href="http://ftp.debian.org/debian/dists/">範例</a>)。我們瀏覽該URL下面的的dists目錄，就會發現下面的目錄和<code>目錄名稱</code>相同。</p>
+
+<p>回到主題：為何從testing換成unstable只有改一個repository？原因是其他的repository並沒有unstable版本。確認如下：</p>
+
+<ul>
+<li>在<code>URL/dists</code>中(<a href="http://ftp.debian.org/debian/dists/">範例</a>)，你會發現<code>sid</code>只有一個目錄。不像<code>jessie</code>或是<code>wheezy</code>會有幾個用這個Code name開頭的目錄。</li>
+<li>Security套件團隊沒有處理unstable release (<a href="https://www.debian.org/releases/sid/">出處</a>)</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<p><a name="ref1"></a></p>
+
+<ul>
+<li><a href="https://www.debian.org/releases/sid/">The unstable distribution (&ldquo;sid&rdquo;)</a></li>
+<li><a href="https://wiki.debian.org/DebianUnstable">DebianUnstable - Debian Wiki</a></li>
+<li><a href="http://debian-handbook.info/browse/wheezy/apt.html">The Debian Administrator&rsquo;s Handbook: Chapter 6. Maintenance and Updates: The APT Tools</a></li>
+<li><a href="http://people.debian.org.tw/~moto/debian/DebianLessPain/Debian-Install-Guide.html">Debian 無痛起步法 ( 線上最新版 )</a>
+
+<ul>
+<li>2002年</li>
+</ul>
+</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/posts/12">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/posts/10">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

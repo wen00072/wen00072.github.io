@@ -1,0 +1,3783 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="身為組裝工，常常執行下面的指令 ./configure
+make
+組裝 用了那麼久從來沒有思考過這是什麼樣的東西，慚愧之餘趕快惡補一下。 目錄 Overview Autotool 元件簡介
+Autoconf
+Automake
+Libtool
+合體 範例 測試環境
+測試程式
+導入Autotools &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/posts/13/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/05/13/study-on-gnu-build-system-autotools/">GNU Build System: Autotools 初探</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-05-13T10:43:00+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:43 am</span></time>
+        
+           | <a href="/blog/2014/05/13/study-on-gnu-build-system-autotools/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>身為組裝工，常常執行下面的指令</p>
+
+<ul>
+<li>./configure</li>
+<li>make</li>
+<li>組裝</li>
+</ul>
+
+
+<p>用了那麼久從來沒有思考過這是什麼樣的東西，慚愧之餘趕快惡補一下。</p>
+
+<hr />
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#overview">Overview</a>
+
+<ul>
+<li><a href="#at-overview">Autotool 元件簡介</a></li>
+<li><a href="#at-aconf">Autoconf</a></li>
+<li><a href="#at-amake">Automake</a></li>
+<li><a href="#at-ltool">Libtool</a></li>
+<li><a href="#at-integrate">合體</a></li>
+</ul>
+</li>
+<li><a href="#auto_ex">範例</a>
+
+<ul>
+<li><a href="#auto_ex_env">測試環境</a></li>
+<li><a href="#auto_ex_prgs">測試程式</a></li>
+<li><a href="#auto_ex_start">導入Autotools</a>
+
+<ul>
+<li><a href="#auto_ex_configac">configure.ac</a></li>
+<li><a href="#auto_ex_maam">Makefile.am</a></li>
+<li><a href="#auto_ex_config">產生<code>configure</code>並編譯</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#ref">參考資料及資源</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="overview"></a></p>
+
+<h2>Overview</h2>
+
+<h3>緣由：</h3>
+
+<p>雖然C語言號稱高移植性，然而遺憾的是因為System call, library等介面早期並沒有規範。這造成使用C語言開發多平台軟體的時候需要針對不同的平台做許多的檢查。後來GNU針對這部份提出了autotool工具減輕開發的負擔。</p>
+
+<p>如果懶得看元件簡介，請直接看<a href="#at-integrate">Overoview結論</a></p>
+
+<hr />
+
+<p><a name="at-overview"></a></p>
+
+<h3>Autotool 元件</h3>
+
+<p>從Wikipedia可以看到<a href="http://en.wikipedia.org/wiki/GNU_build_system">GNU Build system</a>的項目中有提到三個元件：
+* <a href="#at-aconf">Autoconf</a>
+* <a href="#at-amake">Automake</a>
+* <a href="#at-ltool">Libtool</a></p>
+
+<hr />
+
+<p><a name="at-aconf"></a></p>
+
+<h4><a href="http://www.gnu.org/software/autoconf">Autoconf - GNU Project - Free Software Foundation (FSF)</a></h4>
+
+<p>從<a href="http://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Making-configure-Scripts.html#Making-configure-Scripts">這邊</a>可以看到<code>configure</code>負責產生</p>
+
+<ul>
+<li>Makefile
+
+<ul>
+<li>讓你編譯程式</li>
+</ul>
+</li>
+<li>C option用的header file (optional)
+
+<ul>
+<li><code>config.h</code></li>
+</ul>
+</li>
+<li><code>configure.status</code>
+
+<ul>
+<li>重新自動產生上面的資料</li>
+</ul>
+</li>
+<li><code>configure.cache</code> (optional)
+
+<ul>
+<li>cache之前configure偵測的系統結果</li>
+</ul>
+</li>
+</ul>
+
+
+<p>套件中有幾個程式</p>
+
+<ul>
+<li><code>autoscan</code>
+
+<ul>
+<li>產生<code>configure.ac</code></li>
+</ul>
+</li>
+<li><code>autoconf</code>
+
+<ul>
+<li>從<code>configure.ac</code>中產生<code>configure</code></li>
+<li>為何是<code>或</code>呢？這和autoconf的版本有關</li>
+</ul>
+</li>
+<li><code>autoheader</code>
+
+<ul>
+<li>從<code>configure.ac</code>產生<code>config.h.in</code></li>
+</ul>
+</li>
+<li><code>ifnames</code>
+
+<ul>
+<li>掃描C原始碼，抽出ifdef的資訊</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="at-amake"></a></p>
+
+<h4><a href="http://www.gnu.org/software/automake/">Automake - GNU Project - Free Software Foundation (FSF)</a></h4>
+
+<p>套件中有兩個程式</p>
+
+<ul>
+<li>automake
+
+<ul>
+<li>從<code>Makefile.am</code>中產生<code>Makefile.in</code>，讓<code>configure</code>執行時可以產生<code>Makefile</code></li>
+</ul>
+</li>
+<li>aclocal
+
+<ul>
+<li>從<code>configure.ac</code>或<code>configure.in</code>產生<code>aclocal.m4</code></li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="at-ltool"></a></p>
+
+<h4><a href="http://www.gnu.org/software/libtool/">GNU Libtool - The GNU Portable Library Tool</a></h4>
+
+<ul>
+<li>提供抽象化的介面處理函式庫的平台差異問題，本篇暫不討論。</li>
+</ul>
+
+
+<hr />
+
+<p>另外GNU 其他針對移植性輔助的套件有</p>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Gettext">GNU gettext</a>
+
+<ul>
+<li>i18n套件，協助專案中的各國語言訊息開發。</li>
+</ul>
+</li>
+<li><a href="http://en.wikipedia.org/wiki/Pkg-config">pkg-config</a>
+
+<ul>
+<li>提供開發時的函式庫資訊，開發者不需要知道函式庫的路徑和旗標，直接問pkg-config就好。</li>
+</ul>
+</li>
+<li><a href="http://en.wikipedia.org/wiki/GNU_Compiler_Collection">GCC</a>
+
+<ul>
+<li>全名是<code>GNU Compiler Collection</code></li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="at-integrate"></a></p>
+
+<h3>合體</h3>
+
+<p>從Wikipedia的<a href="http://en.wikipedia.org/wiki/File:Autoconf-automake-process.svg">圖：Autoconf-automake-process</a>解釋的非常清楚。</p>
+
+<p>回到最前面，我們可以觀察到autotool的目的就是</p>
+
+<ul>
+<li><strong>產生平台上可以編譯的環境</strong></li>
+</ul>
+
+
+<p>為了達到這樣的目的，系統需要做到下面的功能</p>
+
+<ul>
+<li>檢查平台環境</li>
+<li>產生Makefile</li>
+</ul>
+
+
+<p>因此，開發者最少要告訴autotools <strong>所需平台環境</strong> 和 <strong>產生Makefile</strong> 這兩項資訊。這也是<code>configure.ac</code>和<code>Makefile.am</code>存在的目的。也就是說，開發者需要自行設定<code>configure.ac</code>和<code>Makefile.am</code>。</p>
+
+<p>而這些錯綜複雜的關係可以描述如下</p>
+
+<ul>
+<li>autotool先產生<code>configure.ac</code> (透過<code>autoscan</code>或是自幹）</li>
+<li><code>autoreconf</code>吃<code>configure.ac</code>和<code>Makefile.am</code>產生<code>confgure</code>, <code>config.h.in</code>, 和<code>Makefile.in</code></li>
+<li>autoreconf細節
+
+<ul>
+<li>吃<code>configure.ac</code>，呼叫<code>aclocal</code>產生<code>aclocal.m4</code></li>
+<li>aclocal是給autotools中自訂專案檢查編譯巨集用。
+
+<ul>
+<li>吃<code>configure.ac</code>和<code>aclocal.m4</code>，呼叫<code>autoheader</code>產生<code>config.h.in</code></li>
+<li>吃<code>configure.ac</code>和<code>aclocal.m4</code>，呼叫<code>autoconf</code>產生<code>configure</code></li>
+<li>吃<code>configure.ac</code>和<code>aclocal.m4</code>和各處的<code>Makefile.am</code>，呼叫<code>automake</code>產生<code>Makefile.in</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex"></a></p>
+
+<h2>範例</h2>
+
+<hr />
+
+<p><a name="auto_ex_env"></a></p>
+
+<h3>測試環境</h3>
+
+<ul>
+<li>Ubuntu 12.04.4</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex_prgs"></a></p>
+
+<h3>測試程式</h3>
+
+<p><a href="http://wen00072.github.io/blog/2014/06/07/dry-test-file-template">範例程式細節在這邊</a>，檔案各別重新分配到<code>src</code>, <code>include</code>, <code>libs</code>這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。</p>
+
+<figure class='code'><figcaption><span>測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   └── libb.c
+</span><span class='line'>└── src
+</span><span class='line'>    └── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="auto_ex_start"></a></p>
+
+<h3>導入Autotools</h3>
+
+<p>簡述一下流程</p>
+
+<ul>
+<li>使用<code>autoscan</code>產生<code>configure.ac</code>範本</li>
+<li>手動更改<code>configure.ac</code></li>
+<li>寫<code>Makefile.am</code>，根目錄以及需要編譯的地方都要一份</li>
+<li><code>autoreconf --install</code>產生檔案
+
+<ul>
+<li>替代方案：執行下面程式
+
+<ul>
+<li><code>aclocal</code></li>
+<li><code>autoheader</code></li>
+<li><code>automake --add-missing</code></li>
+<li><code>autoconf</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>configure</code></li>
+<li><code>make</code></li>
+<li><code>make install</code>安裝或<code>make dist</code>打包</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex_configac"></a></p>
+
+<h4>configure.ac</h4>
+
+<p>執行<code>autoscan</code>後會產生<code>configure.scan</code>檔案，把這個檔案rename成<code>configure.ac</code></p>
+
+<figure class='code'><figcaption><span>configure.ac最初範本</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="c">#                                               -*- Autoconf -*-</span>
+</span><span class='line'><span class="c"># Process this file with autoconf to produce a configure script.</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">AC_PREREQ([2.68])</span>
+</span><span class='line'><span class="err">AC_INIT([FULL-PACKAGE-NAME],</span> <span class="err">[VERSION],</span> <span class="err">[BUG-REPORT-ADDRESS])</span>
+</span><span class='line'><span class="err">AC_CONFIG_SRCDIR([libs/libb.c])</span>
+</span><span class='line'><span class="err">AC_CONFIG_HEADERS([config.h])</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for programs.</span>
+</span><span class='line'><span class="err">AC_PROG_CC</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for libraries.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for header files.</span>
+</span><span class='line'><span class="err">AC_CHECK_HEADERS([stdlib.h])</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for typedefs, structures, and compiler characteristics.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for library functions.</span>
+</span><span class='line'><span class="err">AC_FUNC_MALLOC</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">AC_CONFIG_FILES([Makefile</span>
+</span><span class='line'>                 <span class="err">libs/Makefile</span>
+</span><span class='line'>                 <span class="err">src/Makefile])</span>
+</span><span class='line'><span class="err">AC_OUTPUT</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是更動<code>configure.ac</code>，更動完和原本的差別如下：</p>
+
+<figure class='code'><figcaption><span>configure.scan和configure.ac 差別</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>5,6c5,6
+</span><span class='line'>&lt; AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+</span><span class='line'>&lt; AC_CONFIG_SRCDIR([libs/libb.c])
+</span><span class='line'>---
+</span><span class='line'>&gt; AC_INIT([Test_Autotools], [0], [test])
+</span><span class='line'>&gt; AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+</span><span class='line'>8a9,14
+</span><span class='line'>&gt; # Use static libary
+</span><span class='line'>&gt; AC_PROG_RANLIB
+</span><span class='line'>&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>簡單說明如下</p>
+
+<ul>
+<li>更改套件版本資訊</li>
+<li>刪除<code>AC_CONFIG_SRCDIR</code></li>
+<li>設定automake
+
+<ul>
+<li><code>foreign</code>表示這不是標準的GNU Coding Standard，因此不會檢查額外的檔案如<code>NEWS</code>, <code>README</code>, <code>ChangeLog</code>等。</li>
+<li>共用編譯參數</li>
+</ul>
+</li>
+<li><code>AC_PROG_RANLIB</code>表示要使用static library</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex_maam"></a></p>
+
+<h4>Makefile.am</h4>
+
+<p>前面提到，每個目錄都要有一個<code>Makefile.am</code>。關於<code>Makefile.am</code>語法，可以參考 <a href="https://www.lrde.epita.fr/~adl/autotools.html">Alexandre Duret Lutz: Autotools Tutorial</a>大略了解。更詳細的部份可以看<a href="http://www.gnu.org/software/automake/manual/html_node/A-Shared-Library.html#A-Shared-Library">Automake手冊：8.3 Building a Shared Library</a></p>
+
+<p>範例中<code>Makefile.am</code>如下：</p>
+
+<ul>
+<li>./Makefile.am：　基本上就是依照列出的順序編譯</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>./Makefile.am</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">SUBDIRS</span> <span class="o">=</span> libs src
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>libs/Makefile.am</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>libs/Makefile.am</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">AM_CFLAGS</span> <span class="o">=</span> -I../include
+</span><span class='line'><span class="nv">lib_LIBRARIES</span> <span class="o">=</span> liba.a libb.a
+</span><span class='line'><span class="nv">liba_a_SOURCES</span> <span class="o">=</span> liba.c
+</span><span class='line'><span class="nv">libb_a_SOURCES</span> <span class="o">=</span> libb.c
+</span><span class='line'>
+</span><span class='line'><span class="nv">include_HEADERS</span> <span class="o">=</span> ../include/liba.h ../include/libb.h
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>最上面形式就是<code>要裝到目錄</code>_<code>Keyword</code>，所以表示我們要產生<code>liba.a</code>和<code>libb.a</code>，安裝時放在<code>/usr/local/lib</code>下面、指定library由哪些原始程式檔案組成、同時要把header files放在<code>/usr/local/include</code>下。(configure沒指定預設prefix為/usr/local)</p>
+
+<ul>
+<li>src/Makefile.am</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>src/Makefile.am</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">LDADD</span> <span class="o">=</span> ../libs/liba.a ../libs/libb.a
+</span><span class='line'><span class="nv">AM_CFLAGS</span> <span class="o">=</span> -I../include
+</span><span class='line'>
+</span><span class='line'><span class="nv">bin_PROGRAMS</span> <span class="o">=</span> <span class="nb">test</span>
+</span><span class='line'><span class="nv">test_SOURCES</span> <span class="o">=</span> test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一樣的形式：<code>要裝到目錄</code>_<code>Keyword</code>。這邊宣告要安裝到<code>/usr/loca/bin</code>、要link <code>liba.a</code>和<code>libb.a</code>、並且5指定執行檔的原始程式檔案。</p>
+
+<hr />
+
+<p>經過上面的處理，我們多了三個<code>Makefile.am</code>和<code>configure.ac</code>以及一些暫存檔案。新的樹狀目錄列表如下：</p>
+
+<figure class='code'><figcaption><span>autoscan後測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>.
+</span><span class='line'>├── autom4te.cache
+</span><span class='line'>│   ├── output.0
+</span><span class='line'>│   ├── requests
+</span><span class='line'>│   └── traces.0
+</span><span class='line'>├── autoscan.log
+</span><span class='line'>├── configure.ac
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   ├── libb.c
+</span><span class='line'>│   └── Makefile.am
+</span><span class='line'>├── Makefile.am
+</span><span class='line'>└── src
+</span><span class='line'>    ├── Makefile.am
+</span><span class='line'>    └── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="auto_ex_config"></a></p>
+
+<h4>產生<code>configure</code>並編譯</h4>
+
+<p>如前所述，直接使用<code>autoreconf --install</code>就可以了</p>
+
+<figure class='code'><figcaption><span>autoreconf &#8211;install以及之後的測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ autoreconf --install
+</span><span class='line'>configure.ac:6: installing `./install-sh&#39;
+</span><span class='line'>configure.ac:6: installing `./missing&#39;
+</span><span class='line'>libs/Makefile.am: installing `./depcomp&#39;
+</span><span class='line'>
+</span><span class='line'>.
+</span><span class='line'>├── aclocal.m4
+</span><span class='line'>├── autom4te.cache
+</span><span class='line'>│   ├── output.0
+</span><span class='line'>│   ├── output.1
+</span><span class='line'>│   ├── output.2
+</span><span class='line'>│   ├── requests
+</span><span class='line'>│   ├── traces.0
+</span><span class='line'>│   ├── traces.1
+</span><span class='line'>│   └── traces.2
+</span><span class='line'>├── autoscan.log
+</span><span class='line'>├── config.h.in
+</span><span class='line'>├── configure
+</span><span class='line'>├── configure.ac
+</span><span class='line'>├── depcomp
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── install-sh
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   ├── libb.c
+</span><span class='line'>│   ├── Makefile.am
+</span><span class='line'>│   └── Makefile.in
+</span><span class='line'>├── Makefile.am
+</span><span class='line'>├── Makefile.in
+</span><span class='line'>├── missing
+</span><span class='line'>└── src
+</span><span class='line'>    ├── Makefile.am
+</span><span class='line'>    ├── Makefile.in
+</span><span class='line'>    └── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>./configure結果節錄如下</p>
+
+<figure class='code'><figcaption><span>autoreconf &#8211;install以及之後的測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ ./configure --prefix=/tmp/build
+</span><span class='line'>checking for a BSD-compatible install... /usr/bin/install -c
+</span><span class='line'>...
+</span><span class='line'>checking for GNU libc compatible malloc... yes
+</span><span class='line'>configure: creating ./config.status
+</span><span class='line'>config.status: creating Makefile
+</span><span class='line'>config.status: creating src/Makefile
+</span><span class='line'>config.status: creating libs/Makefile
+</span><span class='line'>config.status: creating config.h
+</span><span class='line'>config.status: config.h is unchanged
+</span><span class='line'>config.status: executing depfiles commands
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>幾點要注意的：</p>
+
+<ul>
+<li><code>config.status</code>被產生，並且被執行時生出<code>config.h</code>以及各目錄的的<code>Makefile</code></li>
+<li>這邊指定prefix為<code>/tmp/build</code>，因此<code>make install</code>可以看到被安裝目錄樹狀結構如下：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>安裝目錄樹狀結構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>.
+</span><span class='line'>├── bin
+</span><span class='line'>│   └── test
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>└── lib
+</span><span class='line'>    ├── liba.a
+</span><span class='line'>    └── libb.a
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料及資源</h2>
+
+<p>強烈推荐 <a href="https://www.lrde.epita.fr/~adl/autotools.html">Alexandre Duret Lutz: Autotools Tutorial</a>，主要的想法和資料都是從這邊出來。而且他寫的更加詳細、更加易懂。</p>
+
+<ul>
+<li>FSF官方資料:
+
+<ul>
+<li><a href="http://www.gnu.org/software/autoconf">Autoconf - GNU Project - Free Software Foundation (FSF)</a></li>
+<li><a href="http://www.gnu.org/software/automake/">Automake - GNU Project - Free Software Foundation (FSF)</a></li>
+<li><a href="http://www.gnu.org/software/libtool/">GNU Libtool - The GNU Portable Library Tool</a></li>
+</ul>
+</li>
+<li><a href="http://en.wikipedia.org/wiki/GNU_build_system">Wikipedia: GNU build system</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Autoconf">Wikipedia: Autoconf</a></li>
+<li><a href="http://netlab.cse.yzu.edu.tw/~armor/columns/automake/automake.htm">陳雍穆: automake</a></li>
+<li><a href="http://fourdollars.github.io/autotools/#1">$4: GNU Build System (aka Autotools)</a></li>
+<li><a href="http://blog.roodo.com/rocksaying/archives/12687975.html">石頭閒語: Hello Autoconf, the GNU Build System</a></li>
+<li><a href="http://www.xinotes.net/notes/note/1824/">GNU autoconf (automake) &ldquo;Hello World&rdquo; step-by-step example  </a></li>
+<li><a href="https://www.lrde.epita.fr/~adl/autotools.html">Alexandre Duret Lutz: Autotools Tutorial</a></li>
+<li><a href="https://www.flameeyes.eu/autotools-mythbuster/index.html">Autotools Mythbuster</a></li>
+<li><a href="http://tetralet.luna.com.tw/?op=ViewArticle&amp;articleId=200&amp;blogId=1">今天的 Tetralet 又在唧唧喳喳了: 利用 Autotools 來建立 Makefile 檔案</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/04/30/c99-inline-function/">C99的inline Function</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-04-30T23:02:00+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>11:02 pm</span></time>
+        
+           | <a href="/blog/2014/04/30/c99-inline-function/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/04/30/c99-inline-function/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://en.wikipedia.org/wiki/Inline_function">inline function</a>是一個keyword，提醒compiler可以將function本體直接填入呼叫該function的位置。從<a href="http://en.wikipedia.org/wiki/Inline_expansion">這邊</a>可以看到，優點為</p>
+
+<ul>
+<li>減少呼叫function的overhead，如參數傳遞、回傳值處理等。</li>
+<li>切換到function會jump，也就是會有branch的行為。因為CPU的pipeline和cache的特性，會影響效能。</li>
+<li>經由代換程式碼，也許可以增加最佳化的可能性。</li>
+</ul>
+
+
+<p>廢話少說，先來一段程式碼。
+測試環境</p>
+
+<ul>
+<li>Ubuntu 12.04.4</li>
+<li>GCC 4.6.3</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>inline_test.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">hello</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">hello</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以正常編譯</p>
+
+<figure class='code'><figcaption><span>build.log</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cc -g -Wall -Werror -c -o inline_test.o inline_test.c
+</span><span class='line'>$ cc -g -Wall -Werror -o inline_test inline_test.o
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>有趣的是，換成C99就會編譯錯誤，檢查symbol的確不存在。</p>
+
+<figure class='code'><figcaption><span>build.log</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>cc -g -Wall -Werror -std=c99   -c -o inline_test.o inline_test.c
+</span><span class='line'>cc -g -Wall -Werror -std=c99 -o inline_test inline_test.o
+</span><span class='line'>inline_test.o: In function `main&#39;:
+</span><span class='line'>inline_test.c:10: undefined reference to `hello&#39;
+</span><span class='line'>collect2: ld returned 1 exit status
+</span><span class='line'>make: *** [inline_test] Error 1
+</span><span class='line'>
+</span><span class='line'>$ nm inline_test.o
+</span><span class='line'>                 U hello
+</span><span class='line'>0000000000000000 T main
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>從<a href="http://stackoverflow.com/questions/216510/extern-inline/216546#21654">這邊</a>可以看到C99的<code>inline</code>定義是和GNU C的<code>extern inline</code>相反。所以最簡單的懶人法就是在C99裏面加上<code>extern</code>收工。</p>
+
+<figure class='code'><figcaption><span>inline_test_c99.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">extern</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">hello</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">hello</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h2>加碼測試</h2>
+
+<p>不過對於組裝工而言，為何要在<code>inline</code>前面加<code>extern</code>或是<code>static</code>實在有趣，所以多測了幾下。沒興趣的就直接看<a href="#concl">結論</a>吧</p>
+
+<h2>GNU C測試</h2>
+
+<p>如果我們把程式碼改成</p>
+
+<figure class='code'><figcaption><span>test_inline.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">extern</span> <span class="kr">inline</span> <span class="kt">void</span> <span class="nf">hello</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">hello</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World 2</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">hello</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在GNU C下編譯執行會印<code>Hello World 2</code>，使用<code>objdump -S</code>反組譯可以看到</p>
+
+<ul>
+<li>main 呼叫<code>4004f4</code>位址</li>
+<li><code>4004f4</code>真正的程式碼是印出<code>Hello World2</code>，也就是說<code>extern inline void hello()</code>裏面的程式碼是寫心酸的。</li>
+<li>看起來這種情況GCC沒有把inline function展開。</li>
+</ul>
+
+
+<p>另外一點有趣的是C99下面把<code>extern inline</code>和<code>inline</code>對調會編譯失敗。</p>
+
+<figure class='code'><figcaption><span>inline_test.lst</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>00000000004004f4 &lt;hello&gt;:
+</span><span class='line'>    int i = 100;
+</span><span class='line'>    printf(&quot;Hello World: %d\n&quot;, i);
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>inline void hello()
+</span><span class='line'>{
+</span><span class='line'>  4004f4: 55                      push   %rbp
+</span><span class='line'>  4004f5: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'>    printf(&quot;Hello World 2\n&quot;);
+</span><span class='line'>  4004f8: bf 0c 06 40 00          mov    $0x40060c,%edi
+</span><span class='line'>  4004fd: e8 ee fe ff ff          callq  4003f0 &lt;puts@plt&gt;
+</span><span class='line'>}
+</span><span class='line'>  400502: 5d                      pop    %rbp
+</span><span class='line'>  400503: c3                      retq
+</span><span class='line'>
+</span><span class='line'>0000000000400504 &lt;main&gt;:
+</span><span class='line'>
+</span><span class='line'>int main(void)
+</span><span class='line'>{
+</span><span class='line'>  400504: 55                      push   %rbp
+</span><span class='line'>  400505: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'>    hello();
+</span><span class='line'>  400508: b8 00 00 00 00          mov    $0x0,%eax
+</span><span class='line'>  40050d: e8 e2 ff ff ff          callq  4004f4 &lt;hello&gt;
+</span><span class='line'>
+</span><span class='line'>    return 0;
+</span><span class='line'>  400512: b8 00 00 00 00          mov    $0x0,%eax
+</span><span class='line'>}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>結論</h2>
+
+<ul>
+<li>GNU C和C99 inline的<code>extern</code>定義相反。</li>
+<li>C99下面只有<code>inline</code>只是一個宣告，不會產生symbol。要使用<code>extern</code>編譯器才會產生symbol。猜測可能單純<code>inline</code>是在header file宣告用，而<code>extern inline</code>則是在source code實作時使用。</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Inline_function">Inline function</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Inline_expansion">Inline expansion</a></li>
+<li><a href="http://stackoverflow.com/questions/216510/extern-inline/216546#216546">extern inline</a></li>
+<li><a href="http://elinux.org/Extern_Vs_Static_Inline">Extern Vs Static Inline</a></li>
+<li><a href="http://stackoverflow.com/questions/6312597/is-inline-without-static-or-extern-ever-useful-in-c99">Is 「inline」 without 「static」 or 「extern」 ever useful in C99?</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued/">Linux中使用C語言載入data Object 檔案資料 (續）</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-04-16T02:01:00+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>2:01 am</span></time>
+        
+           | <a href="/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>動機</h2>
+
+<p><a href="http://wen00072.github.io/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux">前面</a>討論了Linux中使用C語言載入data object 檔案資料，裏面提到資料轉成object，裏面會有三個symbol: <code>_binary_objfile_start</code>, <code>_binary_objfile_end</code>, <code>_binary_objfile_size</code>。</p>
+
+<h2>Object symbol</h2>
+
+<p><code>man objcopy</code>找<code>_size</code>可以看到</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>   -B bfdarch
+</span><span class='line'>   --binary-architecture=bfdarch
+</span><span class='line'>       Useful when transforming a architecture-less input file into an object file.  In this case the output architecture can be set to bfdarch.  This
+</span><span class='line'>       option will be ignored if the input file has a known bfdarch.  You can access this binary data inside a program by referencing the special
+</span><span class='line'>       symbols that are created by the conversion process.  These symbols are called _binary_objfile_start, _binary_objfile_end and
+</span><span class='line'>       _binary_objfile_size.  e.g. you can transform a picture file into an object file and then access it in your code using these symbols.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>測試: Segmentation fault版</h2>
+
+<p>簡單來說，和平台無關的檔案轉成obj檔時，可以透過<code>_binary_objfile_start</code>, <code>_binary_objfile_end</code>, <code>_binary_objfile_size</code>去存取資料。所以我再修改了一下測試程式，印出這些symbol 的內容</p>
+
+<figure class='code'><figcaption><span>test_obj.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define MAX_CHARS (32)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">extern</span> <span class="kt">char</span> <span class="n">_binary_my_data_txt_start</span><span class="p">;</span>
+</span><span class='line'><span class="k">extern</span> <span class="kt">char</span> <span class="n">_binary_my_data_txt_end</span><span class="p">;</span>
+</span><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">_binary_my_data_txt_size</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">line</span><span class="p">[</span><span class="n">MAX_CHARS</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="o">*</span><span class="n">my_data_start_addr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">_binary_my_data_txt_start</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">str_len</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)</span> <span class="o">*</span><span class="n">my_data_start_addr</span> <span class="o">-</span> <span class="mh">0x30</span><span class="p">;</span> <span class="cm">/* 0x30 =&gt; &#39;0&#39; */</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">str_len</span> <span class="o">&gt;</span> <span class="n">MAX_CHARS</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">str_len</span> <span class="o">=</span> <span class="n">MAX_CHARS</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">strncpy</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">my_data_start_addr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">str_len</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;_binary_my_data_txt_start: %c</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">_binary_my_data_txt_start</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;_binary_my_data_txt_end: %c</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">_binary_my_data_txt_end</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;_binary_my_data_txt_size: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">_binary_my_data_txt_size</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Read string is %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>而測試檔案為</p>
+
+<figure class='code'><figcaption><span>my_data.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>5Hello
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一跑起來會發生Segmentation fault如下</p>
+
+<figure class='code'><figcaption><span>my_data.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ ./test_obj
+</span><span class='line'>_binary_my_data_txt_start: 5
+</span><span class='line'>_binary_my_data_txt_end:
+</span><span class='line'>Segmentation fault (core dumped)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>分析</h2>
+
+<p>使用gdb可以看到當在存取<code>_binary_my_data_txt_size</code>這行，我們還可以進一步來看這個<strong>變數</strong></p>
+
+<figure class='code'><figcaption><span>gdb 結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>_binary_my_data_txt_start: 5
+</span><span class='line'>_binary_my_data_txt_end:
+</span><span class='line'>
+</span><span class='line'>Program received signal SIGSEGV, Segmentation fault.
+</span><span class='line'>main (argc=1, argv=0x7fffffffe1d8) at test_obj.c:24
+</span><span class='line'>24        printf(&quot;_binary_my_data_txt_size: %d\n&quot;, _binary_my_data_txt_size);
+</span><span class='line'>(gdb) p _binary_my_data_txt_size
+</span><span class='line'>Cannot access memory at address 0x7
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>疑？變數位址是0x7?那我把測試檔案內容改一下，增加3個字元，再跑一次gdb。</p>
+
+<figure class='code'><figcaption><span>my_data.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>8HelloABC
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>gdb 結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>(gdb) p _binary_my_data_txt_size
+</span><span class='line'>Cannot access memory at address 0xa
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到位址從<code>0x7</code>跑到<code>0xa</code>，也就是10，這表示這個數字增加三了。這讓我懷疑這個symbol並不是一個變數，而是一個數值。因此我們可以將
+* <code>printf("_binary_my_data_txt_size: %d\n", _binary_my_data_txt_size);</code></p>
+
+<pre><code>改成
+</code></pre>
+
+<ul>
+<li><code>printf("_binary_my_data_txt_size: %p\n", &amp;_binary_my_data_txt_size);</code></li>
+</ul>
+
+
+<p>另外一個有趣的地方是<code>_binary_my_data_txt_end</code>並不是<code>C</code>，而是<code>\0</code>。而<code>_binary_my_data_txt_end</code>前一個字元是<code>\n</code>。使用<code>ghex</code>去看my_data.txt可以看到最後一個資料其實是<code>\n</code>。但是<code>\0</code>怎麼出現的，目前還不清楚。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><code>man objcopy</code></li>
+<li><a href="http://bytbox.net/blog/2012/11/linking-raw-data.html">Linking raw data with C code</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux/">Linux中使用C語言載入data Object 檔案資料</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-04-15T16:20:00+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>4:20 pm</span></time>
+        
+           | <a href="/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>之前看<a href="https://github.com/southernbear/rtenv">別人的程式</a>，看到作者在ROMFS實作時把資料轉成object檔案，然後在C語言中直接存取資料。他的作法是</p>
+
+<ul>
+<li>寫一個host程式，將某個目錄下面的檔案和目錄轉成單一個binary</li>
+<li>將這個binary轉成object檔案</li>
+<li>更改link script，讓最後的binary可以存取object檔案的section</li>
+</ul>
+
+
+<p>這個project使ARM的架構Realtime 作業系統。看完手癢也想看看Linux下面要怎麼做到類似的功能。本來想說是不是要動到link script，後來看到<a href="http://descent-incoming.blogspot.tw/2012/11/elf.html">這邊</a>的參考資料後，發現只要存取symbol就可以使用了。克服這個問題後就可以來寫個小程式驗證一下。</p>
+
+<p>首先我們先弄個測試資料，很簡單就是一個數字顯示後面字串長度後再存放字串。</p>
+
+<figure class='code'><figcaption><span>my_data.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>5Hello
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是Makefile部份</p>
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-Wall -Werror -g
+</span><span class='line'>
+</span><span class='line'><span class="nv">DATA_SRC</span><span class="o">=</span>my_data.txt
+</span><span class='line'><span class="nv">DATA_OBJ</span><span class="o">=</span>my_data.o
+</span><span class='line'>
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span>test_obj
+</span><span class='line'><span class="nv">OBJS</span><span class="o">=</span><span class="k">$(</span>patsubst %, %.o, <span class="k">$(</span>TARGET<span class="k">))</span> <span class="k">$(</span>DATA_OBJ<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">BFN</span><span class="o">=</span>elf64-x86-64
+</span><span class='line'><span class="nv">ARCH</span><span class="o">=</span>i386
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OBJS</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="nv">$@</span> <span class="k">$(</span>OBJS<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(DATA_OBJ)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">DATA_SRC</span><span class="k">)</span>
+</span><span class='line'>  objcopy -I binary -O <span class="k">$(</span>BFN<span class="k">)</span> -B <span class="k">$(</span>ARCH<span class="k">)</span> --prefix-sections <span class="s1">&#39;.mydata&#39;</span> <span class="nv">$^</span> <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm *.o *~ <span class="k">$(</span>TARGET<span class="k">)</span> -f
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Makefile說明:
+* <code>patsubst</code>
+    * Makefile 提供的函數，用在pattern 替換，所以上面做了下列的代換
+    * test_obj轉成test_obj.o
+* <code>$@</code>
+    * Makefile的內建巨集，代表target
+* <code>$^</code>
+    * Makefile的內建巨集，代表prerequisite</p>
+
+<p>重點是把資料檔案轉成object的部份，節錄該部份並說明如下
+<code>objcopy -I binary -O $(BFN) -B $(ARCH) --prefix-sections '.mydata' $^ $@</code></p>
+
+<ul>
+<li><code>-I binary</code>
+
+<ul>
+<li>指定input檔案binary格式為binary</li>
+</ul>
+</li>
+<li><code>-O elf64-x86-64</code>
+
+<ul>
+<li>指定output binary 格式為elf64-x86-64</li>
+</ul>
+</li>
+<li><code>-B i386</code>
+
+<ul>
+<li>指定架構為i386</li>
+</ul>
+</li>
+<li><code>--prefix-sections '.mydata'</code>
+
+<ul>
+<li>指定放在.mydata的section</li>
+</ul>
+</li>
+</ul>
+
+
+<p>至於要怎麼知道binary格式和架構呢？您可以用<code>objcopy --info |less</code>配合<code>file test_obj.o</code>找出平台上的參數。</p>
+
+<p>我們先來看一下section是不是真的放到.mydata?</p>
+
+<figure class='code'><figcaption><span>objdump結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ objdump -h my_data.o
+</span><span class='line'>
+</span><span class='line'>my_data.o:     file format elf64-x86-64
+</span><span class='line'>
+</span><span class='line'>Sections:
+</span><span class='line'>Idx Name          Size      VMA               LMA               File off  Algn
+</span><span class='line'>  0 .mydata.data  00000007  0000000000000000  0000000000000000  00000040  2**0
+</span><span class='line'>                  CONTENTS, ALLOC, LOAD, DATA
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我只知道.mydata的section，裏面的資訊目前還不清楚有什麼意義。</p>
+
+<p>我們再用nm來看檔案內有哪些symbol</p>
+
+<figure class='code'><figcaption><span>nm結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm  my_data.o
+</span><span class='line'>0000000000000007 D _binary_my_data_txt_end
+</span><span class='line'>0000000000000007 A _binary_my_data_txt_size
+</span><span class='line'>0000000000000000 D _binary_my_data_txt_start
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>flag說明
+* <code>D</code>
+    * 資料放在初始的資料section
+* <code>A</code>
+    * Symbol的值已固定，之後link也不會更動。目前還不知道這樣透露出有什麼額外的資訊</p>
+
+<p>接下來就是存取的方式了，測試程式如下。主要就是從section讀出字串再印出來。</p>
+
+<figure class='code'><figcaption><span>test_obj.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;string.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define MAX_CHARS (32)</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">extern</span> <span class="kt">char</span> <span class="n">_binary_my_data_txt_start</span><span class="p">;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">line</span><span class="p">[</span><span class="n">MAX_CHARS</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">};</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="o">*</span><span class="n">my_data_start_addr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">_binary_my_data_txt_start</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">str_len</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span><span class="p">)</span> <span class="o">*</span><span class="n">my_data_start_addr</span> <span class="o">-</span> <span class="mh">0x30</span><span class="p">;</span> <span class="cm">/* 0x30 =&gt; &#39;0&#39; */</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">str_len</span> <span class="o">&gt;</span> <span class="n">MAX_CHARS</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">str_len</span> <span class="o">=</span> <span class="n">MAX_CHARS</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">strncpy</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">my_data_start_addr</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">str_len</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Read string is %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>程式說明如下
+* 前面nm看到的symbol <code>_binary_my_data_txt_end</code>, <code>_binary_my_data_txt_start</code>, 和<code>_binary_my_data_txt_size</code>只是一個sybmol，這邊我們存的是字元所以宣告成<code>char</code>
+* _binary_my_data_txt_start存放的是該section開始的資料，我們可以用gdb驗證一下</p>
+
+<figure class='code'><figcaption><span>gdb 節錄</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Breakpoint 1, main (argc=1, argv=0x7fffffffe1d8) at test_obj.c:10
+</span><span class='line'>10        char *my_data_start_addr = (char *) &amp;_binary_my_data_txt_start;
+</span><span class='line'>(gdb) p _binary_my_data_txt_start
+</span><span class='line'>$1 = 53 &#39;5&#39;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>所以我們可以取得該資料位址後，讀出字串長度後，再複製後面的字串並列印出來。</li>
+</ul>
+
+
+<p>最後執行結果如下</p>
+
+<figure class='code'><figcaption><span>執行結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ ./test_obj
+</span><span class='line'>Read string is Hello
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/southernbear/rtenv">rtenv</a></li>
+<li><a href="http://descent-incoming.blogspot.tw/2012/11/elf.html">將檔案系統塞到 elf 執行檔</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/25/hello-world/">Hello World</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-25T17:10:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>5:10 pm</span></time>
+        
+           | <a href="/blog/2014/03/25/hello-world/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/03/25/hello-world/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>C語言學習者第一個程式</p>
+
+<figure class='code'><figcaption><span>hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello world</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>最近有人在問，去掉<code>{</code> <code>}</code>你真的了解每一行嗎？我試著回答一下</p>
+
+<p><a href="#inc">#include &lt;stdio.h></a><br>
+<a href="#entr">int main(int argc, char **argv)</a><br>
+<a href="#printf">    printf(&ldquo;Hello world\n&rdquo;);</a><br>
+<a href="#ret_st">    return 0;</a><br></p>
+
+<ul>
+<li><a href="#gcc-v">同場加映gcc -v hello.c</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="inc"></a></p>
+
+<ul>
+<li><code>#include &lt;stdio.h&gt;</code>使用<code>cpp hello.c &gt; hello.i</code> 可以看到</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>hello.i</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp"># 1 &quot;hello.c&quot;</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">printf</span> <span class="p">(</span><span class="n">__const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">__restrict</span> <span class="n">__format</span><span class="p">,</span> <span class="p">...);</span>
+</span><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="nf">sprintf</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">__restrict</span> <span class="n">__s</span><span class="p">,</span>
+</span><span class='line'>      <span class="n">__const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">__restrict</span> <span class="n">__format</span><span class="p">,</span> <span class="p">...)</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="n">__nothrow__</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="cp"># 2 &quot;hello.c&quot; 2</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello world</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>直接編譯hello.i並執行</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ gcc hello.i
+</span><span class='line'>$ ./a.out
+</span><span class='line'>Hello world
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="entr"> </a>
+* <code>int main(int argc, char **argv)</code></p>
+
+<p>從<a href="http://wen00072.github.io/blog/2014/03/14/study-on-the-linker-script">前面文章</a>可以看到gcc編譯時除了link library和本身的object 檔案外，還會多link一些binary，可以從這邊找看看main在那邊。</p>
+
+<p>說明一下，nm顯示的資料中
+<code>U</code>：表示undefined symbol
+<code>T</code>：表示symbol在Text section中</p>
+
+<figure class='code'><figcaption><span>尋找main</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm -A /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o 2&gt; /dev/null |grep main
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o:                 U __libc_start_main
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o:                 U main
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到在crt1.o有一個Undefined symbol叫main，在來看看我們的hello.c這邊</p>
+
+<figure class='code'><figcaption><span>main和hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm hello.o
+</span><span class='line'>0000000000000000 T main
+</span><span class='line'>                 U puts
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>所以可以看到crt1.o會用到main()，當然誰去呼叫main這件事我們就視而不見吧。
+另外<code>crt1.o</code>可以從man gcc看到被稱為startup file。</p>
+
+<p><a name="printf"> </a></p>
+
+<ul>
+<li>printf這邊其實要釐清的觀念是，OS透過system call提供服務。因此我們可以用<code>strace</code>去觀察hello呼叫了哪些system call</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>strace畫面</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ strace ./hello
+</span><span class='line'>execve(&quot;./hello&quot;, [&quot;./hello&quot;], [/* 39 vars */]) = 0
+</span><span class='line'>...
+</span><span class='line'>write(1, &quot;Hello world\n&quot;, 12Hello world
+</span><span class='line'>...
+</span><span class='line'>exit_group(1)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到事實上printf使用write system call去讓OS印字串到螢幕上。而為什麼不直接用<code>write(1, "Hello world\n", strlen("Hello world\n"));</code>呢？看<a href="http://man7.org/tlpi/">TLPI(書）</a>有提到主要原因是system call有代價的，而libc實作了buffer減少system call呼叫的次數。有興趣的可以使用<code>man setvbuf</code>看看buffer的設定方式。</p>
+
+<p><a name="ret_st"> </a></p>
+
+<ul>
+<li><code>return 0;</code>可以看下面的程式碼</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>return_status.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/* This demos return status */</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">rval</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;usage: %s return_status_number(0~255)</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Then observe return status in $?</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;ex: $ %s 121; echo $?</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">0</span><span class="p">]);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="k">return</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Convert return status to 0~255*/</span>
+</span><span class='line'>    <span class="n">rval</span> <span class="o">=</span> <span class="n">atoi</span><span class="p">(</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+</span><span class='line'>    <span class="n">rval</span> <span class="o">=</span> <span class="n">rval</span> <span class="o">%</span> <span class="mi">255</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">rval</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>跑看看便知道</p>
+
+<figure class='code'><figcaption><span>return_status</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ ./return_status ; echo $?
+</span><span class='line'>usage: ./return_status return_status_number(0~255)
+</span><span class='line'>Then observe return status in $?
+</span><span class='line'>ex: $ ./return_status 121; echo $?
+</span><span class='line'>2
+</span><span class='line'>
+</span><span class='line'>$ ./return_status 219 ; echo $?
+</span><span class='line'>219
+</span><span class='line'>
+</span><span class='line'>$ ./return_status 34 ; echo $?
+</span><span class='line'>34
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>$?</code>：<code>man bash</code>找<code>?</code>可以看到是顯示上次執行回傳狀態。因此不難理解return的值是有人會接起來的。Makefile就使用這個特性判斷build code是否有問題，我們可以測試一下</p>
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nf">test</span><span class="o">:</span>
+</span><span class='line'>  ./return_status 147
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Makefile執行結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make test
+</span><span class='line'>./return_status 147
+</span><span class='line'>make: *** [test] Error 147
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gcc-v"></a>
+* <code>gcc -v hello.c</code>輸出</p>
+
+<figure class='code'><figcaption><span>gcc -v hello.c 輸出節錄</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ gcc -v hello.c
+</span><span class='line'>Using built-in specs.
+</span><span class='line'>COLLECT_GCC=gcc
+</span><span class='line'>...
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/4.6/cc1 -quiet -v -imultilib . -imultiarch x86_64-linux-gnu hello.c -quiet -dumpbase hello.c -mtune=generic -march=x86-64 -auxbase hello -version -fstack-protector -o /tmp/cczq4fLe.s
+</span><span class='line'>...
+</span><span class='line'>as --64 -o /tmp/ccSFUZMm.o /tmp/cczq4fLe.s
+</span><span class='line'>...
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/4.6/collect2 --sysroot=/ --build-id --no-add-needed --as-needed --eh-frame-hdr -m elf_x86_64 --hash-style=gnu -dynamic-linker /lib64/ld-linux-x86-64.so.2 -z relro /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../.. /tmp/ccSFUZMm.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>參考資料：</h2>
+
+<ul>
+<li><a href="https://sourceware.org/binutils/docs/binutils/nm.html">nm manual</a></li>
+<li><a href="http://learn.akae.cn/media/ch19s02.html">(簡體中文)Linux C編程一站式學習: 第 19 章 彙編與C之間的關係</a></li>
+<li><a href="http://man7.org/tlpi/">TLPI(書）</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/14/study-on-the-gnu-ld/">GNU Ld初探</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-14T10:14:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:14 am</span></time>
+        
+           | <a href="/blog/2014/03/14/study-on-the-gnu-ld/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/03/14/study-on-the-gnu-ld/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>以前一直以為ld單純就是把<em>.a, </em>.o轉成binary，簡單測試一下發現完全不是這樣。</p>
+
+<p>測試的檔案除了Makefile以外，其他的和<a href="http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory">這邊</a>一樣</p>
+
+<p>將原本的Makefile部份</p>
+
+<figure class='code'><figcaption><span>原本的Makefile準備更動的部份</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
+</span><span class='line'>    <span class="k">$(</span>CC<span class="k">)</span> -o <span class="nv">$@</span> <span class="nv">$^</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>改成</p>
+
+<figure class='code'><figcaption><span>$(CC)改成ld</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
+</span><span class='line'>    ld -o <span class="nv">$@</span> <span class="nv">$^</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一跑make就出現錯誤</p>
+
+<figure class='code'><figcaption><span>make log</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make
+</span><span class='line'>mkdir -p build/libs/
+</span><span class='line'>cc -g -MMD -I ./include -c libs/liba.c -o build/libs/liba.o
+</span><span class='line'>mkdir -p build/libs/
+</span><span class='line'>cc -g -MMD -I ./include -c libs/libb.c -o build/libs/libb.o
+</span><span class='line'>mkdir -p build/
+</span><span class='line'>cc -g -MMD -I ./include -c test.c -o build/test.o
+</span><span class='line'>ld -o build/test build/libs/liba.o build/libs/libb.o build/test.o
+</span><span class='line'>ld: warning: cannot find entry symbol _start; defaulting to 00000000004000b0
+</span><span class='line'>build/libs/liba.o: In function `from_liba&#39;:
+</span><span class='line'>./libs/liba.c:11: undefined reference to `puts&#39;
+</span><span class='line'>build/libs/libb.o: In function `from_libb&#39;:
+</span><span class='line'>./libs/libb.c:11: undefined reference to `puts&#39;
+</span><span class='line'>build/test.o: In function `main&#39;:
+</span><span class='line'>./test.c:10: undefined reference to `malloc&#39;
+</span><span class='line'>make: *** [build/test] Error 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>ld 這邊再加上-lc又有其他的錯誤，看來的確是有東西隱藏在背面。因此需要有對照組，這時候<code>gcc -v</code>就可以出場了</p>
+
+<figure class='code'><figcaption><span>gcc -v log節錄</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ gcc -v -o build/test build/libs/liba.o build/libs/libb.o build/test.o
+</span><span class='line'>Using built-in specs.
+</span><span class='line'>...
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/4.6/collect2 --sysroot=/ --build-id --no-add-needed --as-needed --eh-frame-hdr -m elf_x86_64 --hash-style=gnu -dynamic-linker /lib64/ld-linux-x86-64.so.2 -z relro -o build/test /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o -L/usr/lib/gcc/x86_64-linux-gnu/4.6 -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../.. build/libs/liba.o build/libs/libb.o build/test.o -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s --no-as-needed /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到gcc呼叫<a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/12">collect2</a>，而collect2會呼叫ld</p>
+
+<figure class='code'><figcaption><span>strace collect2結果節錄</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ strace -e execve -f gcc -o build/test build/libs/liba.o build/libs/libb.o build/test.o
+</span><span class='line'>execve(&quot;/usr/bin/gcc&quot;, [&quot;gcc&quot;, &quot;-o&quot;, &quot;build/test&quot;,...
+</span><span class='line'>...
+</span><span class='line'>execve(&quot;/usr/lib/gcc/x86_64-linux-gnu/4.6/collect2&quot;,..., &quot;--sysroot=/&quot;,...
+</span><span class='line'>...
+</span><span class='line'>execve(&quot;/usr/bin/ld&quot;, [&quot;/usr/bin/ld&quot;, &quot;--sysroot=/&quot;, ...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>最後的Makefile版本變成</p>
+
+<figure class='code'><figcaption><span>ld最後參數</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="c"># LD_FLAGS</span>
+</span><span class='line'><span class="nv">LD_FLAGS</span><span class="o">=</span> <span class="se">\</span>
+</span><span class='line'>  --sysroot<span class="o">=</span>/ <span class="se">\</span>
+</span><span class='line'>  --build-id <span class="se">\</span>
+</span><span class='line'>  --no-add-needed --as-needed --eh-frame-hdr <span class="se">\</span>
+</span><span class='line'>  -m elf_x86_64 --hash-style<span class="o">=</span>gnu <span class="se">\</span>
+</span><span class='line'>  -dynamic-linker /lib64/ld-linux-x86-64.so.2 <span class="se">\</span>
+</span><span class='line'>  -z relro /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o<span class="se">\</span>
+</span><span class='line'>  /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o <span class="se">\</span>
+</span><span class='line'>  /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o <span class="se">\</span>
+</span><span class='line'>  -L/usr/lib/gcc/x86_64-linux-gnu/4.6 <span class="se">\</span>
+</span><span class='line'>  -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu <span class="se">\</span>
+</span><span class='line'>  -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib <span class="se">\</span>
+</span><span class='line'>  -L/lib/x86_64-linux-gnu <span class="se">\</span>
+</span><span class='line'>  -L/lib/../lib -L/usr/lib/x86_64-linux-gnu <span class="se">\</span>
+</span><span class='line'>  -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../..<span class="se">\</span>
+</span><span class='line'>  -lgcc --as-needed -lgcc_s --no-as-needed -lc -lgcc --as-needed -lgcc_s <span class="se">\</span>
+</span><span class='line'>  --no-as-needed <span class="se">\</span>
+</span><span class='line'>  /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o <span class="se">\</span>
+</span><span class='line'>  /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o
+</span><span class='line'>
+</span><span class='line'><span class="c"># Build Rules</span>
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
+</span><span class='line'>  ld -o <span class="nv">$@</span> <span class="nv">$^</span> <span class="k">$(</span>LD_FLAGS<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>結論如下</p>
+
+<ol>
+<li>gcc在build code默默處理掉很多細節</li>
+<li>gcc -v可以協助顯示更多編譯細節</li>
+</ol>
+
+
+<h2>參考資料:</h2>
+
+<p><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works">from Source to Binary: How GNU Toolchain Works</a></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/14/study-on-the-linker-script/">Linker Script初探 - GNU Linker Ld手冊略讀</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-14T09:01:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>9:01 am</span></time>
+        
+           | <a href="/blog/2014/03/14/study-on-the-linker-script/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/03/14/study-on-the-linker-script/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>關於一個程式的binary要怎麼存放其實是很有趣的問題，我以前都沒有去想這個問題。後來當組裝工久了以後就忍不住會想知道這些。隨便想一下就有很多問題，例如：</p>
+
+<ul>
+<li>程式碼和資料要怎麼放？</li>
+<li>怎麼做到不同的source code共用global 變數？</li>
+<li>global 變數和local變數放的地方應該不一樣吧？那麼確實不一樣的點是？</li>
+<li>呼叫副函數這回事一定是要先找到副函數再跳過去吧？那麼「找到」到底是什麼意思？</li>
+<li>如果是用shared library的話，runtime才會找到副函數所在的地方，那麼為什麼編譯的時候不會有錯誤呢？
+&hellip;</li>
+</ul>
+
+
+<p>這些問題列出來真的是「罄竹難書」，不過我想整體來說至少在Linux下面從binutils下手應該是沒錯。第一個問題應該和linker有關係。所以我先去看ld文件中的linker script，希望可以解決我的疑惑。就算和我的問題無關，至少可以留下一些中文參考資料，造福需要的朋友。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#intro">簡介</a></li>
+<li><a href="#bkg">背景知識</a>
+
+<ul>
+<li><a href="#bkg-sec">Section</a>
+
+<ul>
+<li><a href="#bkg-layout">Section 記憶體位址</a></li>
+</ul>
+</li>
+<li><a href="#bkg-sym">Symbol</a></li>
+</ul>
+</li>
+<li><a href="#fmt">Linker script 格式概論</a></li>
+<li><a href="#ex">從Linker script 範例開始</a></li>
+<li><a href="#cmd">簡易script 命令格式</a>
+
+<ul>
+<li><a href="#cmd-file">檔案相關命令</a></li>
+<li><a href="#cmd-obj">Object檔案相關格式命令</a></li>
+<li><a href="#cmd-alias">設定記憶體區塊alias命令</a></li>
+<li><a href="#cmd-misc">未分類的命令 (節錄）</a></li>
+</ul>
+</li>
+<li><a href="#assign">設定symbol的值</a>
+
+<ul>
+<li><a href="#assign-op">基本運算</a></li>
+<li><a href="#assign-hid">HIDDEN命令</a></li>
+<li><a href="#assign-prov">PROVIDE命令</a></li>
+<li><a href="#assign-hid-prov">PROVIDE_HIDDEN命令</a></li>
+<li><a href="#assign-src">談談source code和linker script symbol的關係</a></li>
+</ul>
+</li>
+<li><a href="#sec">SECTIONS命令</a>
+
+<ul>
+<li><a href="#sec-output-desc">輸出object檔案的section描述</a>
+
+<ul>
+<li><a href="#sec-output-name">輸出object檔案的section 命名</a></li>
+<li><a href="#sec-output-addr">輸出object檔案section 命令: address欄位</a></li>
+<li><a href="#sec-input-desc">輸入object檔案的section描述</a></li>
+<li><a href="#sec-input-desc-basic">輸入object檔案的section 基礎概念</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#todo">待釐清項目</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="intro"></a></p>
+
+<h2>簡介</h2>
+
+<p><code>ld</code>是GNU linker的程式。<code>ld</code>吃多個object (<em>.o)檔或archive (</em>.a)檔，將他們的資料relocate還有symbol reference資訊一併輸出到新的binary。link通常是compile產生binary的最後步驟。<code>ld</code>在執行的時候依照<strong>Linker command language</strong>檔案描述去產生binary。ld支援不同的binary format <a href="https://sourceware.org/binutils/docs/ld/BFD.html#BFD">(BFD: Binary File Descriptor)</a></p>
+
+<p>每次link的時候，都會依照特定的命令去產生新的object檔。而這些命令就是linker script；換句話說，linker script提供一連串的命令讓linker照表操課。Linker script描述的命令有</p>
+
+<ul>
+<li>ld吃的object檔案中的section要怎麼map到要輸出的binary檔案。</li>
+<li>要輸出的binary檔案要在記憶體中的<strong>layout</strong></li>
+<li>其他</li>
+</ul>
+
+
+<p>因為每次link一定會依據linker script去link，所以當<code>ld</code>沒有指定linker script的時候，系統會使用預設的linker script。而<code>ld --verbose</code>可以顯示預設的linkder script。link時指定自幹的linker script則使用<code>ld -T 自己的linker script</code>。</p>
+
+<hr />
+
+<p><a name="bkg"></a></p>
+
+<h2>背景知識</h2>
+
+<ul>
+<li>object 檔格式：輸入檔案和輸出檔案所遵循的格式</li>
+<li>object 檔案：輸入檔案和輸出檔案</li>
+<li>executable：ld輸出的檔案，有時候會這樣稱呼</li>
+<li>每個object檔案都有好幾個section，而
+
+<ul>
+<li>input section：輸入object檔案中的section</li>
+<li>output section：輸出object檔案中的section</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="bkg-sec"></a></p>
+
+<h3>Section</h3>
+
+<ul>
+<li>obj檔案內部有一組section</li>
+<li>section包含
+
+<ul>
+<li>自己的名稱</li>
+<li>section contents</li>
+<li>section長度資訊</li>
+<li>狀態
+
+<pre><code>* loadable: 執行時該section是否需要被載入到記憶體
+* allocatable: 先保留記憶體的一塊空間讓程式執行時使用，如.bss
+</code></pre>
+
+<ul>
+<li>section不是loadable 或allocatable 的話一般來說都是給debug用的</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/46">參考示意圖: (Jim Huang) How GNU Toolchain Works投影片 </a></li>
+</ul>
+
+
+<p><a name="bkg-layout"></a></p>
+
+<h4>Section 記憶體位址</h4>
+
+<ul>
+<li>Output section如果被載入記憶體，會存放兩種記憶體位址
+
+<ul>
+<li>VMA: Virtual Memory Address</li>
+<li>Runtime 的記憶體位址</li>
+<li>LMA: Load Memory Address
+
+<ul>
+<li>load time的記憶體位址</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>一般來說，VMA = LMA。不同情況有東西要燒到ROM時參考LMA。從ROM載入到記憶體執行的時候參考VMA</li>
+<li>可以使用objdump -h看VMA/LMA資訊</li>
+</ul>
+
+
+<p><a name="bkg-sym"></a></p>
+
+<h3>Symbol</h3>
+
+<ul>
+<li>一個object 檔案存放多個symbol，又稱為symbol table</li>
+<li>將名稱對應到一個記憶體位址的symbol稱為defined symbol，名稱沒有對應到記憶體位址的稱為undefined symbol</li>
+<li>名稱通常就是全域變數、靜態變數或是函數的名稱</li>
+<li>一般來說，如果把單獨的c編譯成object file時
+
+<ul>
+<li>defined symbol為該檔案內的global variable, static varible 和funciton</li>
+<li>undefined symbol為該檔案內的extern variable和外部funciton</li>
+</ul>
+</li>
+<li>可以使用objdump -t或是nm看symbol資訊</li>
+</ul>
+
+
+<hr />
+
+<p><a name="fmt"></a></p>
+
+<h2>Linker script 格式概論</h2>
+
+<ul>
+<li>以文字檔存放</li>
+<li>由多個command組成</li>
+<li>command可能是
+
+<ul>
+<li>keyword + 參數</li>
+<li>設定symbol</li>
+<li>&hellip;</li>
+</ul>
+</li>
+<li>command 可以用<code>;</code>分開，空白會被忽略</li>
+<li>使用/<em> .. </em>/註解</li>
+<li>字串直接打，如果有用到script保留的字元如<code>.</code>可以用<code>"</code>包住</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex"></a></p>
+
+<h2>從Linker script 範例開始</h2>
+
+<figure class='code'><figcaption><span>link script 範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="p">.</span> <span class="o">=</span> <span class="mh">0x10000</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">text</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>  <span class="p">.</span> <span class="o">=</span> <span class="mh">0x8000000</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這個<a href="https://sourceware.org/binutils/docs/ld/Simple-Example.html#Simple-Example">抄來</a>的範例很簡單，只有一個命令<code>SECTIONS</code>。<code>SECTIONS</code>是用來描述執行的時候記憶體的規劃配置（layout）。</p>
+
+<p>說明這個指令細節</p>
+
+<ul>
+<li><code>.</code>表示記憶體位置counter，起始值為0。結束值則由linker 計算把所有input section的資料整合到output section的長度。而<code>.</code>如果沒有指定明確的記憶體位址的話，就會被設定為<strong>上一個位址counter的結束位址</strong>。<a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/46">參考示意圖: (Jim Huang) How GNU Toolchain Works投影片 </a>。</li>
+<li>設定記憶體位置counter為0x10000</li>
+<li>接下來請把所有<strong>輸入</strong>object檔案的程式機械碼中(<code>{ *(.text) }</code>)存放到<strong>輸出</strong>object檔案的<code>.text</code>區塊中。</li>
+<li>接設定記憶體位置counter為0x8000000</li>
+<li>先放有初始值的全域變數（.data）</li>
+<li>再放<strong>沒有</strong>初始值的全域變數（.bss）</li>
+</ul>
+
+
+<p>另外要注意的是ld會自動幫你處理<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>，所以不用擔心section之間的aligment問題。</p>
+
+<hr />
+
+<p><a name="cmd"></a></p>
+
+<h2>linker script 命令格式</h2>
+
+<ul>
+<li><code>ENTRY(symbol)</code>
+
+<ul>
+<li>設定某個symbol為程式執行的第一個指令起始點，在我的預設linker script中是<code>ENTRY(_start)</code>，然後去反組譯隨便一個C編譯出來的執行檔，找字串<code>_start</code>可以看到裏面又去呼叫了<code>__libc_start_main@plt</code>。</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>hello_word執行檔</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Disassembly of section .text:
+</span><span class='line'>
+</span><span class='line'>0000000000400440 &lt;_start&gt;:
+</span><span class='line'>  400440:       31 ed                   xor    %ebp,%ebp
+</span><span class='line'>  400442:       49 89 d1                mov    %rdx,%r9
+</span><span class='line'>  400445:       5e                      pop    %rsi
+</span><span class='line'>  400446:       48 89 e2                mov    %rsp,%rdx
+</span><span class='line'>  400449:       48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+</span><span class='line'>  40044d:       50                      push   %rax
+</span><span class='line'>  40044e:       54                      push   %rsp
+</span><span class='line'>  40044f:       49 c7 c0 c0 05 40 00    mov    $0x4005c0,%r8
+</span><span class='line'>  400456:       48 c7 c1 50 05 40 00    mov    $0x400550,%rcx
+</span><span class='line'>  40045d:       48 c7 c7 2d 05 40 00    mov    $0x40052d,%rdi
+</span><span class='line'>  400464:       e8 b7 ff ff ff          callq  400420 &lt;__libc_start_main@plt&gt;
+</span><span class='line'>  400469:       f4                      hlt
+</span><span class='line'>  40046a:       66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cmd-file"></a></p>
+
+<h3>檔案相關命令</h3>
+
+<ul>
+<li><code>INCLUDE filename</code>
+
+<ul>
+<li>在看到這個命令的時候才去載入<code>filename</code>這個<strong>linker script</strong>。可以被放在不同的命令如SETCTION, MEMORY等。</li>
+</ul>
+</li>
+<li><code>INPUT(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入object檔案，如abc.o這樣的檔案。</li>
+</ul>
+</li>
+<li><code>GROUP(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入archieve檔案，如libabc.a這樣的檔案。</li>
+</ul>
+</li>
+<li><code>AS_NEEDED(file1 file2 ...)</code>
+
+<ul>
+<li>在<code>INPUT</code>和<code>GROUP</code>使用的命令，用來告訴linker說如果object裏面的資料有被reference到才link進來，猜測應該可以減少儲存空間。範例（未測試請自行斟酌）：<code>INPUT(file1.o file2.o AS_NEEDED(file3.o file4.o))</code></li>
+</ul>
+</li>
+<li><code>OUTPUT(filename)</code>
+
+<ul>
+<li>和<code>gcc -o filename</code> 一樣</li>
+</ul>
+</li>
+<li><code>SEARCH_DIR(path)</code>
+
+<ul>
+<li>和<code>-L path</code>一樣</li>
+</ul>
+</li>
+<li><code>STARTUP(filename)</code>
+
+<ul>
+<li>和INPUT相同，唯一差別是ld保證這個檔案一定是第一個被link</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-obj"></a></p>
+
+<h3>Object檔案相關格式命令</h3>
+
+<ul>
+<li><code>OUTPUT_FORMAT(bfdname)</code>
+
+<ul>
+<li>指定輸出object檔案的binary 檔案格式，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>OUTPUT_FORMAT(default, big, little)</code>
+
+<ul>
+<li>指定輸出object檔案預設的binary 檔案格式，big endian的binary 檔案格式以及little endian的binary 檔案格式。可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>TARGET(bfdname)</code>
+
+<ul>
+<li>告訴ld用那種binary 檔案格式讀取輸入object檔案要，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-alias"></a></p>
+
+<h3>設定記憶體區塊alias命令</h3>
+
+<ul>
+<li><code>REGION_ALIAS(alias, region)</code>
+
+<ul>
+<li>設定<code>MEMORY</code>命令中區塊的alias，一般來說，用在不同的平台需要相同的memory layout時可以使用。舉例來說，當有3個平台，記憶體layout都是相同，那麼可以
+
+<ul>
+<li>將他們平台相關的記憶體區塊<code>MEMORY</code>命令寫在個別的檔案如linkcmds.memory</li>
+<li>設定相同的alias</li>
+<li>在主要的linker script 使用<code>INCLUDE</code>載入linkcmds.memory，並且直接使用alias當作一般的區塊使用。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>詳細的範例說明可以看<a href="https://sourceware.org/binutils/docs/ld/REGION_005fALIAS.html#REGION_005fALIAS">這邊</a></p>
+
+<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">INCLUDE</span> <span class="n">linkcmds</span><span class="p">.</span><span class="n">memory</span>
+</span><span class='line'>
+</span><span class='line'> <span class="n">SECTIONS</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_TEXT</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">rodata</span> <span class="p">:</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
+</span><span class='line'>         <span class="n">rodata_end</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_RODATA</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">rodata_end</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="n">data_start</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_DATA</span>
+</span><span class='line'>     <span class="n">data_size</span> <span class="o">=</span> <span class="n">SIZEOF</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'>     <span class="n">data_load_start</span> <span class="o">=</span> <span class="n">LOADADDR</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_BSS</span>
+</span><span class='line'>   <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cmd-misc"></a></p>
+
+<h3>未分類的命令 (節錄）</h3>
+
+<ul>
+<li><code>ASSERT(exp, message)</code>
+
+<ul>
+<li>條件不成立就噴訊息並結束link</li>
+</ul>
+</li>
+<li><code>EXTERN(symbol1 symbol2 ...)</code>
+
+<ul>
+<li>強迫讓指定的symbol設成undefined，手冊說一般用在刻意要使用非標準的API。例如自幹printf時可以用這個命令。 (不過變成了undefine symbol怎麼link??)</li>
+</ul>
+</li>
+<li><p><code>FORCE_COMMON_ALLOCATION</code></p>
+
+<ul>
+<li>手冊和男人說和相容性有關，手冊上是說強迫分配空間給common symbols，即使是link relocate檔案。(common symbols不知道是什麼)</li>
+</ul>
+</li>
+<li><p><code>OUTPUT_ARCH(bfdarch)</code></p>
+
+<ul>
+<li>指定輸出的平台，可以透過<code>objdump -i</code>查詢支援平台</li>
+</ul>
+</li>
+<li><code>INSERT [ AFTER | BEFORE ] output_section</code>
+
+<ul>
+<li>指定在預設linker script命令被執行之前或是之後加上或加入特定的輸入section到輸出section。以下是一個範例</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nl">OVERLAY</span> <span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="p">.</span><span class="n">ov1</span> <span class="p">{</span> <span class="n">ov1</span><span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>      <span class="p">.</span><span class="n">ov2</span> <span class="p">{</span> <span class="n">ov2</span><span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">INSERT</span> <span class="n">AFTER</span> <span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2><a name="assign"></a></h2>
+
+<h2>設定symbol的值</h2>
+
+<p>linker script提供設定<strong>symbol</strong>數值的方法。要注意的是，這邊的symbol可以指一個全域變數、<code>SECTION</code>命令中的location counter（就是<code>.</code>開頭的資料如<code>.text</code>）</p>
+
+<p>使用方式介紹如下：</p>
+
+<p><a name="assign-op"></a></p>
+
+<h3>基本運算</h3>
+
+<figure class='code'><figcaption><span>symbol assignment operations</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">symbol</span> <span class="o">=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">+=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">-=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">*=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">/=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">&lt;&lt;=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">&gt;&gt;=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">&amp;=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">|=</span> <span class="n">expression</span> <span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>關於expression是三小後面會再討論。</p>
+
+<p><a href="https://sourceware.org/binutils/docs/ld/Simple-Assignments.html#Simple-Assignments">手冊上提供的範例</a>是</p>
+
+<figure class='code'><figcaption><span>symbol assign範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">floating_point</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">_etext</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="n">_bdata</span> <span class="o">=</span> <span class="p">(.</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span> <span class="mi">3</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>從這邊可以看到幾種assign</p>
+
+<ul>
+<li>設定全域變數<code>floating_point</code>的symbol為0</li>
+<li>設定全域變數<code>_etext</code>的值為輸入object檔案<code>.text</code>合體後的offset，個人猜測可以理解成end of text。(回顧一下<code>.</code>是offset counter)</li>
+<li>設定全域變數<code>_bdata</code>的值為輸出object檔案<code>.text</code>結尾的offset 的<strong>4的倍數</strong>位址。這邊透露兩個資訊
+
+<ul>
+<li>個人猜測可以理解成begin of data</li>
+<li>四的倍數和<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>應該有關聯。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid"></a></p>
+
+<h3>HIDDEN命令</h3>
+
+<ul>
+<li><code>HIDDEN(要隱藏的symbol)</code>
+可以把他理解成加了<code>static</code>的全域變數，也就是說這個symbol只在這個處理範圍中才能摸到。</li>
+</ul>
+
+
+<p><a name="assign-prov"></a></p>
+
+<h3>PROVIDE命令</h3>
+
+<ul>
+<li><code>PROVIDE命令(symbol = expression)</code>
+
+<ul>
+<li>簡單來說，如果你的程式已經有這個symbol（函數或變數），就用你的；否則就使用這邊提供的symbol。手冊上說是給特殊的linker使用的。想知道他提的use case可以看<a href="https://sourceware.org/binutils/docs/ld/PROVIDE.html#PROVIDE">這邊</a>，我是沒什麼感覺。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid-prov"></a></p>
+
+<h3>PROVIDE_HIDDEN命令</h3>
+
+<ul>
+<li><code>PROVIDE_HIDDEN(symbol = expression)</code>
+
+<ul>
+<li>和PROVIDE命令相同，差別是這個symbol只在這個處理範圍中才能摸到，一如HIDDEN命令。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-src"></a></p>
+
+<h3>談談source code和linker script symbol的關係</h3>
+
+<p>這節很有趣，解答我的一些小問題。</p>
+
+<ul>
+<li>變數如何存放在binary中？
+
+<ul>
+<li>先把變數名稱放入symbol table內，換句話說symbol table會多一筆資料。這筆資料的欄位有
+
+<ul>
+<li>symbol的位址</li>
+<li>symbol的flags</li>
+<li>symbol屬於哪個SECTION</li>
+<li>symbol佔的記憶體空間或是alignment規範</li>
+<li>symbol的名稱</li>
+</ul>
+</li>
+<li>典型的symbol table 資料：C語言的main()
+
+<pre><code>*  `00000000004005ed g     F .text  0000000000000101              main`
+</code></pre></li>
+<li>而symbol的flag有7個groups
+
+<ul>
+<li>Group 1:
+
+<ul>
+<li><code>l</code>: local</li>
+<li><code>g</code>: global</li>
+<li><code>u</code>: unique global，GNU 用於ELF時的 symbol binding extenstion</li>
+<li><code>!</code>: 既是global也是local</li>
+</ul>
+</li>
+<li>Group 2:
+
+<ul>
+<li><code>w</code>: weak symbol</li>
+<li><code>&lt;空白&gt;</code>: strong symbol</li>
+</ul>
+</li>
+<li>Group 3:
+
+<ul>
+<li><code>C</code>: symbol 是一個constructor (不知道這邊constructor是指那個東西? )</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 4:
+
+<ul>
+<li><code>W</code>: warning symbol (不知道是三小)</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 5:
+
+<ul>
+<li><code>I</code>: 間接地reference其他的symbol</li>
+<li><code>i</code>: relocate 時要處理的function</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 6:
+
+<ul>
+<li><code>D</code>: dynamic symbol (不知道是三小)</li>
+<li><code>d</code>: debug symbol</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 7:
+
+<ul>
+<li><code>F</code>: 這是一個function</li>
+<li><code>f</code>: 這是一個檔案</li>
+<li><code>O</code>: 這是一個object</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果有初始值，順便設定初始值。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>foo = 100</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址依照symbol table的size規則將100寫入該位址。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>ptr = &amp;foo</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址寫到ptr在symbol table對應的記憶體。</li>
+</ul>
+</li>
+<li>symbol在symbol table中存放第一個欄位是<strong>symbol的值</strong>，而這個值<strong>是一個位址</strong>。</li>
+<li>在linker script設定的symbol如<code>foo = 100</code>和在程式碼中轉出的symbol如<code>foo = 100</code>差別在那？
+
+<ul>
+<li>linker script的100代表的是symbol的位址，而程式碼中轉出的symbol的100代表的是foo對應記憶體存放的值。</li>
+</ul>
+</li>
+<li>如何從C語言程式碼中摸到linker script內定義的symbol?
+
+<ul>
+<li>要先知道symbol名稱</li>
+<li>在程式碼中extern該symbol，型態為char。</li>
+<li>要知道symbol只是一個位址，所以要存取就要取位址。</li>
+<li>可以參考以前測試的<a href="http://wen00072.github.io/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux">範例：Linux中使用C語言載入data object 檔案資料</a></li>
+<li>另外有趣的是似乎section的symbol對應的位址不一定是只當位址使用。詳細測試在<a href="http://wen00072.github.io/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued">這邊：Linux中使用C語言載入data object 檔案資料 (續）</a></li>
+</ul>
+</li>
+<li>我可以反方向從linker script摸程式碼的symbol
+
+<ul>
+<li>不一定，不同的程式語言和編譯器有不同的變數和函數命名方式，也就是說你原始程式碼的symbol名稱<strong>可能不是</strong>最後存在輸出object檔案的symbol 名稱。</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="sec"></a></p>
+
+<h2>SETCION命令</h2>
+
+<p>其實一開始是為了看懂這個命令才會想看linker script的。如果接觸過很小型的Embedded OS就會發現很多都是自幹linker script；而這些scripts主要的描述命令就是<code>SETCION</code>。</p>
+
+<p>好了，廢話少說，進入主題。SECTION命令的功用是</p>
+
+<ul>
+<li>告訴linker怎麼把輸入object檔案中的SECTION對應到輸出object檔案中的SECTION</li>
+<li>告訴loader object檔案中的SECTION要放到記憶體那些地方</li>
+</ul>
+
+
+<p>典型的SECTION命令長這樣子：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">sections</span><span class="o">-</span><span class="n">command</span>
+</span><span class='line'>  <span class="n">sections</span><span class="o">-</span><span class="n">command</span>
+</span><span class='line'>  <span class="p">...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>望文生義地猜測可以這樣理解：
+輸出object有一些大方向的規範，並且分為不同的section，每個section有他自己的規範。</p>
+
+<p>而<code>sections-command</code>可以分為下面幾種功能</p>
+
+<ul>
+<li><a href="#cmd">ENTRY命令</a></li>
+<li><a href="#assign">設定symbol的值</a></li>
+<li><a href="#sec-output-desc">描述輸出object檔案的setcion</a></li>
+<li>Overlay描述 (不知道是三小)</li>
+</ul>
+
+
+<p>要注意的事，如果你自幹的linker script沒有描述輸出object檔案的setcion的話，linker會</p>
+
+<ul>
+<li>讀輸入object檔案section時，如果該section第一次出現，就在輸出object檔案中加入同樣名稱的section，直到處理完所有的輸入object檔案</li>
+<li>第一個吃到的輸入object檔案section將當作位址0的起始點</li>
+</ul>
+
+
+<p><a name="sec-output-desc"></a></p>
+
+<h3>輸出object檔案的section描述</h3>
+
+<figure class='code'><figcaption><span>輸出object檔案的section描述格式</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">section</span> <span class="p">[</span><span class="n">address</span><span class="p">]</span> <span class="p">[(</span><span class="n">type</span><span class="p">)]</span> <span class="o">:</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">AT</span><span class="p">(</span><span class="n">lma</span><span class="p">)]</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">ALIGN</span><span class="p">(</span><span class="n">section_align</span><span class="p">)</span> <span class="o">|</span> <span class="n">ALIGN_WITH_INPUT</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">SUBALIGN</span><span class="p">(</span><span class="n">subsection_align</span><span class="p">)]</span>
+</span><span class='line'>  <span class="p">[</span><span class="n">constraint</span><span class="p">]</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="n">output</span><span class="o">-</span><span class="n">section</span><span class="o">-</span><span class="n">command</span>
+</span><span class='line'>      <span class="n">output</span><span class="o">-</span><span class="n">section</span><span class="o">-</span><span class="n">command</span>
+</span><span class='line'>      <span class="p">...</span>
+</span><span class='line'>  <span class="p">}</span> <span class="p">[</span><span class="o">&gt;</span><span class="n">region</span><span class="p">]</span> <span class="p">[</span><span class="n">AT</span><span class="o">&gt;</span><span class="n">lma_region</span><span class="p">]</span> <span class="p">[</span><span class="o">:</span><span class="nl">phdr</span> <span class="p">:</span><span class="n">phdr</span> <span class="p">...]</span> <span class="p">[</span><span class="o">=</span><span class="n">fillexp</span><span class="p">]</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>其中<code>output-section-command</code>的功能有</p>
+
+<ul>
+<li><a href="#assign">設定symbol的值</a></li>
+<li>描述輸入object檔案中的section要怎麼放到輸出object檔案的setcion</li>
+<li>輸出object檔案的setcion的資料存放格式如alignment等</li>
+<li>其他</li>
+</ul>
+
+
+<p>這邊很多術語需要先搞清楚，先列出來，希望之後可以看到解答</p>
+
+<ul>
+<li>type</li>
+<li>region</li>
+<li>AT(lma)</li>
+<li>lma_region</li>
+<li>=fillexp</li>
+</ul>
+
+
+<p><a name="sec-output-name"></a></p>
+
+<h3>輸出object檔案的section 命名</h3>
+
+<ul>
+<li>必須符合你要輸出object檔案binary format規定。</li>
+</ul>
+
+
+<p><a name="sec-output-addr"></a></p>
+
+<h4>輸出object檔案section 命令: address欄位</h4>
+
+<p>address是<a href="#sec-output-desc">section</a>的一個optional欄位，使用的記憶體空間為<a href="#bkg-layout">VMA</a>。如果沒有指定的話，linker會依下面的方式設定輸出object檔案section 的VMA。該VMA會遵循section 的alignment規範。</p>
+
+<ul>
+<li>有設定<code>region</code>的話就從region內剩餘空間開始位址</li>
+<li>有使用<code>MEMORY</code>命令定義硬體記憶區塊的話，從定義的區塊中挑<strong>第一個</strong>符合SECTION的區塊。再將address設成該區塊內剩餘空間開始位址</li>
+<li>以上皆非的情況下，位址設成locale counter</li>
+</ul>
+
+
+<p>address欄位因為可以使用exression所以可能有下面的陷阱</p>
+
+<ul>
+<li><code>.text . : { *(.text) }</code></li>
+<li><code>.text : { *(.text) }</code>
+這兩個差一個<code>.</code>，意義就差很多。沒有<code>.</code>那個，表示沒有設定address，所以就是設成locale counter，並且linker會保證alignment。而有<code>.</code>的就表示hardcode成locale counter，所以有可能會有alignment的問題。</li>
+</ul>
+
+
+<p>另外一點要注意的設定後locale counter也會跟著改變。</p>
+
+<p><a name="sec-input-desc"></a></p>
+
+<h4>輸入object檔案的section描述</h4>
+
+<p>這部份可以說是整個<code>output-section-command</code>的重點，目的是告訴linker讀取輸入object檔案後，怎麼把這些檔案裏面的section複製到輸出object檔案裏面<strong>適當地</strong>section。</p>
+
+<p><a name="sec-input-desc-basic"></a></p>
+
+<h4>輸入object檔案的section 基礎概念</h4>
+
+<p>格式為<code>檔案(section1  section2 ...)</code>，檔案支援<a href="https://sourceware.org/binutils/docs/ld/Input-Section-Wildcards.html#Input-Section-Wildcards">萬用字元</a>。</p>
+
+<p>所以常看到的<code>*(.text)</code>的意思是：所有輸入object檔案裏面的<code>.text</code> section。</p>
+
+<p>指定多個section的方式有兩種</p>
+
+<ul>
+<li><p><code>*(.sec1 .sec2)</code>：如果輸入object有兩個檔案的話，輸出object檔案裏面section會變成
+<img src="http://user-image.logdown.io/user/3993/blog/4041/post/188334/f6Crrs5MTT2tl66gz08O_ld1_section.png" alt="ld1_section.png" /></p></li>
+<li><p><code>*(.sec1) *(.sec2)</code>: 如果輸入object有兩個檔案的話，輸出object檔案裏面section會變成
+<img src="http://user-image.logdown.io/user/3993/blog/4041/post/188334/LqhscLhZSbeN8XckduAG_ld2_section2.png" alt="ld2_section2.png" /></p></li>
+</ul>
+
+
+<hr />
+
+<p><a name="todo"></a></p>
+
+<ul>
+<li>待釐清項目
+
+<ul>
+<li>dynamic symbol (不知道是三小)</li>
+<li>warning symbol (不知道是三小)</li>
+<li>constructor symbol (不知道是三小)
+
+<ul>
+<li>Overlay描述 (不知道是三小)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>概念
+
+<ul>
+<li>名詞解釋
+
+<ul>
+<li>bss</li>
+<li>text</li>
+<li>data</li>
+</ul>
+</li>
+<li>locale counter</li>
+<li>region</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts">GNU linker ld: Linker Scripts</a></li>
+<li><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works">from Source to Binary: How GNU Toolchain Works</a></li>
+<li><a href="http://wiki.osdev.org/Linker_Scripts">Linker Scripts - OSDev Wiki</a></li>
+<li><a href="http://www.bravegnu.org/gnu-eprog/index.html">Embedded Programming with the GNU Toolchain</a></li>
+<li><a href="http://stackoverflow.com/questions/6666805/what-does-each-column-of-objdumps-symbol-table-mean">Stackoverflow: What does each column of objdump&rsquo;s Symbol table mean?</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/13/makefile-pattern-rules-little-attention/">Makefile的Pattern Rules小小注意事項</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-13T07:15:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>7:15 am</span></time>
+        
+           | <a href="/blog/2014/03/13/makefile-pattern-rules-little-attention/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/03/13/makefile-pattern-rules-little-attention/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在<a href="http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory">Makefile 自動將產生的檔案指定到特定目錄</a>中，我犯了一個錯誤，造成更動header檔案發生錯誤(原文已修復)。</p>
+
+<p>狀況如下</p>
+
+<figure class='code'><figcaption><span>Error log</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make
+</span><span class='line'>mkdir -p build/libs/
+</span><span class='line'>cc -g -MMD -I ./include -c libs/liba.c -o build/libs/liba.o
+</span><span class='line'>mkdir -p build/libs/
+</span><span class='line'>cc -g -MMD -I ./include -c libs/libb.c -o build/libs/libb.o
+</span><span class='line'>mkdir -p build/
+</span><span class='line'>cc -g -MMD -I ./include -c test.c -o build/test.o
+</span><span class='line'>cc -o build/test build/libs/liba.o build/libs/libb.o build/test.o
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>make: `build/test&#39; is up to date.
+</span><span class='line'>
+</span><span class='line'>$ touch include/*
+</span><span class='line'>
+</span><span class='line'>$ make
+</span><span class='line'>mkdir -p build/libs/
+</span><span class='line'>cc -g -MMD -I ./include -c libs/liba.c include/libb.h -o build/libs/liba.o
+</span><span class='line'>cc: fatal error: cannot specify -o with -c, -S or -E with multiple files
+</span><span class='line'>compilation terminated.
+</span><span class='line'>make: *** [build/libs/liba.o] Error 4
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>從錯誤中可以看到，明明在編liba.c code怎麼會有libb.h來亂呢？請再看下面的分析。</p>
+
+<p>有問題的Makefile如下</p>
+
+<figure class='code'><figcaption><span>有問題的Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-g -MMD -I ./include
+</span><span class='line'>
+</span><span class='line'><span class="c"># binaries</span>
+</span><span class='line'><span class="nv">LIB_SRC</span><span class="o">=</span><span class="k">$(</span>shell ls libs/*.c<span class="k">)</span>
+</span><span class='line'><span class="nv">SRCS</span><span class="o">=</span> <span class="k">$(</span>LIB_SRC<span class="k">)</span> test.c
+</span><span class='line'>
+</span><span class='line'><span class="nv">OBJS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Output</span>
+</span><span class='line'><span class="nv">OUT_DIR</span> <span class="o">=</span> build
+</span><span class='line'><span class="nv">OUT_OBJS</span><span class="o">=</span><span class="k">$(</span>addprefix <span class="k">$(</span>OUT_DIR<span class="k">)</span>/, <span class="k">$(</span>OBJS<span class="k">))</span>
+</span><span class='line'><span class="nv">DEPS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.o, %.d, <span class="k">$(</span>OUT_OBJS<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Build Rules</span>
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="nv">$@</span> <span class="nv">$^</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span>%.<span class="n">c</span>
+</span><span class='line'>  mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> -c <span class="nv">$^</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>OUT_DIR<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">-include $(DEPS)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>問題出在<code>$(CC) $(CFLAGS) -c $^ -o $@</code>，再次回顧一下
+<a name="dep"></a></p>
+
+<ul>
+<li>-MMD效果</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>有問題的Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">$</span> <span class="err">cat</span> <span class="err">build/libs/liba.d</span>
+</span><span class='line'><span class="nf">build/libs/liba.o</span><span class="o">:</span> <span class="n">libs</span>/<span class="n">liba</span>.<span class="n">c</span> <span class="n">include</span>/<span class="n">libb</span>.<span class="n">h</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>而在Makefile中我們會使用<code>-include $(DEPS)</code> include 這些*.d檔案，所以更改Makefile部份敘述。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span>%.<span class="n">c</span>
+</span><span class='line'>  mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> -c <span class="nv">$^</span> -o <span class="nv">$@</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>第一次make後，當header改變, 有的prerequisite會更動，進而觸發Pattern Rule，但是<code>$^</code>是所有的prerequisite，所以$(CC)會把所有的prerequisite全部帶入造成錯誤。已<a href="#dep">這邊</a>的例子，prerequisite就是<code>libs/liba.c</code>和<code>include/libb.h</code>了</p>
+
+<p>解法很簡單，把<code>$^</code>換成<code>$&lt;</code>就可以了。而<code>$&lt;</code>是什麼呢？就是第一個prerequisite，對照<a href="#dep">這邊</a>可以看到，第一個就是第一個prerequisite就是<code>libs/liba.c</code>檔案了。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Pattern-Rules">GNU make: 10.5 Defining and Redefining Pattern Rules</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Automatic-Variables">GNU make: 10.5.3 Automatic Variables</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory/">Makefile 自動將產生的檔案指定到特定目錄</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-12T13:35:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>12</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>1:35 pm</span></time>
+        
+           | <a href="/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>Mar/13/2014已更正錯誤：原本錯誤分析請看<a href="http://wen00072.github.io/blog/2014/03/13/makefile-pattern-rules-little-attention">這邊</a></strong></p>
+
+<p><a href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues">之前</a>分享了Makefile header file dependency問題解決方式之一，裏面提到把<em>.o 和</em>.d 指定產生到特定目錄，而不是散落各處的改進方向。過了幾天網路上看到<a href="https://github.com/southernbear/rtenv/blob/master/Makefile">別人的解法</a>，手癢自己也來玩一下。</p>
+
+<p><a href="http://wen00072.github.io/blog/2014/06/07/dry-test-file-template">範例程式細節在這邊</a>，不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。</p>
+
+<p><a name="tree"></a></p>
+
+<p>這次加碼一下，把檔案散落在不同目錄如下</p>
+
+<figure class='code'><figcaption><span>tree view</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ tree
+</span><span class='line'>.
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   └── libb.c
+</span><span class='line'>├── Makefile
+</span><span class='line'>└── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Makefile更改如下</p>
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-g -MMD -I ./include
+</span><span class='line'>
+</span><span class='line'><span class="c"># binaries</span>
+</span><span class='line'><span class="nv">LIB_SRC</span><span class="o">=</span><span class="k">$(</span>shell ls libs/*.c<span class="k">)</span>
+</span><span class='line'><span class="nv">SRCS</span><span class="o">=</span> <span class="k">$(</span>LIB_SRC<span class="k">)</span> test.c
+</span><span class='line'>
+</span><span class='line'><span class="nv">OBJS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Output</span>
+</span><span class='line'><span class="nv">OUT_DIR</span> <span class="o">=</span> build
+</span><span class='line'><span class="nv">OUT_OBJS</span><span class="o">=</span><span class="k">$(</span>addprefix <span class="k">$(</span>OUT_DIR<span class="k">)</span>/, <span class="k">$(</span>OBJS<span class="k">))</span>
+</span><span class='line'><span class="nv">DEPS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.o, %.d, <span class="k">$(</span>OUT_OBJS<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Build Rules</span>
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="nv">$@</span> <span class="nv">$^</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span>%.<span class="n">c</span>
+</span><span class='line'>  mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> -c <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>OUT_DIR<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">-include $(DEPS)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>整個Makefile主要是</p>
+
+<ol>
+<li>找出所有要編譯的c檔案並放在變數<code>SRCS</code></li>
+<li>把變數<code>SRC</code>中的<em>.c換成</em>.o並存到變數<code>OBJS</code></li>
+<li>再把變數<code>OBJS</code>裏面的字串每一個都加上<code>build/</code>的prefix並存到變數<code>OUT_OBJS</code></li>
+<li>再把<code>OUT_OBJS</code>中的<em>.o換成</em>.d並存到變數<code>DEP</code></li>
+<li>編譯<em>.c到</em>.o的時候，先產生對應於C code的目錄並將<em>.o </em>.d存到裏面</li>
+</ol>
+
+
+<p>參數說明如下</p>
+
+<ul>
+<li><code>-MMD</code>請參考<a href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues">這邊</a></li>
+<li><code>shell</code>請參考<a href="http://wen00072.github.io/blog/2014/01/07/makefile-with-command-results-examples">這邊</a></li>
+<li><code>patsubst</code>請參考<a href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues">這邊</a></li>
+<li><code>addprefix</code>，照字面就是加上prefix</li>
+<li><code>dir</code>，取得檔案的dir</li>
+<li><code>$@</code>
+
+<ul>
+<li>Makefile的內建巨集，代表target</li>
+</ul>
+</li>
+<li><code>$&lt;</code>
+
+<ul>
+<li>Makefile的內建巨集，代表第一個prerequisite</li>
+</ul>
+</li>
+<li><code>-</code>
+  *告訴make 忽略失敗</li>
+<li><code>%.o:%.c</code>
+
+<ul>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Pattern-Rules">Pattern Rules</a></li>
+<li>%表示萬用字元，而prerequisite的%會和target的% match到的相同。所以就是說所有<em>.o結尾的檔案depends on </em>.c檔案時要做下面的事</li>
+<li>舉例來說<code>$(OUT_DIR)/%.o:%.c</code>，表示build/xxx/file1.o 會依賴對應到的xxx/file1.c</li>
+</ul>
+</li>
+<li>其實重點是<code>mkdir -p $(dir $@)</code>會自動在build產生對應的目錄存放<em>.d和</em>.o</li>
+</ul>
+
+
+<p>跑起來結果如下</p>
+
+<figure class='code'><figcaption><span>result</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make
+</span><span class='line'>mkdir -p build/libs/
+</span><span class='line'>cc -g -MMD -I ./include -c libs/liba.c -o build/libs/liba.o
+</span><span class='line'>mkdir -p build/libs/
+</span><span class='line'>cc -g -MMD -I ./include -c libs/libb.c -o build/libs/libb.o
+</span><span class='line'>mkdir -p build/
+</span><span class='line'>cc -g -MMD -I ./include -c test.c -o build/test.o
+</span><span class='line'>cc -o build/test build/libs/liba.o build/libs/libb.o build/test.o
+</span><span class='line'>
+</span><span class='line'>$ tree
+</span><span class='line'>.
+</span><span class='line'>├── build
+</span><span class='line'>│   ├── libs
+</span><span class='line'>│   │   ├── liba.d
+</span><span class='line'>│   │   ├── liba.o
+</span><span class='line'>│   │   ├── libb.d
+</span><span class='line'>│   │   └── libb.o
+</span><span class='line'>│   ├── test
+</span><span class='line'>│   ├── test.d
+</span><span class='line'>│   └── test.o
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   └── libb.c
+</span><span class='line'>├── Makefile
+</span><span class='line'>└── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/southernbear/rtenv/blob/master/Makefile">southernbear / rtenv: Makefile</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Text-Functions">GNU make: 8.2 Functions for String Substitution and Analysis</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Pattern-Rules">GNU make: 10.5 Defining and Redefining Pattern Rules</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Automatic-Variables">GNU make: 10.5.3 Automatic Variables</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/03/06/makefile-header-file-dependency-issues/">Makefile Header File Dependency問題</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-03-06T01:12:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>1:12 am</span></time>
+        
+           | <a href="/blog/2014/03/06/makefile-header-file-dependency-issues/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>自幹Makefile的時候常常忘記把header files加到Prerequisite然後編譯的時候就發生非預期的錯誤。之前整理<a href="http://wen00072.github.io/blog/2013/10/13/talk-about-c-macros">GNU: The C Preprocess導讀</a>有看到gcc/cpp(C Preprocessor)的<code>-MMD</code>參數，但是還不清楚怎麼使用。直到看到<a href="http://stackoverflow.com/questions/11855386/using-g-with-mmd-in-makefile-to-automatically-generate-dependencies">Using g++ with -MMD in makefile to automatically generate dependencies</a>才知道怎麼玩。手癢自己也來弄一個驗證一下。</p>
+
+<p>測試檔案及程式碼如下
+不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。</p>
+
+<figure class='code'><figcaption><span>liba.h</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#ifndef LIBA_H_2013</span>
+</span><span class='line'><span class="cp">#define LIBA_H_2013</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_liba</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_liba</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>liba.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;libb.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_liba</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">from_libb</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_liba</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>libb.h</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#ifndef LIBB_H_2013</span>
+</span><span class='line'><span class="cp">#define LIBB_H_2013</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_libb</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_libb</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>libb.c  </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;liba.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">test_libb</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">from_liba</span><span class="p">();</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">from_libb</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>test.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;libb.h&quot;</span>
+</span><span class='line'><span class="cp">#include &quot;liba.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;stdlib.h&gt;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">test_liba</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">test_libb</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>先來複習一下<code>-MMD</code>的效果</p>
+
+<figure class='code'><figcaption><span>執行-MMD 結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ gcc -MMD -c test.c
+</span><span class='line'>$ ls test.*
+</span><span class='line'>test.c  test.d  test.o
+</span><span class='line'>$ cat test.d
+</span><span class='line'>test.o: test.c libb.h liba.h
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>剩下就是想辦法讓Makefile吃到*.d的內容，因此Makefile長的就像這樣</p>
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-g -MMD
+</span><span class='line'>
+</span><span class='line'><span class="nv">SRCS</span><span class="o">=</span> test.c liba.c libb.c
+</span><span class='line'><span class="nv">OBJS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>
+</span><span class='line'><span class="nv">DEPS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.o, %.d, <span class="k">$(</span>OBJS<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OBJS</span><span class="k">)</span>
+</span><span class='line'>  gcc -g -o <span class="nv">$@</span> <span class="nv">$^</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf *.o *.a *~ <span class="k">$(</span>TARGET<span class="k">)</span> <span class="k">$(</span>OBJS<span class="k">)</span> <span class="k">$(</span>DEPS<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">-include $(DEPS)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Makefile說明:</p>
+
+<ul>
+<li><code>patsubst</code>
+
+<ul>
+<li>Makefile 提供的函數，用在pattern 替換，所以上面做了下列的代換</li>
+<li>.c轉成.o</li>
+<li>.o轉成.d</li>
+</ul>
+</li>
+<li><code>$@</code>
+
+<ul>
+<li>Makefile的內建巨集，代表target</li>
+</ul>
+</li>
+<li><code>$^</code>
+
+<ul>
+<li>Makefile的內建巨集，代表prerequisite</li>
+</ul>
+</li>
+<li><code>-</code>
+
+<ul>
+<li>告訴make 忽略失敗，trick就在這邊</li>
+</ul>
+</li>
+</ul>
+
+
+<p>Trick就是上面提到的<code>-</code>，第一次make時一定<em>.d檔案不存在，因此不使用<code>-</code>就一定編不過。第一次編過之後因為</em>.d已經產生，所以header file的dependecy也被處理好了。</p>
+
+<p>其實上面的Makefile可以做更多改進，當project檔案數量大到某種程度就可以感覺改進的效果，例如</p>
+
+<ul>
+<li>把<em>.o 和</em>.d 指定產生到特定目錄，而不是散落各處</li>
+<li>加上distclean，只有在這種情況下才去刪除*.d的檔案</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/posts/14">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/posts/12">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

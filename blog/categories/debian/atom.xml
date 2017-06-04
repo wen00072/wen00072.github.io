@@ -1,0 +1,523 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Debian | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/debian/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[[Debian套件打包] Pbuilder 中如何安裝自己打包的套件]]></title>
+    <link href="http://wen00072.github.io/blog/2014/11/20/package-debian-packages-using-local-debian-pbuilder-package/"/>
+    <updated>2014-11-20T16:20:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/11/20/package-debian-packages-using-local-debian-pbuilder-package</id>
+    <content type="html"><![CDATA[<p>標題有點難下。直接講為什麼會有這樣的需求好了，<a href="http://wen00072.github.io/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder">在這邊</a>介紹了使用pbuilder驗證單獨的套件。但是如果你要打包的套件需要先安裝另外一個自行先打包的套件就GG了。原因是因為pbuilder不知道去那邊找相依的套件以致於無法編譯你的套件。</p>
+
+<p>舉例來說，假設你現在要打包一個套件是顯示圖片的程式，我們把他叫<code>pkg_image</code>。而這個<code>pkg_image</code>套件使用了<code>lib_img</code>這套函式庫開發。不巧的是<code>lib_img</code>並不在debian官方套件中，所以你必須要先打包<code>lib_img</code>、<code>lib_img-dev</code>和<code>lib_dbg</code>這三個套件。接下來你要確定<code>lib_img-dev</code>套件安裝到你的系統中，你才能夠開始打包<code>pkg_img</code>。</p>
+
+<p>這樣的狀況在pbuilder會有前面講到的套件相依問題。後來在Debian文件的<a href="https://wiki.debian.org/PbuilderTricks">PbuilderTricks</a>中找到解法，整理如下。</p>
+
+<ul>
+<li><a href="#prepare">複習 &amp; 事先準備</a></li>
+<li><a href="#conf">修改pbuilder config檔案</a></li>
+<li><a href="#test">套用並測試</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="prepare"></a></p>
+
+<h2>複習 ＆ 事先準備</h2>
+
+<p>首先我們依照Ubuntu的文件<a href="https://wiki.ubuntu.com/PbuilderHowto">PbuilderHowto</a>中的建議，安裝下面的套件。這部份應該和前面有重複。
+<code>
+sudo apt-get install pbuilder debootstrap devscripts
+</code></p>
+
+<p>其中devscripts提供打包debian套件所需要的script，如前面提到的debuild。而debootstrap則是可以讓你在系統中安裝並執行另外一個debian Linux。在使用時可以指定要裝debian的版本，至於debootstrap支援那些版本？你可以用下面的方式查詢： <code>ls /usr/share/debootstrap/scripts</code></p>
+
+<p>如果你準備打包並上傳到debian官方套件管理庫，那麼你還要安裝debian 的GPG key，指令如下：
+<code>
+sudo apt-get install debian-archive-keyring
+</code></p>
+
+<p>接下來我們要建立一個待測Debian的基本image。我使用</p>
+
+<pre><code>sudo pbuilder create --distribution sid \
+                     --mirror http://ftp.tw.debian.org/debian \
+                     --debootstrapopts \ 
+                     "--keyring=/usr/share/keyrings/debian-archive-keyring.gpg --variant=buildd"
+</code></pre>
+
+<p>這個指令表示</p>
+
+<ul>
+<li>我要針對下建立基於debian sid的base.tgz檔案: <code>--distribution sid</code></li>
+<li>指定mirror site: <code>--mirror http://ftp.tw.debian.org/debian</code></li>
+<li>傳遞下面的參數給debootstrap: <code>--debootstrapopts</code>
+
+<ul>
+<li>使用debian archive的gpg key 來驗證下載的套件<code>--keyring=/usr/share/keyrings/debian-archive-keyring.gpg</code></li>
+<li>除了基本的套件外，請幫我額外安裝編譯軟體需要的相關套件 (&ndash;variant=buildd)</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="conf"></a></p>
+
+<h2>修改pbuilder config檔案</h2>
+
+<p>建立了base.tgz後。還要更改pbuilder的設定以及加入hook。請編輯/etc/pbuilderrc，或是你執行的pbuilder身份home目錄下的~/.pbuilderrc。主要是描述你的local repository放在那邊，以及hook放在那邊。local repository就是你自己打包的套件要放的地方，以前面的例子，就是要放lib_imag.deb和lib_imag-dev.deb到該目錄。而hook可以比喻成/etc/rc.d內的東西，基本上就是在該目錄寫一些script，當pbuilder啟動後就會依順序呼叫。</p>
+
+<pre><code class="text /etc/pbuilder.c">OTHERMIRROR="deb [trusted=yes] file:///path/to/the/dir/deps ./"
+BINDMOUNTS="/path/to/the/dir/deps"
+HOOKDIR="/path/to/hook/dir"
+EXTRAPACKAGES="apt-utils"
+</code></pre>
+
+<p>請確認內容中的每個路徑都存在，還有[trusted=yes]有被加入。沒加這個在pbuilder安裝自己local套件會因為安全條件不滿足而無法安裝。</p>
+
+<p>寫完設定檔後，記得要告訴pbuilder你已經更新了設定。指令如下</p>
+
+<pre><code>sudo pbuilder --update --override-config --distribution sid
+</code></pre>
+
+<p>接下來就是在HOOKDIR指定的目錄中填寫hook的內容，debian trick網頁是使用<code>D05deps</code>，我也是照抄。</p>
+
+<pre><code class="text D05deps">#!/bin/sh
+(cd /path/to/the/dir/deps; apt-ftparchive packages . &gt; Packages)
+apt-get update
+</code></pre>
+
+<p>這個hook就是切換到你存放自己打包deb套件的目錄，然後產生出apt看得懂的套件列表到Packages檔案，最後就是更新apt。所以每次該目錄有新的deb套件時，都可以確保pbuilder一定可以使用。</p>
+
+<p><a name="test"></a></p>
+
+<h2>套用並測試</h2>
+
+<p>完全和前面一樣，pbuilder &ndash;build 一個dsc檔。以前面的例子，我們會依照下面的順序打包</p>
+
+<ul>
+<li><code>pbuilder --build lib_img.dsc</code>打包<code>lib_img</code>，<code>lib_img-dev</code>，<code>lib_img-dbg</code>這三個套件。</li>
+<li>把<code>lib_img</code>，<code>lib_img-dev</code>，<code>lib_img-dbg</code>搬到你給pbuilder吃的local repository目錄</li>
+<li><code>pbuilder --build pkg_image.dsc</code>，pbuilder會自動從local repository中找出並安裝相依套件。</li>
+</ul>
+
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://wiki.debian.org/PbuilderTricks">PbuilderTricks</a></li>
+<li><a href="https://wiki.ubuntu.com/PbuilderHowto">(Ubuntu) PbuilderHowto</a>
+
+<ul>
+<li>後面的提到dput之後我就沒往下看了，感覺似乎和Debian的稍微不同？</li>
+</ul>
+</li>
+<li><a href="http://pbuilder.alioth.debian.org/">pbuilder User&rsquo;s Manual</a></li>
+<li><a href="https://wiki.debian.org/Debootstrap">Debian: Bootstrap</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[淺談Debian套件打包 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/09/22/talk-about-debian-packages-package-slides-on-line/"/>
+    <updated>2014-09-22T11:21:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/09/22/talk-about-debian-packages-package-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/39338832" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/zzz00072/debian-39338832" title="淺談Debian套件打包" target="_blank">淺談Debian套件打包</a> </strong> from <strong><a href="http://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="7608980023ab01328db012917f3c7eff" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[Debian套件打包] 使用pbuilder驗證套件]]></title>
+    <link href="http://wen00072.github.io/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/"/>
+    <updated>2014-07-31T03:57:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder</id>
+    <content type="html"><![CDATA[<p>之前的<a href="http://wen00072.github.io/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages">文章</a>有提到使用pbuilder驗證套件。最近抽空玩了一下。整理到這邊。</p>
+
+<p>[回收以前文章]
+pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來產生並測是套件。如此一來可以確認是否debian目錄下面的設定是否真的可以在這些乾淨的環境被編譯和安裝。</p>
+
+<h2>目錄：</h2>
+
+<ul>
+<li><a href="#env">環境設定並建立image</a></li>
+<li><a href="#pkg">使用pbuilder打包source package</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="env"></a></p>
+
+<h2>環境設定並建立image</h2>
+
+<ul>
+<li>測試環境
+<code>text lsb_release -a畫面
+$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Debian
+Description:    Debian GNU/Linux unstable (sid)
+Release:    unstable
+Codename:   sid
+</code></li>
+</ul>
+
+
+<p>先使用下面指令產生乾淨的Linux環境所對應的tarball，之後會用chroot切換到該環境中。</p>
+
+<ul>
+<li><code>sudo pbuilder create</code></li>
+</ul>
+
+
+<pre><code class="text 執行畫面">$ sudo pbuilder create
+W: /root/.pbuilderrc does not exist
+I: Distribution is sid.
+I: Current time: Thu Jul 31 12:44:44 CST 2014
+I: pbuilder-time-stamp: 1406781884
+I: Building the build environment
+I: running debootstrap
+...
+I: new cache content grep_2.18-2_amd64.deb added
+I: unmounting dev/pts filesystem
+I: unmounting run/shm filesystem
+I: unmounting proc filesystem
+I: creating base tarball [/var/cache/pbuilder/base.tgz]
+I: cleaning the build env 
+I: removing directory /var/cache/pbuilder/build//27394 and its subdirectories
+</code></pre>
+
+<p>從log中可以看到處理的時候會暫時放在<code>/var/cache/pbuilder/build//27394</code>中，當執行結束的時候會刪除。</p>
+
+<p>我們可以更進一步看一下<code>/var/cache/pbuilder</code>目錄：</p>
+
+<pre><code class="text /var/cache/pbuilder">#  tree -d /var/cache/pbuilder
+.
+|-- aptcache
+|-- build
+|-- ccache
+|-- pbuildd
+|-- pbuilder-mnt
+|-- pbuilder-umlresult
+`-- result
+</code></pre>
+
+<p>aptcache目錄可以看到裡面就是一堆deb檔案。我們可以合理的推論當測試十有需要額外安裝相依套件下載後會先存放在這邊。</p>
+
+<p>接下來我們可以使用下面的方式玩一下</p>
+
+<ul>
+<li><code>sudo pbuilder --login</code></li>
+</ul>
+
+
+<pre><code class="text sudo pbuilder --login 執行畫面">$ sudo pbuilder --login
+W: /root/.pbuilderrc does not exist
+I: Building the build Environment
+I: extracting base tarball [/var/cache/pbuilder/base.tgz]
+I: creating local configuration
+I: copying local configuration
+I: mounting /proc filesystem
+I: mounting /run/shm filesystem
+I: mounting /dev/pts filesystem
+I: policy-rc.d already exists
+I: Obtaining the cached apt archive contents
+I: entering the shell
+File extracted to: /var/cache/pbuilder/build//10030
+
+root@debian:/# 
+</code></pre>
+
+<p>重點是<code>File extracted to: /var/cache/pbuilder/build//10030</code>，所以我們可以在本機中去看<code>/var/cache/pbuilder/build/10030</code>，裡面就是一個完整的Linux root</p>
+
+<pre><code class="text 列出目錄：/var/cache/pbuilder/build/10030">##  ls /var/cache/pbuilder/build/10030
+bin  boot  dev  etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+</code></pre>
+
+<p>當我們離開pbuilder shell後，可以看到該root目錄也隨之消失。如此一來，可以確保所有的資料一開始都會是從<code>/var/cache/pbuilder/base.tgz</code>解出來最乾淨的狀態。</p>
+
+<pre><code class="text 離開pbuilder --login">root@debian:/# exit
+logout
+I: Copying back the cached apt archive contents
+I: unmounting dev/pts filesystem
+I: unmounting run/shm filesystem
+I: unmounting proc filesystem
+I: cleaning the build env 
+I: removing directory /var/cache/pbuilder/build//10030 and its subdirectories
+</code></pre>
+
+<hr />
+
+<p><a name="pkg"></a></p>
+
+<h2>使用pbuilder打包驗證source package</h2>
+
+<p>我自己的方式是先用<code>debbuild -S</code>或是<code>dpkg-buildpackage -S</code>產生dsc檔案。在同一個目錄下面下下面的指令。</p>
+
+<ul>
+<li><code>sudo pbuilder --build 你的套件.dsc</code></li>
+</ul>
+
+
+<p>當你原始套件debian/control的depend沒寫好，pbuilder乾淨的環境就不會安裝depend的套件而執行失敗。這時候你就要加入缺少的depend套件到debian/control。最後產生的套件會放在<code>/var/cache/pbuilder/result/</code>中</p>
+
+<p>執行畫面如下：
+<code>text sudo pbuilder --build testautotools_0-1.dsc
+W: /root/.pbuilderrc does not exist
+I: using fakeroot in build.
+I: pbuilder: network access will be disabled during build
+I: Current time: Thu Jul 31 15:28:32 CST 2014
+I: pbuilder-time-stamp: 1406791712
+I: Building the build Environment
+...
+I: Obtaining the cached apt archive contents
+I: Installing the build-deps
+ -&gt; Attempting to satisfy build-dependencies
+ -&gt; Creating pbuilder-satisfydepends-dummy package
+...
+I: Extracting source
+dpkg-source: warning: extracting unsigned source package (testautotools_0-1.dsc)
+dpkg-source: info: extracting testautotools in testautotools-0
+dpkg-source: info: unpacking testautotools_0.orig.tar.xz
+dpkg-source: info: unpacking testautotools_0-1.debian.tar.xz
+I: Building the package
+I: Running cd tmp/buildd/*/ &amp;&amp; env PATH="/usr/sbin:/usr/bin:/sbin:/bin" dpkg-buildpackage -us -uc  -rfakeroot
+...
+I: Copying back the cached apt archive contents
+I: unmounting dev/pts filesystem
+I: unmounting run/shm filesystem
+I: unmounting proc filesystem
+I: cleaning the build env
+I: removing directory /var/cache/pbuilder/build//18912 and its subdirectories
+I: Current time: Thu Jul 31 15:29:09 CST 2014
+I: pbuilder-time-stamp: 1406791749
+</code></p>
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://wiki.ubuntu.com/PbuilderHowto">PbuilderHowto </a></li>
+<li><a href="https://wiki.debian.org/Diaspora/Packaging/pbuilder">Debian: Pbuilder</a></li>
+<li><a href="https://www.debian.org/doc/manuals/maint-guide/build.en.html">Debian New Maintainers&#8217; Guide: Chapter 6. Building the package</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[Debian套件打包] 從同一套tarball打包多個套件]]></title>
+    <link href="http://wen00072.github.io/blog/2014/06/27/package-debian-packages-from-the-same-tarball-package-multiple-suite/"/>
+    <updated>2014-06-27T07:25:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/06/27/package-debian-packages-from-the-same-tarball-package-multiple-suite</id>
+    <content type="html"><![CDATA[<h2>緣由</h2>
+
+<p>使用apt套件管理可以看到，安裝函式庫通常是使用apt-get install libxxx。但是如果編譯時就會需要額外安裝libxxx-<strong>dev</strong>套件。該套件通常就是多了靜態函式庫以及header files。由於libxxx和libxxx-dev應該從同一包tarball產生，好奇之餘整理一下如何從一包tarball產生多個套件的方式。</p>
+
+<h2>步驟</h2>
+
+<ul>
+<li>更改debian/control，加入新的打包名稱，以及相依套件。
+
+<ul>
+<li>範例：原本的套件是libxxx，那麼舊新增libxxx-dev，並且和相依於libxxx。</li>
+</ul>
+</li>
+<li>新增debian/<code>套件名稱.install</code>，並且寫套件想要安裝的檔案。
+
+<ul>
+<li>範例：debian/libxxx.install和debian/libxxx-dev.install</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>測試</h2>
+
+<p>直接使用<a href="http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style">之前的測試方法</a>裏面的套件，照上面的方式修改。</p>
+
+<pre><code class="text debian/control新增testautotools-dev套件">16,21d15
+&lt; 
+&lt; Package: testautotools-dev
+&lt; Architecture: any
+&lt; Depends: ${shlibs:Depends}, ${misc:Depends} testautotools
+&lt; Description: &lt;insert up to 60 chars description&gt;
+&lt;  &lt;insert long description, indented with spaces&gt;
+</code></pre>
+
+<p>另外兩個install 檔案列出如下
+<code>text debian/testautotools.install
+usr/lib/*.so.0*
+usr/bin/my_test
+</code></p>
+
+<pre><code class="text debian/testautotools-dev.install">usr/lib/*.a
+usr/lib/*.so
+usr/lib/*.la
+usr/include
+</code></pre>
+
+<p>更改後跑<code>dpkg-buildpackage -uc -us</code>產生的檔案如下</p>
+
+<pre><code class="text 產生的檔案列表">testautotools_0-1.dsc
+testautotools_0-1_amd64.changes  
+testautotools_0-1_amd64.deb      
+testautotools-dev_0-1_amd64.deb
+testautotools_0-1.debian.tar.gz
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[Debian套件打包] 如何更新現有套件並重新打包？]]></title>
+    <link href="http://wen00072.github.io/blog/2014/06/17/package-debian-packages-how-to-update-the-existing-suite/"/>
+    <updated>2014-06-17T15:09:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/06/17/package-debian-packages-how-to-update-the-existing-suite</id>
+    <content type="html"><![CDATA[<p>Debian New Maintainers&#8217; Guide提供了一些更新打包過的套件的建議:
+分為</p>
+
+<ul>
+<li><a href="#fix">修復錯誤的情況</a></li>
+<li><a href="#rel">打包上游更新原始套件</a></li>
+</ul>
+
+
+<h2><a name="fix"></a></h2>
+
+<h2>修復錯誤的情況</h2>
+
+<h3>需要更改原本套件中的程式碼</h3>
+
+<ul>
+<li>透過<a href="http://wen00072.github.io/blog/2014/06/10/joined-his-patch-package-for-debian-packages">dquilt</a>整理成patch
+
+<ul>
+<li>dquilt new 描述修正的檔名.patch</li>
+<li>dquilt add 要修正的程式碼檔名</li>
+<li>修改要修正的程式碼檔內部程式碼</li>
+<li>dquilt refresh產生patch</li>
+<li>dquilt header -e描述剛才的更改</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>需要更改原本套件中debian/patches的patch</h3>
+
+<ul>
+<li>透過<a href="http://wen00072.github.io/blog/2014/06/10/joined-his-patch-package-for-debian-packages">dquilt</a>整理成patch
+
+<ul>
+<li>dquilt pop 要修正的patch檔名
+
+<ul>
+<li>dqulit會幫你<strong>un-patch</strong></li>
+</ul>
+</li>
+<li>修改要修正的patch檔名內部程式碼</li>
+<li>dquilt refresh產生patch</li>
+<li>dquilt header -e描述剛才的更改</li>
+<li>while dquilt push; do dquilt refresh; done
+
+<pre><code>* Apply 之前被pop的patch
+</code></pre></li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p>更改完畢並產生完patch後，請更改debian/changelog說明更改項目。可以人肉修正、使用<code>dch -i</code>指令或是使用<code>dch -v 新的版號</code>協助更改。</p>
+
+<p>如果更新的原因是因為套件管理系統中有bug report，在debian/changelog中需要特別提到<code>Close: 錯誤追蹤編號</code>，上傳的時候系統會自動根據該編號關閉相對issue。</p>
+
+<p>更改完debian/changelog後請依照<a href="https://www.debian.org/doc/manuals/maint-guide/build.en.html#completebuild">之前</a>的建議重新測試套件。測試無誤後，應將changelog中的狀態從UNRELEASED改為unstable或是experimental並且上傳。由於只有更改部份檔案，所以不需要上所有檔案。</p>
+
+<hr />
+
+<p><a name="rel"></a></p>
+
+<h2>打包上游更新原始套件</h2>
+
+<p>首先要確認新版和舊版都是最乾淨的情況，也就是說autotools產生的檔案如configure等都不應該存在。接下來使用diff人肉檢查是否有可疑要注意的地方。指令如下：</p>
+
+<ul>
+<li><code>diff -urN 乾淨舊版目錄 乾淨新版目錄</code></li>
+</ul>
+
+
+<p>接下來把舊版的debian目錄放置到新版的原始乾淨目錄中。debian目錄在打包的時候應該會單獨產生一個tarball，檔名為<strong>套件名稱.debian.tar.gz</strong>。做以下的更動</p>
+
+<ul>
+<li>照<a href="http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style">以前</a>格式將上游的tarball以<code>套件名稱.org.tar.gz</code>存檔。</li>
+<li>使用<code>dch -v 新版本號碼</code>更新debian/changelog
+
+<ul>
+<li>說明更新上游原始套件，如果有fix bug report的話也要加入<code>Close: 錯誤追蹤編號</code></li>
+<li>while dquilt push; do dquilt refresh; done
+
+<ul>
+<li>Apply 之前被pop的patch</li>
+<li>基本上新版有沒有需要apply自己patch?個人覺得不一定。就算需要，行號等資訊會因為程式碼更動等原因而不一定能夠patch上去。當發生問題時手冊有下面建議
+
+<ul>
+<li>如果這個patch上游原始套件已經fix了，請直接使用<code>dquilt delete</code>刪除該套件。</li>
+<li>使用<code>dquilt push -f</code>暴力patch，然後人肉檢查patch退貨的檔案。接下來觀察退貨檔案，自幹新的patch。</li>
+<li>重複 while dquilt push; do dquilt refresh; done直到都可以apply為止。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><strong>上面的動作可以使用<code>uupdate</code>幫你簡化部份操作。</strong></li>
+</ul>
+
+
+<p>如果debian下的watch有指定的話，可以使用<code>uscan</code>代替<code>update</code>，主要的差別是uscan會根據debian/watch去下載上游原始套件而不需要人肉下載。</p>
+
+<h2>跳過部份</h2>
+
+<ul>
+<li>從舊的debian格式更新成新的debian格式</li>
+<li>更上游原始套件的文字檔到UTF-8</li>
+</ul>
+
+
+<hr />
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://www.debian.org/doc/manuals/maint-guide/update.en.html">Debian New Maintainers&#8217; Guide: Chapter 8. Updating the package</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

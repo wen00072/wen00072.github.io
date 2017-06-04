@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Github Pages | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/github-pages/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[安裝octopress並佈署到github Pages上面]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/25/octopress-installed-and-deployed-on-the-github-pages/"/>
+    <updated>2015-03-25T20:40:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/25/octopress-installed-and-deployed-on-the-github-pages</id>
+    <content type="html"><![CDATA[<p>昨天評估使用github.io存放網頁的技術，本來是想直接套用Jekyll的東西，無奈能力不足，Markdown的支援度不如預期。後來想到Octopress應該支援度不差。估狗了一下的確可行，順手紀錄一下安裝方式。</p>
+
+<p>先說結論，Octopress + Github pages的好處有</p>
+
+<ul>
+<li>使用git管理你的content
+
+<ul>
+<li>換句話說，你所更動的一切都在Github上面</li>
+</ul>
+</li>
+<li>Octopress幫你搞定
+
+<ul>
+<li>deploy到github page</li>
+<li>local PC preview，這樣可以改到爽再commit你的content</li>
+<li>支援Markdown，簡化寫網頁的effort</li>
+<li>Open source，喜歡就自己改吧</li>
+<li>code block有行數，歐耶。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>資料有點雜，還是弄一下目錄好了</p>
+
+<ul>
+<li><a href="#oct-env">測試環境</a></li>
+<li><a href="#oct-prepare">預先準備</a></li>
+<li><a href="#oct-install">安裝Octopress</a></li>
+<li><a href="#oct-config">設定網頁資訊</a></li>
+<li><a href="#oct-deploy">撰寫及發表文章</a></li>
+<li><a href="#oct-notice">Octopress注意事項</a></li>
+<li><a href="#oct-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="oct-env"/></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.2 LTS
+Release:    14.04
+Codename:   trusty
+</code></pre>
+
+<p><a name="oct-prepare"/></a></p>
+
+<h2>預先準備</h2>
+
+<h4>github 帳號，以及<a href="https://pages.github.com/">開通git pages</a></h4>
+
+<h4>安裝Octopress需要的軟體</h4>
+
+<pre><code>$ sudo apt-get install ruby1.9.1-dev
+$ sudo apt-get install nodejs
+$ sudo apt-get install rbenv
+$ sudo gem install bundler
+$ rbenv rehash
+</code></pre>
+
+<p><a name="oct-install"/></a></p>
+
+<h2>安裝Octopress</h2>
+
+<p>基本上就照手冊來，口頭來說就是</p>
+
+<ul>
+<li><a href="##oct-dl">下載Octopress</a></li>
+<li><a href="##oct-ins">安裝Octopress</a></li>
+<li><a href="##oct-gh">指定你要deploy到Github</a></li>
+</ul>
+
+
+<p><a name="oct-dl"/></a></p>
+
+<h4>下載Octopress</h4>
+
+<p>官方網址如下</p>
+
+<ul>
+<li><a href="https://github.com/imathis/octopress">Octopress Github</a></li>
+</ul>
+
+
+<pre><code>$ git clone https://github.com/imathis/octopress
+$ cd octopress
+$ bundle install
+</code></pre>
+
+<p><code>bundle install</code>會根據Octopress裏面的Gemfile安裝使用Octopress需要的Ruby套件。</p>
+
+<p><a name="oct-ins"/></a></p>
+
+<h4>安裝Octopress</h4>
+
+<pre><code>$ rake install
+</code></pre>
+
+<p><a name="oct-gh"/></a></p>
+
+<h4>指定你要deploy到Github page</h4>
+
+<p>跑下面的指令會要求你輸入Github Page的repository如
+<code>git@github.com:wen00072/wen00072.github.io.git</code></p>
+
+<pre><code>$ rake setup_github_pages
+</code></pre>
+
+<p><code>setup_github_pages</code>很有趣，值得提一下他幫你做了什麼</p>
+
+<ul>
+<li>跟你討Github page的URL</li>
+<li>把你下載Octopress的repository remote名稱從<code>origin</code>改成<code>octopress</code></li>
+<li>把你的Github page的repository設成目前git remote的<code>origin</code></li>
+<li>local新增<code>source</code> branch，從master切到該branch</li>
+<li>設定Octopress要deploy到你的Github pages</li>
+<li>clone你的Github page的repository 到<code>_deploy</code>目錄</li>
+</ul>
+
+
+<p>使用下面的指令，產生資料並上傳到你的Github page，此時直接連Github Page應該就會有網頁畫面了。</p>
+
+<pre><code>$ rake generate
+$ rake deploy
+</code></pre>
+
+<p>再來我們直接把目前Octopress的Git repository和前面指令產生/修改新的檔案一口氣產生並加到你的Github page中的source branch吧。這個點特別有趣感覺像是做了某種移花接木的技巧，可以仔細想想他為什麼這樣做。想通了應該對於git remote會有點感覺&hellip;吧？</p>
+
+<p>提示：你應該還記得前面<code>rake setup_github_pages</code>有提到Octopress會將你的Github page repository URL設成目前working directory git remote的orgin吧？</p>
+
+<pre><code>$ git add .
+$ git commit -m "git add . after rake deploy"
+$ git push origin source
+</code></pre>
+
+<p>所以現在你的Github page repository origin會有兩個branch</p>
+
+<ul>
+<li>master
+
+<ul>
+<li>網頁連過去看到的內容</li>
+<li>由rake deploy管控</li>
+</ul>
+</li>
+<li>source: 從Octopress拉下來的程式碼和你剛才指令新增的檔案
+
+<ul>
+<li>你的content以及config由此更動</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="oct-config"/></a></p>
+
+<h2>設定網頁資訊</h2>
+
+<p><a href="http://octopress.org/docs/configuring/">官方網頁</a>有提到如何更改設定。我只做最簡單的更動，就是<code>_config.yml</code></p>
+
+<pre><code>diff --git a/_config.yml b/_config.yml
+index 4bf56f1..e7de252 100644
+ a/_config.yml
++++ b/_config.yml
+@@ -3,9 +3,9 @@
+ ## -- ##
+
+ url: http://wen00072.github.io
+-title: My Octopress Blog
+-subtitle: A blogging framework for hackers.
+-author: Your Name
++title: 國王的耳朵是驢耳朵
++subtitle: 國王的耳朵是驢耳朵
++author: Wen Liao
+ simple_search: https://www.google.com/search
+ description:
+</code></pre>
+
+<p>如果要讓你的config馬上生效，除了local commit， push到source branch外，不要忘記套用到的Github page。</p>
+
+<pre><code>$ rake generate
+$ rake deploy
+</code></pre>
+
+<p><a name="oct-deploy"/></a></p>
+
+<h2>撰寫及發表文章</h2>
+
+<h4>撰寫文章</h4>
+
+<p>撰寫文章有兩種，一個是請Octopress幫你生一個範本，指令如下</p>
+
+<pre><code>$ rake new_post["你的標題"]
+</code></pre>
+
+<p>然後Octopress會幫你產生到<code>source/_posts/</code>下面
+來個範例</p>
+
+<pre><code>$ rake new_post["First"]
+mkdir -p source/_posts
+Creating new post: source/_posts/2015-03-25-first.markdown
+
+$ cat source/_posts/2015-03-25-first.markdown
+
+layout: post
+title: "First"
+date: 2015-03-25 22:10:45 +0800
+comments: true
+categories: 
+</code></pre>
+
+<p>可以看到產生的檔案會有特定的規範。所以你也可以照樣造句，自己人肉寫一個，這就是第二種方式。不管怎樣，剩下的就是按照Markdown語法編輯檔案了。</p>
+
+<h4>發表文章</h4>
+
+<p>最開始有講過，使用Octopress的好處是可以改到爽再deploy到Github page，要如何做呢？很簡單</p>
+
+<pre><code>$ rake preview
+</code></pre>
+
+<p>接下來就是用瀏覽器連<code>localhost:4000</code>，如果不滿意就停止，開始改你的markdown檔案，再<code>rake preview</code>。改到爽為止，決定發佈就用下面的指令上傳到Github page上面。</p>
+
+<pre><code>$ rake deploy
+</code></pre>
+
+<p>上傳完畢後不要忘記local的markdown檔案並沒有commit並且更新。所以你可以做</p>
+
+<pre><code>$ git add source/_posts/
+$ git commit -m "Hello world"
+$ git push origin source
+</code></pre>
+
+<p>要注意<code>git add source/_posts/</code>第一次可以這樣做，接下來建議還是針對你的markdown檔案一個一個確認比較妥當。</p>
+
+<p>這邊是我的<a href="http://wen00072.github.io/">示範網頁</a>。</p>
+
+<p><a name="oct-notice"/></a></p>
+
+<h2>注意事項</h2>
+
+<p>嘗試Octopress發現和以前使用的Markdown有一些要注意的地方</p>
+
+<ul>
+<li>第一個item (我用*) 前面一定要空一行，不然系統無法辨識</li>
+<li>HTML 的anchor tag (我拿來做目錄跳躍)一定要<code>&lt;a name="ref"&gt;&lt;/a&gt;</code>，以前的<code>&lt;a name="ref"/&gt;</code>會讓Octopress的排版亂到讓你想殺人。</li>
+<li>強烈建議修改<code>sass/custom/_layout.scss</code>，把<code>//$indented-lists</code>改成<code>indented-lists</code>，不然list的bullet對齊會很難看。</li>
+<li>如果直接<code>rake preview</code>發現網頁沒更新，請用<code>rake generate</code>檢查是否你的markdown有錯誤的語法。</li>
+<li>preview的時候你的markdown更新到你可以看到網頁改變時間有點長，我這邊大概要十幾秒到二十幾秒的時間才會更動。</li>
+<li>不要一次丟太多markdown進去，因為目前<code>rake generate</code>會噴錯誤，但是不會跟你說在parse哪個markdown檔案出了問題。</li>
+</ul>
+
+
+<p><a name="oct-ref"/></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://zerodie.github.io/blog/2012/01/19/octopress-github-pages/">李嘉玲的技術筆記: Github Page + Octopress</a></li>
+<li><a href="http://octopress.org/docs/setup/">Octopress: Octopress Setup</a></li>
+<li><a href="http://octopress.org/docs/deploying/github/">Octopress: Deploying to Github Pages</a></li>
+<li><a href="http://octopress.org/docs/configuring/">Octopress: Configuring Octopress</a></li>
+<li><a href="http://octopress.org/docs/blogging/">Octopress: Blogging Basics</a></li>
+<li><a href="http://stackoverflow.com/questions/24794024/markdown-list-does-not-indent-using-octopress">Markdown list does not indent using octopress</a></li>
+<li><a href="http://robdodson.me/some-octopress-rake-tips/">Some Octopress Rake Tips</a>
+
+<ul>
+<li>沒試過，小心服用</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

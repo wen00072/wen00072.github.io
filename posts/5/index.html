@@ -1,0 +1,2037 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="搬了一百多篇文章後，很明顯地發現Octopress產生頁面速度慢到爆炸，有多慢呢？大概下了rake preview指令後要幾十秒才能更新。我猜測rake preview實作上可能是把source/_posts全部都抓起來重新產生頁面造成的問題。 目前能夠找到的方法只能算是workaround， &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/posts/5/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/01/speed-up-octopress-new-post-generating/">加快Octopress 修改/新增文章發佈前 Preview速度</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-01T00:12:13+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>1</span><span class='date-suffix'>st</span>, <span class='date-year'>2015</span></span> <span class='time'>12:12 am</span></time>
+        
+           | <a href="/blog/2015/04/01/speed-up-octopress-new-post-generating/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/04/01/speed-up-octopress-new-post-generating/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>搬了一百多篇文章後，很明顯地發現Octopress產生頁面速度慢到爆炸，有多慢呢？大概下了<code>rake preview</code>指令後要幾十秒才能更新。我猜測<code>rake preview</code>實作上可能是把<code>source/_posts</code>全部都抓起來重新產生頁面造成的問題。</p>
+
+<p>目前能夠找到的方法只能算是workaround，勉強可以號溝。整理如下</p>
+
+<ol>
+<li>(optional) <code>rake newpost['新的title']</code></li>
+<li><code>rake isolate['你要修改的檔名']</code>
+
+<ul>
+<li>其實這個命令單純產生<code>source/_stash</code>目錄，然後把你<code>rake isolate</code>以外的檔案搬到這邊。換句話說，目前<code>source/_post</code>下面只有你<code>isolate</code>起來的那一篇。</li>
+</ul>
+</li>
+<li>因為2，<code>rake preview</code>速度飛快，你就快樂的修改你的文章，一存檔馬上就可以看到變化。</li>
+<li>修改完畢後，要用<code>rake integrate</code>剛才搬出去的文章搬回來。</li>
+<li>悲劇的地方在這邊，你還是得<code>rake generate</code>把所有的文章從markdown轉成HTML，時間一樣漫長。</li>
+<li><code>rake deploy</code>發佈到Github</li>
+<li>記得把更改和新增的檔案commit並push到origin source</li>
+</ol>
+
+
+<p>總之，就是號溝。如果有更快的工具，支援Markdown和Github page，我會很慎重地考慮再搬一次。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://leafduo.com/articles/2013/04/15/speed-up-octopress-generation/">Speed up Octopress generation</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/31/add-categories-list-plugin-to-octopress/">Add Categories List Plugin to Octopress</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-31T01:54:10+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2015</span></span> <span class='time'>1:54 am</span></time>
+        
+           | <a href="/blog/2015/03/31/add-categories-list-plugin-to-octopress/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/31/add-categories-list-plugin-to-octopress/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>安裝方式如下</p>
+
+<ul>
+<li>下載<a href="https://github.com/ctdk/octopress-category-list">Plugin</a>
+
+<ul>
+<li>因為檔案和Octopress 的路徑重疊，懶的處理可能的git問題，所以我直接拉zip。</li>
+</ul>
+</li>
+<li>修改<code>_config.yml</code>，把<code>custom/asides/category_cloud.html, custom/asides/category_list.html, custom/asides/top_category_list.html</code>加入到<code>default_asides:</code>這段裏面。
+
+<ul>
+<li>最後頁面右邊會出現相對應的Category資訊</li>
+</ul>
+</li>
+<li>建立上方連結
+
+<ul>
+<li><code>rake newpage['categories']</code></li>
+<li>修改<code>soource/categories/index.md</code>，範例<a href="https://github.com/wen00072/wen00072.github.io/blob/source/source/categories/index.md">在這邊</a></li>
+<li>更改<code>source/_includes/custom/navigation.html</code>
+
+<ul>
+<li>加入<code>&lt;li&gt;&lt;a href="/categories"&gt;Categories&lt;/a&gt;&lt;/li&gt;</code></li>
+</ul>
+</li>
+<li><code>rake generate</code>
+
+<ul>
+<li>不確定這個是否可以省略</li>
+</ul>
+</li>
+<li><code>rake preview</code>
+
+<ul>
+<li>看看有沒有錯誤</li>
+</ul>
+</li>
+<li><code>rake deploy</code></li>
+<li>記得把更改和新增的檔案commit並push到origin source</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://time.to.pullthepl.ug/blog/2012/8/20/octopress-top-categories-plugin/">Octopress Top Categories Plugin</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/31/bash-autocomplete-for-octopress/">Bash Autocomplete for Octopress</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-31T00:39:25+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2015</span></span> <span class='time'>12:39 am</span></time>
+        
+           | <a href="/blog/2015/03/31/bash-autocomplete-for-octopress/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/31/bash-autocomplete-for-octopress/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>被bash_completion慣壞了，所以用Octopress的指令要打參數很煩，乾脆自幹一個。如果有需要的朋友就自行取用吧..</p>
+
+<ul>
+<li><a href="https://github.com/wen00072/octopress_bash_completion">GitHub URL</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/30/modify-footer-in-octopress/">Modify Footer in Octopress</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-30T00:23:43+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>12:23 am</span></time>
+        
+           | <a href="/blog/2015/03/30/modify-footer-in-octopress/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/30/modify-footer-in-octopress/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>步驟如下：</p>
+
+<ul>
+<li>更改<code>source/_includes/custom/footer.html</code></li>
+<li><code>rake generate</code>
+
+<ul>
+<li>不確定這個是否可以省略</li>
+</ul>
+</li>
+<li><code>rake preview</code>
+
+<ul>
+<li>看看有沒有錯誤</li>
+</ul>
+</li>
+<li><code>rake deploy</code></li>
+<li>記得把更改的檔案commit並push到orgin source</li>
+</ul>
+
+
+<p>目前的頁面最後已經加上了CC-BY-NC說明，就是將<code>source/_includes/custom/footer.html</code>內加上相關HTML tag的。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://octopress.org/docs/theme/template/">Octopress: Theming &amp; Customization</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/29/generate-about-page-in-octopress/">Octopress 產生 About頁面</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-29T23:13:07+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:13 pm</span></time>
+        
+           | <a href="/blog/2015/03/29/generate-about-page-in-octopress/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/29/generate-about-page-in-octopress/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>順序如下</p>
+
+<ul>
+<li>切到Octopress根目錄</li>
+<li><code>rake newpage['about']</code></li>
+<li>Octopress會幫你產生<code>source/about/index.md</code></li>
+<li>開始修改<code>source/about/index.md</code></li>
+<li>修改<code>source/_includes/custom/navigation.html</code>
+
+<ul>
+<li><a href="https://github.com/wen00072/wen00072.github.io/commit/9a0edf3ceadbeecfd26059523943d52d840654d4">範例</a></li>
+</ul>
+</li>
+<li><code>rake generate</code>
+
+<ul>
+<li>不確定這個是否可以省略</li>
+</ul>
+</li>
+<li><code>rake preview</code>
+
+<ul>
+<li>看看有沒有錯誤</li>
+</ul>
+</li>
+<li><code>rake deploy</code></li>
+<li>記得把更改和新增的檔案commit並push到origin source</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://gangmax.me/blog/2012/05/04/add-about-page-in-octopress/">Add &lsquo;About&rsquo; Page in Octopress</a>
+
+<ul>
+<li>這邊資料無法直接套用，不過當初估狗到這個至少讓我知道大概的方向，該給的Credit還是要給。</li>
+<li>2015/Mar/31更新，後來發現直接<code>rake newpage['頁面名稱']</code>，Octopress就會幫你產生<code>source/頁面名稱/index.md</code>以及相關的metadata。</li>
+</ul>
+</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/29/markdown-supported-program-syntex/">Octopress Markdown 支援syntax Highlight列表</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-29T21:09:05+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:09 pm</span></time>
+        
+           | <a href="/blog/2015/03/29/markdown-supported-program-syntex/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/29/markdown-supported-program-syntex/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>看<a href="http://octopress.org/docs/blogging/">Octopress手冊</a>看到支援的列表，貼出來方便以後查詢。</p>
+
+<ul>
+<li><a href="http://pygments.org/docs/lexers/">Pyments 支援語法</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/25/octopress-installed-and-deployed-on-the-github-pages/">安裝octopress並佈署到github Pages上面</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-25T20:40:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>8:40 pm</span></time>
+        
+           | <a href="/blog/2015/03/25/octopress-installed-and-deployed-on-the-github-pages/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/25/octopress-installed-and-deployed-on-the-github-pages/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>昨天評估使用github.io存放網頁的技術，本來是想直接套用Jekyll的東西，無奈能力不足，Markdown的支援度不如預期。後來想到Octopress應該支援度不差。估狗了一下的確可行，順手紀錄一下安裝方式。</p>
+
+<p>先說結論，Octopress + Github pages的好處有</p>
+
+<ul>
+<li>使用git管理你的content
+
+<ul>
+<li>換句話說，你所更動的一切都在Github上面</li>
+</ul>
+</li>
+<li>Octopress幫你搞定
+
+<ul>
+<li>deploy到github page</li>
+<li>local PC preview，這樣可以改到爽再commit你的content</li>
+<li>支援Markdown，簡化寫網頁的effort</li>
+<li>Open source，喜歡就自己改吧</li>
+<li>code block有行數，歐耶。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>資料有點雜，還是弄一下目錄好了</p>
+
+<ul>
+<li><a href="#oct-env">測試環境</a></li>
+<li><a href="#oct-prepare">預先準備</a></li>
+<li><a href="#oct-install">安裝Octopress</a></li>
+<li><a href="#oct-config">設定網頁資訊</a></li>
+<li><a href="#oct-deploy">撰寫及發表文章</a></li>
+<li><a href="#oct-notice">Octopress注意事項</a></li>
+<li><a href="#oct-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="oct-env"/></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.2 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="oct-prepare"/></a></p>
+
+<h2>預先準備</h2>
+
+<h4>github 帳號，以及<a href="https://pages.github.com/">開通git pages</a></h4>
+
+<h4>安裝Octopress需要的軟體</h4>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo apt-get install ruby1.9.1-dev
+</span><span class='line'>$ sudo apt-get install nodejs
+</span><span class='line'>$ sudo apt-get install rbenv
+</span><span class='line'>$ sudo gem install bundler
+</span><span class='line'>$ rbenv rehash</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="oct-install"/></a></p>
+
+<h2>安裝Octopress</h2>
+
+<p>基本上就照手冊來，口頭來說就是</p>
+
+<ul>
+<li><a href="##oct-dl">下載Octopress</a></li>
+<li><a href="##oct-ins">安裝Octopress</a></li>
+<li><a href="##oct-gh">指定你要deploy到Github</a></li>
+</ul>
+
+
+<p><a name="oct-dl"/></a></p>
+
+<h4>下載Octopress</h4>
+
+<p>官方網址如下</p>
+
+<ul>
+<li><a href="https://github.com/imathis/octopress">Octopress Github</a></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git clone https://github.com/imathis/octopress
+</span><span class='line'>$ cd octopress
+</span><span class='line'>$ bundle install</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>bundle install</code>會根據Octopress裏面的Gemfile安裝使用Octopress需要的Ruby套件。</p>
+
+<p><a name="oct-ins"/></a></p>
+
+<h4>安裝Octopress</h4>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake install</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="oct-gh"/></a></p>
+
+<h4>指定你要deploy到Github page</h4>
+
+<p>跑下面的指令會要求你輸入Github Page的repository如
+<code>git@github.com:wen00072/wen00072.github.io.git</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake setup_github_pages</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>setup_github_pages</code>很有趣，值得提一下他幫你做了什麼</p>
+
+<ul>
+<li>跟你討Github page的URL</li>
+<li>把你下載Octopress的repository remote名稱從<code>origin</code>改成<code>octopress</code></li>
+<li>把你的Github page的repository設成目前git remote的<code>origin</code></li>
+<li>local新增<code>source</code> branch，從master切到該branch</li>
+<li>設定Octopress要deploy到你的Github pages</li>
+<li>clone你的Github page的repository 到<code>_deploy</code>目錄</li>
+</ul>
+
+
+<p>使用下面的指令，產生資料並上傳到你的Github page，此時直接連Github Page應該就會有網頁畫面了。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake generate
+</span><span class='line'>$ rake deploy</span></code></pre></td></tr></table></div></figure>
+
+
+<p>再來我們直接把目前Octopress的Git repository和前面指令產生/修改新的檔案一口氣產生並加到你的Github page中的source branch吧。這個點特別有趣感覺像是做了某種移花接木的技巧，可以仔細想想他為什麼這樣做。想通了應該對於git remote會有點感覺&hellip;吧？</p>
+
+<p>提示：你應該還記得前面<code>rake setup_github_pages</code>有提到Octopress會將你的Github page repository URL設成目前working directory git remote的orgin吧？</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git add .
+</span><span class='line'>$ git commit -m "git add . after rake deploy"
+</span><span class='line'>$ git push origin source</span></code></pre></td></tr></table></div></figure>
+
+
+<p>所以現在你的Github page repository origin會有兩個branch</p>
+
+<ul>
+<li>master
+
+<ul>
+<li>網頁連過去看到的內容</li>
+<li>由rake deploy管控</li>
+</ul>
+</li>
+<li>source: 從Octopress拉下來的程式碼和你剛才指令新增的檔案
+
+<ul>
+<li>你的content以及config由此更動</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="oct-config"/></a></p>
+
+<h2>設定網頁資訊</h2>
+
+<p><a href="http://octopress.org/docs/configuring/">官方網頁</a>有提到如何更改設定。我只做最簡單的更動，就是<code>_config.yml</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>diff --git a/_config.yml b/_config.yml
+</span><span class='line'>index 4bf56f1..e7de252 100644
+</span><span class='line'> a/_config.yml
+</span><span class='line'>+++ b/_config.yml
+</span><span class='line'>@@ -3,9 +3,9 @@
+</span><span class='line'> ## -- ##
+</span><span class='line'> 
+</span><span class='line'> url: http://wen00072.github.io
+</span><span class='line'>-title: My Octopress Blog
+</span><span class='line'>-subtitle: A blogging framework for hackers.
+</span><span class='line'>-author: Your Name
+</span><span class='line'>+title: 國王的耳朵是驢耳朵
+</span><span class='line'>+subtitle: 國王的耳朵是驢耳朵
+</span><span class='line'>+author: Wen Liao
+</span><span class='line'> simple_search: https://www.google.com/search
+</span><span class='line'> description:</span></code></pre></td></tr></table></div></figure>
+
+
+<p>如果要讓你的config馬上生效，除了local commit， push到source branch外，不要忘記套用到的Github page。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake generate
+</span><span class='line'>$ rake deploy</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="oct-deploy"/></a></p>
+
+<h2>撰寫及發表文章</h2>
+
+<h4>撰寫文章</h4>
+
+<p>撰寫文章有兩種，一個是請Octopress幫你生一個範本，指令如下</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake new_post["你的標題"]</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然後Octopress會幫你產生到<code>source/_posts/</code>下面
+來個範例</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake new_post["First"]
+</span><span class='line'>mkdir -p source/_posts
+</span><span class='line'>Creating new post: source/_posts/2015-03-25-first.markdown
+</span><span class='line'>
+</span><span class='line'>$ cat source/_posts/2015-03-25-first.markdown
+</span><span class='line'>
+</span><span class='line'>layout: post
+</span><span class='line'>title: "First"
+</span><span class='line'>date: 2015-03-25 22:10:45 +0800
+</span><span class='line'>comments: true
+</span><span class='line'>categories: 
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到產生的檔案會有特定的規範。所以你也可以照樣造句，自己人肉寫一個，這就是第二種方式。不管怎樣，剩下的就是按照Markdown語法編輯檔案了。</p>
+
+<h4>發表文章</h4>
+
+<p>最開始有講過，使用Octopress的好處是可以改到爽再deploy到Github page，要如何做呢？很簡單</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake preview</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是用瀏覽器連<code>localhost:4000</code>，如果不滿意就停止，開始改你的markdown檔案，再<code>rake preview</code>。改到爽為止，決定發佈就用下面的指令上傳到Github page上面。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ rake deploy</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上傳完畢後不要忘記local的markdown檔案並沒有commit並且更新。所以你可以做</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git add source/_posts/
+</span><span class='line'>$ git commit -m "Hello world"
+</span><span class='line'>$ git push origin source</span></code></pre></td></tr></table></div></figure>
+
+
+<p>要注意<code>git add source/_posts/</code>第一次可以這樣做，接下來建議還是針對你的markdown檔案一個一個確認比較妥當。</p>
+
+<p>這邊是我的<a href="http://wen00072.github.io/">示範網頁</a>。</p>
+
+<p><a name="oct-notice"/></a></p>
+
+<h2>注意事項</h2>
+
+<p>嘗試Octopress發現和以前使用的Markdown有一些要注意的地方</p>
+
+<ul>
+<li>第一個item (我用*) 前面一定要空一行，不然系統無法辨識</li>
+<li>HTML 的anchor tag (我拿來做目錄跳躍)一定要<code>&lt;a name="ref"&gt;&lt;/a&gt;</code>，以前的<code>&lt;a name="ref"/&gt;</code>會讓Octopress的排版亂到讓你想殺人。</li>
+<li>強烈建議修改<code>sass/custom/_layout.scss</code>，把<code>//$indented-lists</code>改成<code>indented-lists</code>，不然list的bullet對齊會很難看。</li>
+<li>如果直接<code>rake preview</code>發現網頁沒更新，請用<code>rake generate</code>檢查是否你的markdown有錯誤的語法。</li>
+<li>preview的時候你的markdown更新到你可以看到網頁改變時間有點長，我這邊大概要十幾秒到二十幾秒的時間才會更動。</li>
+<li>不要一次丟太多markdown進去，因為目前<code>rake generate</code>會噴錯誤，但是不會跟你說在parse哪個markdown檔案出了問題。</li>
+</ul>
+
+
+<p><a name="oct-ref"/></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://zerodie.github.io/blog/2012/01/19/octopress-github-pages/">李嘉玲的技術筆記: Github Page + Octopress</a></li>
+<li><a href="http://octopress.org/docs/setup/">Octopress: Octopress Setup</a></li>
+<li><a href="http://octopress.org/docs/deploying/github/">Octopress: Deploying to Github Pages</a></li>
+<li><a href="http://octopress.org/docs/configuring/">Octopress: Configuring Octopress</a></li>
+<li><a href="http://octopress.org/docs/blogging/">Octopress: Blogging Basics</a></li>
+<li><a href="http://stackoverflow.com/questions/24794024/markdown-list-does-not-indent-using-octopress">Markdown list does not indent using octopress</a></li>
+<li><a href="http://robdodson.me/some-octopress-rake-tips/">Some Octopress Rake Tips</a>
+
+<ul>
+<li>沒試過，小心服用</li>
+</ul>
+</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/25/hello-world/">Hello World</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-25T00:06:03+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>12:06 am</span></time>
+        
+           | <a href="/blog/2015/03/25/hello-world/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/25/hello-world/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>hello.c</h2>
+
+<figure class='code'><figcaption><span>hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#incldue &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line/">故事：自由軟體和 Richard Stallman 投影片上線</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-15T23:44:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:44 pm</span></time>
+        
+           | <a href="/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/45855449" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/richard-stallman-45855449" title="故事：自由軟體和 Richard Stallman" target="_blank">故事：自由軟體和 Richard Stallman</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="c20dc69814f0439d8e8db97761ca012c" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/10/talk-git-directory/">談談.git 目錄</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-10T23:21:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:21 pm</span></time>
+        
+           | <a href="/blog/2015/03/10/talk-git-directory/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/10/talk-git-directory/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>如果有使用git的朋友，可能會知道git是一個分散式版本控制系統。這表示repository會放一份在本機上面。仔細或是有看書的人，會知道這些repository沒有意外會放在工作目錄的<code>.git</code>下面。今天無聊來這個目錄戳戳看。</p>
+
+<p>因為愈寫愈多，還是弄一下目錄好了</p>
+
+<ul>
+<li><a href="#g_env">測試環境</a></li>
+<li><a href="#g_bkg">背景知識</a></li>
+<li><a href="#g_list">.git目錄列表</a></li>
+<li><a href="#g_1st_file">.git第一層檔案</a>
+
+<ul>
+<li><a href="#gidx">index</a></li>
+<li><a href="#gpkref">packed-refs</a></li>
+<li><a href="#gconf">config</a></li>
+<li><a href="#gorg_head">ORIG_HEAD</a></li>
+<li><a href="#gdesc">description</a></li>
+<li><a href="#ghead">HEAD</a></li>
+</ul>
+</li>
+<li><a href="#g_1st_dir">.git第一層目錄</a>
+
+<ul>
+<li><a href="#g_1st_dir_br">branches</a></li>
+<li><a href="#g_1st_dir_hk">hooks</a></li>
+<li><a href="#g_1st_dir_inf">info</a></li>
+<li><a href="#g_1st_dir_log">logs</a></li>
+<li><a href="#g_1st_dir_obj">objects</a></li>
+<li><a href="#g_1st_dir_ref">refs</a></li>
+</ul>
+</li>
+<li><a href="#g_ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="g_env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.2 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ git --version
+</span><span class='line'>git version 2.3.0
+</span><span class='line'>
+</span><span class='line'>$ git remote show 
+</span><span class='line'>origin
+</span><span class='line'>$ git remote show origin 
+</span><span class='line'>* remote origin
+</span><span class='line'>  Fetch URL: https://github.com/pcman-bbs/pcmanx.git
+</span><span class='line'>  Push  URL: https://github.com/pcman-bbs/pcmanx.git
+</span><span class='line'>  HEAD branch: master
+</span><span class='line'>  Remote branches:
+</span><span class='line'>    gtk3                          tracked
+</span><span class='line'>    master                        tracked
+</span><span class='line'>    next-release                  tracked
+</span><span class='line'>    show_web_search_in_popup_menu tracked
+</span><span class='line'>    transparent_background        tracked
+</span><span class='line'>  Local branch configured for 'git pull':
+</span><span class='line'>    master merges with remote master
+</span><span class='line'>  Local ref configured for 'git push':
+</span><span class='line'>    master pushes to master (up to date)</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="g_list"></a></p>
+
+<h2>.git目錄列表</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/tmp/pcmanx$ ls -gG --group-directories-first .git
+</span><span class='line'>total 56
+</span><span class='line'>drwxrwxr-x 2  4096 Mar  3 23:36 branches
+</span><span class='line'>drwxrwxr-x 2  4096 Mar  3 23:36 hooks
+</span><span class='line'>drwxrwxr-x 2  4096 Mar  3 23:36 info
+</span><span class='line'>drwxrwxr-x 3  4096 Mar  3 23:37 logs
+</span><span class='line'>drwxrwxr-x 4  4096 Mar  3 23:36 objects
+</span><span class='line'>drwxrwxr-x 5  4096 Mar  3 23:37 refs
+</span><span class='line'>-rw-rw-r-- 1   264 Mar  3 23:37 config
+</span><span class='line'>-rw-rw-r-- 1    73 Mar  3 23:36 description
+</span><span class='line'>-rw-rw-r-- 1    23 Mar  3 23:37 HEAD
+</span><span class='line'>-rw-rw-r-- 1 12256 Mar  4 23:11 index
+</span><span class='line'>-rw-rw-r-- 1    41 Mar  4 23:11 ORIG_HEAD
+</span><span class='line'>-rw-rw-r-- 1   829 Mar  3 23:37 packed-refs</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="g_bkg"></a></p>
+
+<h2>背景知識</h2>
+
+<p>這邊只列出需要的背景知識，可能有錯。</p>
+
+<ul>
+<li>Git 的基本上資料有分blob, tree, commit, tag這四種型態</li>
+<li>Git 的branch可以視為放一個檔案，這個檔案存放某個commit的HASH資訊</li>
+</ul>
+
+
+<p>多說無益，直接操作，先來看這四種型態是三小</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git log
+</span><span class='line'>commit fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>來看一下 fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304裏面是啥</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>tree 2f6db7ea7db6b66cb4c07a98e78b580f67872db6
+</span><span class='line'>parent 3fb419f40c10d67bd1b9b18152fb43cca58ca411
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到有放</p>
+
+<ul>
+<li>tree型態的HASH</li>
+<li>上一個commit的HASH</li>
+<li>commit的訊息</li>
+</ul>
+
+
+<p>接下來來看tree吧</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 2f6db7ea7db6b66cb4c07a98e78b580f67872db6
+</span><span class='line'>...
+</span><span class='line'>100644 blob 5bc4b3f69d730535eb3a8aee28d7ef9273225d50  .gitignore
+</span><span class='line'>...
+</span><span class='line'>040000 tree b0b46378d75b1737257fef9d9eb433489b2d0ea0  build</span></code></pre></td></tr></table></div></figure>
+
+
+<p>有沒有和Linux的<a href="http://en.wikipedia.org/wiki/Ext2#Directories">File system</a>很像？<del>目錄</del>tree資料放的是<del>inode</del>HASH值和檔案名稱的對應表。</p>
+
+<p>我們可以看到HASH的型態有tree和blob，理所當然來看看blob吧。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 5bc4b3f69d730535eb3a8aee28d7ef9273225d50
+</span><span class='line'>## autotools generated
+</span><span class='line'>Doxyfile
+</span><span class='line'>INSTALL
+</span><span class='line'>Makefile
+</span><span class='line'>Makefile.in
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>很明顯這是一個資料存放的地方。</p>
+
+<p>然後我們來看branch是不是真的放在檔案，檔案內容是某個commit HASH吧，直接看範例。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b br1
+</span><span class='line'>Switched to a new branch 'br1'
+</span><span class='line'>$ git checkout -b br2
+</span><span class='line'>Switched to a new branch 'br2'
+</span><span class='line'>$ tree .git/refs/
+</span><span class='line'>.git/refs/
+</span><span class='line'>├── heads
+</span><span class='line'>│   ├── br1
+</span><span class='line'>│   ├── br2
+</span><span class='line'>│   └── master
+</span><span class='line'>├── remotes
+</span><span class='line'>│   └── origin
+</span><span class='line'>│       └── HEAD
+</span><span class='line'>└── tags
+</span><span class='line'>
+</span><span class='line'>$ git log
+</span><span class='line'>commit fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>...
+</span><span class='line'>$ cat .git/refs/heads/br1 
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>$ cat .git/refs/heads/br2
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>$ cat .git/refs/heads/master 
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="g_1st_file"></a></p>
+
+<h2>.git第一層檔案</h2>
+
+<p>用file看一下，可以看到大部分都是純文字檔：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/tmp/pcmanx$ find .git -maxdepth 1 -type f -exec file {} \;
+</span><span class='line'>.git/index: Git index, version 2, 144 entries
+</span><span class='line'>.git/packed-refs: ASCII text
+</span><span class='line'>.git/config: ASCII text
+</span><span class='line'>.git/ORIG_HEAD: ASCII text
+</span><span class='line'>.git/description: ASCII text
+</span><span class='line'>.git/HEAD: ASCII text</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來分別討論</p>
+
+<ul>
+<li><a href="#gidx">index</a></li>
+<li><a href="#gpkref">packed-refs</a></li>
+<li><a href="#gconf">config</a></li>
+<li><a href="#gorg_head">ORIG_HEAD</a></li>
+<li><a href="#gdesc">description</a></li>
+<li><a href="#ghead">HEAD</a></li>
+</ul>
+
+
+<p><a name="gidx"></a></p>
+
+<h2>index</h2>
+
+<p>先看下面的操作。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ file .git/index 
+</span><span class='line'>.git/index: Git index, version 2, 144 entries
+</span><span class='line'>
+</span><span class='line'>$ find -type f | grep -v .git\/ | cut -c 3- | sort | wc -l
+</span><span class='line'>144
+</span><span class='line'>
+</span><span class='line'>$ git ls-files | wc -l
+</span><span class='line'>144</span></code></pre></td></tr></table></div></figure>
+
+
+<p>有興趣的人可以把<code>| wc -l</code>去掉玩看看，基本上這個是在描述repository的目錄結構。也就是說，哪個檔案要放在那個目錄。更精確的來說，協助那個blob hash要放在哪個tree中。根據<a href="http://schacon.github.io/gitbook/7_the_git_index.html">這邊</a>的說法，這個檔案可以協助</p>
+
+<ul>
+<li>提供產生tree object時需要的資料</li>
+<li>提供比對working directory和tree的資訊</li>
+<li>merge產生衝突時，可以從index取得的資料協助解決衝突。不過這邊不是很懂，就單純字面翻譯了。</li>
+</ul>
+
+
+<p><a name="gpkref"></a></p>
+
+<h2>packed-refs</h2>
+
+<p>簡單來說，考量效率，git提供pack ref目錄的功能，ref的概念請看前面背景知識。</p>
+
+<p>一樣，看例子比較快。</p>
+
+<p>先用<code>git show-ref</code>看看我們有哪些reference</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git show-ref
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/master
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/HEAD
+</span><span class='line'>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
+</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
+</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
+</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
+</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
+</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
+</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
+</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
+</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
+</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
+</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure>
+
+
+<p>看看<code>packed-refs</code>裏面是三小？有沒有發現和上面很像啊？</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/packed-refs 
+</span><span class='line'>## pack-refs with: peeled fully-peeled 
+</span><span class='line'>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
+</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
+</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
+</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
+</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
+</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
+</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
+</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
+</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
+</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
+</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure>
+
+
+<p>看一下ref目錄，上面的那些reference並不存在在<code>.git/ref</code>裏面</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
+</span><span class='line'>.git/refs/
+</span><span class='line'>├── heads
+</span><span class='line'>│   └── master
+</span><span class='line'>├── remotes
+</span><span class='line'>│   └── origin
+</span><span class='line'>│       └── HEAD
+</span><span class='line'>└── tags
+</span><span class='line'>
+</span><span class='line'>4 directories, 2 files</span></code></pre></td></tr></table></div></figure>
+
+
+<p>好，生一個branch看看。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b I_got_a_new_ref
+</span><span class='line'>Switched to a new branch 'I_got_a_new_ref'</span></code></pre></td></tr></table></div></figure>
+
+
+<p>喔喔！<code>.git/refs</code>出現了剛才產生的ref</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
+</span><span class='line'>.git/refs/
+</span><span class='line'>├── heads
+</span><span class='line'>│   ├── I_got_a_new_ref
+</span><span class='line'>│   └── master
+</span><span class='line'>├── remotes
+</span><span class='line'>│   └── origin
+</span><span class='line'>│       └── HEAD
+</span><span class='line'>└── tags
+</span><span class='line'>
+</span><span class='line'>4 directories, 3 files</span></code></pre></td></tr></table></div></figure>
+
+
+<p>跑一下<code>git gc</code>整理一下</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git gc
+</span><span class='line'>Counting objects: 5002, done.
+</span><span class='line'>Delta compression using up to 4 threads.
+</span><span class='line'>Compressing objects: 100% (1068/1068), done.
+</span><span class='line'>Writing objects: 100% (5002/5002), done.
+</span><span class='line'>Total 5002 (delta 3913), reused 5002 (delta 3913)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>疑？剛才的branch不見了。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
+</span><span class='line'>.git/refs/
+</span><span class='line'>├── heads
+</span><span class='line'>├── remotes
+</span><span class='line'>│   └── origin
+</span><span class='line'>│       └── HEAD
+</span><span class='line'>└── tags
+</span><span class='line'>
+</span><span class='line'>4 directories, 1 file</span></code></pre></td></tr></table></div></figure>
+
+
+<p>跑去pack-ref了</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/packed-refs 
+</span><span class='line'>## pack-refs with: peeled fully-peeled 
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/I_got_a_new_ref
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/master
+</span><span class='line'>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
+</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
+</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
+</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
+</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
+</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
+</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
+</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
+</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
+</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
+</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gconf"></a></p>
+
+<h2>config</h2>
+
+<p>其實這個是個大哉問，就值得專門開一個章節討論。所以我整理到<a href="http://wen00072.github.io/blog/2015/03/08/introduction-to-git-config">這個頁面</a>，請自行前往閱讀。</p>
+
+<p><a name="gorg_head"></a></p>
+
+<h2>ORIG_HEAD</h2>
+
+<p>這個檔案很有趣，一開始其實不存在。後來不知道怎麼突然跑出來，問了估狗和男人(man git reset)後得到的答案就是當reset的時候會把舊的HEAD hash放到這邊。為什麼要這樣做呢，當然是反悔用的。你可以<code>man git commit</code>找<code>ORIG_HEAD</code>就可以看看<code>git commit --amend</code>同效果的範例了。</p>
+
+<p><a name="gdesc"></a></p>
+
+<h2>description</h2>
+
+<p>懶得解釋，跳過</p>
+
+<p><a name="ghead"></a></p>
+
+<h2>HEAD</h2>
+
+<p>望文生義，當然是指向目前所在的commit。</p>
+
+<p>等等！</p>
+
+<p>指向目前所在的commit是三小？
+一樣，來看例子。</p>
+
+<p>目前clone下來，裏面放的是一個檔案，檔案裏面是什麼呢？一樣是個commit HASH</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/HEAD 
+</span><span class='line'>ref: refs/heads/master
+</span><span class='line'>
+</span><span class='line'>$ cat .git/refs/heads/master
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>
+</span><span class='line'>$ git cat-file -t fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>commit</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那我直接checkout一個不是branch的可以嘛？當然沒問題。
+可以看到git會把你checkout的commit HASH寫入.git/HEAD</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ strace git checkout 93f0addca5b2723ff0f1b744b032f359
+</span><span class='line'>...
+</span><span class='line'>open("/tmp/pcmanx/.git/HEAD.lock", O_RDWR|O_CREAT|O_EXCL, 0666) = 3
+</span><span class='line'>write(3, "93f0addca5b2723ff0f1b744b032f359"..., 40) = 40
+</span><span class='line'>write(3, "\n", 1)                       = 1
+</span><span class='line'>close(3)                                = 0
+</span><span class='line'>...
+</span><span class='line'>rename("/tmp/pcmanx/.git/HEAD.lock", "/tmp/pcmanx/.git/HEAD") = 0
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>$ cat .git/HEAD 
+</span><span class='line'>93f0addca5b2723ff0f1b744b032f359938a286d</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="g_1st_dir"></a></p>
+
+<h2>第一層目錄</h2>
+
+<ul>
+<li><a href="#g_1st_dir_br">branches</a></li>
+<li><a href="#g_1st_dir_hk">hooks</a></li>
+<li><a href="#g_1st_dir_inf">info</a></li>
+<li><a href="#g_1st_dir_log">logs</a></li>
+<li><a href="#g_1st_dir_obj">objects</a></li>
+<li><a href="#g_1st_dir_ref">refs</a></li>
+</ul>
+
+
+<p><a name="g_1st_dir_br"></a></p>
+
+<h2>branches</h2>
+
+<p>快過期的東西(<a href="http://git-scm.com/docs/gitrepository-layout">出處</a>)，跳過。</p>
+
+<p><a name="g_1st_dir_hk"></a></p>
+
+<h2>hooks</h2>
+
+<p>hook，這個翻成中文很鳥，保留原文。基本上就是一組callback，特定的時候會去呼叫。我目前生意沒有做很大，有需要再去看。列出預設的檔案如下</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ll .git/hooks/
+</span><span class='line'>total 48
+</span><span class='line'>drwxrwxr-x 2 wen wen 4096 Mar  9 23:10 ./
+</span><span class='line'>drwxrwxr-x 8 wen wen 4096 Mar  9 23:21 ../
+</span><span class='line'>-rwxrwxr-x 1 wen wen  452 Mar  9 23:10 applypatch-msg.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen  896 Mar  9 23:10 commit-msg.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen  189 Mar  9 23:10 post-update.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen  398 Mar  9 23:10 pre-applypatch.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen 1642 Mar  9 23:10 pre-commit.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen 1239 Mar  9 23:10 prepare-commit-msg.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen 1348 Mar  9 23:10 pre-push.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen 4898 Mar  9 23:10 pre-rebase.sample*
+</span><span class='line'>-rwxrwxr-x 1 wen wen 3611 Mar  9 23:10 update.sample*</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="g_1st_dir_inf"></a></p>
+
+<h2>info</h2>
+
+<p>儲存資訊，廢話。目前裏面只有一個exclude，而且檔案內容還都是註解。但是<a href="http://git-scm.com/docs/gitrepository-layout">這邊</a>有說還有其他檔案。另外值得提的是exclude說明有提到<code>.gitignore</code>針對的是<code>git status</code>, <code>git rm</code>, <code>git add</code>, <code>git clean</code>。其他的操作還是得在<code>.git/log/exclude</code>中設定。</p>
+
+<p><a name="g_1st_dir_log"></a></p>
+
+<h2>logs</h2>
+
+<p>這是存放log的地方。log是什麼呢？直接看個例子。</p>
+
+<p>我們先新增一個測試檔案</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ touch test2
+</span><span class='line'>$ git add test2
+</span><span class='line'>$ git commit test2 -m "test2"
+</span><span class='line'>[master 09580e4] test2
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test2</span></code></pre></td></tr></table></div></figure>
+
+
+<p>執行<code>git reflog</code>，可以看到你剛才的動作以及有當次HEAD的commit HASH已經被記起來。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git reflog 
+</span><span class='line'>09580e4 HEAD@{0}: commit: test2
+</span><span class='line'>fd5d6ab HEAD@{1}: checkout: moving from 93f0addca5b2723ff0f1b744b032f359938a286d to master
+</span><span class='line'>93f0add HEAD@{2}: checkout: moving from master to 93f0addca5b2723ff0f1b744b032f359938a286d
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這東西有什麼用處呢？當然是讓你反悔用的。再來看個例子</p>
+
+<p>首先開一個branch</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b demo_reflog
+</span><span class='line'>Switched to a new branch 'demo_reflog'</span></code></pre></td></tr></table></div></figure>
+
+
+<p>新增並commit file1</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ touch file1
+</span><span class='line'>$ git add file1
+</span><span class='line'>$ git commit file1 -m "file 1"
+</span><span class='line'>[demo_reflog c982c70] file 1
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 file1</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然後新增並commit file2</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ touch file2
+</span><span class='line'>$ git add file2
+</span><span class='line'>$ git commit file2 -m "file 2"
+</span><span class='line'>[demo_reflog b85f4d4] file 2
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 file2</span></code></pre></td></tr></table></div></figure>
+
+
+<p>切回master並且宰掉剛才的branch</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout master 
+</span><span class='line'>Switched to branch 'master'
+</span><span class='line'>Your branch is up-to-date with 'origin/master'.
+</span><span class='line'>
+</span><span class='line'>$ git branch -D demo_reflog  
+</span><span class='line'>Deleted branch demo_reflog (was b85f4d4).</span></code></pre></td></tr></table></div></figure>
+
+
+<p>假設上一個動作是手滑誤刪，能不能反悔。
+YES YOU CAN!</p>
+
+<p>先看看log</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git reflog 
+</span><span class='line'>fd5d6ab HEAD@{0}: checkout: moving from demo_reflog to master
+</span><span class='line'>b85f4d4 HEAD@{1}: commit: file 2
+</span><span class='line'>c982c70 HEAD@{2}: commit: file 1
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以知道上次branch最後commit的HASH，那麼我們就可以切過去然後開另外一個branch了。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b i_am_back b85f4d4
+</span><span class='line'>Switched to a new branch 'i_am_back'</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到資料回來了。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git log --pretty=oneline --abbrev-commit
+</span><span class='line'>b85f4d4 file 2
+</span><span class='line'>c982c70 file 1
+</span><span class='line'>fd5d6ab Fix invisible cairo caret issue.
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>當然這還是險招，git本身保留是有保存期限的。有興趣問男人。<code>man git gc</code></p>
+
+<p>不知道有沒有會問：「啊不是要介紹<code>.git/logs</code>嘛？」</p>
+
+<p>問得好！猜猜剛才git reflogs檔案從哪裡讀出來？</p>
+
+<p>一樣請出strace大大</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ strace -e open git reflog 
+</span><span class='line'>...
+</span><span class='line'>open("/tmp/pcmanx/.git/logs/HEAD", O_RDONLY) = 3
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>有看到<code>.git/logs/HEAD</code>吧？有沒有想看一下裏面是啥？至少我想看。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/logs/HEAD
+</span><span class='line'>...
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 c982c70f00875b83e4845ca35ef0ca4c70f73e64 Wen.Liao &lt;censored&gt; 1425997414 +0800  commit: file 1
+</span><span class='line'>c982c70f00875b83e4845ca35ef0ca4c70f73e64 b85f4d4dca4012a2d1785750061fae9e03e817e1 Wen.Liao &lt;censored&gt; 1425997438 +0800  commit: file 2
+</span><span class='line'>b85f4d4dca4012a2d1785750061fae9e03e817e1 fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 Wen.Liao &lt;censored&gt; 1425997673 +0800  checkout: moving from demo_reflog to master
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 b85f4d4dca4012a2d1785750061fae9e03e817e1 Wen.Liao &lt;censored&gt; 1425997732 +0800  checkout: moving from master to b85f4d4
+</span><span class='line'>b85f4d4dca4012a2d1785750061fae9e03e817e1 b85f4d4dca4012a2d1785750061fae9e03e817e1 Wen.Liao &lt;censored&gt; 1425997746 +0800  checkout: moving from b85f4d4dca4012a2d1785750061fae9e03e817e1 to i_am_back</span></code></pre></td></tr></table></div></figure>
+
+
+<p>精確的來說，<code>.git/logs</code>下面不只紀錄HEAD的log，還有各種ref的log。有興趣的朋友可以自行參考<a href="http://git-scm.com/docs/gitrepository-layout">這邊</a>，並且進去目錄逛逛。</p>
+
+<p><a name="g_1st_dir_obj"></a></p>
+
+<h2>objects</h2>
+
+<p>先看剛clone下來的目錄結構</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
+</span><span class='line'>.git/objects/
+</span><span class='line'>├── info
+</span><span class='line'>└── pack
+</span><span class='line'>    ├── pack-6042320de285747900cc3263a47f7bab429cabf8.idx
+</span><span class='line'>    └── pack-6042320de285747900cc3263a47f7bab429cabf8.pack</span></code></pre></td></tr></table></div></figure>
+
+
+<p>來生一個目錄和並且commit一個東西進去。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ mkdir tree
+</span><span class='line'>$ echo test &gt; tree/file
+</span><span class='line'>$ git add tree/file 
+</span><span class='line'>$ git commit tree/file -m "test tree and file"
+</span><span class='line'>[master 2ba01ef] test tree and file
+</span><span class='line'> 1 file changed, 1 insertion(+)
+</span><span class='line'> create mode 100644 tree/file</span></code></pre></td></tr></table></div></figure>
+
+
+<p>然後看看這個目錄變化吧</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
+</span><span class='line'>.git/objects/
+</span><span class='line'>├── 2b
+</span><span class='line'>│   └── a01ef5583f35dd57b5fb5bde732f73bc315b6d
+</span><span class='line'>├── 9d
+</span><span class='line'>│   └── aeafb9864cf43055ae93beb0afd6c7d144bfa4
+</span><span class='line'>├── de
+</span><span class='line'>│   └── f69c2c316574aaf328e546486fa750eb9c53a0
+</span><span class='line'>├── e1
+</span><span class='line'>│   └── b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
+</span><span class='line'>├── info
+</span><span class='line'>└── pack
+</span><span class='line'>    ├── pack-6042320de285747900cc3263a47f7bab429cabf8.idx
+</span><span class='line'>    └── pack-6042320de285747900cc3263a47f7bab429cabf8.pack
+</span><span class='line'>
+</span><span class='line'>6 directories, 6 files</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來把目錄和檔案混起來，用<code>git cat-file -p</code>看看裏面是啥</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 2ba01ef5583f35dd57b5fb5bde732f73bc315b6d
+</span><span class='line'>tree def69c2c316574aaf328e546486fa750eb9c53a0
+</span><span class='line'>parent fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>author Wen.Liao &lt;censored&gt; 1425999641 +0800
+</span><span class='line'>committer Wen.Liao &lt;censored&gt; 1425999641 +0800
+</span><span class='line'>
+</span><span class='line'>test tree and file</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 9daeafb9864cf43055ae93beb0afd6c7d144bfa4
+</span><span class='line'>test</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p def69c2c316574aaf328e546486fa750eb9c53a0
+</span><span class='line'>100644 blob 5bc4b3f69d730535eb3a8aee28d7ef9273225d50  .gitignore
+</span><span class='line'>...
+</span><span class='line'>040000 tree e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19  tree</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
+</span><span class='line'>100644 blob 9daeafb9864cf43055ae93beb0afd6c7d144bfa4  file</span></code></pre></td></tr></table></div></figure>
+
+
+<p>其實不難猜，你local commit的東西會被處理後變成object，並且依照hash分門別類地存放。</p>
+
+<p>接下來我們來做個測試</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git gc
+</span><span class='line'>Counting objects: 5006, done.
+</span><span class='line'>Delta compression using up to 4 threads.
+</span><span class='line'>Compressing objects: 100% (1070/1070), done.
+</span><span class='line'>Writing objects: 100% (5006/5006), done.
+</span><span class='line'>Total 5006 (delta 3914), reused 5001 (delta 3913)</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到，剛才的目錄全部消失，而pack目錄的檔案名稱也和前面的不同了。對照上面<code>git gc</code>的訊息，可以知道<code>git gc</code>做了壓縮，並且將這些object一起壓到pack目錄的檔案中了。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
+</span><span class='line'>.git/objects/
+</span><span class='line'>├── info
+</span><span class='line'>│   └── packs
+</span><span class='line'>└── pack
+</span><span class='line'>    ├── pack-57d163604c430e1919a18e97c5b1312291b62721.idx
+</span><span class='line'>    └── pack-57d163604c430e1919a18e97c5b1312291b62721.pack
+</span><span class='line'>
+</span><span class='line'>2 directories, 3 files</span></code></pre></td></tr></table></div></figure>
+
+
+<p>所以我們可以從觀察中做出結論。Git object的存放有兩種型式</p>
+
+<ul>
+<li>loose object：就是剛才看到用[HASH前兩碼]/[剩下HASH] 的目錄檔案結構</li>
+<li>packed object: 把object壓縮成兩個檔案</li>
+</ul>
+
+
+<p>而looose object型式經過<code>git gc</code>後會有可能轉換成packed object，反之亦然。詳細規則問男人。
+由於<code>git gc</code>是用來<strong>清除</strong>和<strong>整理</strong>local repository，也就是說做了<code>git gc</code>是有可能刪除用不到的資料。詳細情況一樣請問男人<code>man git gc</code></p>
+
+<p><a name="g_1st_dir_ref"></a></p>
+
+<h2>refs</h2>
+
+<ul>
+<li><a href="#g_bkg">背景知識</a>和<a href="#gpkref">packed-ref</a>有提到，就不要拖台錢了。</li>
+</ul>
+
+
+<p><a name="g_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/4084921/what-does-the-git-index-contain-exactly">Stackoverflow: What does the git index contain EXACTLY?</a></li>
+<li><a href="http://schacon.github.io/gitbook/7_the_git_index.html">Git Community Book: The Git Index</a></li>
+<li><a href="http://stackoverflow.com/questions/964876/head-and-orig-head-in-git">Stackoverflow: HEAD and ORIG_HEAD in Git</a></li>
+<li><a href="http://git-scm.com/book/en/v2/Git-Internals-Git-Objects">ProGit: 10.2 Git Internals - Git Objects</a></li>
+<li><a href="http://gitready.com/advanced/2009/03/23/whats-inside-your-git-directory.html">what&rsquo;s inside your .git directory</a></li>
+<li><a href="http://git-scm.com/docs/git-pack-refs">git-pack-refs - Pack heads and tags for efficient repository access</a></li>
+<li><a href="http://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration#_git_config">ProGit: 8.1 Customizing Git - Git Configuration</a></li>
+<li><a href="http://git-scm.com/docs/gitrepository-layout">gitrepository-layout - Git Repository Layout</a></li>
+<li><a href="http://schacon.github.io/gitbook/7_how_git_stores_objects.html">Git Community Book: How Git Stores Objects</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/posts/6">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/posts/4">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

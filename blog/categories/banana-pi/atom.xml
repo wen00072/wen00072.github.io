@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Banana Pi | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/banana-pi/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[在Banana Pi設定WPA2-PSK無線網路]]></title>
+    <link href="http://wen00072.github.io/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu/"/>
+    <updated>2015-12-03T20:50:34+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu</id>
+    <content type="html"><![CDATA[<p>Banana Pi是一套ARMv7為處理器的開發版。一般來說照官方網頁把IMAGE燒到SD卡，外接鍵盤、滑鼠、HDMI螢幕，再通電即可透過GUI設定網路。</p>
+
+<p>由於手上沒有任何外接設備，只有USB轉RS232線和USB WiFi。因此我只能在這樣的設備上設定網路，設定完成後就可以透過ssh server從外面連進去版子了。</p>
+
+<p>照例先描述環境</p>
+
+<p>HOST端
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID: Ubuntu
+</span><span class='line'>Description:    Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:    14.04
+</span><span class='line'>Codename:   trusty&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ minicom &ndash;version
+</span><span class='line'>minicom version 2.7 (compiled Jan  1 2014)
+</span><span class='line'>&hellip;</span></code></pre></td></tr></table></div></figure></p>
+
+<p>設備端，假設你已經將系統燒入到SD卡中</p>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.3 LTS
+Release:    14.04
+Codename:   trusty
+</code></pre>
+
+<h2>接上TTY</h2>
+
+<p>首先你要有一條RS232轉USB的設備，上頭有TX/RX/GND/VCC，VCC在這邊用不到。
+<img src="http://wen00072.github.io/files/banana_pi/DSC_0026.jpg" title="RS232轉USB線"></p>
+
+<p>版子上面其實已經幫你把腳位標示好了，上面有TX/RX和GND如下：
+<img src="http://wen00072.github.io/files/banana_pi/DSC_0030.jpg" title="Banana Pi RS232接腳"></p>
+
+<p>剩下的就是把線路接起來。由於版子已經裝上外框，我有用鑷子協助連接線路。
+<img src="http://wen00072.github.io/files/banana_pi/DSC_0024.jpg" title="接上訊號線"></p>
+
+<p>線路接完後，將USB接上你的HOST，檢查下面幾項</p>
+
+<ul>
+<li>下<code>dmesg</code>確認HOST找到<code>/dev/ttyUSBn</code>（n為0開始的正整數）</li>
+<li>確認你的終端機（我用minicom）設備指定<code>/dev/ttyUSBn</code>（n為0開始的正整數）</li>
+<li>確認你的終端機（我用minicom）參數為115200 BPS，8N1，軟體硬體流量控制關閉</li>
+</ul>
+
+
+<p>開啟你的終端機軟體，然後版子通電。當終端機畫面進入提示符號，請輸入帳號密碼。Banana Pi有預設的帳號密碼請自行上網查詢。</p>
+
+<h2>設定無線網路</h2>
+
+<p>Ubuntu 是透過<code>/etc/network/interface</code>去設定網路介面。這邊我們可以分成兩個部份討論</p>
+
+<h3>設定無線網路介面</h3>
+
+<p>首先你要下<code>ifconfig -a</code>看看你的無線網路介面名稱是什麼。我這邊是<code>wlan2</code>，為什麼不是<code>wlan0</code>，不要問我。</p>
+
+<p>接下來就是修改<code>/etc/network/interface</code>，先貼上我網路參考的部份</p>
+
+<pre><code class="text /etc/network/interface">auto wlan2
+
+allow-hotplug wlan2
+iface wlan2 inet dhcp
+wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+</code></pre>
+
+<p>大概解釋一下</p>
+
+<ul>
+<li><code>auto</code>：<code>ifup</code>指令有<code>-a</code>參數會把有<code>auto</code>的網路介面全部bring up (bring up請自行估狗)</li>
+<li><code>allow-hotplug</code>：當kernel偵測到該網路介面被接上會自動bring up該網路介面，<a href="https://www.debian.org/doc/manuals/debian-reference/ch05.en.html">出處</a></li>
+<li><code>iface wlan2 inet dhcp</code>：指定網路介面<code>wlan2</code>使用<code>TCP/IP</code>，動態分配IP</li>
+<li><code>wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf</code>：找不到最原始出處，網路上就算是<a href="https://wiki.debian.org/WiFi/HowToUse">Debian官方文件</a>也直接拿來用而已，<code>man -K wpa-conf</code>也找不到。不過字面上不太難猜，就是指定wpa 會吃的config檔案路徑。</li>
+</ul>
+
+
+<h3>設定無線網路連線</h3>
+
+<p>前面有看到設定wpa的config檔案，接下來就來設定吧。我這邊是沒有該config檔，所以要自己新增一個。基本上就是設定SSID，密碼，加密方式，以及說明是否你要連的AP是否沒有broadcast SSID等。這邊我只是<a href="https://coderwall.com/p/v290ta/raspberry-pi-wifi-setup-with-wpa2-psk-aes">參考這邊</a>，有興趣的人可以自行鑽研。</p>
+
+<pre><code class="text /etc/wpa_supplicant/wpa_supplicant.conf">ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={
+ssid="AP的SSID"
+scan_ssid=1 # 如果你的AP 是沒有broadcast SSID就要加這個
+psk="你的AP 密碼(passphase)"
+proto=RSN
+key_mgmt=WPA-PSK
+pairwise=CCMP
+auth_alg=OPEN
+}
+</code></pre>
+
+<p>設定完畢確認連線正常、有安裝sshd後，剩下就透過ssh操作版子了。祝好運！</p>
+]]></content>
+  </entry>
+  
+</feed>

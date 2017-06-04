@@ -1,0 +1,948 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>GNU Build System: Autotools 初探 - My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="身為組裝工，常常執行下面的指令 ./configure
+make
+組裝 用了那麼久從來沒有思考過這是什麼樣的東西，慚愧之餘趕快惡補一下。 目錄 Overview Autotool 元件簡介
+Autoconf
+Automake
+Libtool
+合體 範例 測試環境
+測試程式
+導入Autotools &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">GNU Build System: Autotools 初探</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-05-13T10:43:00+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:43 am</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>身為組裝工，常常執行下面的指令</p>
+
+<ul>
+<li>./configure</li>
+<li>make</li>
+<li>組裝</li>
+</ul>
+
+
+<p>用了那麼久從來沒有思考過這是什麼樣的東西，慚愧之餘趕快惡補一下。</p>
+
+<hr />
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#overview">Overview</a>
+
+<ul>
+<li><a href="#at-overview">Autotool 元件簡介</a></li>
+<li><a href="#at-aconf">Autoconf</a></li>
+<li><a href="#at-amake">Automake</a></li>
+<li><a href="#at-ltool">Libtool</a></li>
+<li><a href="#at-integrate">合體</a></li>
+</ul>
+</li>
+<li><a href="#auto_ex">範例</a>
+
+<ul>
+<li><a href="#auto_ex_env">測試環境</a></li>
+<li><a href="#auto_ex_prgs">測試程式</a></li>
+<li><a href="#auto_ex_start">導入Autotools</a>
+
+<ul>
+<li><a href="#auto_ex_configac">configure.ac</a></li>
+<li><a href="#auto_ex_maam">Makefile.am</a></li>
+<li><a href="#auto_ex_config">產生<code>configure</code>並編譯</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#ref">參考資料及資源</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="overview"></a></p>
+
+<h2>Overview</h2>
+
+<h3>緣由：</h3>
+
+<p>雖然C語言號稱高移植性，然而遺憾的是因為System call, library等介面早期並沒有規範。這造成使用C語言開發多平台軟體的時候需要針對不同的平台做許多的檢查。後來GNU針對這部份提出了autotool工具減輕開發的負擔。</p>
+
+<p>如果懶得看元件簡介，請直接看<a href="#at-integrate">Overoview結論</a></p>
+
+<hr />
+
+<p><a name="at-overview"></a></p>
+
+<h3>Autotool 元件</h3>
+
+<p>從Wikipedia可以看到<a href="http://en.wikipedia.org/wiki/GNU_build_system">GNU Build system</a>的項目中有提到三個元件：
+* <a href="#at-aconf">Autoconf</a>
+* <a href="#at-amake">Automake</a>
+* <a href="#at-ltool">Libtool</a></p>
+
+<hr />
+
+<p><a name="at-aconf"></a></p>
+
+<h4><a href="http://www.gnu.org/software/autoconf">Autoconf - GNU Project - Free Software Foundation (FSF)</a></h4>
+
+<p>從<a href="http://www.gnu.org/savannah-checkouts/gnu/autoconf/manual/autoconf-2.69/html_node/Making-configure-Scripts.html#Making-configure-Scripts">這邊</a>可以看到<code>configure</code>負責產生</p>
+
+<ul>
+<li>Makefile
+
+<ul>
+<li>讓你編譯程式</li>
+</ul>
+</li>
+<li>C option用的header file (optional)
+
+<ul>
+<li><code>config.h</code></li>
+</ul>
+</li>
+<li><code>configure.status</code>
+
+<ul>
+<li>重新自動產生上面的資料</li>
+</ul>
+</li>
+<li><code>configure.cache</code> (optional)
+
+<ul>
+<li>cache之前configure偵測的系統結果</li>
+</ul>
+</li>
+</ul>
+
+
+<p>套件中有幾個程式</p>
+
+<ul>
+<li><code>autoscan</code>
+
+<ul>
+<li>產生<code>configure.ac</code></li>
+</ul>
+</li>
+<li><code>autoconf</code>
+
+<ul>
+<li>從<code>configure.ac</code>中產生<code>configure</code></li>
+<li>為何是<code>或</code>呢？這和autoconf的版本有關</li>
+</ul>
+</li>
+<li><code>autoheader</code>
+
+<ul>
+<li>從<code>configure.ac</code>產生<code>config.h.in</code></li>
+</ul>
+</li>
+<li><code>ifnames</code>
+
+<ul>
+<li>掃描C原始碼，抽出ifdef的資訊</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="at-amake"></a></p>
+
+<h4><a href="http://www.gnu.org/software/automake/">Automake - GNU Project - Free Software Foundation (FSF)</a></h4>
+
+<p>套件中有兩個程式</p>
+
+<ul>
+<li>automake
+
+<ul>
+<li>從<code>Makefile.am</code>中產生<code>Makefile.in</code>，讓<code>configure</code>執行時可以產生<code>Makefile</code></li>
+</ul>
+</li>
+<li>aclocal
+
+<ul>
+<li>從<code>configure.ac</code>或<code>configure.in</code>產生<code>aclocal.m4</code></li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="at-ltool"></a></p>
+
+<h4><a href="http://www.gnu.org/software/libtool/">GNU Libtool - The GNU Portable Library Tool</a></h4>
+
+<ul>
+<li>提供抽象化的介面處理函式庫的平台差異問題，本篇暫不討論。</li>
+</ul>
+
+
+<hr />
+
+<p>另外GNU 其他針對移植性輔助的套件有</p>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Gettext">GNU gettext</a>
+
+<ul>
+<li>i18n套件，協助專案中的各國語言訊息開發。</li>
+</ul>
+</li>
+<li><a href="http://en.wikipedia.org/wiki/Pkg-config">pkg-config</a>
+
+<ul>
+<li>提供開發時的函式庫資訊，開發者不需要知道函式庫的路徑和旗標，直接問pkg-config就好。</li>
+</ul>
+</li>
+<li><a href="http://en.wikipedia.org/wiki/GNU_Compiler_Collection">GCC</a>
+
+<ul>
+<li>全名是<code>GNU Compiler Collection</code></li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="at-integrate"></a></p>
+
+<h3>合體</h3>
+
+<p>從Wikipedia的<a href="http://en.wikipedia.org/wiki/File:Autoconf-automake-process.svg">圖：Autoconf-automake-process</a>解釋的非常清楚。</p>
+
+<p>回到最前面，我們可以觀察到autotool的目的就是</p>
+
+<ul>
+<li><strong>產生平台上可以編譯的環境</strong></li>
+</ul>
+
+
+<p>為了達到這樣的目的，系統需要做到下面的功能</p>
+
+<ul>
+<li>檢查平台環境</li>
+<li>產生Makefile</li>
+</ul>
+
+
+<p>因此，開發者最少要告訴autotools <strong>所需平台環境</strong> 和 <strong>產生Makefile</strong> 這兩項資訊。這也是<code>configure.ac</code>和<code>Makefile.am</code>存在的目的。也就是說，開發者需要自行設定<code>configure.ac</code>和<code>Makefile.am</code>。</p>
+
+<p>而這些錯綜複雜的關係可以描述如下</p>
+
+<ul>
+<li>autotool先產生<code>configure.ac</code> (透過<code>autoscan</code>或是自幹）</li>
+<li><code>autoreconf</code>吃<code>configure.ac</code>和<code>Makefile.am</code>產生<code>confgure</code>, <code>config.h.in</code>, 和<code>Makefile.in</code></li>
+<li>autoreconf細節
+
+<ul>
+<li>吃<code>configure.ac</code>，呼叫<code>aclocal</code>產生<code>aclocal.m4</code></li>
+<li>aclocal是給autotools中自訂專案檢查編譯巨集用。
+
+<ul>
+<li>吃<code>configure.ac</code>和<code>aclocal.m4</code>，呼叫<code>autoheader</code>產生<code>config.h.in</code></li>
+<li>吃<code>configure.ac</code>和<code>aclocal.m4</code>，呼叫<code>autoconf</code>產生<code>configure</code></li>
+<li>吃<code>configure.ac</code>和<code>aclocal.m4</code>和各處的<code>Makefile.am</code>，呼叫<code>automake</code>產生<code>Makefile.in</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex"></a></p>
+
+<h2>範例</h2>
+
+<hr />
+
+<p><a name="auto_ex_env"></a></p>
+
+<h3>測試環境</h3>
+
+<ul>
+<li>Ubuntu 12.04.4</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex_prgs"></a></p>
+
+<h3>測試程式</h3>
+
+<p><a href="http://wen00072.github.io/blog/2014/06/07/dry-test-file-template">範例程式細節在這邊</a>，檔案各別重新分配到<code>src</code>, <code>include</code>, <code>libs</code>這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。</p>
+
+<figure class='code'><figcaption><span>測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   └── libb.c
+</span><span class='line'>└── src
+</span><span class='line'>    └── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="auto_ex_start"></a></p>
+
+<h3>導入Autotools</h3>
+
+<p>簡述一下流程</p>
+
+<ul>
+<li>使用<code>autoscan</code>產生<code>configure.ac</code>範本</li>
+<li>手動更改<code>configure.ac</code></li>
+<li>寫<code>Makefile.am</code>，根目錄以及需要編譯的地方都要一份</li>
+<li><code>autoreconf --install</code>產生檔案
+
+<ul>
+<li>替代方案：執行下面程式
+
+<ul>
+<li><code>aclocal</code></li>
+<li><code>autoheader</code></li>
+<li><code>automake --add-missing</code></li>
+<li><code>autoconf</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>configure</code></li>
+<li><code>make</code></li>
+<li><code>make install</code>安裝或<code>make dist</code>打包</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex_configac"></a></p>
+
+<h4>configure.ac</h4>
+
+<p>執行<code>autoscan</code>後會產生<code>configure.scan</code>檔案，把這個檔案rename成<code>configure.ac</code></p>
+
+<figure class='code'><figcaption><span>configure.ac最初範本</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="c">#                                               -*- Autoconf -*-</span>
+</span><span class='line'><span class="c"># Process this file with autoconf to produce a configure script.</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">AC_PREREQ([2.68])</span>
+</span><span class='line'><span class="err">AC_INIT([FULL-PACKAGE-NAME],</span> <span class="err">[VERSION],</span> <span class="err">[BUG-REPORT-ADDRESS])</span>
+</span><span class='line'><span class="err">AC_CONFIG_SRCDIR([libs/libb.c])</span>
+</span><span class='line'><span class="err">AC_CONFIG_HEADERS([config.h])</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for programs.</span>
+</span><span class='line'><span class="err">AC_PROG_CC</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for libraries.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for header files.</span>
+</span><span class='line'><span class="err">AC_CHECK_HEADERS([stdlib.h])</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for typedefs, structures, and compiler characteristics.</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Checks for library functions.</span>
+</span><span class='line'><span class="err">AC_FUNC_MALLOC</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">AC_CONFIG_FILES([Makefile</span>
+</span><span class='line'>                 <span class="err">libs/Makefile</span>
+</span><span class='line'>                 <span class="err">src/Makefile])</span>
+</span><span class='line'><span class="err">AC_OUTPUT</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是更動<code>configure.ac</code>，更動完和原本的差別如下：</p>
+
+<figure class='code'><figcaption><span>configure.scan和configure.ac 差別</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>5,6c5,6
+</span><span class='line'>&lt; AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
+</span><span class='line'>&lt; AC_CONFIG_SRCDIR([libs/libb.c])
+</span><span class='line'>---
+</span><span class='line'>&gt; AC_INIT([Test_Autotools], [0], [test])
+</span><span class='line'>&gt; AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+</span><span class='line'>8a9,14
+</span><span class='line'>&gt; # Use static libary
+</span><span class='line'>&gt; AC_PROG_RANLIB
+</span><span class='line'>&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>簡單說明如下</p>
+
+<ul>
+<li>更改套件版本資訊</li>
+<li>刪除<code>AC_CONFIG_SRCDIR</code></li>
+<li>設定automake
+
+<ul>
+<li><code>foreign</code>表示這不是標準的GNU Coding Standard，因此不會檢查額外的檔案如<code>NEWS</code>, <code>README</code>, <code>ChangeLog</code>等。</li>
+<li>共用編譯參數</li>
+</ul>
+</li>
+<li><code>AC_PROG_RANLIB</code>表示要使用static library</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex_maam"></a></p>
+
+<h4>Makefile.am</h4>
+
+<p>前面提到，每個目錄都要有一個<code>Makefile.am</code>。關於<code>Makefile.am</code>語法，可以參考 <a href="https://www.lrde.epita.fr/~adl/autotools.html">Alexandre Duret Lutz: Autotools Tutorial</a>大略了解。更詳細的部份可以看<a href="http://www.gnu.org/software/automake/manual/html_node/A-Shared-Library.html#A-Shared-Library">Automake手冊：8.3 Building a Shared Library</a></p>
+
+<p>範例中<code>Makefile.am</code>如下：</p>
+
+<ul>
+<li>./Makefile.am：　基本上就是依照列出的順序編譯</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>./Makefile.am</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">SUBDIRS</span> <span class="o">=</span> libs src
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>libs/Makefile.am</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>libs/Makefile.am</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">AM_CFLAGS</span> <span class="o">=</span> -I../include
+</span><span class='line'><span class="nv">lib_LIBRARIES</span> <span class="o">=</span> liba.a libb.a
+</span><span class='line'><span class="nv">liba_a_SOURCES</span> <span class="o">=</span> liba.c
+</span><span class='line'><span class="nv">libb_a_SOURCES</span> <span class="o">=</span> libb.c
+</span><span class='line'>
+</span><span class='line'><span class="nv">include_HEADERS</span> <span class="o">=</span> ../include/liba.h ../include/libb.h
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>最上面形式就是<code>要裝到目錄</code>_<code>Keyword</code>，所以表示我們要產生<code>liba.a</code>和<code>libb.a</code>，安裝時放在<code>/usr/local/lib</code>下面、指定library由哪些原始程式檔案組成、同時要把header files放在<code>/usr/local/include</code>下。(configure沒指定預設prefix為/usr/local)</p>
+
+<ul>
+<li>src/Makefile.am</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>src/Makefile.am</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">LDADD</span> <span class="o">=</span> ../libs/liba.a ../libs/libb.a
+</span><span class='line'><span class="nv">AM_CFLAGS</span> <span class="o">=</span> -I../include
+</span><span class='line'>
+</span><span class='line'><span class="nv">bin_PROGRAMS</span> <span class="o">=</span> <span class="nb">test</span>
+</span><span class='line'><span class="nv">test_SOURCES</span> <span class="o">=</span> test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>一樣的形式：<code>要裝到目錄</code>_<code>Keyword</code>。這邊宣告要安裝到<code>/usr/loca/bin</code>、要link <code>liba.a</code>和<code>libb.a</code>、並且5指定執行檔的原始程式檔案。</p>
+
+<hr />
+
+<p>經過上面的處理，我們多了三個<code>Makefile.am</code>和<code>configure.ac</code>以及一些暫存檔案。新的樹狀目錄列表如下：</p>
+
+<figure class='code'><figcaption><span>autoscan後測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>.
+</span><span class='line'>├── autom4te.cache
+</span><span class='line'>│   ├── output.0
+</span><span class='line'>│   ├── requests
+</span><span class='line'>│   └── traces.0
+</span><span class='line'>├── autoscan.log
+</span><span class='line'>├── configure.ac
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   ├── libb.c
+</span><span class='line'>│   └── Makefile.am
+</span><span class='line'>├── Makefile.am
+</span><span class='line'>└── src
+</span><span class='line'>    ├── Makefile.am
+</span><span class='line'>    └── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="auto_ex_config"></a></p>
+
+<h4>產生<code>configure</code>並編譯</h4>
+
+<p>如前所述，直接使用<code>autoreconf --install</code>就可以了</p>
+
+<figure class='code'><figcaption><span>autoreconf &#8211;install以及之後的測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ autoreconf --install
+</span><span class='line'>configure.ac:6: installing `./install-sh&#39;
+</span><span class='line'>configure.ac:6: installing `./missing&#39;
+</span><span class='line'>libs/Makefile.am: installing `./depcomp&#39;
+</span><span class='line'>
+</span><span class='line'>.
+</span><span class='line'>├── aclocal.m4
+</span><span class='line'>├── autom4te.cache
+</span><span class='line'>│   ├── output.0
+</span><span class='line'>│   ├── output.1
+</span><span class='line'>│   ├── output.2
+</span><span class='line'>│   ├── requests
+</span><span class='line'>│   ├── traces.0
+</span><span class='line'>│   ├── traces.1
+</span><span class='line'>│   └── traces.2
+</span><span class='line'>├── autoscan.log
+</span><span class='line'>├── config.h.in
+</span><span class='line'>├── configure
+</span><span class='line'>├── configure.ac
+</span><span class='line'>├── depcomp
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>├── install-sh
+</span><span class='line'>├── libs
+</span><span class='line'>│   ├── liba.c
+</span><span class='line'>│   ├── libb.c
+</span><span class='line'>│   ├── Makefile.am
+</span><span class='line'>│   └── Makefile.in
+</span><span class='line'>├── Makefile.am
+</span><span class='line'>├── Makefile.in
+</span><span class='line'>├── missing
+</span><span class='line'>└── src
+</span><span class='line'>    ├── Makefile.am
+</span><span class='line'>    ├── Makefile.in
+</span><span class='line'>    └── test.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>./configure結果節錄如下</p>
+
+<figure class='code'><figcaption><span>autoreconf &#8211;install以及之後的測試程式樹狀架構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ ./configure --prefix=/tmp/build
+</span><span class='line'>checking for a BSD-compatible install... /usr/bin/install -c
+</span><span class='line'>...
+</span><span class='line'>checking for GNU libc compatible malloc... yes
+</span><span class='line'>configure: creating ./config.status
+</span><span class='line'>config.status: creating Makefile
+</span><span class='line'>config.status: creating src/Makefile
+</span><span class='line'>config.status: creating libs/Makefile
+</span><span class='line'>config.status: creating config.h
+</span><span class='line'>config.status: config.h is unchanged
+</span><span class='line'>config.status: executing depfiles commands
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>幾點要注意的：</p>
+
+<ul>
+<li><code>config.status</code>被產生，並且被執行時生出<code>config.h</code>以及各目錄的的<code>Makefile</code></li>
+<li>這邊指定prefix為<code>/tmp/build</code>，因此<code>make install</code>可以看到被安裝目錄樹狀結構如下：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>安裝目錄樹狀結構</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>.
+</span><span class='line'>├── bin
+</span><span class='line'>│   └── test
+</span><span class='line'>├── include
+</span><span class='line'>│   ├── liba.h
+</span><span class='line'>│   └── libb.h
+</span><span class='line'>└── lib
+</span><span class='line'>    ├── liba.a
+</span><span class='line'>    └── libb.a
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料及資源</h2>
+
+<p>強烈推荐 <a href="https://www.lrde.epita.fr/~adl/autotools.html">Alexandre Duret Lutz: Autotools Tutorial</a>，主要的想法和資料都是從這邊出來。而且他寫的更加詳細、更加易懂。</p>
+
+<ul>
+<li>FSF官方資料:
+
+<ul>
+<li><a href="http://www.gnu.org/software/autoconf">Autoconf - GNU Project - Free Software Foundation (FSF)</a></li>
+<li><a href="http://www.gnu.org/software/automake/">Automake - GNU Project - Free Software Foundation (FSF)</a></li>
+<li><a href="http://www.gnu.org/software/libtool/">GNU Libtool - The GNU Portable Library Tool</a></li>
+</ul>
+</li>
+<li><a href="http://en.wikipedia.org/wiki/GNU_build_system">Wikipedia: GNU build system</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Autoconf">Wikipedia: Autoconf</a></li>
+<li><a href="http://netlab.cse.yzu.edu.tw/~armor/columns/automake/automake.htm">陳雍穆: automake</a></li>
+<li><a href="http://fourdollars.github.io/autotools/#1">$4: GNU Build System (aka Autotools)</a></li>
+<li><a href="http://blog.roodo.com/rocksaying/archives/12687975.html">石頭閒語: Hello Autoconf, the GNU Build System</a></li>
+<li><a href="http://www.xinotes.net/notes/note/1824/">GNU autoconf (automake) &ldquo;Hello World&rdquo; step-by-step example  </a></li>
+<li><a href="https://www.lrde.epita.fr/~adl/autotools.html">Alexandre Duret Lutz: Autotools Tutorial</a></li>
+<li><a href="https://www.flameeyes.eu/autotools-mythbuster/index.html">Autotools Mythbuster</a></li>
+<li><a href="http://tetralet.luna.com.tw/?op=ViewArticle&amp;articleId=200&amp;blogId=1">今天的 Tetralet 又在唧唧喳喳了: 利用 Autotools 來建立 Makefile 檔案</a></li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Wen Liao</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2014-05-13T10:43:00+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>10:43 am</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/autotools/'>autotools</a>, <a class='category' href='/blog/categories/linux/'>linux</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools/" data-via="" data-counturl="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/04/30/c99-inline-function/" title="Previous Post: C99的inline function">&laquo; C99的inline function</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2014/05/16/debian-package-preparation-kit-and-document/" title="Next Post: Debian打包準備套件和文件">Debian打包準備套件和文件 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools/';
+        var disqus_url = 'http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

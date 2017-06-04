@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Make | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/make/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[GNU Make, Autotools, CMake 簡介投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/07/09/gnu-make-autotools-and-cmake-introduction-slides-on-line/"/>
+    <updated>2014-07-09T17:39:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/07/09/gnu-make-autotools-and-cmake-introduction-slides-on-line</id>
+    <content type="html"><![CDATA[<ul>
+<li>Slideshare</li>
+</ul>
+
+
+<iframe src="//www.slideshare.net/slideshow/embed_code/36801801" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/zzz00072/gnu-make-autotools-cmake" title="GNU Make, Autotools, CMake 簡介" target="_blank">GNU Make, Autotools, CMake 簡介</a> </strong> from <strong><a href="http://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<ul>
+<li>Speaker Deck</li>
+</ul>
+
+
+<script async class="speakerdeck-embed" data-id="46ad0fc0e9c001313be5762c67c15dde" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Makefile中Command敘述的Shell變數存取]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/18/access-to-shell-variable-in-the-makefile/"/>
+    <updated>2014-05-18T07:18:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/18/access-to-shell-variable-in-the-makefile</id>
+    <content type="html"><![CDATA[<p>想說寫一個loop自動make變數內的目錄
+<figure class='code'><figcaption><span>錯誤的Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">DIRS</span> <span class="o">=</span> libs src&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'><span class="nf">&lt;p&gt;all</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">for</span> i in <span class="k">${</span><span class="nv">DIRS</span><span class="k">}</span><span class="p">;</span> <span class="k">do</span> make -C <span class="nv">$i</span><span class="p">;</span> <span class="k">done</span>
+</span><span class='line'><span class="err">&lt;code&gt;</span>
+</span><span class='line'><span class="err">結果跑出來和想像不同</span>
+</span><span class='line'><span class="err">&lt;/code&gt;text</span> <span class="err">make結果</span>
+</span><span class='line'><span class="err">for</span> <span class="err">i</span> <span class="err">in</span> <span class="err">lib</span> <span class="err">src;</span> <span class="err">do</span> <span class="err">make</span> <span class="err">-C</span> <span class="err">;</span> <span class="err">done</span>
+</span><span class='line'><span class="nf">make</span><span class="o">:</span> <span class="n">option</span> <span class="n">requires</span> <span class="n">an</span> <span class="n">argument</span> &amp;<span class="n">ndash</span>; &amp;<span class="n">lsquo</span>;<span class="n">C</span>&amp;<span class="n">rsquo</span>;
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>原因是$本身在Makefile有特殊意義。要使用$$才能在command敘述中顯示$，因此改進如下</p>
+
+<pre><code class="makefile 正確的Makefile">DIRS = libs src
+
+all:
+    for i in ${DIRS}; do make -C $$i; done
+</code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/13774784/how-do-i-use-shell-variables-in-makefile-actions">Stackoverflow: How do I use shell variables in Makefile actions?</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Makefile的Pattern Rules小小注意事項]]></title>
+    <link href="http://wen00072.github.io/blog/2014/03/13/makefile-pattern-rules-little-attention/"/>
+    <updated>2014-03-13T07:15:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/03/13/makefile-pattern-rules-little-attention</id>
+    <content type="html"><![CDATA[<p>在<a href="http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory">Makefile 自動將產生的檔案指定到特定目錄</a>中，我犯了一個錯誤，造成更動header檔案發生錯誤(原文已修復)。</p>
+
+<p>狀況如下</p>
+
+<pre><code class="text Error log">$ make
+mkdir -p build/libs/
+cc -g -MMD -I ./include -c libs/liba.c -o build/libs/liba.o
+mkdir -p build/libs/
+cc -g -MMD -I ./include -c libs/libb.c -o build/libs/libb.o
+mkdir -p build/
+cc -g -MMD -I ./include -c test.c -o build/test.o
+cc -o build/test build/libs/liba.o build/libs/libb.o build/test.o
+
+$ make
+make: `build/test' is up to date.
+
+$ touch include/*
+
+$ make
+mkdir -p build/libs/
+cc -g -MMD -I ./include -c libs/liba.c include/libb.h -o build/libs/liba.o
+cc: fatal error: cannot specify -o with -c, -S or -E with multiple files
+compilation terminated.
+make: *** [build/libs/liba.o] Error 4
+</code></pre>
+
+<p>從錯誤中可以看到，明明在編liba.c code怎麼會有libb.h來亂呢？請再看下面的分析。</p>
+
+<p>有問題的Makefile如下</p>
+
+<pre><code class="makefile 有問題的Makefile">CFLAGS=-g -MMD -I ./include
+
+# binaries
+LIB_SRC=$(shell ls libs/*.c)
+SRCS= $(LIB_SRC) test.c
+
+OBJS = $(patsubst %.c, %.o, $(SRCS))
+
+# Output
+OUT_DIR = build
+OUT_OBJS=$(addprefix $(OUT_DIR)/, $(OBJS))
+DEPS = $(patsubst %.o, %.d, $(OUT_OBJS))
+
+# Build Rules
+TARGET=test
+
+$(OUT_DIR)/$(TARGET): $(OUT_OBJS)
+    $(CC) -o $@ $^
+
+$(OUT_DIR)/%.o:%.c
+    mkdir -p $(dir $@)
+    $(CC) $(CFLAGS) -c $^ -o $@
+
+clean:
+    rm -rf $(OUT_DIR)
+
+-include $(DEPS)
+</code></pre>
+
+<p>問題出在<code>$(CC) $(CFLAGS) -c $^ -o $@</code>，再次回顧一下
+<a name="dep"></a></p>
+
+<ul>
+<li>-MMD效果
+<code>
+$ cat build/libs/liba.d
+build/libs/liba.o: libs/liba.c include/libb.h
+</code></li>
+</ul>
+
+
+<p>而在Makefile中我們會使用<code>-include $(DEPS)</code> include 這些*.d檔案，所以更改Makefile部份敘述。
+<code>makefile
+$(OUT_DIR)/%.o:%.c
+    mkdir -p $(dir $@)
+    $(CC) $(CFLAGS) -c $^ -o $@
+</code></p>
+
+<p>第一次make後，當header改變, 有的prerequisite會更動，進而觸發Pattern Rule，但是<code>$^</code>是所有的prerequisite，所以$(CC)會把所有的prerequisite全部帶入造成錯誤。已<a href="#dep">這邊</a>的例子，prerequisite就是<code>libs/liba.c</code>和<code>include/libb.h</code>了</p>
+
+<p>解法很簡單，把<code>$^</code>換成<code>$&lt;</code>就可以了。而<code>$&lt;</code>是什麼呢？就是第一個prerequisite，對照<a href="#dep">這邊</a>可以看到，第一個就是第一個prerequisite就是<code>libs/liba.c</code>檔案了。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Pattern-Rules">GNU make: 10.5 Defining and Redefining Pattern Rules</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Automatic-Variables">GNU make: 10.5.3 Automatic Variables</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Makefile 自動將產生的檔案指定到特定目錄]]></title>
+    <link href="http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory/"/>
+    <updated>2014-03-12T13:35:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/03/12/makefile-automatically-assign-a-file-to-a-specific-directory</id>
+    <content type="html"><![CDATA[<p><strong>Mar/13/2014已更正錯誤：原本錯誤分析請看<a href="http://wen00072.github.io/blog/2014/03/13/makefile-pattern-rules-little-attention">這邊</a></strong></p>
+
+<p><a href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues">之前</a>分享了Makefile header file dependency問題解決方式之一，裏面提到把<em>.o 和</em>.d 指定產生到特定目錄，而不是散落各處的改進方向。過了幾天網路上看到<a href="https://github.com/southernbear/rtenv/blob/master/Makefile">別人的解法</a>，手癢自己也來玩一下。</p>
+
+<p><a href="http://wen00072.github.io/blog/2014/06/07/dry-test-file-template">範例程式細節在這邊</a>，不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。</p>
+
+<p><a name="tree"></a></p>
+
+<p>這次加碼一下，把檔案散落在不同目錄如下
+<code>text tree view
+$ tree
+.
+├── include
+│   ├── liba.h
+│   └── libb.h
+├── libs
+│   ├── liba.c
+│   └── libb.c
+├── Makefile
+└── test.c
+</code></p>
+
+<p>Makefile更改如下</p>
+
+<pre><code class="makefile Makefile">CFLAGS=-g -MMD -I ./include
+
+# binaries
+LIB_SRC=$(shell ls libs/*.c)
+SRCS= $(LIB_SRC) test.c
+
+OBJS = $(patsubst %.c, %.o, $(SRCS))
+
+# Output
+OUT_DIR = build
+OUT_OBJS=$(addprefix $(OUT_DIR)/, $(OBJS))
+DEPS = $(patsubst %.o, %.d, $(OUT_OBJS))
+
+# Build Rules
+TARGET=test
+
+$(OUT_DIR)/$(TARGET): $(OUT_OBJS)
+    $(CC) -o $@ $^
+
+$(OUT_DIR)/%.o:%.c
+    mkdir -p $(dir $@)
+    $(CC) $(CFLAGS) -c $&lt; -o $@
+
+
+clean:
+    rm -rf $(OUT_DIR)
+
+-include $(DEPS)
+</code></pre>
+
+<p>整個Makefile主要是</p>
+
+<ol>
+<li>找出所有要編譯的c檔案並放在變數<code>SRCS</code></li>
+<li>把變數<code>SRC</code>中的<em>.c換成</em>.o並存到變數<code>OBJS</code></li>
+<li>再把變數<code>OBJS</code>裏面的字串每一個都加上<code>build/</code>的prefix並存到變數<code>OUT_OBJS</code></li>
+<li>再把<code>OUT_OBJS</code>中的<em>.o換成</em>.d並存到變數<code>DEP</code></li>
+<li>編譯<em>.c到</em>.o的時候，先產生對應於C code的目錄並將<em>.o </em>.d存到裏面</li>
+</ol>
+
+
+<p>參數說明如下</p>
+
+<ul>
+<li><code>-MMD</code>請參考<a href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues">這邊</a></li>
+<li><code>shell</code>請參考<a href="http://wen00072.github.io/blog/2014/01/07/makefile-with-command-results-examples">這邊</a></li>
+<li><code>patsubst</code>請參考<a href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues">這邊</a></li>
+<li><code>addprefix</code>，照字面就是加上prefix</li>
+<li><code>dir</code>，取得檔案的dir</li>
+<li><code>$@</code>
+
+<ul>
+<li>Makefile的內建巨集，代表target</li>
+</ul>
+</li>
+<li><code>$&lt;</code>
+
+<ul>
+<li>Makefile的內建巨集，代表第一個prerequisite</li>
+</ul>
+</li>
+<li><code>-</code>
+  *告訴make 忽略失敗</li>
+<li><code>%.o:%.c</code>
+
+<ul>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Pattern-Rules">Pattern Rules</a></li>
+<li>%表示萬用字元，而prerequisite的%會和target的% match到的相同。所以就是說所有<em>.o結尾的檔案depends on </em>.c檔案時要做下面的事</li>
+<li>舉例來說<code>$(OUT_DIR)/%.o:%.c</code>，表示build/xxx/file1.o 會依賴對應到的xxx/file1.c</li>
+</ul>
+</li>
+<li>其實重點是<code>mkdir -p $(dir $@)</code>會自動在build產生對應的目錄存放<em>.d和</em>.o</li>
+</ul>
+
+
+<p>跑起來結果如下
+&#8220;`text result
+$ make
+mkdir -p build/libs/
+cc -g -MMD -I ./include -c libs/liba.c -o build/libs/liba.o
+mkdir -p build/libs/
+cc -g -MMD -I ./include -c libs/libb.c -o build/libs/libb.o
+mkdir -p build/
+cc -g -MMD -I ./include -c test.c -o build/test.o
+cc -o build/test build/libs/liba.o build/libs/libb.o build/test.o</p>
+
+<p>$ tree
+.
+├── build
+│   ├── libs
+│   │   ├── liba.d
+│   │   ├── liba.o
+│   │   ├── libb.d
+│   │   └── libb.o
+│   ├── test
+│   ├── test.d
+│   └── test.o
+├── include
+│   ├── liba.h
+│   └── libb.h
+├── libs
+│   ├── liba.c
+│   └── libb.c
+├── Makefile
+└── test.c</p>
+
+<p>&#8220;`</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/southernbear/rtenv/blob/master/Makefile">southernbear / rtenv: Makefile</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Text-Functions">GNU make: 8.2 Functions for String Substitution and Analysis</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Pattern-Rules">GNU make: 10.5 Defining and Redefining Pattern Rules</a></li>
+<li><a href="http://www.gnu.org/software/make/manual/make.html#Automatic-Variables">GNU make: 10.5.3 Automatic Variables</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Makefile Header File Dependency問題]]></title>
+    <link href="http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues/"/>
+    <updated>2014-03-06T01:12:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/03/06/makefile-header-file-dependency-issues</id>
+    <content type="html"><![CDATA[<p>自幹Makefile的時候常常忘記把header files加到Prerequisite然後編譯的時候就發生非預期的錯誤。之前整理<a href="http://wen00072.github.io/blog/2013/10/13/talk-about-c-macros">GNU: The C Preprocess導讀</a>有看到gcc/cpp(C Preprocessor)的<code>-MMD</code>參數，但是還不清楚怎麼使用。直到看到<a href="http://stackoverflow.com/questions/11855386/using-g-with-mmd-in-makefile-to-automatically-generate-dependencies">Using g++ with -MMD in makefile to automatically generate dependencies</a>才知道怎麼玩。手癢自己也來弄一個驗證一下。</p>
+
+<p>測試檔案及程式碼如下
+不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。</p>
+
+<pre><code class="c liba.h">#ifndef LIBA_H_2013
+#define LIBA_H_2013
+void test_liba(void);
+void from_liba(void);
+#endif
+</code></pre>
+
+<pre><code class="c liba.c">#include "libb.h"
+#include &lt;stdio.h&gt;
+
+void test_liba(void)
+{
+    from_libb();
+}
+
+void from_liba()
+{
+    printf("%s\n", __PRETTY_FUNCTION__);
+}
+</code></pre>
+
+<pre><code class="c libb.h">#ifndef LIBB_H_2013
+#define LIBB_H_2013
+void test_libb(void);
+void from_libb(void);
+#endif
+</code></pre>
+
+<pre><code class="c libb.c  ">#include "liba.h"
+#include &lt;stdio.h&gt;
+
+void test_libb(void)
+{
+    from_liba();
+}
+
+void from_libb()
+{
+    printf("%s\n", __PRETTY_FUNCTION__);
+}
+</code></pre>
+
+<pre><code class="c test.c">#include "libb.h"
+#include "liba.h"
+#include &lt;stdlib.h&gt;
+int main(void)
+{
+    test_liba();
+    test_libb();
+
+    return 0;
+}
+</code></pre>
+
+<p>先來複習一下<code>-MMD</code>的效果</p>
+
+<pre><code class="text 執行-MMD 結果">$ gcc -MMD -c test.c
+$ ls test.*
+test.c  test.d  test.o
+$ cat test.d 
+test.o: test.c libb.h liba.h
+</code></pre>
+
+<p>剩下就是想辦法讓Makefile吃到*.d的內容，因此Makefile長的就像這樣</p>
+
+<pre><code class="makefile Makefile">CFLAGS=-g -MMD
+
+SRCS= test.c liba.c libb.c
+OBJS = $(patsubst %.c, %.o, $(SRCS))
+DEPS = $(patsubst %.o, %.d, $(OBJS))
+
+TARGET=test
+
+$(TARGET): $(OBJS)
+    gcc -g -o $@ $^
+
+clean:
+    rm -rf *.o *.a *~ $(TARGET) $(OBJS) $(DEPS)
+
+-include $(DEPS)
+</code></pre>
+
+<p>Makefile說明:</p>
+
+<ul>
+<li><code>patsubst</code>
+
+<ul>
+<li>Makefile 提供的函數，用在pattern 替換，所以上面做了下列的代換</li>
+<li>.c轉成.o</li>
+<li>.o轉成.d</li>
+</ul>
+</li>
+<li><code>$@</code>
+
+<ul>
+<li>Makefile的內建巨集，代表target</li>
+</ul>
+</li>
+<li><code>$^</code>
+
+<ul>
+<li>Makefile的內建巨集，代表prerequisite</li>
+</ul>
+</li>
+<li><code>-</code>
+
+<ul>
+<li>告訴make 忽略失敗，trick就在這邊</li>
+</ul>
+</li>
+</ul>
+
+
+<p>Trick就是上面提到的<code>-</code>，第一次make時一定<em>.d檔案不存在，因此不使用<code>-</code>就一定編不過。第一次編過之後因為</em>.d已經產生，所以header file的dependecy也被處理好了。</p>
+
+<p>其實上面的Makefile可以做更多改進，當project檔案數量大到某種程度就可以感覺改進的效果，例如</p>
+
+<ul>
+<li>把<em>.o 和</em>.d 指定產生到特定目錄，而不是散落各處</li>
+<li>加上distclean，只有在這種情況下才去刪除*.d的檔案</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

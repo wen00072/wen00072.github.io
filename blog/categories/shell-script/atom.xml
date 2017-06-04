@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Shell Script | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/shell-script/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Auto Photo Watermarking Script]]></title>
+    <link href="http://wen00072.github.io/blog/2016/08/02/auto-photo-watermarking-script/"/>
+    <updated>2016-08-02T16:53:13+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/08/02/auto-photo-watermarking-script</id>
+    <content type="html"><![CDATA[<p>因故需要對大量圖片調整解析度並加入浮水印，查了網路找到非常好的<a href="http://www.linuxjournal.com/content/easy-watermarking-imagemagick">範例文章</a>。這篇<a href="http://www.linuxjournal.com/content/easy-watermarking-imagemagick">文章</a>裏面也有script，和我的不太一樣，有興趣的人可以去參考。</p>
+
+<p>更改後寫成script如下，它做了：</p>
+
+<ol>
+<li>開了<code>processed_pictures</code>目錄，把改過的檔案存到該目錄</li>
+<li>將新的圖案解析度寬度轉成1024</li>
+<li>將產生的圖片quality設成80%</li>
+<li>加入浮水印字串</li>
+</ol>
+
+
+<pre><code class="bash">#!/bin/sh
+TARGET_DIR=processed_pictures
+NEW_WIDTH=1024
+CAP="Wen Liao"
+
+mkdir -p $TARGET_DIR
+for i in $(ls) ; do
+    echo convert $i to $TARGET_DIR
+    convert -background '#0008' -quality 80 -resize $NEW_WIDTH -fill white -gravity center -size $(identify -format %w $i)x120 caption:"$CAP" $i +swap -gravity south -composite $TARGET_DIR/$i
+done
+</code></pre>
+
+<p>要注意</p>
+
+<ol>
+<li>本script假設目前目錄都是圖檔，所以不判斷檔名是否為<code>.jpg</code>或是<code>.png</code></li>
+<li>無法處理檔名有空白的檔案</li>
+<li>你需要自行安裝imagemagick</li>
+<li>由於相片landscape 和 portrait的關係，浮水印的位址不一定會和你想的一樣，目前為止我不在意這個問題就是了。附上範例轉出的landscape 和 portrait照片各一張</li>
+</ol>
+
+
+<h4>Landscape</h4>
+
+<p><img src="http://wen00072.github.io/files/dog.jpg" title="landscape"></p>
+
+<h4>Portrait</h4>
+
+<p><img src="http://wen00072.github.io/files/cat.jpg" title="portrait"></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://www.linuxjournal.com/content/easy-watermarking-imagemagick">Linux Journal Easy Watermarking with ImageMagick</a></li>
+<li><a href="http://www.xoogu.com/2013/how-to-automatically-watermark-or-batch-watermark-photos-using-imagemagick/">How to automatically watermark or batch watermark photos using ImageMagick</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Bash Autocomplete for Octopress]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/31/bash-autocomplete-for-octopress/"/>
+    <updated>2015-03-31T00:39:25+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/31/bash-autocomplete-for-octopress</id>
+    <content type="html"><![CDATA[<p>被bash_completion慣壞了，所以用Octopress的指令要打參數很煩，乾脆自幹一個。如果有需要的朋友就自行取用吧..</p>
+
+<ul>
+<li><a href="https://github.com/wen00072/octopress_bash_completion">GitHub URL</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Bash變數的字串替換]]></title>
+    <link href="http://wen00072.github.io/blog/2014/06/30/bash-string-variable-substitution/"/>
+    <updated>2014-06-30T13:53:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/06/30/bash-string-variable-substitution</id>
+    <content type="html"><![CDATA[<p>有時候會在command line或是script裏面需要極簡單的字串替換。bash有提供這樣的功能。這樣的功能是用以下的方式達成</p>
+
+<ul>
+<li>變數=字串</li>
+<li>${變數名稱/想要找的字串/替換的字串}</li>
+</ul>
+
+
+<p>直接看範例就知道
+<code>text ${變數取代範例}
+$ MY_VAR=test.tar.gz
+$ echo ${MY_VAR/.tar.gz/}
+test
+$ echo ${MY_VAR/.tar.gz/_a}
+test_a
+</code></p>
+
+<p>我自己是偶爾會需要解壓縮tarball，這時候先建立一個目錄再解壓縮會比較妥當。不然可能會變成目前目錄下面散落很多解出來的檔案，這就不是我想要的狀態。因此我的script會這樣做。</p>
+
+<pre><code class="bash extract.sh (沒有檢查錯誤）">#!/bin/bash
+FILE=$1                   # Get tarball from command line 
+DIR_NAME=${FILE/.tar.gz/}
+mkdir $DIR_NAME-pkg
+cd $DIR_NAME-pkg
+tar -zxvf ../$FILE
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Shell Script: 番茄式時間管理法]]></title>
+    <link href="http://wen00072.github.io/blog/2013/09/13/shell-script-pomodoro-technique/"/>
+    <updated>2013-09-13T13:20:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/09/13/shell-script-pomodoro-technique</id>
+    <content type="html"><![CDATA[<p>這是從The clean coder中文版看到的時間方式，本來想要找看看Ubuntun上面有沒有現成軟體可以用。後來看到<a href="http://navaneeth.github.io/blog/2010/12/19/simple-egg-timer-on-linux-for-pomodoro-technique/">有人</a>使用Shell Script去弄一個。手癢也來做一個自己的版本。</p>
+
+<h2>番茄式時間管理法簡介</h2>
+
+<ul>
+<li>Francesco Cirillo 在1980年代末提出來的時間管理方式</li>
+</ul>
+
+
+<h3>運作原則</h3>
+
+<ol>
+<li>設定計時器二十五分鐘，這段時間內專心做事</li>
+<li>二十五分鐘時間到休息五分鐘</li>
+<li>1 和 2 總共重覆四次後休息長一點的時間</li>
+</ol>
+
+
+<h2>測試環境</h2>
+
+<ul>
+<li>Ubuntu 12.04</li>
+<li>bash</li>
+</ul>
+
+
+<h2>程式碼</h2>
+
+<pre><code class="bash">#!/bin/bash
+## Inspired by http://navaneeth.github.io/blog/2010/12/19/simple-egg-timer-on-linux-for-pomodoro-technique/
+## info: http://en.wikipedia.org/wiki/Pomodoro_Technique
+
+## Function
+function start_timer_minutes() ## Unit is minute
+{
+    time_elapse_minutes=0
+    expire_period_minutes=$1
+
+    while [ $time_elapse_minutes -lt $expire_period_minutes ] ; do
+       sleep 60
+       time_elapse_minutes=$(($time_elapse_minutes + 1))
+       echo "$time_elapse_minutes minute(s) elapse of $expire_period_minutes minutes at iteration $((pomodori+1)).";
+    done
+}
+
+## Check options
+if [ $## -eq 2 ] ; then
+    work_period_minutes=$1
+    break_period_minutes=$2
+elif [ $## -eq 0 ] ; then
+    work_period_minutes=25
+    break_period_minutes=5
+else
+    echo $0 expire_period_minutes break_period_minutes
+    exit
+fi
+
+## Info variables
+alert_title="Pomodoro"
+start_message="Pomodoro started. You have $work_period_minutes minutes left"
+end_message="Pomodoro ended. Take a short break for $break_period_minutes minutes."
+max_pomodori=4
+
+## pomodori, 4 iterations
+pomodori=0
+while [ $pomodori -lt $max_pomodori ] ; do
+    ## Work time
+    notify-send -u critical -i appointment -t 600 "$alert_title" "$start_message at iteration $((pomodori+1))"
+    start_timer_minutes "$work_period_minutes"
+
+    ## Rest time
+    if [ $pomodori -lt $((max_pomodori - 1)) ] ; then
+        notify-send -u critical -i appointment -t 600 "$alert_title" "$end_message"
+        start_timer_minutes "$break_period_minutes"
+    fi
+
+    pomodori=$((pomodori + 1))
+done
+
+notify-send -u critical -i appointment -t 600 "$alert_title" "Time's up.. Take a longer rest."
+echo "Time's up.. Take a longer rest."
+</code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Pomodoro_Technique">Wiki: Pomodoro Technique</a></li>
+<li><a href="http://navaneeth.github.io/blog/2010/12/19/simple-egg-timer-on-linux-for-pomodoro-technique/">Simple Egg Timer on Linux for Pomodoro Technique</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

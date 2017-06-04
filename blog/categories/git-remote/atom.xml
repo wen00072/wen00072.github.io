@@ -1,0 +1,824 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Git Remote | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/git-remote/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[再談 Git Remote]]></title>
+    <link href="http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/"/>
+    <updated>2016-01-24T20:30:32+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote</id>
+    <content type="html"><![CDATA[<ul>
+<li>更新：
+
+<ul>
+<li>Apr/09/2016：感謝網友柏瑀的告知，修正白字。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。</p>
+
+<p>一樣，先講測試環境，避免無法reproduce的問題。</p>
+
+<pre><code class="text">$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.3 LTS
+Release:    14.04
+Codename:   trusty
+
+$ git --version
+git version 2.7.0
+</code></pre>
+
+<p>本次介紹目錄如下</p>
+
+<ul>
+<li><a href="#gr_gb">背景說明</a></li>
+<li><a href="#gr_cmd">git remote指令介紹</a>
+
+<ul>
+<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
+<li><a href="#gr_cmd_add">新增remote</a></li>
+<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
+<li><a href="#gr_cmd_push">remote的branch操作</a></li>
+<li><a href="#gr_cmd_rm">刪除remote</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="gr_gb"></a></p>
+
+<h2>背景說明</h2>
+
+<p>先來問問男人<code>git remote</code>是什麼吧？</p>
+
+<pre><code>GIT-REMOTE(1)                                     Git Manual                                    GIT-REMOTE(1)
+
+NAME
+       git-remote - Manage set of tracked repositories
+</code></pre>
+
+<p>白話來說，<code>git remote</code>是用來管理<font color="red">多個</font>tracked repositories。（中文難翻，意思是你要追蹤的git repository）。在大部分的情況，<code>git clone</code>下來後只需要和原本clone的遠端互動的話，你只有一個remote，那麼你機乎不會感受到remote的運作，我天生駑鈍，剛開始只是覺得奇怪怎麼有時候後會有個<code>origin</code>跑出來而已。</p>
+
+<p>如果夠幸運（還是不幸？）你不太會需要遇到需要處理remote的情況。不過在github上面，倒是蠻有機會要用到remote，情境如下。</p>
+
+<ul>
+<li>你在github上面有帳號，要fork別人的project <code>A</code>，fork來的稱為<code>A+</code></li>
+<li>你在<code>A+</code>開發，同時<code>A</code>也在開發</li>
+<li><code>A+</code>有需要和<code>A</code>同步，也許是<code>A</code>有新功能，或是你要回饋程式碼總不能回饋和<code>A</code>差異太大的程式碼</li>
+</ul>
+
+
+<p><code>A+</code>和<code>A</code>同步，是remote常用的情境。常用到github直接給<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>。大概描述如下：</p>
+
+<ul>
+<li><code>A+</code>加一個remote，URL為<code>A</code>的URL。白話來說，就是<code>A+</code>要track repository <code>A</code>。
+
+<ul>
+<li>remote必須給個名字，github的<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>上給的名字叫upstream。</li>
+</ul>
+</li>
+<li>既然加了一個tracked repository，你就可以做
+
+<ul>
+<li>拉remote程式碼下來</li>
+<li>切換到remote下面的branch</li>
+<li><strong>merge remote 的branch</strong></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="gr_cmd"></a></p>
+
+<h2>git remote指令介紹</h2>
+
+<p>在介紹指令之前，先建立示範git repository 以便下面的說明。情境如下</p>
+
+<ol>
+<li>建立新的git repository，稱為<code>repo_1</code></li>
+<li>clone <code>repo_1</code>到<code>repo_2</code></li>
+<li>clone <code>repo_2</code>到<code>repo_3</code></li>
+</ol>
+
+
+<pre><code>$ git init repo_1
+Initialized empty Git repository in /tmp/test_remote/repo_1/.git/
+
+$ cd repo_1/
+/repo_1$ touch test_file &amp;&amp; git add test_file &amp;&amp; git commit -a -m "init for test"
+[master (root-commit) 6847c3c] init for test
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 test_file
+
+$ cd ../
+
+$ git clone --bare repo_1 repo_2 
+Cloning into bare repository 'repo_2'...
+done.
+
+$ git clone repo_2/ repo_3
+Cloning into 'repo_3'...
+done.
+</code></pre>
+
+<p>關於repo_2的&ndash;bare部份，一言難盡。長話短說，不這樣幹repo_3不能push到repo_2，有興趣可以看<a href="http://stackoverflow.com/questions/2816369/git-push-error-remote-rejected-master-master-branch-is-currently-checked">這邊</a>。</p>
+
+<p>如果你的git repository是clone過來的，一定會有一個預設remote。沒意外的會叫<code>origin</code> <del>(什麼？你的remote叫<code>aosp</code>? 呃太複雜不討論)</del>，接下來你可以對於remote 操作，分別說明如下：</p>
+
+<ul>
+<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
+<li><a href="#gr_cmd_add">新增remote</a></li>
+<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
+<li><a href="#gr_cmd_push">remote的branch操作</a></li>
+<li><a href="#gr_cmd_rm">刪除remote</a></li>
+</ul>
+
+
+<p><a name="gr_cmd_status"></a></p>
+
+<h2>查詢remote資訊</h2>
+
+<ul>
+<li><code>git remote</code>
+
+<ul>
+<li>顯示remote名稱</li>
+</ul>
+</li>
+<li><code>git remote -v</code>
+
+<ul>
+<li>顯示remote名稱及remote URL</li>
+</ul>
+</li>
+<li><code>git remote show remote名稱</code>
+
+<ul>
+<li>顯示<code>remote名稱</code>的詳細資訊</li>
+</ul>
+</li>
+</ul>
+
+
+<p>直接看範例</p>
+
+<pre><code>$ cd /tmp/test_remote/repo_3
+
+$ git remote
+origin
+
+$ git remote -v
+origin  /tmp/test_remote/repo_2/ (fetch)
+origin  /tmp/test_remote/repo_2/ (push)
+
+$ git remote show origin 
+* remote origin
+  Fetch URL: /tmp/test_remote/repo_2/
+  Push  URL: /tmp/test_remote/repo_2/
+  HEAD branch: master
+  Remote branch:
+    master tracked
+  Local branch configured for 'git pull':
+    master merges with remote master
+  Local ref configured for 'git push':
+    master pushes to master (up to date)
+</code></pre>
+
+<p><a name="gr_cmd_add"></a></p>
+
+<h2>新增remote</h2>
+
+<ul>
+<li><code>git add remote名稱 remote_repository_URL</code></li>
+</ul>
+
+
+<p>範例如下</p>
+
+<pre><code>$ git remote add upstream /tmp/test_remote/repo_1/
+
+$ git remote -v
+origin  /tmp/test_remote/repo_2/ (fetch)
+origin  /tmp/test_remote/repo_2/ (push)
+upstream    /tmp/test_remote/repo_1/ (fetch)
+upstream    /tmp/test_remote/repo_1/ (push)
+</code></pre>
+
+<p>新增完畢後，請記得<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>是你要操作remote的參數。</p>
+
+<p>另外你還可以加入多個remote來場大亂鬥。例如你從<code>A</code> fork <code>A+</code>，也許有人fork 出來的<code>A++</code>有你想要的功能，就可以再把<code>A++</code>加入你<code>A</code> repository的remote。</p>
+
+<p><a name="gr_cmd_fetch"></a></p>
+
+<h2>拉remote repository</h2>
+
+<ul>
+<li><code>git fetch remote_名稱</code></li>
+<li><code>git pull remote_名稱/remote_branch_名稱</code></li>
+</ul>
+
+
+<p>我們先在<code>repo_1</code>開一個branch稱為<code>br1</code>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cd /tmp/test_remote/repo_1/&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ git checkout -b br1
+</span><span class='line'>Switched to a new branch &lsquo;br1&rsquo;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ touch test_on_branch &amp;&amp; git add test_on_branch &amp;&amp; git commit test_on_branch -m &ldquo;test&rdquo;
+</span><span class='line'>[br1 cc7222f] test
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_on_branch</span></code></pre></td></tr></table></div></figure></p>
+
+<p>接下來就是範例時間
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git fetch upstream
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'> * [new branch]      br1        -&gt; upstream/br1
+</span><span class='line'> * [new branch]      master     -&gt; upstream/master&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls
+</span><span class='line'>test_file&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ git pull upstream br1
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'> * branch            br1        -&gt; FETCH_HEAD
+</span><span class='line'>Updating 6847c3c..cc7222f
+</span><span class='line'>Fast-forward
+</span><span class='line'> test_on_branch | 0
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_on_branch&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls
+</span><span class='line'>test_file  test_on_branch&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ git status
+</span><span class='line'>On branch master
+</span><span class='line'>Your branch is ahead of &lsquo;origin/master&rsquo; by 1 commit.
+</span><span class='line'>  (use &ldquo;git push&rdquo; to publish your local commits)
+</span><span class='line'>nothing to commit, working directory clean
+</span><span class='line'>&lt;code&gt;``
+</span><span class='line'>注意最後的指令，因為我們pull了&lt;/code&gt;upstream/br1&lt;code&gt;，所以local多了一個commit。因此訊息中有說你目前repository 比&lt;/code&gt;origin/master&lt;code&gt;(你clone的remote/branch)多一個commit。你可以push回&lt;/code&gt;origin/master`。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&lt;a name="gr_cmd_push"&gt;&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;remote的branch操作&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;原則就是命令中有參數會是&lt;code&gt;remote_名稱&lt;/code&gt;、&lt;code&gt;remote_名稱 remote_branch_名稱&lt;/code&gt;或&lt;code&gt;remote_名稱/remote_branch_名稱&lt;/code&gt;。&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;切換</span></code></pre></td></tr></table></div></figure>
+$ git checkout upstream/br1
+Note: checking out &lsquo;upstream/br1&rsquo;.</li>
+</ul>
+
+
+<p>You are in &lsquo;detached HEAD&rsquo; state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by performing another checkout.</p>
+
+<p>If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -b with the checkout command again. Example:</p>
+
+<p>  git checkout -b <new-branch-name></p>
+
+<p>HEAD is now at bd026e3&hellip; test
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>中間的一堆英文簡單來說是因為git checkout沒特別參數，git只是把HEAD指到命令中的hash而已。如果你要同時在local開一個branch，可以這樣幹：&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;$ git checkout --track  upstream/br1 
+</span><span class='line'>Branch br1 set up to track remote branch br1 from upstream.
+</span><span class='line'>Switched to a new branch 'br1'
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;merge&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;# 先在upstream/br1建立新的commit
+</span><span class='line'>$ cd /tmp/test_remote/repo_1/
+</span><span class='line'>
+</span><span class='line'>$ touch test1_on_branch &amp;&amp; git add test1_on_branch &amp;&amp; git commit test1_on_branch -m "test1"
+</span><span class='line'>[br1 d82612a] test1
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test1_on_branch
+</span><span class='line'>
+</span><span class='line'># 切回repo_3
+</span><span class='line'>cd /tmp/test_remote/repo_3
+</span><span class='line'>
+</span><span class='line'># 先fetch
+</span><span class='line'>$ git fetch upstream 
+</span><span class='line'>remote: Counting objects: 2, done.
+</span><span class='line'>remote: Compressing objects: 100% (2/2), done.
+</span><span class='line'>remote: Total 2 (delta 0), reused 0 (delta 0)
+</span><span class='line'>Unpacking objects: 100% (2/2), done.
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'>   bd026e3..d82612a  br1        -&gt; upstream/br1
+</span><span class='line'>
+</span><span class='line'># 再merge，事實上和git pull upstream br1 一樣效果（默）
+</span><span class='line'>$ git merge upstream/br1 
+</span><span class='line'>Updating bd026e3..d82612a
+</span><span class='line'>Fast-forward
+</span><span class='line'> test1_on_branch | 0
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test1_on_branch
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&lt;a name="gr_cmd_rm"&gt;&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;刪除remote&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;git remote remove remote名稱&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;範例如下&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;$ git remote remove upstream 
+</span><span class='line'>
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin  /tmp/test_remote/repo_2 (fetch)
+</span><span class='line'>origin  /tmp/test_remote/repo_2 (push)
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>]]&gt;&lt;/content&gt;
+</span><span class='line'>  &lt;/entry&gt;
+</span><span class='line'>  
+</span><span class='line'>  &lt;entry&gt;
+</span><span class='line'>    &lt;title type="html"&gt;&lt;![CDATA[談談git Remote]]&gt;&lt;/title&gt;
+</span><span class='line'>    &lt;link href="http://wen00072.github.io/blog/2015/03/06/talk-about-git-remote/"/&gt;
+</span><span class='line'>    &lt;updated&gt;2015-03-06T07:15:00+08:00&lt;/updated&gt;
+</span><span class='line'>    &lt;id&gt;http://wen00072.github.io/blog/2015/03/06/talk-about-git-remote&lt;/id&gt;
+</span><span class='line'>    &lt;content type="html"&gt;&lt;![CDATA[&lt;p&gt;在軟體專案開發常常會需要比對不同的repository。舉例來說，你可能在遠端有一套軟體專案，這個專案是從upstream fork 下來，那麼如果要把upstream 新的功能合併到專案，人肉合併往往是最容易出錯又最沒效率的方式。如果這兩個專案都有git，那麼git remote就是你的救星。針對剛才講的更詳細的use case可以看&lt;a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/"&gt;Git Hub的範例&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;直接拿Use case範例，不囉唆。
+</span><span class='line'>Demo情境&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;有兩個遠端repositories: repo1, repo2&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;將repo1 clone下來到local repository，另外一個透過git remote加入到local repository&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;在local建立一個branch，對應到repo2&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;merge repo1到repo2
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;要注意的是其實以upstream 情況是剛好相反，一般來說repo1，也就是你clone的才是你要開發的專案。選擇這樣的case單純只是吃飽撐著。&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;詳細行為範例如下&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;ul&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="#g2_env"&gt;建立測試環境&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="#g2_rt_url"&gt;新增remote URL&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="#g2_rt_branch"&gt;建立對應remote URL的local branch&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="#g2_rt_merge"&gt;在local合併兩個Romote Branch&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;li&gt;&lt;a href="#g2_ref"&gt;參考資料&lt;/a&gt;&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&lt;a name="g2_env"&gt;&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;建立測試環境&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;產生兩個遠端repositories: repo1, repo2&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;repo1&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;$ mkdir remote_repo1
+</span><span class='line'>$ cd remote_repo1/
+</span><span class='line'>$ git init .
+</span><span class='line'>Initialized empty Git repository in /tmp/remote_repo1/.git/
+</span><span class='line'>$ echo "repo1" &gt; myfile
+</span><span class='line'>$ git add myfile 
+</span><span class='line'>$ git commit myfile -m "init"
+</span><span class='line'>[master (root-commit) 043d3c6] init
+</span><span class='line'> 1 file changed, 1 insertion(+)
+</span><span class='line'> create mode 100644 myfile
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;repo2&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;$ cd ../
+</span><span class='line'>$ mkdir remote_repo2
+</span><span class='line'>$ cd remote_repo2/
+</span><span class='line'>$ git init .
+</span><span class='line'>Initialized empty Git repository in /tmp/remote_repo2/.git/
+</span><span class='line'>$ echo "repo2" &gt; myfile
+</span><span class='line'>$ git add myfile 
+</span><span class='line'>$ git commit myfile -m "init"
+</span><span class='line'>[master (root-commit) 5c329bf] init
+</span><span class='line'> 1 file changed, 1 insertion(+)
+</span><span class='line'> create mode 100644 myfile
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;看一下目錄架構&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;$ cd ../
+</span><span class='line'>$ tree remote_repo1 remote_repo2/
+</span><span class='line'>remote_repo1
+</span><span class='line'>└── myfile
+</span><span class='line'>remote_repo2/
+</span><span class='line'>└── myfile
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&lt;a name="g2_rt_url"&gt;&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;新增remote URL&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;就 git clone，沒啥好說&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;$ git clone remote_repo1/ local_repo
+</span><span class='line'>Cloning into 'local_repo'...
+</span><span class='line'>done.
+</span><span class='line'>$ cd local_repo/
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin  /tmp/remote_repo1/ (fetch)
+</span><span class='line'>origin  /tmp/remote_repo1/ (push)
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;&lt;a name="g2_rt_branch"&gt;&lt;/a&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;建立對應remote URL的local branch&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;我們用了&lt;code&gt;git remote add 本地如何稱呼remote remote的URL&lt;/code&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;$ git remote add repo2 /tmp/remote_repo2/
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin  /tmp/remote_repo1/ (fetch)
+</span><span class='line'>origin  /tmp/remote_repo1/ (push)
+</span><span class='line'>repo2   /tmp/remote_repo2/ (fetch)
+</span><span class='line'>repo2   /tmp/remote_repo2/ (push)
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;接下來把remote URL的repository 拉下來
+</span><span class='line'>&lt;code&gt;
+</span><span class='line'>$ git fetch repo2
+</span><span class='line'>warning: no common commits
+</span><span class='line'>remote: Counting objects: 3, done.
+</span><span class='line'>remote: Total 3 (delta 0), reused 0 (delta 0)
+</span><span class='line'>Unpacking objects: 100% (3/3), done.
+</span><span class='line'>From /tmp/remote_repo2
+</span><span class='line'> * [new branch]      master     -&gt; repo2/master
+</span><span class='line'>&lt;/code&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;然後建立一個branch，對應到repo2的master</span></code></pre></td></tr></table></div></figure>
+$ git checkout -b local_repo2 repo2/master
+Branch local_repo2 set up to track remote branch master from repo2.
+Switched to a new branch &lsquo;local_repo2&rsquo;</p>
+
+<p>$ git branch -a
+* local_repo2
+  master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/master
+  remotes/repo2/master</p>
+
+<p>$ git diff master
+diff &ndash;git a/myfile b/myfile
+index 464d9cd..27d38ae 100644
+ a/myfile
++++ b/myfile
+@@ -1 +1 @@
+-repo1
++repo2
+&#8220;`</p>
+
+<p><a name="g2_rt_merge"></a></p>
+
+<h2>在local合併兩個Romote Branch</h2>
+
+<p>剩下非常直覺，就把兩個local branch merge，整理完衝突收工。</p>
+
+<pre><code>$ git merge master 
+Auto-merging myfile
+CONFLICT (add/add): Merge conflict in myfile
+Automatic merge failed; fix conflicts and then commit the result.
+
+$ git status 
+On branch local_repo2
+Your branch is up-to-date with 'repo2/master'.
+You have unmerged paths.
+  (fix conflicts and run "git commit")
+
+Unmerged paths:
+  (use "git add &lt;file&gt;..." to mark resolution)
+
+    both added:      myfile
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+$ cat myfile 
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+repo2
+=======
+repo1
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; master
+$ echo shut-up &gt; myfile 
+
+$ git add myfile 
+
+$ git commit -m "Overwrite myfile"
+[local_repo2 a76c0a6] Overwrite myfile
+</code></pre>
+
+<p><font color="red"/font>請注意這個case不能夠把更動push 回repo2/master 會噴錯誤如下</font></p>
+
+<pre><code>$ git push repo2 
+warning: push.default is unset; its implicit value has changed in
+Git 2.0 from 'matching' to 'simple'. To squelch this message
+and maintain the traditional behavior, use:
+
+  git config --global push.default matching
+
+To squelch this message and adopt the new behavior now, use:
+
+  git config --global push.default simple
+
+When push.default is set to 'matching', git will push local branches
+to the remote branches that already exist with the same name.
+
+Since Git 2.0, Git defaults to the more conservative 'simple'
+behavior, which only pushes the current branch to the corresponding
+remote branch that 'git pull' uses to update the current branch.
+
+See 'git help config' and search for 'push.default' for further information.
+(the 'simple' mode was introduced in Git 1.7.11. Use the similar mode
+'current' instead of 'simple' if you sometimes use older versions of Git)
+
+fatal: The upstream branch of your current branch does not match
+the name of your current branch.  To push to the upstream branch
+on the remote, use
+
+    git push repo2 HEAD:master
+
+To push to the branch of the same name on the remote, use
+
+    git push repo2 local_repo2
+
+To choose either option permanently, see push.default in 'git help config'.
+</code></pre>
+
+<p>簡單翻譯一下，目前local branch名稱在repo2上面沒有，你要嘛</p>
+
+<ul>
+<li>指定push到repo2的master: <code>git push repo2 HEAD:master</code></li>
+<li>要嘛指定push local branch到repo2 repository上</li>
+</ul>
+
+
+<p>第一個情況需要bared repository，時間關係有空再談。</p>
+
+<p><a name="g2_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes">ProGit: 2.5 Git Basics - Working with Remotes</a></li>
+<li><a href="http://git-scm.com/book/en/v2/Git-Branching-Remote-Branches">ProGit: 3.5 Git Branching - Remote Branches</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,966 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>ARM CM4 Pratice (3): USART 初探 - My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="致謝 感謝網友Zack，Villar，學弟Joe Ho，還有其他大大的幫忙，不然這次應該是撞牆撞到死吧。 前言 這次實驗有卡關，不然其實不算難。卡關的點如下： 一開始使用USART1，可是USART1接到STLink 接腳，最後用USART6代替。(STM32F4 Discovry Disco &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">ARM CM4 Pratice (3): USART 初探</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-08-05T15:53:47+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>3:53 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>致謝</h2>
+
+<p>感謝網友<a href="https://github.com/starnight">Zack</a>，<a href="http://vh21.github.io/">Villar</a>，學弟Joe Ho，還有其他大大的幫忙，不然這次應該是撞牆撞到死吧。</p>
+
+<h2>前言</h2>
+
+<p>這次實驗有卡關，不然其實不算難。卡關的點如下：</p>
+
+<ul>
+<li>一開始使用USART1，可是USART1接到STLink 接腳，最後用USART6代替。(<a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F4 Discovry Disco 開發版手冊</a>，p19, SB11那段)</li>
+<li>SPL的HSE 設定和版子不合，造成Baud rate計算錯誤。</li>
+</ul>
+
+
+<p>這次的實驗是一個ECHO程式，透過版子上的USART6和電腦連線，電腦送出什麼字元，版子就傳回什麼字元。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#stm-3-prepare">事前準備</a></li>
+<li><a href="#stm-3-env">測試環境</a></li>
+<li><a href="#stm-3-usart">USART 控制</a></li>
+<li><a href="#stm-3-code">程式碼</a>
+
+<ul>
+<li><a href="#stm-3-code-code">完整程式碼</a></li>
+<li><a href="#stm-3-code-make">Makefile</a></li>
+</ul>
+</li>
+<li><a href="#stm-3-test">功能驗證</a></li>
+<li><a href="#stm-3-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="stm-3-prepare"></a></p>
+
+<h2>事前準備</h2>
+
+<ul>
+<li><p>Saleae 邏輯分析儀 (一千新台幣有找）</p>
+
+<ul>
+<li>需要自行到Saleae官方網站下載安裝Linux版軟體
+<img src="/files/stm32/STM_LG.jpg"/></li>
+</ul>
+</li>
+<li><p>USB 轉 RS232 TTL 轉接線
+<img src="/files/banana_pi/DSC_0026.jpg"/></p></li>
+</ul>
+
+
+<p><a name="stm-3-env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.4 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ arm-none-eabi-gcc --version
+</span><span class='line'>arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-branch revision 237715]
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<ul>
+<li>SPL版本： STM32F4xx_DSP_StdPeriph_Lib_V1.6.1</li>
+<li>開發板： STM32F4 Dicovery, <a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F429-Disco</a></li>
+</ul>
+
+
+<p><a name="stm-3-usart"></a></p>
+
+<h2>USART 控制</h2>
+
+<p>對於組裝工來說，我想要理解的不是電位差之這些電器信號。甚至在組裝時我也不在意暫存器設定等東西和背後的原理（好孩子不要學）。我關心的是</p>
+
+<ol>
+<li>我們要用哪些資源？</li>
+<li>這些資源對應的實體腳位是？</li>
+<li>軟體中怎麼樣設定和啟動設備？</li>
+<li>軟體中怎麼樣傳輸資料？</li>
+</ol>
+
+
+<p>我們針對這四個問題一一處理</p>
+
+<h3>我們要用哪些資源？</h3>
+
+<p>從手冊可以看到有八個USART可以用。我原本是挑USART1來用，不過後來卡關經過網友提醒發現要避開USART1。後來發現APB2上面除了USART1外另外一個USART是USART6。懶得太多程式碼的情況下就挑了USART6。</p>
+
+<h3>這些資源對應的實體腳位是？</h3>
+
+<p>一樣要翻手冊。</p>
+
+<ul>
+<li>PC6: UASRT6 TX</li>
+<li>PC7: USART6 RX</li>
+</ul>
+
+
+<h3>軟體中怎麼樣設定和啟動設備？</h3>
+
+<p>要分兩個部份討論</p>
+
+<h4>a. GPIOC 設定</h4>
+
+<p>要設定</p>
+
+<ul>
+<li>開啟GPIOC的clock</li>
+<li>設定Pin腳，設定PC6和PC7這兩個腳位。為什麼是這兩個腳位請查手冊
+
+<ul>
+<li>PC6: 設成Alternate function，也就是USART6 TX</li>
+<li>PC7: 設成Alternate function，也就是USART6 RX</li>
+<li>其他
+
+<ul>
+<li>設定為Pull UP，這和USART通訊協定有關，在IDLE時維持高電位</li>
+<li>設定Push-Pull輸出模式，這個我完全不懂只是閉著眼睛抄的</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>來看大家最討厭看的程式碼片斷吧</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">GPIO_InitTypeDef</span> <span class="n">GPIO_InitStructure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Enable GPIOC clock */</span>
+</span><span class='line'><span class="n">RCC_AHB1PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_AHB1Periph_GPIOC</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Connect USART6_Tx instead of PC6 */</span>
+</span><span class='line'><span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource6</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Connect USART6_Rx instead of PC7 */</span>
+</span><span class='line'><span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource7</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Configure USART Tx (PC6) and Rx (PC7) as alternate function  */</span>
+</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span>  <span class="o">=</span> <span class="n">GPIO_Mode_AF</span><span class="p">;</span>
+</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Pin</span>   <span class="o">=</span> <span class="n">GPIO_Pin_6</span> <span class="o">|</span> <span class="n">GPIO_Pin_7</span><span class="p">;</span>
+</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Speed</span> <span class="o">=</span> <span class="n">GPIO_Speed_100MHz</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_OType</span> <span class="o">=</span> <span class="n">GPIO_OType_PP</span><span class="p">;</span>
+</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_PuPd</span>  <span class="o">=</span> <span class="n">GPIO_PuPd_UP</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">GPIO_Init</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">GPIO_InitStructure</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h4>b. USART6 設定</h4>
+
+<p>依下列步驟</p>
+
+<ol>
+<li>開啟USART6的clock</li>
+<li>設定USART6
+
+<ul>
+<li>115200 BPS</li>
+<li>No parity bit</li>
+<li>8-bit 資料</li>
+<li>1 Stop bit</li>
+<li>關閉硬體流量控制</li>
+<li>TX/RX模式都打開</li>
+</ul>
+</li>
+<li>啟動UASRT6</li>
+</ol>
+
+
+<p>一樣來看大家最討厭看的程式碼片斷吧</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">USART_InitTypeDef</span> <span class="n">USART_InitStruct</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Enable USART6 clock */</span>
+</span><span class='line'><span class="n">RCC_APB2PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB2Periph_USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* 115200, N81  */</span>
+</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_BaudRate</span> <span class="o">=</span> <span class="mi">115200</span><span class="p">;</span>
+</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_WordLength</span> <span class="o">=</span> <span class="n">USART_WordLength_8b</span><span class="p">;</span>
+</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_StopBits</span> <span class="o">=</span> <span class="n">USART_StopBits_1</span><span class="p">;</span>
+</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Parity</span> <span class="o">=</span> <span class="n">USART_Parity_No</span><span class="p">;</span>
+</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_HardwareFlowControl</span> <span class="o">=</span> <span class="n">USART_HardwareFlowControl_None</span><span class="p">;</span>
+</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Mode</span> <span class="o">=</span> <span class="n">USART_Mode_Rx</span> <span class="o">|</span> <span class="n">USART_Mode_Tx</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Apply USART settings */</span>
+</span><span class='line'><span class="n">USART_Init</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">USART_InitStruct</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Enable USART */</span>
+</span><span class='line'><span class="n">USART_Cmd</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>軟體中怎麼樣傳輸資料？</h3>
+
+<p>這部份還蠻直覺的，就是檢查狀態。可以送的時候就寫資料到暫存器去；有資料時從暫存器讀出資料。程式碼夠短應該不會那麼討厭吧？另外SPL也有提供USART傳輸接收的函數，請自行查詢。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">char</span> <span class="nf">getchar</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_RXNE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">putchar</span><span class="p">(</span><span class="kt">char</span> <span class="n">c</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="cm">/* Wait until data was tranferred */</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_TXE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-3-code"></a></p>
+
+<h2>程式碼</h2>
+
+<p>最完整可編譯程式碼放在<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice/tree/master/labs/1_usart">這邊</a>。</p>
+
+<p>前面有提到HSE設定需要更動為8MHz。我是在<code>stm32f4xx_conf.h</code>加入以下片斷。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#if defined  (HSE_VALUE)</span>
+</span><span class='line'><span class="cm">/* Redefine the HSE value; it&#39;s equal to 8 MHz on the STM32F4-DISCOVERY Kit */</span>
+</span><span class='line'> <span class="cp">#undef HSE_VALUE</span>
+</span><span class='line'> <span class="cp">#define HSE_VALUE    ((uint32_t)8000000) </span>
+</span><span class='line'><span class="cp">#endif </span><span class="cm">/* HSE_VALUE */</span><span class="cp"></span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-3-code-code"></a></p>
+
+<h3>完整程式碼</h3>
+
+<p>就是把前面的設定合體再加上一些helper就是了。這個程式也不難，就是印出你打的字。當你按enter後會自動塞入<code>\r</code>並且印出提示符號。</p>
+
+<figure class='code'><figcaption><span>usart.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;stm32f4xx_conf.h&quot;</span>
+</span><span class='line'><span class="cp">#include &lt;stm32f4xx.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stm32f4xx_gpio.h&gt;</span>
+</span><span class='line'><span class="cp">#include &lt;stm32f4xx_usart.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">setupUSART</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* helper functions */</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">);</span>
+</span><span class='line'><span class="kt">char</span> <span class="nf">getchar</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">putchar</span><span class="p">(</span><span class="kt">char</span> <span class="n">c</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="cm">/* Setup USART */</span>
+</span><span class='line'>    <span class="n">setupUSART</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Greeting */</span>
+</span><span class='line'>    <span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r</span><span class="s">&gt; &quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="cm">/* Echo a character */</span>
+</span><span class='line'>        <span class="kt">char</span> <span class="n">c</span> <span class="o">=</span> <span class="n">getchar</span><span class="p">();</span>
+</span><span class='line'>        <span class="n">putchar</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/* Show prompt with enter */</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="sc">&#39;\n&#39;</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r</span><span class="s">&gt; &quot;</span><span class="p">);</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">setupUSART</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">GPIO_InitTypeDef</span> <span class="n">GPIO_InitStructure</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Enable GPIOC clock */</span>
+</span><span class='line'>    <span class="n">RCC_AHB1PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_AHB1Periph_GPIOC</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Connect USART6_Tx instead of PC6 */</span>
+</span><span class='line'>    <span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource6</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Connect USART6_Rx instead of PC7 */</span>
+</span><span class='line'>    <span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource7</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Configure USART Tx (PC6) and Rx (PC7) as alternate function  */</span>
+</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span>  <span class="o">=</span> <span class="n">GPIO_Mode_AF</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Pin</span>   <span class="o">=</span> <span class="n">GPIO_Pin_6</span> <span class="o">|</span> <span class="n">GPIO_Pin_7</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Speed</span> <span class="o">=</span> <span class="n">GPIO_Speed_100MHz</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_OType</span> <span class="o">=</span> <span class="n">GPIO_OType_PP</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_PuPd</span>  <span class="o">=</span> <span class="n">GPIO_PuPd_UP</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">GPIO_Init</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">GPIO_InitStructure</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/********************************************</span>
+</span><span class='line'><span class="cm">     * USART set started here</span>
+</span><span class='line'><span class="cm">     ********************************************/</span>
+</span><span class='line'>    <span class="n">USART_InitTypeDef</span> <span class="n">USART_InitStruct</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Enable USART6 clock */</span>
+</span><span class='line'>    <span class="n">RCC_APB2PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB2Periph_USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* 115200, N81  */</span>
+</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_BaudRate</span> <span class="o">=</span> <span class="mi">115200</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_WordLength</span> <span class="o">=</span> <span class="n">USART_WordLength_8b</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_StopBits</span> <span class="o">=</span> <span class="n">USART_StopBits_1</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Parity</span> <span class="o">=</span> <span class="n">USART_Parity_No</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_HardwareFlowControl</span> <span class="o">=</span> <span class="n">USART_HardwareFlowControl_None</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Mode</span> <span class="o">=</span> <span class="n">USART_Mode_Rx</span> <span class="o">|</span> <span class="n">USART_Mode_Tx</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Apply USART settings */</span>
+</span><span class='line'>    <span class="n">USART_Init</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">USART_InitStruct</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Enable USART */</span>
+</span><span class='line'>    <span class="n">USART_Cmd</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">char</span> <span class="nf">getchar</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_RXNE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">putchar</span><span class="p">(</span><span class="kt">char</span> <span class="n">c</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="cm">/* Wait until data was tranferred */</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_TXE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">assert_param</span><span class="p">(</span><span class="n">str</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">putchar</span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">str</span><span class="o">++</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="cm">/* Trap here for gdb if asserted */</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">assert_failed</span><span class="p">(</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">file</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">line</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-3-code-make"></a></p>
+
+<h3>Makefile</h3>
+
+<p>有兩點要說明</p>
+
+<ol>
+<li>加入<code>stm32f4xx_usart.c</code></li>
+<li>加入make flash自動燒錄
+
+<ul>
+<li>目前發現使用st-flash燒錄有時候顯示燒錄完成，但是實際上測試還是燒錄前的行為，換成openocd測試中</li>
+</ul>
+</li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
+</span><span class='line'><span class="c"># Commom settings</span>
+</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span>usart
+</span><span class='line'><span class="nv">PRJ_ROOT</span><span class="o">=</span><span class="k">$(</span>shell <span class="nb">cd</span> ../../ <span class="p">;</span> <span class="nb">pwd</span><span class="k">)</span>
+</span><span class='line'><span class="cp">include $(PRJ_ROOT)/conf/build.def</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
+</span><span class='line'><span class="c"># Files to build</span>
+</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
+</span><span class='line'><span class="nv">SRCS</span>  <span class="o">=</span> <span class="k">$(</span>CMSIS_STARTUP_SRC<span class="k">)</span> <span class="k">$(</span>CMSIS_SYSTEM_SRC<span class="k">)</span>
+</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_gpio.c
+</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_rcc.c
+</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_usart.c
+</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> usart.c
+</span><span class='line'>
+</span><span class='line'><span class="nv">C_OBJS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>   <span class="c"># translate *.c to *.o</span>
+</span><span class='line'><span class="nv">OBJS</span>   <span class="o">=</span> <span class="k">$(</span>patsubst %.s, %.o, <span class="k">$(</span>C_OBJS<span class="k">))</span> <span class="c"># also *.s to *.o files</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">OUT_OBJS</span> <span class="o">=</span> <span class="k">$(</span>addprefix <span class="k">$(</span>OUT_DIR<span class="k">)</span>/, <span class="k">$(</span>OBJS<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
+</span><span class='line'><span class="c"># Build here</span>
+</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
+</span><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET).bin</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -Wl,-Map<span class="o">=</span><span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.map,-T<span class="k">$(</span>TARGET<span class="k">)</span>.ld -nostartfiles <span class="se">\</span>
+</span><span class='line'>      <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="k">$(</span>OUT_OBJS<span class="k">)</span> -o <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf
+</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-objcopy -Obinary <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf <span class="nv">$@</span>
+</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-objdump -S <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf &gt; <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.list
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span> %.<span class="n">s</span>
+</span><span class='line'>  mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -c <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span> %.<span class="n">c</span>
+</span><span class='line'>  mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -c <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">flash</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_DIR</span><span class="k">)</span>/<span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">bin</span>
+</span><span class='line'>  openocd -f interface/stlink-v2.cfg  <span class="se">\</span>
+</span><span class='line'>            -f target/stm32f4x.cfg      <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;init&quot;</span>                   <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;reset init&quot;</span>             <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;stm32f2x unlock 0&quot;</span>      <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;flash probe 0&quot;</span>          <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;flash info 0&quot;</span>           <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;flash write_image erase $&lt; 0x8000000&quot;</span> <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;reset run&quot;</span> -c shutdown
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -fr <span class="k">$(</span>OUT_DIR<span class="k">)</span> gdb.txt
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-3-test"></a></p>
+
+<h2>功能驗證</h2>
+
+<h3>邏輯分析儀驗證</h3>
+
+<p>現在邏輯分析儀已經可以自動幫你抓波形分析了。當你下載並解壓縮檔案後，記得更新udev的Rule讓電腦可以認得邏輯分析儀。</p>
+
+<p>接下來你要設定邏輯分析儀的分析通訊協定為Async Serial 如下圖
+<img src="/files/stm32/LG_SP1.jpg"/></p>
+
+<p>選了Async Serial會有選單出現，你需要設定用第幾個Channel以及USART通訊參數如下圖
+<img src="/files/stm32/LG_SP2.jpg"/></p>
+
+<p>如果需要的話，你可以進一步設定取樣速度、取樣時間如下圖
+<img src="/files/stm32/LG_SP3.jpg"/></p>
+
+<p>假設你的邏輯分析儀接腳都接好了就可以按開始分析訊號了
+<img src="/files/stm32/LG_SP4.jpg"/></p>
+
+<p>這是一個成功的Hello World波形分析，圖可能有點小，全圖在<a href="/files/stm32/usart2.jpg">這邊</a>。
+<img src="/files/stm32/usart2.jpg"/></p>
+
+<h3>實際驗證</h3>
+
+<p>你需要先把USB 轉 RS232 TTL 轉接線接到版子上如下圖
+<img src="/files/stm32/STM_USART_Pin.jpg"/></p>
+
+<p>我是使用mintern，執行畫面如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ miniterm.py -b 115200 -p /dev/ttyUSB0
+</span><span class='line'>--- Miniterm on /dev/ttyUSB0: 115200,8,N,1 ---
+</span><span class='line'>--- Quit: Ctrl+]  |  Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H ---
+</span><span class='line'>test
+</span><span class='line'>&gt; test
+</span><span class='line'>&gt; test
+</span><span class='line'>&gt; test
+</span><span class='line'>&gt; testast
+</span><span class='line'>&gt; teadsatdsasd
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-3-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://homes.soic.indiana.edu/geobrown/index.cgi/teaching">Geoffrey Brown: Teaching </a>
+
+<ul>
+<li>請找 Lab Manual 裏面的link, 書名是<code>Discovering the STM32 Microcontroller</code></li>
+</ul>
+</li>
+<li><a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F4 Discovry Disco 開發版手冊</a></li>
+<li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html">STM32F4 DSP and standard peripherals library</a></li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Wen Liao</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-08-05T15:53:47+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>3:53 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/arm/'>arm</a>, <a class='category' href='/blog/categories/stm32/'>stm32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/" data-via="" data-counturl="http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/08/02/auto-photo-watermarking-script/" title="Previous Post: Auto photo watermarking script">&laquo; Auto photo watermarking script</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2016/08/10/arm-cm4-pratice-4-semihosting/" title="Next Post: ARM CM4 Pratice (4): semihosting">ARM CM4 Pratice (4): semihosting &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/';
+        var disqus_url = 'http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

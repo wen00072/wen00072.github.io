@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Dbdoclet | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/dbdoclet/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Ubuntu 14.04下使用dbdoclet 產生pdf手冊]]></title>
+    <link href="http://wen00072.github.io/blog/2015/08/27/use-dbdoclet-to-create-manual/"/>
+    <updated>2015-08-27T21:48:07+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/08/27/use-dbdoclet-to-create-manual</id>
+    <content type="html"><![CDATA[<p>Sept/1/2015 更新：下面的方法有個問題，目錄的頁面會有從<code>ii</code>開始的羅馬數字頁碼。當known issue吧，猜測要從xsl修正，<code>/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl</code>應該有線索。</p>
+
+<h2>前言</h2>
+
+<p>Javadoc是一個掃描Java原始碼自動產生網頁文件的工具。除此之外，Javadoc還提供了API讓人實作doclet的功能。Javadoc把產出資料餵給doclet，doclet自行決定該怎麼處理，如</p>
+
+<ul>
+<li>轉成pdf文件</li>
+<li>轉成LaTeX文件</li>
+<li>轉成docbook文件</li>
+<li>&hellip;</li>
+</ul>
+
+
+<p>回到主題，為了要產生PDF手冊，並且需要符合下面的要求：</p>
+
+<ul>
+<li>封面</li>
+<li>版權宣告、版本變動紀錄</li>
+<li>目錄</li>
+<li>SDK簡介，包含方塊圖</li>
+<li>API使用方式</li>
+<li>範例</li>
+</ul>
+
+
+<h2>doclet 評估</h2>
+
+<p>目前找到幾個免費產生pdf的doclet，簡單的試玩結果如下</p>
+
+<ul>
+<li>pdfdoclet
+
+<ul>
+<li>直接輸出pdf，沒有目錄、針對手冊需求增加修改資料極度困難</li>
+</ul>
+</li>
+<li>AurigaDoclet
+
+<ul>
+<li>和樓上的主要差別在多了目錄</li>
+</ul>
+</li>
+<li>ltxdoclet
+
+<ul>
+<li>產出LaTeX檔案，可透過pdflatex輸出pdf。有亂碼，美觀程度不如上面兩個</li>
+</ul>
+</li>
+<li>TeXdoclet
+
+<ul>
+<li>產出LaTeX，不支援pdflatex，直接放棄。</li>
+</ul>
+</li>
+<li>dbdoclet
+
+<ul>
+<li>產出docbook，透過一些方式可以達到目標，雖然美觀程度還是比不上pdfdoclet和AurigaDoclet，但是比doxygen和ltxdoclet好，最後用這個產生手冊。</li>
+</ul>
+</li>
+<li>其他族繁不及記載
+
+<h2>使用dbdoclet 產生pdf手冊步驟</h2></li>
+</ul>
+
+
+<p>詳細指令大家自行估狗，這邊單純提供key word。大略步驟如下：</p>
+
+<ol>
+<li>透過任何方式(openoffice, LaTeX, etc)產生封面、版權宣告的pdf的檔案，假設為<code>cover.pdf</code>。</li>
+<li>撰寫針對你要產出手冊的XSL style sheet，我寫了三個東西。這邊要注意的是建議直接在XSL import docbook.xsl。
+
+<ul>
+<li>人肉產生page break的指令，原因docbook不夠聰明，有些東西還是得人肉加page break。如一個段落之後就是範例程式的程式碼。這時候範例程式的程式碼放在頁面開頭的話，閱讀應該比較輕鬆。</li>
+<li>header的描述</li>
+<li>footer的描述，可塞入圖片</li>
+</ul>
+</li>
+<li>以docbook格式撰寫你要塞的內容如
+
+<ul>
+<li>簡介</li>
+<li>範例程式</li>
+</ul>
+</li>
+<li>透過javadoc執行dbdoclet，我這邊跑完會產生<code>Reference.xml</code>。</li>
+<li>使用sed或是你順手的字串工具
+
+<ul>
+<li>修改產出的<code>Reference.xml</code>，找對的地方include自己寫的內容</li>
+<li>如果有必要，修改針對你要產出手冊的XSL style sheet</li>
+</ul>
+</li>
+<li>透過<code>xsltproc</code>產生fo檔。幾點要注意的
+
+<ul>
+<li>要加&ndash;xinclude，不然程式不會去include你自己寫的xml</li>
+<li>/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl不用指定，因為你自己寫的XSL style sheet已經import了，這個問題卡了我一陣子時間。</li>
+</ul>
+</li>
+<li>使用<code>fop</code>將fo轉成pdf檔，假設為<code>draft.pdf</code>。</li>
+<li>使用<code>pdftk</code>做
+
+<ul>
+<li>把你的<code>draft.pdf</code>目錄前面頁面全部幹掉，另存新檔如<code>temp.pdf</code></li>
+<li>把<code>cover.pdf</code>和<code>temp.pdf</code>合併，就會有封面和含目錄以及你設定的手冊了。</li>
+</ul>
+</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>

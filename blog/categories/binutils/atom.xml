@@ -1,0 +1,1154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Binutils | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/binutils/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[談談strip]]></title>
+    <link href="http://wen00072.github.io/blog/2015/11/16/tan-tan-strip/"/>
+    <updated>2015-11-16T21:32:23+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/11/16/tan-tan-strip</id>
+    <content type="html"><![CDATA[<p>Strip，顧名思義，就是脫脫。有興趣的紳士可以估狗strip club。那麼在Linux的binutil中strip是要脫什麼呢？先來問一下男人</p>
+
+<pre><code class="text man strip">STRIP(1)                                    GNU Development Tools                                    STRIP(1)
+
+NAME
+       strip - Discard symbols from object files.
+...
+</code></pre>
+
+<p>用中文說，就是從object 檔中把symbol丟掉。讓我們做幾個小實驗吧。</p>
+
+<ul>
+<li><a href="#strip_test1">測試一：Strip 執行檔</a></li>
+<li><a href="#strip_test2">測試二：Strip Object檔</a></li>
+<li><a href="#strip_test3">測試三：Strip debug 資訊</a></li>
+<li><a href="#strip_test4">測試四：Strip shared library</a></li>
+</ul>
+
+
+<h2>測試環境</h2>
+
+<pre><code class="text">$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.3 LTS
+Release:    14.04
+Codename:   trusty
+</code></pre>
+
+<h2>測試程式</h2>
+
+<pre><code class="c main_test.c">#include &lt;stdio.h&gt;
+extern test();
+
+int main(void)
+{
+    test();
+
+    return 0;
+}
+</code></pre>
+
+<pre><code class="c test.c">#include &lt;stdio.h&gt;
+
+char *g_myStr = "Wen";
+static char *gp_myStr = "Liao";
+
+static void s_test(void)
+{
+    printf("%s %s\n", g_myStr, gp_myStr);
+}
+
+
+void test(void)
+{
+    printf("Hello ");
+    s_test();
+}
+</code></pre>
+
+<pre><code class="Makefile Makefile">TARGET=test
+SRCS=test.c main_test.c
+OBJS=$(patsubst  %.c, %.o, $(SRCS))
+CFLAGS=-g
+
+$(TARGET): $(OBJS)
+    $(CC) $(CFLAGS) $^ -o $@
+
+clean:
+    rm -rf $(TARGET) $(OBJS)
+</code></pre>
+
+<p><a name="strip_test1"></a></p>
+
+<h2>測試一：Strip 執行檔</h2>
+
+<pre><code class="text">$ make clean
+rm -rf test  test.o  main_test.o
+
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ ./test 
+Hello Wen Liao
+
+$ ls test -gG
+-rwxrwxr-x 1 10217 Nov 16 22:33 test
+</code></pre>
+
+<p>可以看到產生出來的執行檔有<code>10217</code> bytes。我們進一步來看執行檔的symbol。</p>
+
+<pre><code class="text">$ nm test
+0000000000601050 B __bss_start
+...
+0000000000601040 D g_myStr
+00000000004003e0 T _init
+...
+0000000000601048 d gp_myStr
+...
+000000000040056d T main
+                 U printf@@GLIBC_2.2.5
+...
+000000000040052d t s_test
+0000000000400553 T test
+0000000000601050 D __TMC_END__
+</code></pre>
+
+<p>那麼來看看strip後的檔案size和symbol吧。你可以看到size變小而且symbol不見了。另外上面可以比對一下<code>t</code>、<code>T</code>、<code>d</code>、<code>D</code>和<code>s_test</code>、<code>test</code>、<code>gp_myStr</code>、<code>g_myStr</code>的關係。</p>
+
+<pre><code class="text">$ strip test
+
+$ ./test 
+Hello Wen Liao
+
+$ nm test
+nm: test: no symbols
+
+$ ls -gG test
+-rwxrwxr-x 1 6296 Nov 16 22:36 test
+</code></pre>
+
+<p><a name="strip_test2"></a></p>
+
+<h2>測試二：Strip Object檔</h2>
+
+<p>因為strip就是把object file (執行檔也是一種object file)的symbol拿掉，所以在link time需要symbol時如果該object檔案被strip過，就會發生錯誤。範例如下：</p>
+
+<pre><code class="text">$ make clean
+rm -rf test  test.o  main_test.o
+
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ nm -a test.o 
+0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_str
+0000000000000000 r .eh_frame
+0000000000000000 D g_myStr
+0000000000000008 d gp_myStr
+0000000000000000 n .note.GNU-stack
+                 U printf
+0000000000000000 r .rodata
+0000000000000000 t s_test
+0000000000000026 T test
+0000000000000000 a test.c
+0000000000000000 t .text
+
+$ ls -gG test.o
+-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+
+$ strip test.o 
+
+$ ls -gG test.o
+-rw-rw-r-- 1 952 Nov 16 23:03 test.o
+
+$ nm test.o
+nm: test.o: no symbols
+
+$ make
+cc -g test.o main_test.o -o test
+/usr/bin/ld: error in test.o(.eh_frame); no .eh_frame_hdr table will be created.
+main_test.o: In function `main':
+/home/wen/tmp/sandbox/main_test.c:6: undefined reference to `test'
+collect2: error: ld returned 1 exit status
+make: *** [test] Error 1
+</code></pre>
+
+<p>這邊我<code>nm</code>下了<code>-a</code>參數，這會顯示出<strong>所有的symbol</strong>，預設的<code>nm</code>輸出如下提供比較。</p>
+
+<pre><code class="text">$ nm test.o 
+0000000000000000 D g_myStr
+0000000000000008 d gp_myStr
+                 U printf
+0000000000000000 t s_test
+0000000000000026 T test
+</code></pre>
+
+<p><a name="strip_test3"></a></p>
+
+<h2>測試三：Strip debug 資訊</h2>
+
+<p>其實只是單純要介紹<code>-d</code>參數而已</p>
+
+<pre><code class="text">$ make clean
+rm -rf test  test.o  main_test.o
+
+$ ls -gG test.o
+-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ ls -gG test.o
+-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+
+$ strip -d test.o
+
+$ nm -a test.o
+0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 r .eh_frame
+0000000000000000 D g_myStr
+0000000000000008 d gp_myStr
+0000000000000000 n .note.GNU-stack
+                 U printf
+0000000000000000 r .rodata
+0000000000000000 t s_test
+0000000000000026 T test
+0000000000000000 t .text
+
+$ make
+cc -g test.o main_test.o -o test
+
+$ ./test
+Hello Wen Liao
+
+$ ls -gG test test.o
+-rwxrwxr-x 1 9737 Nov 16 23:01 test
+-rw-rw-r-- 1 1896 Nov 16 23:01 test.o
+</code></pre>
+
+<p><a name="strip_test4"></a></p>
+
+<h2>測試四：Strip shared library</h2>
+
+<p>這邊要幹的第一件事是修改Makefile如下。主要是把test.o包裝成shared library，這個Makefile很醜，我知道。</p>
+
+<pre><code class="Makefile Makefile">TARGET=test
+SRC=main_test.c
+OBJ=$(patsubst  %.c, %.o, $(SRC))
+
+LIB_SRC=test.c
+LIB_OBJ=$(patsubst  %.c, %.o, $(LIB_SRC))
+LIB_NAME=test
+LIB=lib$(LIB_NAME).so
+CFLAGS=-g
+
+$(TARGET): $(OBJ) $(LIB)
+    $(CC) $(CFLAGS) $&lt; -o $@ -L./ -l$(LIB_NAME)
+
+$(LIB): $(LIB_OBJ)
+    $(CC) -shared -Wl,-soname,$(LIB).0 $^ -o $@
+    rm $(LIB).0 &amp;&amp; ln -sf $(LIB) $(LIB).0
+
+$(LIB_OBJ): $(LIB_SRC)
+    $(CC) $(CFLAGS) -c -fPIC $^
+
+clean:
+    rm -rf $(TARGET) $(OBJ) $(LIB_OBJ)
+</code></pre>
+
+<p>自幹shared library執行程式的時候不要忘記加上<code>LD_LIBRARY_PATH</code>環境變數：
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make clean
+</span><span class='line'>rm -rf test  main_test.o  test.o&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ make
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g -c -fPIC test.c
+</span><span class='line'>cc -shared -Wl,-soname,libtest.so.0 test.o -o libtest.so
+</span><span class='line'>rm libtest.so.0 &amp;amp;&amp;amp; ln -sf libtest.so libtest.so.0
+</span><span class='line'>cc -g main_test.o -o test -L./ -ltest&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ LD_LIBRARY_PATH=&lt;code&gt;pwd&lt;/code&gt; ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>現在來比較strip前後的shared library 差異吧。
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm -a libtest.so
+</span><span class='line'>0000000000000000 a
+</span><span class='line'>0000000000201048 b .bss
+</span><span class='line'>0000000000201048 B &lt;strong&gt;bss_start
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000201048 b completed.6973
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>                 w &lt;/strong&gt;cxa_finalize@@GLIBC_2.2.5
+</span><span class='line'>0000000000201030 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000650 t deregister_tm_clones
+</span><span class='line'>00000000000006c0 t &lt;strong&gt;do_global_dtors_aux
+</span><span class='line'>0000000000200df0 t &lt;/strong&gt;do_global_dtors_aux_fini_array_entry
+</span><span class='line'>0000000000201030 d &lt;strong&gt;dso_handle
+</span><span class='line'>0000000000200e00 d .dynamic
+</span><span class='line'>0000000000200e00 d &lt;em&gt;DYNAMIC
+</span><span class='line'>0000000000000398 r .dynstr
+</span><span class='line'>0000000000000230 r .dynsym
+</span><span class='line'>0000000000201048 D &lt;/em&gt;edata
+</span><span class='line'>00000000000007c0 r .eh_frame
+</span><span class='line'>000000000000079c r .eh_frame_hdr
+</span><span class='line'>0000000000201050 B &lt;em&gt;end
+</span><span class='line'>000000000000077c T &lt;/em&gt;fini
+</span><span class='line'>000000000000077c t .fini
+</span><span class='line'>0000000000200df0 t .fini_array
+</span><span class='line'>0000000000000700 t frame_dummy
+</span><span class='line'>0000000000200de8 t &lt;/strong&gt;frame_dummy_init_array_entry
+</span><span class='line'>0000000000000840 r &lt;strong&gt;FRAME_END&lt;/strong&gt;
+</span><span class='line'>0000000000201000 d &lt;em&gt;GLOBAL_OFFSET_TABLE&lt;/em&gt;
+</span><span class='line'>                 w &lt;strong&gt;gmon_start&lt;/strong&gt;
+</span><span class='line'>0000000000201038 D g_myStr
+</span><span class='line'>00000000000001f0 r .gnu.hash
+</span><span class='line'>000000000000045c r .gnu.version
+</span><span class='line'>0000000000000480 r .gnu.version_r
+</span><span class='line'>0000000000200fd0 d .got
+</span><span class='line'>0000000000201000 d .got.plt
+</span><span class='line'>0000000000201040 d gp_myStr
+</span><span class='line'>00000000000005f0 T &lt;em&gt;init
+</span><span class='line'>00000000000005f0 t .init
+</span><span class='line'>0000000000200de8 t .init_array
+</span><span class='line'>                 w &lt;/em&gt;ITM_deregisterTMCloneTable
+</span><span class='line'>                 w &lt;em&gt;ITM_registerTMCloneTable
+</span><span class='line'>0000000000200df8 d .jcr
+</span><span class='line'>0000000000200df8 d &lt;strong&gt;JCR_END&lt;/strong&gt;
+</span><span class='line'>0000000000200df8 d &lt;strong&gt;JCR_LIST&lt;/strong&gt;
+</span><span class='line'>                 w &lt;/em&gt;Jv_RegisterClasses
+</span><span class='line'>00000000000001c8 r .note.gnu.build-id
+</span><span class='line'>0000000000000610 t .plt
+</span><span class='line'>                 U printf@@GLIBC_2.2.5
+</span><span class='line'>0000000000000680 t register_tm_clones
+</span><span class='line'>00000000000004a0 r .rela.dyn
+</span><span class='line'>00000000000005a8 r .rela.plt
+</span><span class='line'>0000000000000785 r .rodata
+</span><span class='line'>0000000000000735 t s_test
+</span><span class='line'>0000000000000760 T test
+</span><span class='line'>0000000000000000 a test.c
+</span><span class='line'>0000000000000650 t .text
+</span><span class='line'>0000000000201048 d &lt;strong&gt;TMC_END&lt;/strong&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 9275 Nov 16 23:47 libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ strip libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 6104 Nov 16 23:47 libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ nm -a libtest.so
+</span><span class='line'>nm: libtest.so: no symbols&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ LD_LIBRARY_PATH=&lt;code&gt;pwd&lt;/code&gt; ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>這邊變成有新的作業，dynamic link的時候沒有shared library沒有symbol怎麼拿到function address和全域變數？下次有看到再來解釋吧。</p>
+
+<h2>補充</h2>
+
+<p>如果編譯的程式碼有加入debug資訊，objdump在反組譯的時候可以加入<code>-S</code>參數比對原始碼對應的機械碼，對於想要研究系統細節的人應該有所幫助。簡單範例如下</p>
+
+<pre><code class="text"> x$ make clean
+rm -rf test  test.o  main_test.o
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ objdump -S -d test
+
+test:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+00000000004003e0 &lt;_init&gt;:
+  4003e0:   48 83 ec 08             sub    $0x8,%rsp
+...
+
+0000000000400553 &lt;test&gt;:
+
+
+void test(void)
+{
+  400553:   55                      push   %rbp
+  400554:   48 89 e5                mov    %rsp,%rbp
+    printf("Hello ");
+  400557:   bf 24 06 40 00          mov    $0x400624,%edi
+  40055c:   b8 00 00 00 00          mov    $0x0,%eax
+  400561:   e8 aa fe ff ff          callq  400410 &lt;printf@plt&gt;
+    s_test();
+  400566:   e8 c2 ff ff ff          callq  40052d &lt;s_test&gt;
+}
+  40056b:   5d                      pop    %rbp
+  40056c:   c3                      retq   
+
+...
+</code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>Binary Hacks：駭客秘傳技巧一百招</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[系統函式庫的debug 資訊放在那邊？]]></title>
+    <link href="http://wen00072.github.io/blog/2015/02/20/system-class-library-debug-over-there/"/>
+    <updated>2015-02-20T17:17:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/02/20/system-class-library-debug-over-there</id>
+    <content type="html"><![CDATA[<p>在查詢hello world中的<code>_start</code>呼叫<code>__libc_start_main</code>部份，使用到了反組譯工具。觀察反組譯的部份發現有可能需要看一下libc本身的<code>__libc_start_main</code>組合語言的行為。以前的經驗，這種情況先拉有debug 資訊的套件來看，所以拉了libc6-dbg下來，結果下來的結果，<font color="red">完全無法反組譯</font>。後來請教網友<a href="http://scottt.tw/">Scott Tasi</a>才發現我錯很大。</p>
+
+<p>先講結論：</p>
+
+<ul>
+<li>libc的debug 資訊和本身的binary完全隔開。所以反組譯要看的仍然是在原本的libc.so這個檔案。</li>
+</ul>
+
+
+<p>年紀大了才發現能夠從結論中問問題收穫會更多，所以我就來問</p>
+
+<ul>
+<li>問題一：誰來用這些debug 資訊?</li>
+<li>問題二：既然debug 資訊不在binary內？那麼怎麼找到額外的debug 資訊?</li>
+</ul>
+
+
+<p>先來回答誰來用這些debug 資訊？其實這個根本就是廢話，gdb用心酸的啊。其實這只是在鋪梗，這表示找第二個問題的答案就會和gdb有很大的關係，也就是說我們可以把問題縮小到和gdb相關 <a href="#rk1">（註一）</a>。</p>
+
+<p>好，我們來重複問題二</p>
+
+<ul>
+<li>既然debug 資訊不在binary內？那麼怎麼找到額外的debug 資訊?</li>
+</ul>
+
+
+<p>從常理來猜測，顯然是原本的binary有地方告訴gdb「有額外的除錯檔案，請你載入的時候去那邊抓除錯資訊」。我們直接看<a href="https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html">GDB手冊</a>怎麼說</p>
+
+<ul>
+<li>gdb允許把debug 資訊放在binary外面，而gdb可以透過兩種方式取得
+
+<ul>
+<li>執行的binary內提供link讓gdb可以摸到有debug 資訊的檔案。如果是執行檔，可能就稱為<code>執行檔.debug</code>。
+
+<ul>
+<li>這個link資料，放兩個東西
+
+<ul>
+<li>不包含directory的檔案名稱</li>
+<li>該檔案名稱算出的CRC 碼</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>透過build ID，因為和我找的無關，跳過。我們focus在第一個方式。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>有了debug link資訊後，仍然有幾個細節需要釐清</p>
+
+<ul>
+<li>問題三：debug 資訊檔案放在哪個目錄？</li>
+<li>問題四：debug link放在binary 的哪裡？</li>
+</ul>
+
+
+<p>一樣來看手冊。手冊上說debug 資訊檔案會依以下的順序搜尋</p>
+
+<ul>
+<li>該執行檔的存放目錄</li>
+<li>該執行檔的存放目錄下面同樣目錄名稱，但是加上.debug。如/usr/bin -> /usr/bin.debug/</li>
+<li>系統預設的debug 目錄</li>
+</ul>
+
+
+<p>以上是問題三的的解答，剩下問題四我就認為可以把整個故事說完。所以來看問題四吧。</p>
+
+<ul>
+<li>問題四：debug link放在binary 的哪裡？</li>
+</ul>
+
+
+<p>同樣的在手冊中有提到，binary 中有特別的section稱為<code>.gnu_debuglink</code>，就是存放debug 資訊檔案的資訊。存放的資訊為</p>
+
+<ul>
+<li>存放debug 資訊的檔案名稱</li>
+<li>padding for 4-byte alignment</li>
+<li>4 byte CRC checksum</li>
+</ul>
+
+
+<p>好啦，有了完整的故事，當然要看是不是在唬爛。我們來看libc.so吧</p>
+
+<pre><code>$ pwd
+/lib/arm-linux-gnueabi
+$ objdump -h libc-2.19.so | grep debug
+ 68 .gnu_debuglink 00000014  00000000  00000000  001336a0  2**0
+$ objdump -s -j .gnu_debuglink libc-2.19.so 
+
+libc-2.19.so:     file format elf32-littlearm
+
+Contents of section .gnu_debuglink:
+ 0000 6c696263 2d322e31 392e736f 00000000  libc-2.19.so....
+ 0010 1b8f248c                             ..$. 
+
+$ sudo apt-get install libc6-dbg
+Reading package lists... Done
+Building dependency tree       
+Reading state information... Done
+The following NEW packages will be installed:
+  libc6-dbg
+0 upgraded, 1 newly installed, 0 to remove and 0 not upgraded.
+Need to get 3,290 kB of archives.
+After this operation, 18.1 MB of additional disk space will be used.
+Get:1 http://不告訴你/debian/ jessie/main libc6-dbg armel 2.19-13 [3,290 kB]
+Fetched 3,290 kB in 4s (701 kB/s)      
+Selecting previously unselected package libc6-dbg:armel.
+(Reading database ... 46987 files and directories currently installed.)
+Preparing to unpack .../libc6-dbg_2.19-13_armel.deb ...
+Unpacking libc6-dbg:armel (2.19-13) ...
+Setting up libc6-dbg:armel (2.19-13) ...
+$ find /usr/lib/debug/ |grep libc-2
+/usr/lib/debug/lib/arm-linux-gnueabi/libc-2.19.so
+</code></pre>
+
+<p>那麼這個和我原本要反組譯libc的結果有什麼關係？嘛，旅行的精華就是在迷路不是嗎？</p>
+
+<hr />
+
+<h2>測試環境</h2>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Debian
+Description:    Debian GNU/Linux 8.0 (jessie)
+Release:    8.0
+Codename:   jessie
+
+$ uname -a
+Linux debian 3.2.0-4-versatile #1 Debian 3.2.65-1+deb7u1 armv5tejl GNU/Linux
+
+$ gcc -dumpmachine
+arm-linux-gnueabi
+</code></pre>
+
+<hr />
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html">GDB Manuel: Debugging Information in Separate Files</a></li>
+<li><a href="http://fcamel-life.blogspot.tw/2012/01/gdb-debug-symbol.html">fcamel: gdb 如何找到 debug symbol</a></li>
+<li><a href="https://blogs.oracle.com/dbx/entry/gnu_debuglink_or_debugging_system">.gnu_debuglink or Debugging system libraries with source code</a></li>
+</ul>
+
+
+<hr />
+
+<h2>註解</h2>
+
+<p><a name="rk1"></a>
+一：精確來說，這應該不是只有gdb才能用，我不過偷懶而已。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Linux中誰來呼叫C語言中的main?]]></title>
+    <link href="http://wen00072.github.io/blog/2015/02/14/main-linux-whos-going-to-call-in-c-language/"/>
+    <updated>2015-02-14T15:56:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/02/14/main-linux-whos-going-to-call-in-c-language</id>
+    <content type="html"><![CDATA[<p>記得很久以前聽說在Linux執行檔案時，真正的起始點並不是main，加上<a href="http://wen00072.github.io/blog/2014/03/14/study-on-the-gnu-ld">之前</a>有看到單純ld會幫你偷偷link一些沒看過的object檔案，所以這次就來看到底真相為何？</p>
+
+<h2>測試環境</h2>
+
+<p>因為<del>很假掰</del>想要順便接觸一下ARM的組語，所以這次測試就使用Qemu跑ARM的Debian。</p>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Debian
+Description:    Debian GNU/Linux 8.0 (jessie)
+Release:    8.0
+Codename:   jessie
+
+$ file /bin/ls
+/bin/ls: ELF 32-bit LSB executable, ARM, EABI5 version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.32, BuildID[sha1]=571db48d9c9e4625b7da206e748e41c237f2b202, stripped
+</code></pre>
+
+<h2>測試原始碼，一樣是大家熟悉的Hellow world</h2>
+
+<pre><code class="c hello1.c">#include &lt;stdio.h&gt;
+
+int main()
+{
+    printf("Hello World\n");
+
+    return 0;
+}
+</code></pre>
+
+<p>不知道各位還記得前面有提過，執行檔中有<code>.text</code>的section。要執行的機械碼會放在這邊。我們先來看看hello1執行檔會從那邊開始？</p>
+
+<pre><code>$ readelf -h hello1
+ELF Header:
+  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00 
+  Class:                             ELF32
+  Data:                              2's complement, little endian
+  Version:                           1 (current)
+  OS/ABI:                            UNIX - System V
+  ABI Version:                       0
+  Type:                              EXEC (Executable file)
+  Machine:                           ARM
+  Version:                           0x1
+  Entry point address:               0x102f0
+  Start of program headers:          52 (bytes into file)
+...
+Section header string table index: 33
+</code></pre>
+
+<p>從readelf可以看到起始點為0x102f0，那麼0x102f0是在那邊呢？我們再去看symbol table可以看到很巧的就是<code>.text</code>的起始點。</p>
+
+<pre><code>$ objdump -t hello1
+
+hello1:     file format elf32-littlearm
+
+SYMBOL TABLE:
+00010134 l    d  .interp    00000000              .interp
+...
+000102f0 l    d  .text  00000000              .text
+</code></pre>
+
+<p>好了，那麼<code>.text</code>這邊起始的程式是什麼？</p>
+
+<pre><code class="asm">Disassembly of section .text:
+
+000102f0 &lt;_start&gt;:
+   102f0:       e3a0b000        mov     fp, #0
+   102f4:       e3a0e000        mov     lr, #0
+   102f8:       e49d1004        pop     {r1}            ; (ldr r1, [sp], #4)
+   102fc:       e1a0200d        mov     r2, sp
+   10300:       e52d2004        push    {r2}            ; (str r2, [sp, #-4]!)
+   10304:       e52d0004        push    {r0}            ; (str r0, [sp, #-4]!)
+   10308:       e59fc010        ldr     ip, [pc, #16]   ; 10320 &lt;_start+0x30&gt;
+   1030c:       e52dc004        push    {ip}            ; (str ip, [sp, #-4]!)
+   10310:       e59f000c        ldr     r0, [pc, #12]   ; 10324 &lt;_start+0x34&gt;
+   10314:       e59f300c        ldr     r3, [pc, #12]   ; 10328 &lt;_start+0x38&gt;
+   10318:       ebffffeb        bl      102cc &lt;__libc_start_main@plt&gt;
+   1031c:       ebfffff0        bl      102e4 &lt;abort@plt&gt;
+   10320:       000104b4        .word   0x000104b4
+   10324:       00010420        .word   0x00010420
+   10328:       00010448        .word   0x00010448
+</code></pre>
+
+<p>很有趣，沒看到<code>main()</code>，反而看到<code>_start</code>。到底是<code>_start</code>是什麼呢？還記得Linker script嗎？裏面有一個<code>ENTRY</code>指令，可以指定程式從那邊開始跑，先來看一下預設的<code>ENTRY</code>是不是也是<code>_start</code>?</p>
+
+<pre><code>$ ld --verbose | grep ENTRY
+ENTRY(_start)
+</code></pre>
+
+<p>目前我們只知道執行檔起始點是<code>_start</code>，而不是<code>main</code>，那顯然有人幫你把執行檔加碼，以至於你的執行檔出現了<code>_start</code>。最偷懶的方式就是去找binary看看是不是有這樣的symbol。</p>
+
+<pre><code>user@host:/usr/lib$ find -name "*.[ao]" -exec nm -A {} \;  2&gt; /dev/null | grep " _start$"
+./arm-linux-gnueabi/crt1.o:00000000 T _start
+./arm-linux-gnueabi/gcrt1.o:00000000 T _start
+./arm-linux-gnueabi/Scrt1.o:00000000 T _start
+./debug/usr/lib/arm-linux-gnueabi/crt1.o:00000000 T _start
+./debug/usr/lib/arm-linux-gnueabi/gcrt1.o:00000000 T _start
+./debug/usr/lib/arm-linux-gnueabi/Scrt1.o:00000000 T _start
+</code></pre>
+
+<p>OK，的確有object檔案裡面有<code>_start</code>，我們再來確認編譯的時候會不會link這些檔案。</p>
+
+<pre><code>$ gcc -v hello1.c 
+Using built-in specs.
+COLLECT_GCC=gcc
+...
+COLLECT_GCC_OPTIONS='-v' '-march=armv4t' '-mfloat-abi=soft' 
+...
+-X --hash-style=gnu -m armelf_linux_eabi
+...
+/usr/lib/gcc/arm-linux-gnueabi/4.9/../../../arm-linux-gnueabi/crt1.o 
+...
+</code></pre>
+
+<p>而<code>_start</code>會呼叫外部函數<code>__libc_start_main</code>，我們透過<code>LD_DEBUG</code>來看一下。</p>
+
+<pre><code>$ LD_DEBUG=all ./hello1 2&gt;&amp;1 |grep __libc_start_main
+       890: symbol=__libc_start_main;  lookup in file=./hello1 [0]
+       890: symbol=__libc_start_main;  lookup in file=/lib/arm-linux-gnueabi/libc.so.6 [0]
+       890: binding file ./hello1 [0] to /lib/arm-linux-gnueabi/libc.so.6 [0]: normal symbol `__libc_start_main' [GLIBC_2.4]
+</code></pre>
+
+<p>可以看到，在./hello1中有去找<code>__libc_start_main</code>，最後去<code>libc.so.6</code>找，並且找出<code>libc.so.6</code>中<code>__libc_start_main</code>的位址(即binding)。而<code>__libc_start_main</code>的<a href="http://refspecs.linuxbase.org/LSB_4.0.0/LSB-Core-generic/LSB-Core-generic/baselib---libc-start-main-.html">prototype</a>如下</p>
+
+<pre><code class="c">int __libc_start_main(int (*main) (int, char **, char **), int argc, char ** ubp_av, void (*init) (void), void (*fini) (void), void (*rtld_fini) (void), void (*stack_end));
+</code></pre>
+
+<p>看到有趣的東西嘛？我有看到</p>
+
+<ul>
+<li>main函數當作function pointer傳入</li>
+<li>main函數的參數</li>
+<li>其他不知道三小的function pointer
+
+<ul>
+<li>init</li>
+<li>fini</li>
+<li>rtld_fini</li>
+</ul>
+</li>
+</ul>
+
+
+<p>從這邊我可以猜測這個函數就是呼叫一堆callback function，這些callback function就是上面列的死人骨頭。</p>
+
+<p>從<a href="http://refspecs.linuxbase.org/LSB_4.0.0/LSB-Core-generic/LSB-Core-generic/baselib---libc-start-main-.html">手冊</a>的說明可以看到<code>__libc_start_main()</code>是用來執行環境的初始化、呼叫<code>main</code>函數並且傳遞參數，當<code>main</code>函數結束後處理回傳值。手冊提到的範例詳細行為有</p>
+
+<ul>
+<li>檢查權限，確保安全性</li>
+<li>thread subsystem初始化 (我可不知道什麼thread subsystem唷)</li>
+<li>向<code>rtld_fini</code>註冊release callback function，當shared object結束時使用該callback釋放資源</li>
+<li>呼叫init callback function</li>
+<li>呼叫main callback function並且帶入參數</li>
+<li>當main callback function結束後，將回傳值作為參數呼叫exit</li>
+</ul>
+
+
+<p>我們再回頭看看<code>_start</code>的組合語言：</p>
+
+<pre><code>000102f0 &lt;_start&gt;:
+   102f0:       e3a0b000        mov     fp, #0
+   102f4:       e3a0e000        mov     lr, #0
+   102f8:       e49d1004        pop     {r1}            ; (ldr r1, [sp], #4)
+   102fc:       e1a0200d        mov     r2, sp
+   10300:       e52d2004        push    {r2}            ; (str r2, [sp, #-4]!)
+   10304:       e52d0004        push    {r0}            ; (str r0, [sp, #-4]!)
+   10308:       e59fc010        ldr     ip, [pc, #16]   ; 10320 &lt;_start+0x30&gt;
+   1030c:       e52dc004        push    {ip}            ; (str ip, [sp, #-4]!)
+   10310:       e59f000c        ldr     r0, [pc, #12]   ; 10324 &lt;_start+0x34&gt;
+   10314:       e59f300c        ldr     r3, [pc, #12]   ; 10328 &lt;_start+0x38&gt;
+   10318:       ebffffeb        bl      102cc &lt;__libc_start_main@plt&gt;
+   1031c:       ebfffff0        bl      102e4 &lt;abort@plt&gt;
+   10320:       000104b4        .word   0x000104b4
+   10324:       00010420        .word   0x00010420
+   10328:       00010448        .word   0x00010448
+</code></pre>
+
+<p>有趣的地方是這3個位址
+<code>
+   10320:       000104b4        .word   0x000104b4
+   10324:       00010420        .word   0x00010420
+   10328:       00010448        .word   0x00010448
+</code>
+從<a href="#ful-asm">這邊</a>可以看到這3個位址分別是</p>
+
+<ul>
+<li>10320:       000104b4        .word   0x000104b4
+
+<ul>
+<li><code>__libc_csu_fini</code></li>
+</ul>
+</li>
+<li>10324:       00010420        .word   0x00010420
+
+<ul>
+<li><code>main</code></li>
+</ul>
+</li>
+<li>10328:       00010448        .word   0x00010448
+
+<ul>
+<li><code>__libc_csu_init</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>也就是說，<code>main</code>和<code>__libc_csu_init</code>分別當作第一和第四參數傳給<code>__libc_start_main</code>，而<code>__libc_csu_fini</code>則被丟到stack，一樣傳給<code>__libc_start_main</code>了。</p>
+
+<h2>結論</h2>
+
+<p>Linux執行程式的起始點並不是<code>main</code>，而是glibc  binary中<code>crt1.o</code>準備的<code>_start</code>。這個start主要將你的<code>main</code>，還有一些hook函數丟給<code>__libc_start_main</code>，接下來libc的<code>__libc_start_main</code>樵好事情後才真正執行你的<code>main</code>，並且還要在<code>main</code>結束後清理戰場。</p>
+
+<h2>延伸閱讀</h2>
+
+<ul>
+<li>Hook function
+
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gccint/Initialization.html#Initialization">GCCINT: 17.20.5 How Initialization Functions Are Handled</a></li>
+<li><a href="http://stackoverflow.com/questions/2053029/how-exactly-does-attribute-constructor-work">Stackoverflow: How exactly does <strong>attribute</strong>((constructor)) work?</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://refspecs.linuxbase.org/LSB_4.0.0/LSB-Core-generic/LSB-Core-generic/baselib---libc-start-main-.html">Linux Standard Base Core Specification 4.0: __libc_start_main</a>
+
+<ul>
+<li>不知道是不是過期，請小心服用</li>
+</ul>
+</li>
+<li><a href="http://bottomupcs.sourceforge.net/csbu/x3564.htm">Computer Science from the Bottom Up: Chapter 8. Behind the process   (大推!)</a></li>
+<li><a href="http://dev.gentoo.org/~vapier/crt.txt">Mini FAQ about the misc libc/gcc crt files</a></li>
+<li><a href="http://allenlsy.com/c-essense-2-assembly-and-c/">allenlsy: C Essense (2) - C and Assembly</a>
+
+<ul>
+<li>全系列都推！</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="ful_asm"></a></p>
+
+<h2>完整反組譯程式碼</h2>
+
+<pre><code class="asm Hello.dis">$ cat hello1.dis 
+
+hello1:     file format elf32-littlearm
+
+
+Disassembly of section .init:
+
+0001029c &lt;_init&gt;:
+   1029c:   e92d4008    push    {r3, lr}
+   102a0:   eb000021    bl  1032c &lt;call_weak_fn&gt;
+   102a4:   e8bd4008    pop {r3, lr}
+   102a8:   e12fff1e    bx  lr
+
+Disassembly of section .plt:
+
+000102ac &lt;puts@plt-0x14&gt;:
+   102ac:   e52de004    push    {lr}        ; (str lr, [sp, #-4]!)
+   102b0:   e59fe004    ldr lr, [pc, #4]    ; 102bc &lt;_init+0x20&gt;
+   102b4:   e08fe00e    add lr, pc, lr
+   102b8:   e5bef008    ldr pc, [lr, #8]!
+   102bc:   00010318    .word   0x00010318
+
+000102c0 &lt;puts@plt&gt;:
+   102c0:   e28fc600    add ip, pc, #0, 12
+   102c4:   e28cca10    add ip, ip, #16, 20 ; 0x10000
+   102c8:   e5bcf318    ldr pc, [ip, #792]! ; 0x318
+
+000102cc &lt;__libc_start_main@plt&gt;:
+   102cc:   e28fc600    add ip, pc, #0, 12
+   102d0:   e28cca10    add ip, ip, #16, 20 ; 0x10000
+   102d4:   e5bcf310    ldr pc, [ip, #784]! ; 0x310
+
+000102d8 &lt;__gmon_start__@plt&gt;:
+   102d8:   e28fc600    add ip, pc, #0, 12
+   102dc:   e28cca10    add ip, ip, #16, 20 ; 0x10000
+   102e0:   e5bcf308    ldr pc, [ip, #776]! ; 0x308
+
+000102e4 &lt;abort@plt&gt;:
+   102e4:   e28fc600    add ip, pc, #0, 12
+   102e8:   e28cca10    add ip, ip, #16, 20 ; 0x10000
+   102ec:   e5bcf300    ldr pc, [ip, #768]! ; 0x300
+
+Disassembly of section .text:
+
+000102f0 &lt;_start&gt;:
+   102f0:   e3a0b000    mov fp, #0
+   102f4:   e3a0e000    mov lr, #0
+   102f8:   e49d1004    pop {r1}        ; (ldr r1, [sp], #4)
+   102fc:   e1a0200d    mov r2, sp
+   10300:   e52d2004    push    {r2}        ; (str r2, [sp, #-4]!)
+   10304:   e52d0004    push    {r0}        ; (str r0, [sp, #-4]!)
+   10308:   e59fc010    ldr ip, [pc, #16]   ; 10320 &lt;_start+0x30&gt;
+   1030c:   e52dc004    push    {ip}        ; (str ip, [sp, #-4]!)
+   10310:   e59f000c    ldr r0, [pc, #12]   ; 10324 &lt;_start+0x34&gt;
+   10314:   e59f300c    ldr r3, [pc, #12]   ; 10328 &lt;_start+0x38&gt;
+   10318:   ebffffeb    bl  102cc &lt;__libc_start_main@plt&gt;
+   1031c:   ebfffff0    bl  102e4 &lt;abort@plt&gt;
+   10320:   000104b4    .word   0x000104b4
+   10324:   00010420    .word   0x00010420
+   10328:   00010448    .word   0x00010448
+
+0001032c &lt;call_weak_fn&gt;:
+   1032c:   e59f3014    ldr r3, [pc, #20]   ; 10348 &lt;call_weak_fn+0x1c&gt;
+   10330:   e59f2014    ldr r2, [pc, #20]   ; 1034c &lt;call_weak_fn+0x20&gt;
+   10334:   e08f3003    add r3, pc, r3
+   10338:   e7932002    ldr r2, [r3, r2]
+   1033c:   e3520000    cmp r2, #0
+   10340:   012fff1e    bxeq    lr
+   10344:   eaffffe3    b   102d8 &lt;__gmon_start__@plt&gt;
+   10348:   00010298    .word   0x00010298
+   1034c:   0000001c    .word   0x0000001c
+
+00010350 &lt;deregister_tm_clones&gt;:
+   10350:   e59f301c    ldr r3, [pc, #28]   ; 10374 &lt;deregister_tm_clones+0x24&gt;
+   10354:   e59f001c    ldr r0, [pc, #28]   ; 10378 &lt;deregister_tm_clones+0x28&gt;
+   10358:   e0603003    rsb r3, r0, r3
+   1035c:   e3530006    cmp r3, #6
+   10360:   912fff1e    bxls    lr
+   10364:   e59f3010    ldr r3, [pc, #16]   ; 1037c &lt;deregister_tm_clones+0x2c&gt;
+   10368:   e3530000    cmp r3, #0
+   1036c:   012fff1e    bxeq    lr
+   10370:   e12fff13    bx  r3
+   10374:   000205ff    .word   0x000205ff
+   10378:   000205fc    .word   0x000205fc
+   1037c:   00000000    .word   0x00000000
+
+00010380 &lt;register_tm_clones&gt;:
+   10380:   e59f1024    ldr r1, [pc, #36]   ; 103ac &lt;register_tm_clones+0x2c&gt;
+   10384:   e59f0024    ldr r0, [pc, #36]   ; 103b0 &lt;register_tm_clones+0x30&gt;
+   10388:   e0601001    rsb r1, r0, r1
+   1038c:   e1a01141    asr r1, r1, #2
+   10390:   e0811fa1    add r1, r1, r1, lsr #31
+   10394:   e1b010c1    asrs    r1, r1, #1
+   10398:   012fff1e    bxeq    lr
+   1039c:   e59f3010    ldr r3, [pc, #16]   ; 103b4 &lt;register_tm_clones+0x34&gt;
+   103a0:   e3530000    cmp r3, #0
+   103a4:   012fff1e    bxeq    lr
+   103a8:   e12fff13    bx  r3
+   103ac:   000205fc    .word   0x000205fc
+   103b0:   000205fc    .word   0x000205fc
+   103b4:   00000000    .word   0x00000000
+
+000103b8 &lt;__do_global_dtors_aux&gt;:
+   103b8:   e92d4010    push    {r4, lr}
+   103bc:   e59f401c    ldr r4, [pc, #28]   ; 103e0 &lt;__do_global_dtors_aux+0x28&gt;
+   103c0:   e5d43000    ldrb    r3, [r4]
+   103c4:   e3530000    cmp r3, #0
+   103c8:   1a000002    bne 103d8 &lt;__do_global_dtors_aux+0x20&gt;
+   103cc:   ebffffdf    bl  10350 &lt;deregister_tm_clones&gt;
+   103d0:   e3a03001    mov r3, #1
+   103d4:   e5c43000    strb    r3, [r4]
+   103d8:   e8bd4010    pop {r4, lr}
+   103dc:   e12fff1e    bx  lr
+   103e0:   000205fc    .word   0x000205fc
+
+000103e4 &lt;frame_dummy&gt;:
+   103e4:   e92d4008    push    {r3, lr}
+   103e8:   e59f0028    ldr r0, [pc, #40]   ; 10418 &lt;frame_dummy+0x34&gt;
+   103ec:   e5903000    ldr r3, [r0]
+   103f0:   e3530000    cmp r3, #0
+   103f4:   1a000001    bne 10400 &lt;frame_dummy+0x1c&gt;
+   103f8:   e8bd4008    pop {r3, lr}
+   103fc:   eaffffdf    b   10380 &lt;register_tm_clones&gt;
+   10400:   e59f3014    ldr r3, [pc, #20]   ; 1041c &lt;frame_dummy+0x38&gt;
+   10404:   e3530000    cmp r3, #0
+   10408:   0afffffa    beq 103f8 &lt;frame_dummy+0x14&gt;
+   1040c:   e1a0e00f    mov lr, pc
+   10410:   e12fff13    bx  r3
+   10414:   eafffff7    b   103f8 &lt;frame_dummy+0x14&gt;
+   10418:   000204e8    .word   0x000204e8
+   1041c:   00000000    .word   0x00000000
+
+00010420 &lt;main&gt;:
+   10420:   e92d4800    push    {fp, lr}
+   10424:   e28db004    add fp, sp, #4
+   10428:   e59f0014    ldr r0, [pc, #20]   ; 10444 &lt;main+0x24&gt;
+   1042c:   ebffffa3    bl  102c0 &lt;puts@plt&gt;
+   10430:   e3a03000    mov r3, #0
+   10434:   e1a00003    mov r0, r3
+   10438:   e24bd004    sub sp, fp, #4
+   1043c:   e8bd4800    pop {fp, lr}
+   10440:   e12fff1e    bx  lr
+   10444:   000104c8    .word   0x000104c8
+
+00010448 &lt;__libc_csu_init&gt;:
+   10448:   e92d43f8    push    {r3, r4, r5, r6, r7, r8, r9, lr}
+   1044c:   e59f6058    ldr r6, [pc, #88]   ; 104ac &lt;__libc_csu_init+0x64&gt;
+   10450:   e59f5058    ldr r5, [pc, #88]   ; 104b0 &lt;__libc_csu_init+0x68&gt;
+   10454:   e08f6006    add r6, pc, r6
+   10458:   e08f5005    add r5, pc, r5
+   1045c:   e0656006    rsb r6, r5, r6
+   10460:   e1a07000    mov r7, r0
+   10464:   e1a08001    mov r8, r1
+   10468:   e1a09002    mov r9, r2
+   1046c:   ebffff8a    bl  1029c &lt;_init&gt;
+   10470:   e1b06146    asrs    r6, r6, #2
+   10474:   0a00000a    beq 104a4 &lt;__libc_csu_init+0x5c&gt;
+   10478:   e2455004    sub r5, r5, #4
+   1047c:   e3a04000    mov r4, #0
+   10480:   e2844001    add r4, r4, #1
+   10484:   e5b53004    ldr r3, [r5, #4]!
+   10488:   e1a00007    mov r0, r7
+   1048c:   e1a01008    mov r1, r8
+   10490:   e1a02009    mov r2, r9
+   10494:   e1a0e00f    mov lr, pc
+   10498:   e12fff13    bx  r3
+   1049c:   e1540006    cmp r4, r6
+   104a0:   1afffff6    bne 10480 &lt;__libc_csu_init+0x38&gt;
+   104a4:   e8bd43f8    pop {r3, r4, r5, r6, r7, r8, r9, lr}
+   104a8:   e12fff1e    bx  lr
+   104ac:   00010088    .word   0x00010088
+   104b0:   00010080    .word   0x00010080
+
+000104b4 &lt;__libc_csu_fini&gt;:
+   104b4:   e12fff1e    bx  lr
+
+Disassembly of section .fini:
+
+000104b8 &lt;_fini&gt;:
+   104b8:   e92d4008    push    {r3, lr}
+   104bc:   e8bd4008    pop {r3, lr}
+   104c0:   e12fff1e    bx  lr
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Hello World在那邊？背景說明投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2015/01/24/hello-world-in-where-background-note-slides-on-line/"/>
+    <updated>2015-01-24T16:35:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/01/24/hello-world-in-where-background-note-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/43848623" width="425" height="355" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-43848623" title="Hello world在那邊？背景說明" target="_blank">Hello world在那邊？背景說明</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="d8f1004085d00132de3b7a1c3ec56d64" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[GNU Ld的linker Script簡介投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/25/introduction-to-gnu-ld-linker-script-slides-on-line/"/>
+    <updated>2014-12-25T11:01:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/25/introduction-to-gnu-ld-linker-script-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/42996920" width="425" height="355" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/gnu-ldlinker-script" title="Gnu ld的linker script簡介" target="_blank">GNU ld的linker script簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="cb9576a06e0f0132f68022c1cc0a8a7f" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+</feed>

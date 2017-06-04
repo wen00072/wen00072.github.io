@@ -1,0 +1,687 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>ARM CM4 Pratice (4): Semihosting - My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="Semihosting 是一種讓開發版透過除錯介面執行主機上的服務。透過semihosting，使用者可以快速驗證功能。舉例來說，在USART還沒搞定前先把訊息透過semihosting印到主機上觀看程式的行為。 本次練習使用openocd提供主機上的服務。以下是這次的練習 目錄 測試環境 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/blog/2016/08/10/arm-cm4-pratice-4-semihosting/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">ARM CM4 Pratice (4): Semihosting</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-08-10T12:51:46+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>12:51 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>Semihosting 是一種讓開發版透過除錯介面執行主機上的服務。透過semihosting，使用者可以快速驗證功能。舉例來說，在USART還沒搞定前先把訊息透過semihosting印到主機上觀看程式的行為。</p>
+
+<p>本次練習使用<code>openocd</code>提供主機上的服務。以下是這次的練習</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#stm-4-env">測試環境</a></li>
+<li><a href="#stm-4-semi">使用Semihosting</a>
+
+<ul>
+<li><a href="#stm-4-semi-target">開發版</a></li>
+<li><a href="#stm-4-semi-host">主機 (openocd)</a></li>
+</ul>
+</li>
+<li><a href="#stm-4-test">實驗：Echo</a>
+
+<ul>
+<li><a href="#stm-4-test-code">程式</a>
+
+<ul>
+<li><a href="#stm-4-test-code-main">主程式</a></li>
+<li><a href="#stm-4-test-code-semi">Semihosting 程式</a></li>
+</ul>
+</li>
+<li><a href="#stm-4-test-makefile">Makefile</a></li>
+<li><a href="#stm-4-test-result">執行結果</a></li>
+</ul>
+</li>
+<li><a href="#stm-4-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="stm-4-env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.4 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ arm-none-eabi-gcc --version
+</span><span class='line'>arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-branch revision 237715]
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>$ openocd --version
+</span><span class='line'>Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-07-22:20)
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<ul>
+<li>SPL版本： STM32F4xx_DSP_StdPeriph_Lib_V1.6.1</li>
+<li>開發板： STM32F4 Dicovery, <a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F429-Disco</a></li>
+</ul>
+
+
+<p><a name="stm-4-semi"></a></p>
+
+<h2>使用Semihosting</h2>
+
+<p><a name="stm-4-semi-target"></a></p>
+
+<h3>開發版</h3>
+
+<p>ARM官方網站有說，在ARMv6-M 和 ARMv7-M (Cortex M4是ARMv7E-M)架構中，使用break point指令並帶入參數<code>0xab</code>即可。詳細的使用範例會在<a href="#stm-4-test">後面</a>說明。</p>
+
+<p>以下是ARM規範的Semihosting服務</p>
+
+<ul>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/BEIDFAEH.html">angel_SWIreason_EnterSVC (0x17)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/BEIGEDFE.html">angel_SWIreason_ReportException (0x18)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Baccdcef.html">SYS_CLOSE (0x02)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdcfje.html">SYS_CLOCK (0x10)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdgdcc.html">SYS_ELAPSED (0x30)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdhfgc.html">SYS_ERRNO (0x13)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdgdic.html">SYS_FLEN (0x0C)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Baccbcbe.html">SYS_GET_CMDLINE (0x15)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacbefaa.html">SYS_HEAPINFO (0x16)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Baccjafh.html">SYS_ISERROR (0x08)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacbhcee.html">SYS_ISTTY (0x09)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdagge.html">SYS_OPEN (0x01)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Baceahbd.html">SYS_READ (0x06)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Baccbaba.html">SYS_READC (0x07)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacbffjf.html">SYS_REMOVE (0x0E)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdjebc.html">SYS_RENAME (0x0F)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdfgcg.html">SYS_SEEK (0x0A)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdijcb.html">SYS_SYSTEM (0x12)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacchdbe.html">SYS_TICKFREQ (0x31)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacebdhg.html">SYS_TIME (0x11)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Baccafja.html">SYS_TMPNAM (0x0D)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacbedji.html">SYS_WRITE (0x05)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacbejbe.html">SYS_WRITEC (0x03)</a></li>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/Bacdhdcd.html">SYS_WRITE0 (0x04)</a></li>
+</ul>
+
+
+<p><a name="stm-4-semi-host"></a></p>
+
+<h3>主機 (openocd)</h3>
+
+<p>其實非常簡單，就是啟動openocd的時候要把semihosting打開。單獨指令如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>arm semihosting enable
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-4-test"></a></p>
+
+<h2>實驗：Echo</h2>
+
+<p>完整可以編譯的程式碼在<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice/tree/master/labs/2_semihosting">這邊</a></p>
+
+<p>這個實驗行為和<a href="http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/">前一個實驗</a>很類似，就是透過semihosting的read服務主機端輸入資料，然後再透過semihosting的write服務印到螢幕上。</p>
+
+<p><a name="stm-4-test-code"></a></p>
+
+<h3>程式</h3>
+
+<p><a name="stm-4-test-code-main"></a></p>
+
+<h4>主程式</h4>
+
+<p>非常簡單，唯一要說明的是在微處理器中，所有的東西都要自己來，也就是說下面的<code>memset</code>、<code>strlen</code>都是自己寫的。</p>
+
+<figure class='code'><figcaption><span>semihosting.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;my_utils.h&quot;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#define GREETING_STR  &quot;Hello World\n\r&quot;</span>
+</span><span class='line'><span class="cp">#define PROMPT_STR    &quot;\r&gt; &quot;</span>
+</span><span class='line'><span class="cp">#define LINE_MAX_CHAR (64)</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">char</span> <span class="n">line</span><span class="p">[</span><span class="n">LINE_MAX_CHAR</span><span class="p">];</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Greeting */</span>
+</span><span class='line'>    <span class="n">host_write</span><span class="p">(</span><span class="n">STDOUT</span><span class="p">,</span> <span class="n">GREETING_STR</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">GREETING_STR</span><span class="p">));</span>
+</span><span class='line'>    <span class="n">host_write</span><span class="p">(</span><span class="n">STDOUT</span><span class="p">,</span> <span class="n">PROMPT_STR</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">PROMPT_STR</span><span class="p">));</span>
+</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">memset</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="mh">0x00</span><span class="p">,</span> <span class="n">LINE_MAX_CHAR</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">host_read</span><span class="p">(</span><span class="n">STDIN</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">LINE_MAX_CHAR</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">host_write</span><span class="p">(</span><span class="n">STDOUT</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">line</span><span class="p">));</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="cm">/* Show prompt */</span>
+</span><span class='line'>        <span class="n">host_write</span><span class="p">(</span><span class="n">STDOUT</span><span class="p">,</span> <span class="n">PROMPT_STR</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">PROMPT_STR</span><span class="p">));</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-4-test-code-semi"></a></p>
+
+<h4>semihosting 程式</h4>
+
+<p>首先我們從手冊中知道read/write的semihosting對應代號，<font color="red">用hardcode是不道德的</font>，所以我們使用有意義的文字代替。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">enum</span> <span class="n">HOST_SYSCALL</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">HOSTCALL_WRITE</span>       <span class="o">=</span> <span class="mh">0x05</span><span class="p">,</span>
+</span><span class='line'>    <span class="n">HOSTCALL_READ</span>        <span class="o">=</span> <span class="mh">0x06</span><span class="p">,</span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來我們發現read/write參數的型態有整數(file descriptor)
+和位址這兩種，而手冊中說明參數傳遞的方式是將參數全部放在一個連續的記憶體空間，再將該記憶體空間位址存放在<code>R1</code>暫存器中。也就是說我們需要</p>
+
+<ol>
+<li>連續的空間</li>
+<li>空間中的參數可能有多個，而且它們的型態可能都不同</li>
+</ol>
+
+
+<p>要達到這樣的方式，以前上課看來的方式就是做一個<code>union</code>。每次使用時建立陣列、指令參數型態和值，接下來把該陣列的位址傳給semihosting就可以了。</p>
+
+<p>以下是這次用的<code>union</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/* Semihost system call parameters */</span>
+</span><span class='line'><span class="k">union</span> <span class="kt">param_t</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span>   <span class="n">pdInt</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">void</span> <span class="o">*</span><span class="n">pdPtr</span><span class="p">;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">typedef</span> <span class="k">union</span> <span class="kt">param_t</span> <span class="n">param</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來是實際的呼叫semihosting服務。就是前面提到下break point指令。你可能會問這邊怎麼沒有參數傳遞？傻孩子，這就是ABI存在的目的了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="nf">host_call</span><span class="p">(</span><span class="k">enum</span> <span class="n">HOST_SYSCALL</span> <span class="n">action</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="nf">host_call</span><span class="p">(</span><span class="k">enum</span> <span class="n">HOST_SYSCALL</span> <span class="n">action</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">arg</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">__asm__</span><span class="p">(</span> \
+</span><span class='line'>      <span class="s">&quot;bkpt 0xAB</span><span class="se">\n</span><span class="s">&quot;</span>\
+</span><span class='line'>      <span class="s">&quot;nop</span><span class="se">\n</span><span class="s">&quot;</span> \
+</span><span class='line'>      <span class="s">&quot;bx lr</span><span class="se">\n</span><span class="s">&quot;</span>\
+</span><span class='line'>        <span class="o">:</span><span class="s">&quot;=r&quot;</span> <span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">::</span>\
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>剩下就簡單了，設定好參數呼叫semihosting的介面收工。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">size_t</span> <span class="nf">host_read</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">param</span> <span class="n">semi_param</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">fd</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdPtr</span> <span class="o">=</span> <span class="n">buf</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">count</span> <span class="p">}</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">host_call</span><span class="p">(</span><span class="n">HOSTCALL_READ</span><span class="p">,</span> <span class="n">semi_param</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">size_t</span> <span class="nf">host_write</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">param</span> <span class="n">semi_param</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">fd</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdPtr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="p">)</span> <span class="n">buf</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">count</span> <span class="p">}</span>
+</span><span class='line'>    <span class="p">};</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">host_call</span><span class="p">(</span><span class="n">HOSTCALL_WRITE</span><span class="p">,</span> <span class="n">semi_param</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-4-test-makefile"></a></p>
+
+<h3>Makefile</h3>
+
+<p>最主要的是要透過openocd提供semihosting服務。如果想要在gdb測試時打開可以參考<a href="http://electronics.stackexchange.com/questions/149387/how-do-i-print-debug-messages-to-gdb-console-with-stm32-discovery-board-using-gd">這邊</a>的資料。</p>
+
+<p>Makefile相關描述如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nf">run</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_DIR</span><span class="k">)</span>/<span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">bin</span>
+</span><span class='line'>  openocd -f interface/stlink-v2.cfg  <span class="se">\</span>
+</span><span class='line'>            -f target/stm32f4x.cfg      <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;init&quot;</span>                   <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;reset init&quot;</span>             <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;arm semihosting enable&quot;</span> <span class="se">\</span>
+</span><span class='line'>            -c <span class="s2">&quot;reset run&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-4-test-result"></a></p>
+
+<h3>執行結果</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make run
+</span><span class='line'>openocd -f interface/stlink-v2.cfg  \
+</span><span class='line'>            -f target/stm32f4x.cfg      \
+</span><span class='line'>            -c &quot;init&quot;                   \
+</span><span class='line'>            -c &quot;reset init&quot;             \
+</span><span class='line'>            -c &quot;arm semihosting enable&quot; \
+</span><span class='line'>            -c &quot;reset run&quot;
+</span><span class='line'>Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-07-22:20)
+</span><span class='line'>Licensed under GNU GPL v2
+</span><span class='line'>For bug reports, read
+</span><span class='line'>  http://openocd.org/doc/doxygen/bugs.html
+</span><span class='line'>Info : auto-selecting first available session transport &quot;hla_swd&quot;. To override use &#39;transport select &lt;transport&gt;&#39;.
+</span><span class='line'>Info : The selected transport took over low-level target control. The results might differ compared to plain JTAG/SWD
+</span><span class='line'>adapter speed: 2000 kHz
+</span><span class='line'>adapter_nsrst_delay: 100
+</span><span class='line'>none separate
+</span><span class='line'>Info : Unable to match requested speed 2000 kHz, using 1800 kHz
+</span><span class='line'>Info : Unable to match requested speed 2000 kHz, using 1800 kHz
+</span><span class='line'>Info : clock speed 1800 kHz
+</span><span class='line'>Info : STLINK v2 JTAG v17 API v2 SWIM v0 VID 0x0483 PID 0x3748
+</span><span class='line'>Info : using stlink api v2
+</span><span class='line'>Info : Target voltage: 2.883392
+</span><span class='line'>Info : stm32f4x.cpu: hardware has 6 breakpoints, 4 watchpoints
+</span><span class='line'>adapter speed: 2000 kHz
+</span><span class='line'>stm32f4x.cpu: target state: halted
+</span><span class='line'>target halted due to debug-request, current mode: Thread
+</span><span class='line'>xPSR: 0x01000000 pc: 0x080005c4 msp: 0x20030000
+</span><span class='line'>adapter speed: 8000 kHz
+</span><span class='line'>semihosting is enabled
+</span><span class='line'>adapter speed: 2000 kHz
+</span><span class='line'>Hello World
+</span><span class='line'>&gt; My test
+</span><span class='line'>My test
+</span><span class='line'>&gt; !!!!
+</span><span class='line'>!!!!
+</span><span class='line'>&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="stm-4-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://infocenter.arm.com/help/topic/com.arm.doc.dui0471g/CHDJHHDI.html">ARM Compiler toolchain Developing Software for ARM Processors: Semihosting</a></li>
+<li><a href="http://openocd.org/doc/html/Architecture-and-Core-Commands.html">OpenOCD User&rsquo;s Guide: Architecture and Core Commands</a></li>
+<li><a href="http://bgamari.github.io/posts/2014-10-31-semihosting.html">Semihosting on ARM with GCC and OpenOCD</a>
+
+<ul>
+<li>這個很有趣，可以用Semihosting直接使用glibc的stdio，不過做實驗就是要吃原味，要又痛又爽才是最高境界，所以這個我就沒去嘗試了</li>
+</ul>
+</li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Wen Liao</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-08-10T12:51:46+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>12:51 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/arm/'>arm</a>, <a class='category' href='/blog/categories/semihosting/'>semihosting</a>, <a class='category' href='/blog/categories/stm32/'>stm32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2016/08/10/arm-cm4-pratice-4-semihosting/" data-via="" data-counturl="http://wen00072.github.io/blog/2016/08/10/arm-cm4-pratice-4-semihosting/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/" title="Previous Post: ARM CM4 Pratice (3): USART 初探">&laquo; ARM CM4 Pratice (3): USART 初探</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2016/09/27/linux-kernel-pratice-0-buildroot-setup-with-qemu/" title="Next Post: (過期) Linux Kernel Pratice 0: Buildroot (1/2)">(過期) Linux Kernel Pratice 0: Buildroot (1/2) &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://wen00072.github.io/blog/2016/08/10/arm-cm4-pratice-4-semihosting/';
+        var disqus_url = 'http://wen00072.github.io/blog/2016/08/10/arm-cm4-pratice-4-semihosting/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

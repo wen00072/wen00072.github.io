@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Rtos | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/rtos/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[F9-Kernel初探 - Build System]]></title>
+    <link href="http://wen00072.github.io/blog/2014/02/02/study-on-the-f9-kernel-build-system/"/>
+    <updated>2014-02-02T13:19:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/02/02/study-on-the-f9-kernel-build-system</id>
+    <content type="html"><![CDATA[<h2>MACRO</h2>
+
+<h3>Platform module</h3>
+
+<ul>
+<li><code>-D __CHIP__=xxx</code></li>
+<li><code>-D'INC_PLAT(x)=&lt;platform/__CHIP__/x&gt;'</code></li>
+<li><code>#include INC_PLAT(gpio.h)</code>
+&#8220;`
+$ find |grep gpio.h
+./include/platform/stm32f4/gpio.h</li>
+</ul>
+
+
+<p>&#8220;`</p>
+
+<h2>compiler front end options</h2>
+
+<ul>
+<li><code>-std=gnu99</code></li>
+<li><code>-isystem</code></li>
+<li><code>-nostdlib</code></li>
+<li><code>-ffreestanding</code></li>
+<li><code>-mcpu=cortex-m4</code></li>
+<li><code>-mthumb</code></li>
+<li><code>-mthumb-interwork</code>
+
+<ul>
+<li>Specify that the code has been generated with interworking between Thumb and ARM code in mind.</li>
+</ul>
+</li>
+<li><code>-Xassembler -mimplicit-it=thumb -mno-sched-prolog -mno-unaligned-access</code></li>
+<li><code>-Wdouble-promotion</code></li>
+<li><code>-fsingle-precision-constant</code></li>
+<li><code>-fshort-double</code></li>
+<li><code>-fno-toplevel-reorder</code></li>
+<li><code>-fdata-sections</code></li>
+<li><code>-ffunction-sections</code></li>
+<li><code>-g3</code></li>
+<li><code>-Wall</code></li>
+<li><code>-Werror</code></li>
+<li><code>-Wundef</code></li>
+<li><code>-Wstrict-prototypes</code></li>
+<li><code>-Wno-trigraphs</code></li>
+<li><code>-fno-strict-aliasing</code></li>
+<li><code>-fno-common</code></li>
+<li><code>-Werror-implicit-function-declaration</code></li>
+<li><code>-Wno-format-security</code></li>
+<li><code>-fno-delete-null-pointer-checks</code></li>
+<li><code>-Wdeclaration-after-statement</code></li>
+<li><code>-Wno-pointer-sign</code></li>
+<li><code>-fno-strict-overflow</code></li>
+<li><code>-fconserve-stack</code></li>
+<li><code>-MMD</code></li>
+<li><code>-MF</code></li>
+</ul>
+
+
+<h2>Build directory order</h2>
+
+<ol>
+<li>platform/stm32f4/</li>
+<li>board/discoveryf4/</li>
+<li>platform/</li>
+<li>kernel/lib/</li>
+<li>kernel/</li>
+<li>user/</li>
+<li>user/lib/l4/platform/</li>
+<li>user/lib/io/</li>
+<li>user/apps/</li>
+</ol>
+
+
+<h2>.config</h2>
+
+<ul>
+<li>Platform related</li>
+<li>Limitation</li>
+<li>Kernel timer</li>
+<li>Flexiable page</li>
+<li>Thread</li>
+<li>KIP</li>
+<li>Kernel debug</li>
+</ul>
+
+
+<h2>Build binaries</h2>
+
+<h3>Root Makefile</h3>
+
+<ul>
+<li>Options
+
+<ul>
+<li>BOARD</li>
+<li>PROJECT</li>
+</ul>
+</li>
+<li>Decide which files to compiled and linked</li>
+</ul>
+
+
+<h3>Implicit Rules</h3>
+
+<ul>
+<li>CC
+
+<ul>
+<li>mk/generic.mk</li>
+</ul>
+</li>
+<li>Loader
+
+<ul>
+<li>mk/loader.mk</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>Questions</h2>
+
+<ul>
+<li>Makefile
+
+<ul>
+<li>eval command?</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

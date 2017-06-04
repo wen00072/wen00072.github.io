@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Octopress | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/octopress/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[加快Octopress 編輯文章的script]]></title>
+    <link href="http://wen00072.github.io/blog/2015/04/10/script-for-octopress/"/>
+    <updated>2015-04-10T08:30:41+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/04/10/script-for-octopress</id>
+    <content type="html"><![CDATA[<p><a href="http://wen00072.github.io/blog/2015/04/01/speed-up-octopress-new-post-generating">之前</a>有提到Octopress在文章夠多的時候產生網頁很慢，有號溝的方法。每次要用的時候都要打一狗票。<strong>偷懶是組裝工的美德</strong>，所以寫了一個script，喜歡的人自己拿去用吧。</p>
+
+<p>這個script主要是</p>
+
+<ul>
+<li>例行檢查</li>
+<li>isolate、preview、generate文件</li>
+</ul>
+
+
+<pre><code class="sh">#!/bin/bash
+# Check parameter
+if [ "$#" = "0" ] ; then
+    echo "usage: $(basename $0) [octopress markdown flie]"
+    exit
+fi
+
+# Check file
+if [ ! -f "$1" ] ; then
+    echo "No such file: $1"
+    exit
+fi
+
+# Let's create and process markdown
+rake isolate[$1]
+rake generate
+rake preview
+rake integrate
+rake generate
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[加快Octopress 修改/新增文章發佈前 Preview速度]]></title>
+    <link href="http://wen00072.github.io/blog/2015/04/01/speed-up-octopress-new-post-generating/"/>
+    <updated>2015-04-01T00:12:13+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/04/01/speed-up-octopress-new-post-generating</id>
+    <content type="html"><![CDATA[<p>搬了一百多篇文章後，很明顯地發現Octopress產生頁面速度慢到爆炸，有多慢呢？大概下了<code>rake preview</code>指令後要幾十秒才能更新。我猜測<code>rake preview</code>實作上可能是把<code>source/_posts</code>全部都抓起來重新產生頁面造成的問題。</p>
+
+<p>目前能夠找到的方法只能算是workaround，勉強可以號溝。整理如下</p>
+
+<ol>
+<li>(optional) <code>rake newpost['新的title']</code></li>
+<li><code>rake isolate['你要修改的檔名']</code>
+
+<ul>
+<li>其實這個命令單純產生<code>source/_stash</code>目錄，然後把你<code>rake isolate</code>以外的檔案搬到這邊。換句話說，目前<code>source/_post</code>下面只有你<code>isolate</code>起來的那一篇。</li>
+</ul>
+</li>
+<li>因為2，<code>rake preview</code>速度飛快，你就快樂的修改你的文章，一存檔馬上就可以看到變化。</li>
+<li>修改完畢後，要用<code>rake integrate</code>剛才搬出去的文章搬回來。</li>
+<li>悲劇的地方在這邊，你還是得<code>rake generate</code>把所有的文章從markdown轉成HTML，時間一樣漫長。</li>
+<li><code>rake deploy</code>發佈到Github</li>
+<li>記得把更改和新增的檔案commit並push到origin source</li>
+</ol>
+
+
+<p>總之，就是號溝。如果有更快的工具，支援Markdown和Github page，我會很慎重地考慮再搬一次。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://leafduo.com/articles/2013/04/15/speed-up-octopress-generation/">Speed up Octopress generation</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Add Categories List Plugin to Octopress]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/31/add-categories-list-plugin-to-octopress/"/>
+    <updated>2015-03-31T01:54:10+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/31/add-categories-list-plugin-to-octopress</id>
+    <content type="html"><![CDATA[<p>安裝方式如下</p>
+
+<ul>
+<li>下載<a href="https://github.com/ctdk/octopress-category-list">Plugin</a>
+
+<ul>
+<li>因為檔案和Octopress 的路徑重疊，懶的處理可能的git問題，所以我直接拉zip。</li>
+</ul>
+</li>
+<li>修改<code>_config.yml</code>，把<code>custom/asides/category_cloud.html, custom/asides/category_list.html, custom/asides/top_category_list.html</code>加入到<code>default_asides:</code>這段裏面。
+
+<ul>
+<li>最後頁面右邊會出現相對應的Category資訊</li>
+</ul>
+</li>
+<li>建立上方連結
+
+<ul>
+<li><code>rake newpage['categories']</code></li>
+<li>修改<code>soource/categories/index.md</code>，範例<a href="https://github.com/wen00072/wen00072.github.io/blob/source/source/categories/index.md">在這邊</a></li>
+<li>更改<code>source/_includes/custom/navigation.html</code>
+
+<ul>
+<li>加入<code>&lt;li&gt;&lt;a href="/categories"&gt;Categories&lt;/a&gt;&lt;/li&gt;</code></li>
+</ul>
+</li>
+<li><code>rake generate</code>
+
+<ul>
+<li>不確定這個是否可以省略</li>
+</ul>
+</li>
+<li><code>rake preview</code>
+
+<ul>
+<li>看看有沒有錯誤</li>
+</ul>
+</li>
+<li><code>rake deploy</code></li>
+<li>記得把更改和新增的檔案commit並push到origin source</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://time.to.pullthepl.ug/blog/2012/8/20/octopress-top-categories-plugin/">Octopress Top Categories Plugin</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Bash Autocomplete for Octopress]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/31/bash-autocomplete-for-octopress/"/>
+    <updated>2015-03-31T00:39:25+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/31/bash-autocomplete-for-octopress</id>
+    <content type="html"><![CDATA[<p>被bash_completion慣壞了，所以用Octopress的指令要打參數很煩，乾脆自幹一個。如果有需要的朋友就自行取用吧..</p>
+
+<ul>
+<li><a href="https://github.com/wen00072/octopress_bash_completion">GitHub URL</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Modify Footer in Octopress]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/30/modify-footer-in-octopress/"/>
+    <updated>2015-03-30T00:23:43+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/30/modify-footer-in-octopress</id>
+    <content type="html"><![CDATA[<p>步驟如下：</p>
+
+<ul>
+<li>更改<code>source/_includes/custom/footer.html</code></li>
+<li><code>rake generate</code>
+
+<ul>
+<li>不確定這個是否可以省略</li>
+</ul>
+</li>
+<li><code>rake preview</code>
+
+<ul>
+<li>看看有沒有錯誤</li>
+</ul>
+</li>
+<li><code>rake deploy</code></li>
+<li>記得把更改的檔案commit並push到orgin source</li>
+</ul>
+
+
+<p>目前的頁面最後已經加上了CC-BY-NC說明，就是將<code>source/_includes/custom/footer.html</code>內加上相關HTML tag的。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://octopress.org/docs/theme/template/">Octopress: Theming &amp; Customization</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

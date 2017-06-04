@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Linker | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/linker/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[C語言archive 明明有symbol卻link時出現unsolved Symbol錯誤]]></title>
+    <link href="http://wen00072.github.io/blog/2013/12/24/c-archive-reference-link/"/>
+    <updated>2013-12-24T02:29:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/12/24/c-archive-reference-link</id>
+    <content type="html"><![CDATA[<h2>說明</h2>
+
+<p><a href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99">GNU ld 手冊</a>提到，archive (可能是<em>.a或是</em>.o檔)在link時預設只會reference一次，如果沒有注意的話會發現明明有symbol卻link時出現unsolved symbol錯誤</p>
+
+<hr />
+
+<h2>測試</h2>
+
+<p>下面是<code>測試程式碼</code>、<code>liba.a包含的程式碼</code>和<code>liba.a包含的程式碼</code>，可以看到liba.a的function去呼叫libb的function，反之亦然。</p>
+
+<pre><code class="c test.c">#include "libb.h"
+#include "liba.h"
+
+int main(void)
+{
+    test_liba();
+    test_libb();
+
+    return 0;
+}
+</code></pre>
+
+<pre><code class="c liba.c">#include "libb.h"
+#include &lt;stdio.h&gt;
+
+void test_liba(void)
+{
+    from_libb();
+}
+
+void from_liba()
+{
+    printf("%s\n", __PRETTY_FUNCTION__);
+}
+</code></pre>
+
+<pre><code class="c libb.c">#include "liba.h"
+#include &lt;stdio.h&gt;
+
+void test_libb(void)
+{
+    from_liba();
+}
+
+void from_libb()
+{
+    printf("%s\n", __PRETTY_FUNCTION__);
+}
+</code></pre>
+
+<p>而測試的Makefile如下，變數說明如下</p>
+
+<ul>
+<li>$^: prerequisites</li>
+<li>$@: target</li>
+<li>$>: 第一個prerequisite</li>
+</ul>
+
+
+<pre><code class="makefile Makefile">all: liba.a libb.a test.o
+    gcc -o test $^
+
+liba.a: liba.o liba.h
+    ar crv $@ $&lt;
+
+libb.a: libb.o libb.h
+    ar crv $@ $&lt;
+
+clean:
+    rm -rf *.o *.a *~
+</code></pre>
+
+<p>編譯輸出如下，正如前面的預想
+<code>``text Result
+$ make
+cc    -c -o liba.o liba.c
+ar crv liba.a liba.o
+a - liba.o
+cc    -c -o libb.o libb.c
+ar crv libb.a libb.o
+a - libb.o
+cc    -c -o test.o test.c
+gcc -o test liba.a libb.a test.o
+test.o: In function</code>main&#8217;:
+test.c:(.text+0x5): undefined reference to <code>test_liba'
+test.c:(.text+0xa): undefined reference to</code>test_libb&#8217;
+collect2: ld returned 1 exit status
+make: *** [all] Error 1</p>
+
+<pre><code>---
+## 解法
+### 解法一：調整link順序
+
+- 將Makefile的`all: liba.a libb.a test.o`順序改成`all: test.o liba.a libb.a`可以正常編譯
+    - 延伸測試
+        - 將Makefile的`all: liba.a libb.a test.o`順序改成`all: liba.a test.o libb.a`會發生下面的錯誤
+- 關於link怎麼resovle symbol部份就不在本篇中討論，抱歉。
+</code></pre>
+
+<p>$ make
+cc    -c -o liba.o liba.c
+ar crv liba.a liba.o
+a - liba.o
+cc    -c -o test.o test.c
+cc    -c -o libb.o libb.c
+ar crv libb.a libb.o
+a - libb.o
+gcc -o test liba.a test.o libb.a
+test.o: In function <code>main':
+test.c:(.text+0x5): undefined reference to</code>test_liba&#8217;
+libb.a(libb.o): In function <code>test_libb':
+libb.c:(.text+0x5): undefined reference to</code>from_liba&#8217;
+collect2: ld returned 1 exit status
+make: *** [all] Error 1</p>
+
+<pre><code>
+### 解法二：使用`--start-group` ... `--end-group`參數
+
+- 將Makefile 的`gcc -o test $^`改成`gcc -o test -Wl,--start-group $^ -Wl,--end-group`
+- 參數說明如下
+    - `-Wl`: 告訴gcc傳參數給linker
+    - `--start-group` ... `--end-group`
+        - 告訴linker在中間的`...`重複找尋symbol
+        - **這樣的行為有效能代價，請謹慎使用**
+
+- 編譯並執行結果如下
+</code></pre>
+
+<p>$ make
+cc    -c -o liba.o liba.c
+ar crv liba.a liba.o
+a - liba.o
+cc    -c -o libb.o libb.c
+ar crv libb.a libb.o
+a - libb.o
+cc    -c -o test.o test.c
+gcc -o test -Wl,&ndash;start-group liba.a libb.a test.o -Wl,&ndash;end-group</p>
+
+<p>$ ./test
+from_libb
+from_liba
+&#8220;`</p>
+
+<hr />
+
+<h2>版本資訊</h2>
+
+<ul>
+<li>GNU ld 2.2</li>
+</ul>
+
+
+<hr />
+
+<p><a name="參考資料"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>man ld
+
+<ul>
+<li>搜尋start-group</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

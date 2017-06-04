@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Pomodoro Technique | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/pomodoro-technique/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Shell Script: 番茄式時間管理法]]></title>
+    <link href="http://wen00072.github.io/blog/2013/09/13/shell-script-pomodoro-technique/"/>
+    <updated>2013-09-13T13:20:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/09/13/shell-script-pomodoro-technique</id>
+    <content type="html"><![CDATA[<p>這是從The clean coder中文版看到的時間方式，本來想要找看看Ubuntun上面有沒有現成軟體可以用。後來看到<a href="http://navaneeth.github.io/blog/2010/12/19/simple-egg-timer-on-linux-for-pomodoro-technique/">有人</a>使用Shell Script去弄一個。手癢也來做一個自己的版本。</p>
+
+<h2>番茄式時間管理法簡介</h2>
+
+<ul>
+<li>Francesco Cirillo 在1980年代末提出來的時間管理方式</li>
+</ul>
+
+
+<h3>運作原則</h3>
+
+<ol>
+<li>設定計時器二十五分鐘，這段時間內專心做事</li>
+<li>二十五分鐘時間到休息五分鐘</li>
+<li>1 和 2 總共重覆四次後休息長一點的時間</li>
+</ol>
+
+
+<h2>測試環境</h2>
+
+<ul>
+<li>Ubuntu 12.04</li>
+<li>bash</li>
+</ul>
+
+
+<h2>程式碼</h2>
+
+<pre><code class="bash">#!/bin/bash
+## Inspired by http://navaneeth.github.io/blog/2010/12/19/simple-egg-timer-on-linux-for-pomodoro-technique/
+## info: http://en.wikipedia.org/wiki/Pomodoro_Technique
+
+## Function
+function start_timer_minutes() ## Unit is minute
+{
+    time_elapse_minutes=0
+    expire_period_minutes=$1
+
+    while [ $time_elapse_minutes -lt $expire_period_minutes ] ; do
+       sleep 60
+       time_elapse_minutes=$(($time_elapse_minutes + 1))
+       echo "$time_elapse_minutes minute(s) elapse of $expire_period_minutes minutes at iteration $((pomodori+1)).";
+    done
+}
+
+## Check options
+if [ $## -eq 2 ] ; then
+    work_period_minutes=$1
+    break_period_minutes=$2
+elif [ $## -eq 0 ] ; then
+    work_period_minutes=25
+    break_period_minutes=5
+else
+    echo $0 expire_period_minutes break_period_minutes
+    exit
+fi
+
+## Info variables
+alert_title="Pomodoro"
+start_message="Pomodoro started. You have $work_period_minutes minutes left"
+end_message="Pomodoro ended. Take a short break for $break_period_minutes minutes."
+max_pomodori=4
+
+## pomodori, 4 iterations
+pomodori=0
+while [ $pomodori -lt $max_pomodori ] ; do
+    ## Work time
+    notify-send -u critical -i appointment -t 600 "$alert_title" "$start_message at iteration $((pomodori+1))"
+    start_timer_minutes "$work_period_minutes"
+
+    ## Rest time
+    if [ $pomodori -lt $((max_pomodori - 1)) ] ; then
+        notify-send -u critical -i appointment -t 600 "$alert_title" "$end_message"
+        start_timer_minutes "$break_period_minutes"
+    fi
+
+    pomodori=$((pomodori + 1))
+done
+
+notify-send -u critical -i appointment -t 600 "$alert_title" "Time's up.. Take a longer rest."
+echo "Time's up.. Take a longer rest."
+</code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Pomodoro_Technique">Wiki: Pomodoro Technique</a></li>
+<li><a href="http://navaneeth.github.io/blog/2010/12/19/simple-egg-timer-on-linux-for-pomodoro-technique/">Simple Egg Timer on Linux for Pomodoro Technique</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

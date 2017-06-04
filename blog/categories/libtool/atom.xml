@@ -1,0 +1,658 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Libtool | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/libtool/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[在Autotools使用Libtool編譯函式庫]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/20/autotools-to-use-libtool-compile-function-library/"/>
+    <updated>2014-05-20T06:46:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/20/autotools-to-use-libtool-compile-function-library</id>
+    <content type="html"><![CDATA[<p>前面討論了<a href="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools">Autotools</a>和<a href="http://wen00072.github.io/blog/2014/05/18/study-on-the-libtool">Libtool</a>，今天就來合體一下。其實只要把原本<a href="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools">Autotools</a>範例做少部份的修改就可以了。</p>
+
+<p>目錄：</p>
+
+<ul>
+<li><a href="#preview">前情提要</a></li>
+<li><a href="#ex">更動說明</a>
+
+<ul>
+<li><a href="#ex-conf">configure.ac</a></li>
+<li><a href="#ex-libs">libs/Makefile.am</a></li>
+<li><a href="#ex-src">src/Makefile.am</a></li>
+<li><a href="#ex-result">執行結果</a></li>
+</ul>
+</li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name = "preview"></a></p>
+
+<h2>前情提要</h2>
+
+<p>先複習一下</p>
+
+<ul>
+<li><p>Autotools</p>
+
+<ul>
+<li>目的是協助處理不同平台相依性的問題。</li>
+<li>Autotools 產生
+
+<ul>
+<li>scripts用來偵測環境，最終產生平台相依的Makefile。</li>
+<li>config.h存放不同設定。</li>
+</ul>
+</li>
+<li>使用者最低限度的需要自己寫/更改
+
+<ul>
+<li>每個需要目錄中的<code>Makefile.am</code> 給automake產生Makefile.in。</li>
+<li><code>configure.ac</code>給autotools中工具使用。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Libtool</p>
+
+<ul>
+<li>協助處理不同平台編譯以及link時相依性的問題。 (我自己想的，可能不精確。)
+
+<ul>
+<li>是一個script</li>
+</ul>
+</li>
+<li>編譯會產生
+
+<ul>
+<li>原始檔衍生出來的兩個object 檔案，一個為標準object檔案，另外為<a href="http://en.wikipedia.org/wiki/Position-independent_code">PIC</a>版本
+
+<ul>
+<li>*.lo檔案描述該原始檔的metadata</li>
+</ul>
+</li>
+<li>library
+
+<ul>
+<li>*.la檔案描述library的metadata</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name = "ex"></a></p>
+
+<h2>更動說明</h2>
+
+<p><a name = "ex-conf"></a></p>
+
+<h3>configure.ac</h3>
+
+<p>更動如下：</p>
+
+<ul>
+<li>拿掉<code>AC_PROG_RANLIB</code>，這邊libtool會幫忙處理</li>
+<li>加入<code>LT_INIT</code>告訴autotool會使用libtool</li>
+</ul>
+
+
+<pre><code class="text configure.ac.diff">diff --git a/configure.ac b/configure.ac
+index 7763f37..edec020 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -6,8 +6,8 @@ AC_INIT([Test_Autotools], [0], [test])
+ AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+ AC_CONFIG_HEADERS([config.h])
+
+-# Use static libary
+-AC_PROG_RANLIB
++# USE libtool
++LT_INIT
+
+ # Makefiles
+ AC_CONFIG_FILES([Makefile src/Makefile libs/Makefile])
+</code></pre>
+
+<hr />
+
+<p><a name = "ex-libs"></a></p>
+
+<h3>libs/Makefile.am</h3>
+
+<p>更動如下：</p>
+
+<ul>
+<li>把<code>LIBRARIES</code>改成<code>LTLIBRARIES</code></li>
+<li>產生的目標為從<em>.a改成</em>.la</li>
+</ul>
+
+
+<pre><code class="text libs/Makefile.am.diff">diff --git a/libs/Makefile.am b/libs/Makefile.am
+index f173ac6..230fa34 100644
+--- a/libs/Makefile.am
++++ b/libs/Makefile.am
+@@ -1,7 +1,8 @@
+ AM_CFLAGS = -I../include
+-lib_LIBRARIES = liba.a libb.a
+-liba_a_SOURCES = liba.c
+-libb_a_SOURCES = libb.c
++lib_LTLIBRARIES = liba.la libb.la
++liba_la_SOURCES = liba.c
++libb_la_SOURCES = libb.c
++
+
+ include_HEADERS = ../include/liba.h ../include/libb.h
+</code></pre>
+
+<hr />
+
+<p><a name = "ex-src"></a></p>
+
+<h3>src/Makefile.am</h3>
+
+<p>更動如下：</p>
+
+<ul>
+<li>指定link *.la
+<figure class='code'><figcaption><span>src/Makefile.am.diff</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>diff &amp;ndash;git a/src/Makefile.am b/src/Makefile.am
+</span><span class='line'>index 75a5199..b8b29bf 100644
+</span><span class='line'>&amp;mdash; a/src/Makefile.am
+</span><span class='line'>+++ b/src/Makefile.am
+</span><span class='line'>@@ -1,4 +1,4 @@
+</span><span class='line'>-LDADD = ../libs/liba.a ../libs/libb.a
+</span><span class='line'>+LDADD = ../libs/liba.la ../libs/libb.la
+</span><span class='line'>AM_CFLAGS = -I../include&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt; bin_PROGRAMS = test
+</span></code></pre></td></tr></table></div></figure></p>
+
+<hr />
+
+<p><a name = "ex-result"></a></p>
+
+<h3>執行結果</h3>
+
+<p>簡單來說，autotool使用libtool產生<em>.a和</em>.so檔案</p>
+
+<ul>
+<li><p>執行
+<code>
+make distclean; autoreconf --install; ./configure --prefix=/tmp/test; make; make install
+</code></p></li>
+<li><p>先看/tmp/test安裝的檔案tree view
+<code>
+├── bin
+│   └── test
+├── include
+│   ├── liba.h
+│   └── libb.h
+└── lib
+  ├── liba.a
+  ├── liba.la
+  ├── liba.so -&gt; liba.so.0.0.0
+  ├── liba.so.0 -&gt; liba.so.0.0.0
+  ├── liba.so.0.0.0
+  ├── libb.a
+  ├── libb.la
+  ├── libb.so -&gt; libb.so.0.0.0
+  ├── libb.so.0 -&gt; libb.so.0.0.0
+  └── libb.so.0.0.0
+</code></p></li>
+<li><p>make library 結果節錄
+<code>
+make[2]: Entering directory `libs'
+/bin/bash ../libtool --tag=CC   --mode=compile gcc -DHAVE_CONFIG_H -I. -I..    -I../include -g -O2 -MT liba.lo -MD -MP -MF .deps/liba.Tpo -c -o liba.lo liba.c
+libtool: compile:  gcc -DHAVE_CONFIG_H -I. -I.. -I../include -g -O2 -MT liba.lo -MD -MP -MF .deps/liba.Tpo -c liba.c  -fPIC -DPIC -o .libs/liba.o
+libtool: compile:  gcc -DHAVE_CONFIG_H -I. -I.. -I../include -g -O2 -MT liba.lo -MD -MP -MF .deps/liba.Tpo -c liba.c -o liba.o &gt;/dev/null 2&gt;&amp;1
+mv -f .deps/liba.Tpo .deps/liba.Plo
+/bin/bash ../libtool --tag=CC   --mode=link gcc -I../include -g -O2   -o liba.la -rpath /usr/local/lib liba.lo  
+libtool: link: gcc -shared  -fPIC -DPIC  .libs/liba.o    -O2   -Wl,-soname -Wl,liba.so.0 -o .libs/liba.so.0.0.0
+libtool: link: (cd ".libs" &amp;&amp; rm -f "liba.so.0" &amp;&amp; ln -s "liba.so.0.0.0" "liba.so.0")
+libtool: link: (cd ".libs" &amp;&amp; rm -f "liba.so" &amp;&amp; ln -s "liba.so.0.0.0" "liba.so")
+libtool: link: ar cru .libs/liba.a  liba.o
+libtool: link: ranlib .libs/liba.a
+libtool: link: ( cd ".libs" &amp;&amp; rm -f "liba.la" &amp;&amp; ln -s "../liba.la" "liba.la" )
+</code></p></li>
+<li><p>產生執行檔結果
+<code>
+gcc -DHAVE_CONFIG_H -I. -I..    -I../include -g -O2 -MT test.o -MD -MP -MF .deps/test.Tpo -c -o test.o test.c
+mv -f .deps/test.Tpo .deps/test.Po
+/bin/bash ../libtool --tag=CC   --mode=link gcc -I../include -g -O2   -o test test.o ../libs/liba.la ../libs/libb.la
+libtool: link: gcc -I../include -g -O2 -o .libs/test test.o  ../libs/.libs/liba.so ../libs/.libs/libb.so
+</code></p></li>
+<li><p>ls libs/.libs
+<code>
+$ ls libs/.libs/
+liba.a  liba.la  liba.lai  liba.o  liba.so  liba.so.0  liba.so.0.0.0  libb.a  libb.la  libb.lai  libb.o  libb.so  libb.so.0  libb.so.0.0.0
+</code></p></li>
+</ul>
+
+
+<hr />
+
+<p><a name = "ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/8916425/how-to-create-a-shared-library-so-in-an-automake-script">How to create a shared library (.so) in an automake script?</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Libtool初探]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/18/study-on-the-libtool/"/>
+    <updated>2014-05-18T05:15:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/18/study-on-the-libtool</id>
+    <content type="html"><![CDATA[<p>之前討論的<a href="http://wen00072.github.io/blog/2014/05/13/study-on-gnu-build-system-autotools">autotools</a>中，偷懶沒去看libtool。後來想到手上參考的資料沒有使用autotool產生shared library的方式。想要補充後發現和libtool有關。看來出來混還是要還的。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#intr">概論</a></li>
+<li><a href="#ex">範例</a>
+
+<ul>
+<li><a href="#ex-prg">測試程式</a></li>
+<li><a href="#ex-mk">測試Makefile</a>
+
+<ul>
+<li><a href="#ex-lib">使用libtool編譯函式庫</a></li>
+<li><a href="#ex-exec">使用libtool編譯執行檔</a></li>
+</ul>
+</li>
+<li><a href="#ex-inst">安裝</a></li>
+</ul>
+</li>
+<li><a href="#ref">參考資料及資源</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="intr"></a></p>
+
+<h2>概論</h2>
+
+<p>autotool想要處理不同平台之間的移植性問題。而shared library部份的問題是：</p>
+
+<ul>
+<li>不同平台會有不同格式，舉例來說，在Linux下面的shared library的副檔名是so；而在Windows平台上面會是dll的副檔名。</li>
+<li>因為平台不同，shared library可能功能相同但是API稍有不同的</li>
+<li>Header file可能名稱不同</li>
+<li>&hellip;</li>
+</ul>
+
+
+<p>處理這些問題，應用程式可能會寫了一堆很噁心的<code>#ifdef</code>來呼叫不同平台處理不同的shared library的API。這樣一來不但損害程式碼可讀性，也提高的程式碼的維護成本。所以GNU提出了libtool來解決這樣的問題。</p>
+
+<p>從<a href="http://www.gnu.org/software/libtool/manual/html_node/Introduction.html#Introduction">這邊</a>可以看到，GNU libtool使用下面的方式來處理平台移植性的中shared library的問題。</p>
+
+<ul>
+<li>用libtool這個script去封裝平台相依性以及提供存取介面</li>
+<li>使用者透過libtool這個script存取封裝的資料</li>
+</ul>
+
+
+<p>因為libtool提供了和平台無關的share library統一介面。Shared library的使用者可以透過autotools安心使用shared library；而Shared library開發者可以安心的使用libtool產生不同平台使用的shared library。</p>
+
+<p><code>libtool --help</code> 可以看到有<code>--mode</code>參數。他的合法選項為</p>
+
+<ul>
+<li>clean
+
+<ul>
+<li>從build目錄刪除檔案</li>
+</ul>
+</li>
+<li>compile
+
+<ul>
+<li>把原始碼編譯成libtool object</li>
+</ul>
+</li>
+<li>execute
+
+<ul>
+<li>自動設定library path 並執行特定檔案</li>
+</ul>
+</li>
+<li>finish
+
+<ul>
+<li>  結束libtool library 安裝</li>
+</ul>
+</li>
+<li>install
+
+<ul>
+<li>安裝library或是執行檔</li>
+</ul>
+</li>
+<li>link
+
+<ul>
+<li>產生library或是執行檔</li>
+</ul>
+</li>
+<li>uninstall
+
+<ul>
+<li>反安裝library或是執行檔</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex"></a></p>
+
+<h2>範例</h2>
+
+<ul>
+<li>測試環境: Ubuntu 12.04.4</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex-prg"></a></p>
+
+<h3>測試程式碼</h3>
+
+<p><a href="http://wen00072.github.io/blog/2014/06/07/dry-test-file-template">範例程式細節在這邊</a>，檔案各別重新分配到<code>src</code>, <code>include</code>, <code>libs</code>這三個目錄。不想看code只要知道每個檔案都有參考到某個自訂的header file就好了。重點在<a href="#ex-mk">Makefile</a>如何使用libtool的部份。</p>
+
+<pre><code class="text 測試程式樹狀架構">├── include
+│   ├── liba.h
+│   └── libb.h
+├── libs
+│   ├── liba.c
+│   ├── libb.c
+│   └── Makefile
+├── Makefile
+└── src
+    ├── Makefile
+    └── test.c
+</code></pre>
+
+<hr />
+
+<p><a name="ex-mk"></a></p>
+
+<h3>測試Makefile</h3>
+
+<p>主要demo libtool的部份在這邊。 ./Makefile 主要只是按照指定目錄進入編譯或清除</p>
+
+<pre><code class="makefile ./Makefile">COMPILE_DIRS = libs src
+INC_DIR=$(shell pwd)/include
+
+.PHONY: all
+
+all:
+    for i in $(COMPILE_DIRS); do make -C $$i INC_DIR=$(INC_DIR); done
+
+clean:
+    for i in $(COMPILE_DIRS); do make -C $$i INC_DIR=$(INC_DIR) clean; done
+</code></pre>
+
+<hr />
+
+<p><a name="ex-lib"></a></p>
+
+<h4>使用libtool編譯函式庫</h4>
+
+<p>libs/Makefile大概描述如下</p>
+
+<ul>
+<li>產生兩個libraries, liba.a(靜態函式庫)和libb.so(動態函式庫)</li>
+<li>編譯時使用&ndash;mode=compile作為參數</li>
+<li>連結時使用&ndash;mode=link作為參數，都是指定gcc產生*.la檔案</li>
+<li>靜態和動態的參數差別為是否有指定runtime elf搜尋路徑<code>-rpath</code>
+
+<ul>
+<li><code>-rpath</code>加入後libtools會產生 <strong>動態和靜態兩種函式庫</strong> ，不加看起來只有產生靜態函式庫</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="makefile libs/Makefile">LIBTOOL=libtool
+SRCS = liba.c libb.c
+OBJS = $(patsubst %.c, %.o, $(SRCS))
+CFLAGS = -I$(INC_DIR)
+CC = gcc
+
+TARGET=liba.la libb.la
+
+all: $(OBJS) $(TARGET)
+
+liba.la: liba.lo
+    $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $^
+
+libb.la: libb.lo
+    $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $^ -rpath /usr/local/lib
+
+%.o:%.c
+    $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c $^
+
+clean:
+    rm -rf $(OBJS) .libs *.lo $(TARGET) *.a
+</code></pre>
+
+<p>先來看編譯程式碼的輸出
+<code>
+libtool --mode=compile gcc -I../include -c liba.c
+libtool: compile:  gcc -I../include -c liba.c  -fPIC -DPIC -o .libs/liba.o
+libtool: compile:  gcc -I../include -c liba.c -o liba.o &gt;/dev/null 2&gt;&amp;1
+libtool --mode=compile gcc -I../include -c libb.c
+libtool: compile:  gcc -I../include -c libb.c  -fPIC -DPIC -o .libs/libb.o
+libtool: compile:  gcc -I../include -c libb.c -o libb.o &gt;/dev/null 2&gt;&amp;1
+libtool --mode=link gcc -I../include -o liba.la liba.lo
+libtool: link: ar cru .libs/liba.a .libs/liba.o
+libtool: link: ranlib .libs/liba.a
+libtool: link: ( cd ".libs" &amp;&amp; rm -f "liba.la" &amp;&amp; ln -s "../liba.la" "liba.la" )
+libtool --mode=link gcc -I../include -o libb.la libb.lo -rpath /usr/local/lib
+libtool: link: gcc -shared  -fPIC -DPIC  .libs/libb.o      -Wl,-soname -Wl,libb.so.0 -o .libs/libb.so.0.0.0
+libtool: link: (cd ".libs" &amp;&amp; rm -f "libb.so.0" &amp;&amp; ln -s "libb.so.0.0.0" "libb.so.0")
+libtool: link: (cd ".libs" &amp;&amp; rm -f "libb.so" &amp;&amp; ln -s "libb.so.0.0.0" "libb.so")
+libtool: link: ar cru .libs/libb.a  libb.o
+libtool: link: ranlib .libs/libb.a
+libtool: link: ( cd ".libs" &amp;&amp; rm -f "libb.la" &amp;&amp; ln -s "../libb.la" "libb.la" )
+</code>
+如果把gcc換成cc會發現不會有FPIC參數跑出來，詳細原因不明。</p>
+
+<p>可以看到</p>
+
+<ul>
+<li>libtool產生兩種object檔
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Position-independent_code">PIC</a>版本放在libs/.libs
+
+<ul>
+<li>一般的就放在工作目錄下</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>現在libs下面檔案除了object檔案外，還多了<em>.lo和</em>.la檔案。</p>
+
+<pre><code>$ ls libs
+liba.c  liba.la  liba.lo  liba.o  libb.c  libb.la  libb.lo  libb.o  Makefile
+</code></pre>
+
+<p>我們先看lo檔，可以看到lo檔存放PIC和一般的object檔案位置資訊。</p>
+
+<pre><code>$ cat liba.lo 
+# liba.lo - a libtool object file
+# Generated by libtool (GNU libtool) 2.4.2 Debian-2.4.2-1ubuntu1
+#
+# Please DO NOT delete this file!
+# It is necessary for linking the library.
+
+# Name of the PIC object.
+pic_object='.libs/liba.o'
+
+# Name of the non-PIC object
+non_pic_object='liba.o'
+</code></pre>
+
+<p>而la檔案則是存放library資訊，我們可以看到靜態和動態主要的差別是有沒有指定so檔名稱以及存放路徑</p>
+
+<pre><code>$ diff libs/libb.la  libs/liba.la 
+1c1
+&lt; # libb.la - a libtool library file
+---
+&gt; # liba.la - a libtool library file
+8c8
+&lt; dlname='libb.so.0'
+---
+&gt; dlname=''
+11c11
+&lt; library_names='libb.so.0.0.0 libb.so.0 libb.so'
+---
+&gt; library_names=''
+14c14
+&lt; old_library='libb.a'
+---
+&gt; old_library='liba.a'
+25,28c25,28
+&lt; # Version information for libb.
+&lt; current=0
+&lt; age=0
+&lt; revision=0
+---
+&gt; # Version information for liba.
+&gt; current=
+&gt; age=
+&gt; revision=
+41c41
+&lt; libdir='/usr/local/lib'
+---
+&gt; libdir=''
+</code></pre>
+
+<hr />
+
+<p><a name="ex-exec"></a></p>
+
+<h4>使用libtool編譯執行檔</h4>
+
+<p>src/Makefile中主要就是連結的時候除了指定object檔案外，指定連結la檔案而不是<em>.a或是</em>.so檔案。libtool會幫你從la檔案中找到對的library binary。</p>
+
+<pre><code class="makefile src/Makefile">LIBTOOL=libtool
+SRCS = test.c
+OBJS = $(patsubst %.c, %.o, $(SRCS)) ../libs/libb.la ../libs/liba.la
+CFLAGS = -I$(INC_DIR)
+CC = gcc
+
+TARGET=test
+
+$(TARGET): $(OBJS)
+    $(LIBTOOL) --mode=link $(CC) $(CFLAGS) -o $@ $(OBJS)
+
+%.o:%.c
+    $(LIBTOOL) --mode=compile $(CC) $(CFLAGS) -c $^
+
+clean:
+    rm -rf $(OBJS) .libs *.lo $(TARGET)
+</code></pre>
+
+<hr />
+
+<p><a name="ex-inst"></a></p>
+
+<h3>安裝</h3>
+
+<ul>
+<li>如果<code>--mode=link</code>有加<code>-rpath</code>資訊，libtool會支援安裝功能：
+
+<ul>
+<li>libtool &ndash;mode=install cp libs/libb.la /usr/local/lib</li>
+<li>另外值得一提的是安裝時la檔案是有被更動的。比對如下</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code>$ diff libs/libb.la  /usr/local/lib/libb.la 
+31c31
+&lt; installed=no
+---
+&gt; installed=yes
+</code></pre>
+
+<ul>
+<li><p>執行檔:</p>
+
+<ul>
+<li>libtool &ndash;mode=install install -c src/.libs/my_test /usr/local/bin</li>
+</ul>
+</li>
+<li><p>靜態函式庫部份目前還沒試出來，不確定是libtool只支援安裝動態函式庫還是沒有找到正確的方式。</p></li>
+</ul>
+
+
+<hr />
+
+<p>應該有人會問怎麼沒看到autotool怎麼用，這當作下次題目吧。</p>
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料及資源</h2>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/GNU_Libtool">Wikipedia: GNU Libtool</a></li>
+<li><a href="http://www.gnu.org/software/libtool/manual/html_node/index.html">GNU Libtool手冊</a>
+
+<ul>
+<li>本文內容主要參考第三章</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

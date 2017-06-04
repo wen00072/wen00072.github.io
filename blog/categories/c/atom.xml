@@ -1,0 +1,2079 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: C | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/c/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g' Packet Reply Is Too Long:]]></title>
+    <link href="http://wen00072.github.io/blog/2017/06/04/qemu-x86-64-with-gdb/"/>
+    <updated>2017-06-04T16:11:15+08:00</updated>
+    <id>http://wen00072.github.io/blog/2017/06/04/qemu-x86-64-with-gdb</id>
+    <content type="html"><![CDATA[<h2>問題描述</h2>
+
+<p>本篇文章主要是解決使用gdb 設Qemu x86_64 模擬執行x86_64 buildroot kernel開機的中斷點時遇到下面的錯誤訊息</p>
+
+<p><strong><font color="red">Remote &#39;g&#8217; packet reply is too long:</font></strong></p>
+
+<p>詳細訊息如下
+<code>
+0x0000000000000000 in irq_stack_union ()
+(gdb) b x86_64_start_kernel
+Breakpoint 1 at 0xffffffff8188429b: file arch/x86/kernel/head64.c, line 134.
+(gdb) c
+Continuing.
+Remote 'g' packet reply is too long: 9b428881ffffffff0000000000000000010100c000000000ffffffff00000000804001000000000080400100000000000000000000000000f03f8081ffffffff00a080010000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000009b428881ffffffff4600000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000801f0000
+</code></p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#qxg-env">測試環境</a></li>
+<li><a href="#qxg-prepare">buildroot 事先準備</a></li>
+<li><a href="#qxg-fix">gdb 錯誤訊息解法</a></li>
+<li><a href="#qxg-pkg">懶人包</a>
+
+<ul>
+<li><a href="#qxg-tty">讓qemu-system-x86_64 在console 可以登入</a></li>
+</ul>
+</li>
+<li><a href="#qxg-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="qxg-env"></a></p>
+
+<h2>測試環境</h2>
+
+<ul>
+<li><a href="https://git.buildroot.net/buildroot">Buildroot</a>
+
+<ul>
+<li>Commit: <code>bfc90a5621c680000f8b19e8afea944da5c2a469</code></li>
+</ul>
+</li>
+<li>Target kernel 版本</li>
+</ul>
+
+
+<pre><code># uname -a
+Linux buildroot 4.9.6 #2 SMP Sun Jun 4 18:46:27 CST 2017 x86_64 GNU/Linux
+</code></pre>
+
+<ul>
+<li>Qemu 執行指令</li>
+</ul>
+
+
+<pre><code>$ qemu-system-x86_64 -M pc -kernel output/images/bzImage                        \
+                     -drive file=output/images/rootfs.ext2,if=virtio,format=raw \
+                     -append "root=/dev/vda console=ttyS0"                      \
+                     -net nic,model=virtio -net user -nographic -S -s
+</code></pre>
+
+<p>基本上是從<a href="https://git.buildroot.net/buildroot/tree/board/qemu/x86_64/readme.txt">這邊</a>衍生出來的，挑幾個重點</p>
+
+<ul>
+<li><code>-append "root=/dev/vda console=ttyS0"</code>
+
+<ul>
+<li>指定serial port console，如此一來就可以在terminal 直接顯示Qemu 的執行文字，不過你需要<a href="#qxg-tty">修改</a>rootfs 的<code>/etc/inittab</code>才能在terminal login</li>
+</ul>
+</li>
+<li><code>-S -s</code>
+
+<ul>
+<li>開機的時候就停下來，並開啟port 1234讓gdb從遠端連入除錯</li>
+</ul>
+</li>
+<li><code>-nographic</code>
+
+<ul>
+<li>懶得跳一個視窗，直接terminal當console使用</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="qxg-prepare"></a></p>
+
+<h2>buildroot 事先準備</h2>
+
+<ol>
+<li>下載buildroot
+
+<ul>
+<li><code>git clone https://git.buildroot.net/buildroot</code></li>
+</ul>
+</li>
+<li>設定預設config
+
+<ul>
+<li><code>make qemu_x86_64_defconfig</code></li>
+</ul>
+</li>
+<li>手動設定buildroot config如gcc版本，客製化rootfs套件等
+
+<ul>
+<li><code>make menuconfig</code></li>
+</ul>
+</li>
+<li>設定Linux kernel 選項，主要是打開debug symbol
+
+<ul>
+<li><code>make linux-menuconfig</code></li>
+</ul>
+</li>
+<li>編譯rootfs及kernel
+
+<ul>
+<li><code>make</code></li>
+</ul>
+</li>
+<li><a href="#qxg-tty">設定可以從console 登入</a></li>
+</ol>
+
+
+<p><a name="qxg-fix"></a></p>
+
+<h2>gdb 錯誤訊息解法</h2>
+
+<p>從<a href="http://wiki.osdev.org/QEMU_and_GDB_in_long_mode">OSDev: QEMU and GDB in long mode</a>可以看到可以使用下面指令頂著先（workaround）</p>
+
+<ul>
+<li><code>disconnect</code></li>
+<li><code>set arch i386:x86-64</code></li>
+<li><code>target remote 127.0.0.1:1234</code></li>
+</ul>
+
+
+<p>然而作為組裝工，信奉偷懶就是美德，每次要打這麼多指令實在很麻煩。因此我將這些麻煩的方式使用下面的指令自動化</p>
+
+<pre><code>gdb ./vmlinux  -ex "target remote localhost:1234"       \
+               -ex "break x86_64_start_kernel"          \
+               -ex "continue"                           \
+               -ex "disconnect"                         \
+               -ex "set architecture i386:x86-64:intel" \
+               -ex "target remote localhost:1234"
+</code></pre>
+
+<p>執行後畫面輸出部份節錄如下
+<code>
+Reading symbols from ./vmlinux...done.
+Remote debugging using localhost:1234
+0x0000000000000000 in irq_stack_union ()
+Breakpoint 1 at 0xffffffff8188429b: file arch/x86/kernel/head64.c, line 134.
+Continuing.
+Remote 'g' packet reply is too long: 9b428881ffffffff0000000000000000010100c000000000ffffffff00000000804001000000000080400100000000000000000000000000f03f8081ffffffff00a080010000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000009b428881ffffffff4600000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000801f0000
+Ending remote debugging.
+The target architecture is assumed to be i386:x86-64:intel
+Remote debugging using localhost:1234
+x86_64_start_kernel (real_mode_data=0x14080 &lt;cpu_tss+6848&gt; &lt;error: Cannot access memory at address 0x14080&gt;) at arch/x86/kernel/head64.c:134
+134 {
+(gdb) n
+151     cr4_init_shadow();
+</code></p>
+
+<p>由於gdb command file 遇到錯誤就會停下來，所以把上面的指令放到一個檔案中，執行gdb時將會停在<code>continue</code>這邊，目前懶的找解法了。有興趣的朋友可以自行研究。</p>
+
+<p><a name="qxg-pkg"></a></p>
+
+<h2>懶人包</h2>
+
+<ul>
+<li><p>Buildroot
+<code>
+git clone https://git.buildroot.net/buildroot
+cd buildroot
+make qemu_x86_64_defconfig
+make menuconfig
+make linux-menuconfig
+make
+</code></p></li>
+<li><p>啟動Qemu
+假設在buildroot top directory下
+<code>
+qemu-system-x86_64 -M pc -kernel output/images/bzImage                          \
+                   -drive file=output/images/rootfs.ext2,if=virtio,format=raw \
+                   -append "root=/dev/vda console=ttyS0"                      \
+                   -net nic,model=virtio -net user -nographic -S -s
+</code></p></li>
+<li><p>gdb
+假設在buildroot top directory下
+<code>
+cd output/build/linux-4.9.6
+gdb ./vmlinux  -ex "target remote localhost:1234"       \
+             -ex "break x86_64_start_kernel"          \
+             -ex "continue"                           \
+             -ex "disconnect"                         \
+             -ex "set architecture i386:x86-64:intel" \
+             -ex "target remote localhost:1234"
+</code></p></li>
+</ul>
+
+
+<p><a name="qxg-tty"></a></p>
+
+<h3>讓qemu-system-x86_64 在console 可以登入</h3>
+
+<p>在<code>/etc/inittab</code>加入下面這行<code>ttyS0::respawn:/sbin/getty -L  ttyS0 0 vt100 # GENERIC_SERIAL</code></p>
+
+<pre><code class="text /etc/inittab"> # Put a getty on the serial port
+ tty1::respawn:/sbin/getty -L  tty1 0 vt100 # GENERIC_SERIAL
++ttyS0::respawn:/sbin/getty -L  ttyS0 0 vt100 # GENERIC_SERIAL
+</code></pre>
+
+<p><a name="qxg-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://wiki.osdev.org/QEMU_and_GDB_in_long_mode">OSDev: QEMU and GDB in long mode</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[筆記 - GNU Coding Style]]></title>
+    <link href="http://wen00072.github.io/blog/2016/12/18/review-gnu-coding-style/"/>
+    <updated>2016-12-18T21:34:23+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/12/18/review-gnu-coding-style</id>
+    <content type="html"><![CDATA[<p>這是沒事亂看的，主要找和C 語言相關的描述，就不要在意文章組織和可讀性了。</p>
+
+<p>閱讀版本：<code>July 25, 2016</code></p>
+
+<h2>CH 3</h2>
+
+<ul>
+<li>要保證C程式碼可移植性，compile flag可以使用<code>--ansi</code>, <code>--posix</code>, <code>--compatible</code></li>
+<li>可以使用下面的方式取代原本的巨集條件編譯，現在的gcc已經可以產生一樣的結果了。</li>
+</ul>
+
+
+<pre><code class="c 原本程式碼">#ifdef HAS_FOO
+...
+#else
+...
+#endif
+</code></pre>
+
+<pre><code class="c 建議使用方式">if (HAS_FOO)
+...
+else
+...
+</code></pre>
+
+<h2>Ch 4</h2>
+
+<ul>
+<li><code>--pedantic</code>：產生所有ISO C和ISO C++規範的警告訊息，並將所有C的extension退貨</li>
+<li>冷門：POSIX 2.0規範du/df的unit是512 bytes</li>
+</ul>
+
+
+<h3>4.2 Writing Robust Programs</h3>
+
+<ul>
+<li>使用動態配置資料方式避免資料長度限制，包含檔案名稱長度、一行長度等</li>
+<li>讀檔案時不得丟棄<code>NUL</code>字元以及不可列印字元，並需相容多位元編碼方式如<code>UTF-8</code></li>
+<li>除非要刻意忽略錯誤，使用system call必定檢查回傳值，並使用<code>perror</code>或<code>strerror</code>等方式列印出錯誤訊息</li>
+<li>使用<code>mallic</code>及<code>relloc</code>一定要檢查回傳值是否為NULL。當使用<code>relloc</code>要求分配比原本空間更小時更需要注意，因為實作關係可能最後分配的空間block可能和原本的不同</li>
+<li>使用<code>free</code>後就不要留戀還在裏面的資料了吧</li>
+<li>一旦<code>malloc</code>出現錯誤時，非互動程式請將他視為嚴重錯誤。互動程式就儘早自殺(<code>abort()</code>)吧</li>
+<li>使用<code>getopt_long</code>處理命令列參數</li>
+<li>避免操作低階UNIX介面，以減少相容性問題</li>
+<li>在程式中檢查到不可能發生的狀況，直接給他死。既然不可能發生了，顯然那邊出大問題，儘早發現儘早處理。因為就是不可能發生，而死掉一定從這邊找起，寫程式時就在這邊提供更多註解和資訊吧</li>
+<li>使用全域變數或static 變數儘量給初值。（不確定是否有看懂，<a href="https://www.gnu.org/prep/standards/html_node/Semantics.html#Semantics">出處</a>）</li>
+<li>不要從回傳值傳回發生錯誤的次數，因為只有256個狀態而已，很容易overflow的。</li>
+<li>使用存放暫存檔到<code>$TMP_DIR</code>環境變數而不是閉著眼睛寫到<code>/tmp</code>下面</li>
+<li>同樣的，暫存檔請將權限設為0600確保資訊不會洩漏</li>
+</ul>
+
+
+<h3>CH 4.3 Library Behavior</h3>
+
+<ul>
+<li>儘量讓函數reentrant</li>
+<li>Name covention 很重要，因為library是給別人用，粗心大意就出現name conflict 的問題，以下是GNU的建議
+
+<ul>
+<li>external 函數和變數需加<code>prefix</code>，prefix為兩個字元以上（後面英文太爛看不懂）</li>
+<li>external 但是不想讓使用者看到（或是文件不會提到的）的函數以<code>_</code>開頭加上prefix用來辨識這是內部函數</li>
+<li>內部static 就請自便</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>CH 4.4 Formatting Error Messages</h3>
+
+<ul>
+<li>錯誤訊息格式，我只挑一個，有興趣看全文請參考<a href="https://www.gnu.org/prep/standards/html_node/Errors.html#Errors">這邊</a>
+
+<ul>
+<li><code>sourcefile:lineno: message</code></li>
+</ul>
+</li>
+</ul>
+
+
+<h3><a href="https://www.gnu.org/prep/standards/html_node/User-Interfaces.html#User-Interfaces">CH 4.5 Standards for Interfaces Generally</a></h3>
+
+<p>很奇怪的，單字句子都看懂，就是不懂他要表達啥。只能猜測說不要生出一堆很功能類似的執行檔，而是用最少執行檔加上參數取代。以及執行檔儘量device independent</p>
+
+<h3>4.12 File Usage</h3>
+
+<p>檔案有可能會存放在readonly FS，如果要寫東西寫到必定是可寫的目錄如<code>/var</code>或是<code>/tmp</code>目錄中</p>
+
+<h2>Writing C</h2>
+
+<ul>
+<li>單行最多79個字元</li>
+</ul>
+
+
+<h3>註解</h3>
+
+<ul>
+<li>檔案開頭請加註解說明該檔案的用途</li>
+<li>用英文寫註解</li>
+<li>每個函數都要說明該函數的用法，參數，回傳值等資訊</li>
+<li><code>#endif</code> 後加上對應的<code>#ifdef</code>或<code>#ifndef</code> 說明，範例如下：</li>
+</ul>
+
+
+<pre><code class="c">#ifdef ASDF
+...
+#else  /* ASDF */
+...
+#endif /* not ASDF */
+
+#ifnef QWER
+...
+#endif /* not QWER */
+</code></pre>
+
+<h3>Clean Use of C Constructs</h3>
+
+<ul>
+<li>所有的宣告都要明確，例如不要因為預設回傳值是<code>int</code>就省略要回傳<code>int</code>的函數對應宣告</li>
+<li>視情況自行決定是否要使用嚴格的語法檢查如<code>-Wall</code>，編譯器是我們的奴隸，你自己清楚要做什麼就好。不要為了避免嚴格語法檢查硬上一些奇怪的語法導致可讀性變差</li>
+<li><code>extern</code> 要嘛全部放在C檔案的同一塊地方，要嘛集中到header file，不要東一撮西一撮。更嚴禁在函數內使用</li>
+<li>不要在函數中重複使用一些無意義名稱的變數如<code>tmp</code>之類的，個別變數就給予個別有意義的變數名稱，不要偷懶。也可以在需要的最小scope宣告變數增加可讀性。</li>
+<li>變數要注意是否和global 變數或是更大scope名稱相同，您可以開啟<code>-Wshadow</code>協助偵測這類的錯誤</li>
+<li>多個變數就個別宣告型態，一方面增加可註解的空間，一方面可讀性也較佳。範例如下</li>
+</ul>
+
+
+<pre><code class="c">/* Bad */
+int i_am_bad, i_am_super_bad;
+
+/* Good */
+int i_am_good   = 0;
+int i_am_better = 0;
+</code></pre>
+
+<ul>
+<li>不要在判斷式加入assign，這樣很容易出錯，範例如下</li>
+</ul>
+
+
+<pre><code class="c">    /* Bad */
+    if ((my_id = get_id(my_record)) != NONE) {
+        /* Prcess data */
+    }
+    else {
+        return NO_DATA;
+    }
+</code></pre>
+
+<pre><code class="c">    /* Good */
+    my_id = get_id(my_record);
+    if (my_id == NONE) {
+        return NO_DATA;
+    }
+    /* Prcess data */
+</code></pre>
+
+<h3>Naming Variables, Functions, and Files</h3>
+
+<ul>
+<li>Global name 要有意義，不要亂取。
+
+<ul>
+<li>ps: 個人會加個<code>g</code> prefix提醒一下</li>
+</ul>
+</li>
+<li>縮寫如src等可以使用。但是請確定讀者可以知道該縮寫或是該縮寫可能造成讀者模糊混淆</li>
+<li>使用常數時儘量用<code>enum</code>取代巨集</li>
+</ul>
+
+
+<h3>Portability between CPUs</h3>
+
+<p><strong><font color="red">完全看不懂，抱歉</font></strong></p>
+
+<h3>剩下的是平台相容性和國際化字元等，沒興趣所以跳過</h3>
+
+<h3>參考資料</h3>
+
+<ul>
+<li><a href="https://www.gnu.org/prep/standards/html_node/">GNU Coding Standards</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Trace C 程式碼的vim設定]]></title>
+    <link href="http://wen00072.github.io/blog/2016/11/26/vim-setup-for-trace-c-code/"/>
+    <updated>2016-11-26T04:03:41+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/11/26/vim-setup-for-trace-c-code</id>
+    <content type="html"><![CDATA[<p>分享使用<code>vim</code> 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體<code>cscope</code>和<code>ctags</code>來trace C語言的程式碼。</p>
+
+<ul>
+<li>致謝，感謝網友<a href="http://scottt.tw/">Scott</a>介紹vim register概念，<a href="http://yodalee.blogspot.tw/">葉闆</a>介紹的tagbar，和Kyle Lin介紹的airline。</li>
+</ul>
+
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#vtr-env">測試環境</a></li>
+<li><a href="#vtr-set">設定.vimrc以及Vundle plugins</a>
+
+<ul>
+<li>  <a href="#vtr-set-prep">事前準備</a></li>
+<li>  <a href="#vtr-set-insvd">安裝Vundle</a></li>
+<li>  <a href="#vtr-set-vdplg">我安裝的Vundle Plugins</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-ed">編輯器相關</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-al">airline</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-al-pre">安裝準備</a></li>
+<li><a href="#vtr-set-vdplg-al-set">設定airline</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-vdplg-ed-itl">indentLine</a></li>
+<li><a href="#vtr-set-vdplg-vbw">vim-better-whitespace</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-vdplg-tr">Trace 程式碼相關</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-tr-cm">cscope_maps</a></li>
+<li><a href="#vtr-set-vdplg-tr-se">SrcExpl</a></li>
+<li><a href="#vtr-set-vdplg-tr-tl">taglist</a></li>
+<li><a href="#vtr-set-vdplg-tr-nd">nerdtree</a></li>
+<li><a href="#vtr-set-vdplg-tr-tri">Trinity</a></li>
+<li><a href="#vtr-set-vdplg-tr-tgb">tagbar</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>  <a href="#vtr-set-misc">和Plugin 無關的設定</a>
+
+<ul>
+<li><a href="#vtr-set-misc-ed">編輯器和顯示特殊字元相關設定</a></li>
+<li><a href="#vtr-set-misc-ind">Indent相關設定</a></li>
+<li><a href="#vtr-set-misc-msc">其他</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#vtr-test">參考資料</a></li>
+<li><a href="#vtr-pkg">懶人包</a></li>
+</ul>
+
+
+<p><a name="vtr-env"></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code class="text">$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.5 LTS
+Release:    14.04
+Codename:   trusty
+
+$ ctags --version
+Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
+...
+
+$ cscope --version
+cscope: version 15.8a
+
+$ vim --version
+VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Jan  2 2014 19:39:47)
+...
+</code></pre>
+
+<p><a name="vtr-set"></a></p>
+
+<h2>設定.vimrc以及Vundle plugins</h2>
+
+<p><a name="vtr-set-prep"></a></p>
+
+<h3>事前準備</h3>
+
+<p>您需要確認</p>
+
+<ul>
+<li>vim版本為7.4以上</li>
+<li>安裝ctags和cscope，指令如下
+<code>sudo apt-get install exuberant-ctags cscope</code></li>
+</ul>
+
+
+<p><a name="vtr-set-insvd"></a></p>
+
+<h3>安裝Vundle</h3>
+
+<p><code>Vundle</code>是vim plugin 管理工具，他可以透過URL, github, 以及local FS等方式安裝甚至更新Plugin。類似的工具還有不少，我只是挑看到的第一個而已。</p>
+
+<p><code>Vundle</code>常用的指令如下，還蠻容易望文生義所以我就不解釋了</p>
+
+<ul>
+<li><code>:PluginList</code></li>
+<li><code>:PluginInstall</code></li>
+<li><code>:PluginClean</code></li>
+<li><code>:PluginUpdate</code></li>
+</ul>
+
+
+<p>安裝方式如下</p>
+
+<ul>
+<li><p>首先你要下載<code>Vundle</code>，指令如下
+<code>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim</code></p></li>
+<li><p>接下來在你的.vimrc加入下面這段，我是從<a href="https://github.com/VundleVim/Vundle.vim">官方網頁</a>改的，其實只是把他的範例Plugin幹掉並加上分隔線及分隔線內的註解而已</p></li>
+</ul>
+
+
+<pre><code class="text .vimrc 要加的部份">"====================================================================
+" Start vundle
+"====================================================================
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
+
+" let Vundle manage Vundle, required
+Plugin 'VundleVim/Vundle.vim'
+
+"===============================================================
+" Write your plugins here
+"===============================================================
+Plugin 'Yggdroot/indentLine'
+Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'vim-airline/vim-airline'
+Plugin 'tpope/vim-fugitive'
+Plugin 'chazy/cscope_maps'
+Plugin 'vim-scripts/taglist.vim'
+Plugin 'scrooloose/nerdtree'
+Plugin 'wesleyche/SrcExpl'
+Plugin 'wesleyche/Trinity'
+Plugin 'majutsushi/tagbar'
+
+"====================================================================
+" Run vundle
+"====================================================================
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+"
+" Brief help
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+"
+" see :h vundle for more details or wiki for FAQ
+" Put your non-Plugin stuff after this line
+</code></pre>
+
+<p>注意下面列出的這幾行statements，你要新增或移除Plugin就是改這個地方。這些Plugin將會在後面介紹。剛好我要安裝的Plugin都是在<a href="https://github.com">GitHub</a>上開發或有mirror。而<code>Vundle</code>可以用直接指定Plugin 專案在GitHub相對路徑即可安裝。這些描述也是<code>Vundle</code>載入Plugin　的順序，沒寫對順序有可能有相依問題請自行注意。</p>
+
+<p>例如<code>https://github.com/Yggdroot/indentLine</code> 就寫成<code>Yggdroot/indentLine</code></p>
+
+<pre><code class="text 我安裝的Plugin">"===============================================================
+" Write your plugins here
+"===============================================================
+Plugin 'Yggdroot/indentLine'
+Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'vim-airline/vim-airline'
+Plugin 'tpope/vim-fugitive'
+Plugin 'chazy/cscope_maps'
+Plugin 'vim-scripts/taglist.vim'
+Plugin 'scrooloose/nerdtree'
+Plugin 'wesleyche/SrcExpl'
+Plugin 'wesleyche/Trinity'
+Plugin 'majutsushi/tagbar'
+</code></pre>
+
+<ul>
+<li>確定新增/刪除Plugin後，就可以執行vim/gvim，使用下面命令
+
+<ul>
+<li><code>:PluginInstall</code></li>
+<li><code>:PluginClean</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-set-vdplg"></a></p>
+
+<h3>我安裝的Vundle Plugins</h3>
+
+<p>因為安裝方式已經在上面了，這邊就以介紹為主</p>
+
+<p><a name="vtr-set-vdplg-ed"></a></p>
+
+<h4>編輯器相關</h4>
+
+<p><a name="vtr-set-vdplg-al"></a></p>
+
+<h5>airline</h5>
+
+<p><a name="vtr-set-vdplg-al-pre"></a></p>
+
+<h6>安裝準備</h6>
+
+<p>先看圖，圖中最下方的那行就是airline，可以顯示一些有用的資訊
+<img src=/images/vim_ind11.jpg></p>
+
+<p>由左到右我們可以看到Vim 模式，Git branch 等資訊。以及一些比較特別的符號，這表示我們需要</p>
+
+<ul>
+<li>讓airline取得git資訊</li>
+<li>讓airline取得特別符號</li>
+</ul>
+
+
+<p>也就是說，在安裝<code>airline</code>前要做一些前置動作如下</p>
+
+<ul>
+<li>讓airline取得git資訊
+
+<ul>
+<li>很簡單，安裝<code>vim-fugitive</code> plugin即可</li>
+</ul>
+</li>
+<li>讓airline取得特別符號
+這也不難，就是安裝特殊字型，並且設定GUI時存取這些字型。方式如下</li>
+</ul>
+
+
+<p><strong>取得字型</strong></p>
+
+<pre><code class="text">git clone https://github.com/powerline/fonts
+</code></pre>
+
+<p><strong>安裝字型</strong></p>
+
+<pre><code class="text">cd fonts &amp;&amp; ./install.sh
+</code></pre>
+
+<p><strong> .vimrc中指定安裝的字型 </strong></p>
+
+<pre><code class="text">set guifont=Inconsolata\ for\ Powerline\ 20
+</code></pre>
+
+<p><a name="vtr-set-vdplg-al-set"></a></p>
+
+<h6>設定airline</h6>
+
+<p>把下面的資料放入<code>.vimrc</code>即可</p>
+
+<pre><code class="text">let g:airline_powerline_fonts = 1
+set laststatus=2
+</code></pre>
+
+<p><a name="vtr-set-vdplg-ed-itl"></a></p>
+
+<h5>indentLine</h5>
+
+<p>當Ident為空白增加以下的Indent 對齊參考資線
+<img src=/images/vim_ind2.jpg></p>
+
+<p><strong>注意此Plugin在Ident為tab同時又加上顯示tab字元時自動失效，目前workaround就是顯示tab字元為<code>|</code>，接下來以<code>.</code>延伸作為辨別。範例如下：</strong>
+<img src=/images/vim_ind1.jpg></p>
+
+<p><a name="vtr-set-vdplg-vbw"></a></p>
+
+<h5>vim-better-whitespace</h5>
+
+<p>將<a href="http://stackoverflow.com/questions/22273233/what-is-meant-by-%0Atrailing-space-and-whats-the-difference-between-it-and-a-blank">trailing space</a>顯示成明顯的紅色
+<img src=/images/vim_ind3.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr"></a></p>
+
+<h4>Trace 程式碼相關</h4>
+
+<p><a name="vtr-set-vdplg-tr-cm"></a></p>
+
+<h5>cscope_maps</h5>
+
+<p>簡單來說，就是把cscope指令對應到Hot key</p>
+
+<p>先列出find部份的指令
+<code>text
+find : Query for a pattern            (Usage: find c|d|e|f|g|i|s|t name)
+       c: Find functions calling this function
+       d: Find functions called by this function
+       e: Find this egrep pattern
+       f: Find this file
+       g: Find this definition
+       i: Find files #including this file
+       s: Find this C symbol
+       t: Find this text string   
+</code></p>
+
+<p>他的使用方法也很簡單，就是先把游標移動到你要查的statement，再按<code>ctrl</code> + <code>\</code> + <code>c|d|e|f|g|i|s|t 其中一個</code>。</p>
+
+<p>舉例來說，我在下圖中把游標移動到<code>core_sys_select</code>函數後按下<code>ctrl</code> + <code>\</code> + <code>c</code>的結果如下
+<img src=/images/vim_ind4.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-se"></a></p>
+
+<h5>SrcExpl</h5>
+
+<p>當啟動時，您的游標在那個敘述，Source explorer 會切割視窗，印出該敘述的定義。舉例來說，當我游標在138行的<code>free_poll_entry</code>的話，顯示的畫面如下。</p>
+
+<p><img src=/images/vim_ind5.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-tl"></a></p>
+
+<h5>taglist</h5>
+
+<p>列出目前檔案所有symbol並且可以選擇symbol切換到該symbol在檔案中的位置
+<img src=/images/vim_ind6.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-nd"></a></p>
+
+<h5>nerdtree</h5>
+
+<p>以樹狀顯示目前檔案所在目錄結構，看圖就知道
+<img src=/images/vim_ind7.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-tri"></a></p>
+
+<h5>Trinity</h5>
+
+<p>看完以上三個，你可能會覺得奇怪好像沒提到怎麼啟動。這就是<code>Trinity</code>大顯身手的地方了。你安裝Trinity後，再Vundle後面加上下面的敘述就可以有</p>
+
+<ul>
+<li><code>F8</code> : 同時打開或關閉<code>nerdtree</code>, <code>Source explorer</code>, 以及<code>tag list</code></li>
+<li><code>F9</code> : 打開或關閉<code>Source explorer</code></li>
+<li><code>F10</code>: 打開或關閉<code>tag list</code></li>
+<li><code>F11</code>: 打開或關閉<code>nerdtree</code></li>
+</ul>
+
+
+<pre><code class="text .vimrc 的Trinity設定">"====================================================================
+" Trinity Settings
+"====================================================================
+" Open and close all the three plugins on the same time 
+nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt; 
+
+" Open and close the Source Explorer separately 
+nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt; 
+
+" Open and close the Taglist separately 
+nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt; 
+
+" Open and close the NERD Tree separately 
+nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt; 
+</code></pre>
+
+<p>以下是按下<code>F8</code> 的畫面
+<img src=/images/vim_ind8.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-tgb"></a></p>
+
+<h5>tagbar</h5>
+
+<p>網友推荐的taglist改良版 plugin，為什麼不換掉taglist呢？因為我喜歡source explorer。除了安裝Plugin外，我也順便設定按下<code>F7</code>可以切換，設定如下。</p>
+
+<pre><code>"====================================================================
+" Tagbar Settings
+"====================================================================
+" Open and close the tagbar separately 
+nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt; 
+</code></pre>
+
+<p>以下是按下<code>F7</code> 的畫面，可以注意右邊視窗會更進一步地顯示資料結構的成員名稱
+<img src=/images/vim_ind10.jpg></p>
+
+<p><a name="vtr-set-misc"></a></p>
+
+<h3>和Plugin 無關的設定</h3>
+
+<p>以下都加在<code>.vimrc中</code>，建議加到<code>Vundle</code>設定結束後以確保可能會用到的Plugin已經啟動</p>
+
+<p><a name="vtr-set-misc-ed"></a></p>
+
+<h4>編輯器和顯示特殊字元相關設定</h4>
+
+<ul>
+<li>設定gvim 的配色，請自行找Color scheme
+
+<ul>
+<li><code>colorscheme koehler</code></li>
+</ul>
+</li>
+<li>設定gvim 的字型和大小
+
+<ul>
+<li><code>set guifont=inconsolata\ 20</code></li>
+</ul>
+</li>
+<li>將找到的字串設成高亮度
+
+<ul>
+<li><code>set hlsearch</code></li>
+</ul>
+</li>
+<li>游標在的該行背景高亮度
+
+<ul>
+<li><code>set cursorline</code></li>
+</ul>
+</li>
+<li>顯示行號
+
+<ul>
+<li><code>set nu</code></li>
+</ul>
+</li>
+<li>第八十字元地方顯示高亮度區塊（這是連續兩個描述)
+
+<ul>
+<li><code>set colorcolumn=80</code></li>
+<li><code>highlight ColorColumn guibg=#202020</code></li>
+</ul>
+</li>
+<li>顯示tab （這是連續兩個描述)
+
+<ul>
+<li><code>set listchars=tab:»\</code>
+
+<ul>
+<li><strong>注意<code>\</code>後面有一個空白</strong></li>
+</ul>
+</li>
+<li><code>set list</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>效果如下圖
+<img src=/images/vim_ind9.jpg></p>
+
+<p><a name="vtr-set-misc-ind"></a></p>
+
+<h4>Indent相關設定</h4>
+
+<ul>
+<li>Tab相關設定
+
+<ul>
+<li><code>set ts=4</code>
+
+<ul>
+<li>tab space 為4個字元</li>
+</ul>
+</li>
+<li><code>set expandtab</code>
+
+<ul>
+<li>不使用tab，用空白字元代替</li>
+</ul>
+</li>
+<li><code>set shiftwidth=4</code>
+
+<ul>
+<li>Auto indent的移動字元數量</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>visual 模式下一次移動一個indent
+
+<ul>
+<li><code>vnoremap &lt; &lt;gv</code>
+
+<ul>
+<li>往左移動一個indent</li>
+</ul>
+</li>
+<li><code>vnoremap &gt; &gt;gv</code>
+
+<ul>
+<li>往右移動一個indent</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-set-misc-msc"></a></p>
+
+<h4>其他</h4>
+
+<ul>
+<li><code>set clipboard+=unnamed</code>
+
+<ul>
+<li>PRIMARY selection的register <code>"*</code>包含vim的unnamed register。白話講就是其他的APP如gedit中滑鼠選字後可以用<code>"*p</code>貼到vim，同樣的<code>"*y6y</code>的結果可以貼在其他的APP如gedit上。這部份有vim <code>register</code>副本，建議到參考資料的副本區一讀。再次感謝<a href="http://scottt.tw/">Scott</a>大大。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/VundleVim/Vundle.vim">Vundle Github</a></li>
+<li><a href="https://github.com/vim-airline/vim-airline">vim-airline</a></li>
+<li><a href="https://github.com/tpope/vim-fugitive">vim-fugitive</a></li>
+<li><a href="https://github.com/powerline/fonts">Powerline fonts</a></li>
+<li><a href="https://majutsushi.github.io/tagbar/">Tagbar</a></li>
+<li><a href="https://github.com/Yggdroot/indentLine">indentLine</a></li>
+<li><a href="https://github.com/ntpeters/vim-better-whitespace">Vim Better Whitespace Plugin</a></li>
+<li><a href="https://github.com/chazy/cscope_maps">cscope maps</a></li>
+<li><a href="https://github.com/vim-scripts/taglist.vim">taglist</a></li>
+<li><a href="https://github.com/scrooloose/nerdtree">Nerd Tree</a></li>
+<li><a href="https://github.com/wesleyche/SrcExpl">Source Explorer</a></li>
+<li><a href="https://github.com/wesleyche/Trinity">Trinity</a></li>
+<li><a href="http://stackoverflow.com/questions/4998582/show-whitespace-characters-in-gvim">Stackoverflow: Show white space and tab in vim</a></li>
+<li>和plugin無關的vim trace code資料
+
+<ul>
+<li><a href="http://blog.vgod.tw/2009/12/08/vim-cheat-sheet-for-programmers/">給程式設計師的Vim入門圖解說明</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/11/24/the-skin-slides-to-trace-code-on-line/">Trace 程式碼之皮投影片上線</a></li>
+</ul>
+</li>
+<li>副本: vim 的register概念
+
+<ul>
+<li><a href="http://usevim.com/2012/04/13/registers/">usevim: Vim 101: Registers</a></li>
+<li><a href="http://stackoverflow.com/questions/11489428/how-to-make-vim-paste-from-and-copy-to-systems-clipboard">Stackoverflow: How to make vim paste from (and copy to) system&rsquo;s clipboard?</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-pkg"></a></p>
+
+<h2>懶人包</h2>
+
+<ul>
+<li>安裝相關軟體，Vundle和airline字型</li>
+</ul>
+
+
+<pre><code class="text">sudo apt-get install exuberant-ctags cscope vim-gtk git
+git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+git clone https://github.com/powerline/fonts
+cd fonts &amp;&amp; ./install.sh
+</code></pre>
+
+<ul>
+<li>剪貼下面的文字並放到 ~/.vimrc</li>
+</ul>
+
+
+<pre><code class="text .vimrc">"====================================================================
+" Start vundle
+"====================================================================
+set nocompatible              " be iMproved, required
+filetype off                  " required
+
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
+
+" let Vundle manage Vundle, required
+Plugin 'VundleVim/Vundle.vim'
+
+"===============================================================
+" Write your plugins here
+"===============================================================
+Plugin 'Yggdroot/indentLine'
+Plugin 'ntpeters/vim-better-whitespace'
+Plugin 'vim-airline/vim-airline'
+Plugin 'tpope/vim-fugitive'
+Plugin 'chazy/cscope_maps'
+Plugin 'vim-scripts/taglist.vim'
+Plugin 'scrooloose/nerdtree'
+Plugin 'wesleyche/SrcExpl'
+Plugin 'wesleyche/Trinity'
+Plugin 'majutsushi/tagbar'
+
+"====================================================================
+" Run vundle
+"====================================================================
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+"
+" Brief help
+" :PluginList       - lists configured plugins
+" :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+" :PluginSearch foo - searches for foo; append `!` to refresh local cache
+" :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+"
+" see :h vundle for more details or wiki for FAQ
+" Put your non-Plugin stuff after this line
+
+"====================================================================
+" Tagbar Settings
+"====================================================================
+" Open and close the tagbar separately 
+nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt; 
+
+"====================================================================
+" Trinity Settings
+"====================================================================
+" Open and close all the three plugins on the same time 
+nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt; 
+
+" Open and close the Source Explorer separately 
+nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt; 
+
+" Open and close the Taglist separately 
+nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt; 
+
+" Open and close the NERD Tree separately 
+nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt; 
+
+"====================================================================
+" Airline settings
+"====================================================================
+let g:airline_powerline_fonts = 1
+set laststatus=2
+
+"====================================================================
+" Editor and display Settings
+"====================================================================
+colorscheme koehler         " Color for gvim
+
+set hlsearch                " Highlight search
+set guifont=Inconsolata\ for\ Powerline\ 20 " Font 
+set cursorline              " Hight background at current cursor line
+set nu                      " Display line numbers
+
+" Set background color at colum 80
+set colorcolumn=80
+highlight ColorColumn guibg=#202020
+
+" Show tabs
+set listchars=tab:\|.
+set list
+
+"====================================================================
+" Indent Settings
+"====================================================================
+" Tabs
+set ts=4
+set expandtab
+set shiftwidth=4
+
+" visual indent shift
+vnoremap &lt; &lt;gv
+vnoremap &gt; &gt;gv
+
+"====================================================================
+" MISC Settings
+"====================================================================
+" Shared unamed regitered with primary selection
+set clipboard+=unnamed
+</code></pre>
+
+<ul>
+<li>gvim -> <code>:PluginInstall</code> 安裝Plugin重新開啟收工</li>
+</ul>
+
+
+<h3>其他</h3>
+
+<ul>
+<li>cscope產生database供vim使用
+
+<ul>
+<li><code>cscope -bqkR</code>
+
+<ul>
+<li>k表示使用kernel mode，不把/usr/include之類的加入資料庫。Cross compile也不會使用host 的header file，所以請自行斟酌。其他參數請自己問男人。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ctags產生database供vim使用
+
+<ul>
+<li><code>ctags -R</code></li>
+</ul>
+</li>
+<li>要在vim使用到ctags和cscope的話，請記得<strong>vim一定要開在database同一層目錄!</strong></li>
+</ul>
+
+
+<p>舉例來說，你在/tmp/linux-stable目錄下了上面兩個指令。要開啟檔案請在/tmp/linux-stable目錄中指定對應路徑。範例如下</p>
+
+<pre><code class="text">user@host:/tmp/linux-stable$ gvim fs/select.c
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[使用gdb 靜態分析C 語言名稱和參數相同函數的原始檔位置]]></title>
+    <link href="http://wen00072.github.io/blog/2016/10/03/locate-function-source-code-via-gdb/"/>
+    <updated>2016-10-03T14:36:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/10/03/locate-function-source-code-via-gdb</id>
+    <content type="html"><![CDATA[<h2>前言</h2>
+
+<p>感謝<a href="http://scottt.tw/">Scott</a>大大的資訊。</p>
+
+<p>忘記那邊看過的名言：「手上有了新玩具，就會想要馬上拿來用。」</p>
+
+<h2>動機</h2>
+
+<p>組裝軟體的時候，有一件事很讓我困擾。那就是當整包SDK有兩個以上名稱和參數相同的函數的時候。當這種情況發生時，trace code就很麻煩，你必須要花時間釐清到底最後會使用到那一個函數。而這些config可能用下面兩種方式切換這些名稱和參數相同的函數：</p>
+
+<ol>
+<li>巨集
+
+<ul>
+<li><code>#if</code></li>
+<li><code>#ifdef</code></li>
+</ul>
+</li>
+<li>Makefile
+
+<ul>
+<li>在檔案中根據不同變數編譯不同的檔案</li>
+</ul>
+</li>
+</ol>
+
+
+<p>我以前會視情況用下面兩種方法找到該函數編譯實際使用的原始檔位置</p>
+
+<ol>
+<li>下毒藥，只要相同名字的函數都塞入<code>#error 可以辨別的字串</code>。編譯時根據錯誤訊息判斷使用哪個函數</li>
+<li>gdb設斷點，runtime透過中斷函數的方式取得函數的檔案和行號</li>
+</ol>
+
+
+<p>不過<a href="http://scottt.tw/">Scott</a>大大的今天給的資訊讓我可以更省力的處理這個問題了。</p>
+
+<p>如果只想要知道用法，看完下面指令就可以收工回家了。</p>
+
+<pre><code class="sh">gdb -ex 'file 你的執行檔或是shared library檔' -ex 'info line 要查的函數' -ex 'quit'
+</code></pre>
+
+<p>當然用<code>gdb</code>編譯時不要忘記加debug option。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#gds_env">測試環境</a></li>
+<li><a href="#gds_files">測試檔案</a>
+
+<ul>
+<li><a href="#gds_files_1">test_same_func.c</a></li>
+<li><a href="#gds_files_2">same_func1.c</a></li>
+<li><a href="#gds_files_3">same_func2.c</a></li>
+<li><a href="#gds_files_mk">Makefile</a></li>
+</ul>
+</li>
+<li><a href="#gds_test">測試結果</a></li>
+<li><a href="#gds_ref">延伸資料</a></li>
+</ul>
+
+
+<p><a name="gds_env"></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code class="text">$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.5 LTS
+Release:    14.04
+Codename:   trusty
+</code></pre>
+
+<p><a name="gds_files"></a></p>
+
+<h2>測試檔案</h2>
+
+<p>簡單來說，就是實作切換兩種方式同樣名稱和參數的函數：</p>
+
+<ol>
+<li>巨集</li>
+<li>Makefile</li>
+</ol>
+
+
+<p>所以我們會有</p>
+
+<ol>
+<li><a href="#gds_files_1">測試檔案進入點</a></li>
+<li><a href="#gds_files_2">測試檔一</a>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和測試檔二完全一模一樣</li>
+</ul>
+</li>
+<li><a href="#gds_files_3">測試檔二</a>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和測試檔一完全一模一樣</li>
+</ul>
+</li>
+<li><a href="#gds_files_mk">Makefile</a>
+
+<ul>
+<li>除了編譯以外，還提供兩個變數，由command line傳入
+
+<ul>
+<li>USE_FILE=1
+
+<ul>
+<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
+</ul>
+</li>
+<li>EN_OP1=1
+
+<ul>
+<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+
+<p><a name="gds_files_1"></a></p>
+
+<h3>test_same_func.c</h3>
+
+<ul>
+<li>測試檔案進入點，呼叫func1()。func1()在compile time才被決定</li>
+</ul>
+
+
+<pre><code class="c test_same_func.c">#include &lt;stdio.h&gt;
+extern void func1(void);
+
+int main()
+{
+    printf("Hello World\n");
+    func1();
+
+    return 0;
+}
+</code></pre>
+
+<p><a name="gds_files_2"></a></p>
+
+<h3>same_func1.c</h3>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和<a href="#gds_files_2">same_func2</a>完全一模一樣</li>
+</ul>
+
+
+<pre><code class="c same_func1.c">#include &lt;stdio.h&gt;
+
+#if OP1
+void func1(void)
+{
+    printf("%s: %s_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#else
+void func1(void)
+{
+    printf("%s: %s_NOT_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#endif
+</code></pre>
+
+<p><a name="gds_files_3"></a></p>
+
+<h3>same_func2.c</h3>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和<a href="#gds_files_1">same_func1</a>完全一模一樣</li>
+</ul>
+
+
+<pre><code class="c same_func2.c">#include &lt;stdio.h&gt;
+
+#if OP1
+void func1(void)
+{
+    printf("%s: %s_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#else
+void func1(void)
+{
+    printf("%s: %s_NOT_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#endif
+</code></pre>
+
+<p><a name="gds_files_mk"></a></p>
+
+<h3>Makefile</h3>
+
+<p>提供兩個變數，由command line傳入</p>
+
+<ul>
+<li>USE_FILE=1
+
+<ul>
+<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
+</ul>
+</li>
+<li>EN_OP1=1
+
+<ul>
+<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="makefile">CFLAGS+=-Wall -Werror -g3
+TARGET=test_same_func
+SRCS=test_same_func.c
+
+ifeq ($(USE_FILE), 1)
+    SRCS += same_func1.c
+else
+    SRCS += same_func2.c
+endif
+
+ifeq ($(EN_OP1), 1)
+    CFLAGS += -DOP1=1
+endif
+
+OBJS=$(patsubst %.c, %.o, $(SRCS))
+
+$(TARGET): $(OBJS)
+    $(CC) -o $@ $^
+    gdb -ex 'file $@' -ex 'info line func1' -ex 'quit'
+
+%.o: %.c
+    $(CC) $(CFLAGS) -c $^
+
+clean:
+    rm *.o *~ $(TARGET) -f
+</code></pre>
+
+<p><a name="gds_test"></a></p>
+
+<h2>測試結果</h2>
+
+<p>前面提過，<code>func1()</code>的實作受兩個變數影響，分別為</p>
+
+<ol>
+<li>巨集<code>OP1</code>是否有設定
+
+<ul>
+<li>只有<code>OP1</code> 被設定<strong>並且</strong>非零時才會進入<code>OP1</code>的<code>func1()</code></li>
+</ul>
+</li>
+<li>Makefile變數<code>USE_FILE</code>是否有設定
+
+<ul>
+<li>只有<code>USE_FILE</code>為1的時候才會使用<code>same_func1.c</code>，其他情形都編譯<code>same_func2.c</code></li>
+</ul>
+</li>
+</ol>
+
+
+<p>所以我們make 指令有下面四種變化</p>
+
+<ol>
+<li><a href="">巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</a></li>
+<li><a href="">設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</a></li>
+<li><a href="">巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></a></li>
+<li><a href="">全部設定巨集<code>OP1</code>和<code>USE_FILE</code></a></li>
+</ol>
+
+
+<p><a name=""></a></p>
+
+<h3>巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func2.c</code></li>
+<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean 
+default settings: OP1 disable and use same_func1.c
+rm *.o *~ test_same_func -f
+
+$ make
+cc -Wall -Werror -g3 -c test_same_func.c
+cc -Wall -Werror -g3 -c same_func2.c
+cc -o test_same_func test_same_func.o same_func2.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 11 of "same_func2.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func2.c: func1_NOT_OP1
+</code></pre>
+
+<p><a name=""></a></p>
+
+<h3>設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func2.c</code></li>
+<li>使用<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean
+rm *.o *~ test_same_func -f
+
+$ make EN_OP1=1
+cc -Wall -Werror -g3 -DOP1=1 -c test_same_func.c
+cc -Wall -Werror -g3 -DOP1=1 -c same_func2.c
+cc -o test_same_func test_same_func.o same_func2.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 5 of "same_func2.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func2.c: func1_OP1
+</code></pre>
+
+<p><a name=""></a></p>
+
+<h3>巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func1.c</code></li>
+<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean
+rm *.o *~ test_same_func -f
+
+$ make USE_FILE=1
+cc -Wall -Werror -g3 -c test_same_func.c
+cc -Wall -Werror -g3 -c same_func1.c
+cc -o test_same_func test_same_func.o same_func1.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 11 of "same_func1.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func1.c: func1_NOT_OP1
+</code></pre>
+
+<p><a name=""></a></p>
+
+<h3>全部設定巨集<code>OP1</code>和<code>USE_FILE</code></h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func1.c</code></li>
+<li>使用<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean
+rm *.o *~ test_same_func -f
+
+$ make EN_OP1=1 USE_FILE=1
+cc -Wall -Werror -g3 -DOP1=1 -c test_same_func.c
+cc -Wall -Werror -g3 -DOP1=1 -c same_func1.c
+cc -o test_same_func test_same_func.o same_func1.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 5 of "same_func1.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func1.c: func1_OP1
+</code></pre>
+
+<p><a name="gds_ref"></a></p>
+
+<h2>延伸資料</h2>
+
+<ul>
+<li><a href="https://docs.google.com/document/d/1w1nPmCLpeRN3kEYglzHwozhWXY0ddT9oe6JCZocsPNE/edit">Using GDB to Help You Read Linux Kernel Code without Running It</a>
+
+<ul>
+<li><a href="http://scottt.tw/">Scott</a>大大的文件，描述使用gdb 靜態分析Linux kernel的技巧</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[談談strip]]></title>
+    <link href="http://wen00072.github.io/blog/2015/11/16/tan-tan-strip/"/>
+    <updated>2015-11-16T21:32:23+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/11/16/tan-tan-strip</id>
+    <content type="html"><![CDATA[<p>Strip，顧名思義，就是脫脫。有興趣的紳士可以估狗strip club。那麼在Linux的binutil中strip是要脫什麼呢？先來問一下男人</p>
+
+<pre><code class="text man strip">STRIP(1)                                    GNU Development Tools                                    STRIP(1)
+
+NAME
+       strip - Discard symbols from object files.
+...
+</code></pre>
+
+<p>用中文說，就是從object 檔中把symbol丟掉。讓我們做幾個小實驗吧。</p>
+
+<ul>
+<li><a href="#strip_test1">測試一：Strip 執行檔</a></li>
+<li><a href="#strip_test2">測試二：Strip Object檔</a></li>
+<li><a href="#strip_test3">測試三：Strip debug 資訊</a></li>
+<li><a href="#strip_test4">測試四：Strip shared library</a></li>
+</ul>
+
+
+<h2>測試環境</h2>
+
+<pre><code class="text">$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.3 LTS
+Release:    14.04
+Codename:   trusty
+</code></pre>
+
+<h2>測試程式</h2>
+
+<pre><code class="c main_test.c">#include &lt;stdio.h&gt;
+extern test();
+
+int main(void)
+{
+    test();
+
+    return 0;
+}
+</code></pre>
+
+<pre><code class="c test.c">#include &lt;stdio.h&gt;
+
+char *g_myStr = "Wen";
+static char *gp_myStr = "Liao";
+
+static void s_test(void)
+{
+    printf("%s %s\n", g_myStr, gp_myStr);
+}
+
+
+void test(void)
+{
+    printf("Hello ");
+    s_test();
+}
+</code></pre>
+
+<pre><code class="Makefile Makefile">TARGET=test
+SRCS=test.c main_test.c
+OBJS=$(patsubst  %.c, %.o, $(SRCS))
+CFLAGS=-g
+
+$(TARGET): $(OBJS)
+    $(CC) $(CFLAGS) $^ -o $@
+
+clean:
+    rm -rf $(TARGET) $(OBJS)
+</code></pre>
+
+<p><a name="strip_test1"></a></p>
+
+<h2>測試一：Strip 執行檔</h2>
+
+<pre><code class="text">$ make clean
+rm -rf test  test.o  main_test.o
+
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ ./test 
+Hello Wen Liao
+
+$ ls test -gG
+-rwxrwxr-x 1 10217 Nov 16 22:33 test
+</code></pre>
+
+<p>可以看到產生出來的執行檔有<code>10217</code> bytes。我們進一步來看執行檔的symbol。</p>
+
+<pre><code class="text">$ nm test
+0000000000601050 B __bss_start
+...
+0000000000601040 D g_myStr
+00000000004003e0 T _init
+...
+0000000000601048 d gp_myStr
+...
+000000000040056d T main
+                 U printf@@GLIBC_2.2.5
+...
+000000000040052d t s_test
+0000000000400553 T test
+0000000000601050 D __TMC_END__
+</code></pre>
+
+<p>那麼來看看strip後的檔案size和symbol吧。你可以看到size變小而且symbol不見了。另外上面可以比對一下<code>t</code>、<code>T</code>、<code>d</code>、<code>D</code>和<code>s_test</code>、<code>test</code>、<code>gp_myStr</code>、<code>g_myStr</code>的關係。</p>
+
+<pre><code class="text">$ strip test
+
+$ ./test 
+Hello Wen Liao
+
+$ nm test
+nm: test: no symbols
+
+$ ls -gG test
+-rwxrwxr-x 1 6296 Nov 16 22:36 test
+</code></pre>
+
+<p><a name="strip_test2"></a></p>
+
+<h2>測試二：Strip Object檔</h2>
+
+<p>因為strip就是把object file (執行檔也是一種object file)的symbol拿掉，所以在link time需要symbol時如果該object檔案被strip過，就會發生錯誤。範例如下：</p>
+
+<pre><code class="text">$ make clean
+rm -rf test  test.o  main_test.o
+
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ nm -a test.o 
+0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_str
+0000000000000000 r .eh_frame
+0000000000000000 D g_myStr
+0000000000000008 d gp_myStr
+0000000000000000 n .note.GNU-stack
+                 U printf
+0000000000000000 r .rodata
+0000000000000000 t s_test
+0000000000000026 T test
+0000000000000000 a test.c
+0000000000000000 t .text
+
+$ ls -gG test.o
+-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+
+$ strip test.o 
+
+$ ls -gG test.o
+-rw-rw-r-- 1 952 Nov 16 23:03 test.o
+
+$ nm test.o
+nm: test.o: no symbols
+
+$ make
+cc -g test.o main_test.o -o test
+/usr/bin/ld: error in test.o(.eh_frame); no .eh_frame_hdr table will be created.
+main_test.o: In function `main':
+/home/wen/tmp/sandbox/main_test.c:6: undefined reference to `test'
+collect2: error: ld returned 1 exit status
+make: *** [test] Error 1
+</code></pre>
+
+<p>這邊我<code>nm</code>下了<code>-a</code>參數，這會顯示出<strong>所有的symbol</strong>，預設的<code>nm</code>輸出如下提供比較。</p>
+
+<pre><code class="text">$ nm test.o 
+0000000000000000 D g_myStr
+0000000000000008 d gp_myStr
+                 U printf
+0000000000000000 t s_test
+0000000000000026 T test
+</code></pre>
+
+<p><a name="strip_test3"></a></p>
+
+<h2>測試三：Strip debug 資訊</h2>
+
+<p>其實只是單純要介紹<code>-d</code>參數而已</p>
+
+<pre><code class="text">$ make clean
+rm -rf test  test.o  main_test.o
+
+$ ls -gG test.o
+-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ ls -gG test.o
+-rw-rw-r-- 1 3944 Nov 16 23:02 test.o
+
+$ strip -d test.o
+
+$ nm -a test.o
+0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 r .eh_frame
+0000000000000000 D g_myStr
+0000000000000008 d gp_myStr
+0000000000000000 n .note.GNU-stack
+                 U printf
+0000000000000000 r .rodata
+0000000000000000 t s_test
+0000000000000026 T test
+0000000000000000 t .text
+
+$ make
+cc -g test.o main_test.o -o test
+
+$ ./test
+Hello Wen Liao
+
+$ ls -gG test test.o
+-rwxrwxr-x 1 9737 Nov 16 23:01 test
+-rw-rw-r-- 1 1896 Nov 16 23:01 test.o
+</code></pre>
+
+<p><a name="strip_test4"></a></p>
+
+<h2>測試四：Strip shared library</h2>
+
+<p>這邊要幹的第一件事是修改Makefile如下。主要是把test.o包裝成shared library，這個Makefile很醜，我知道。</p>
+
+<pre><code class="Makefile Makefile">TARGET=test
+SRC=main_test.c
+OBJ=$(patsubst  %.c, %.o, $(SRC))
+
+LIB_SRC=test.c
+LIB_OBJ=$(patsubst  %.c, %.o, $(LIB_SRC))
+LIB_NAME=test
+LIB=lib$(LIB_NAME).so
+CFLAGS=-g
+
+$(TARGET): $(OBJ) $(LIB)
+    $(CC) $(CFLAGS) $&lt; -o $@ -L./ -l$(LIB_NAME)
+
+$(LIB): $(LIB_OBJ)
+    $(CC) -shared -Wl,-soname,$(LIB).0 $^ -o $@
+    rm $(LIB).0 &amp;&amp; ln -sf $(LIB) $(LIB).0
+
+$(LIB_OBJ): $(LIB_SRC)
+    $(CC) $(CFLAGS) -c -fPIC $^
+
+clean:
+    rm -rf $(TARGET) $(OBJ) $(LIB_OBJ)
+</code></pre>
+
+<p>自幹shared library執行程式的時候不要忘記加上<code>LD_LIBRARY_PATH</code>環境變數：
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make clean
+</span><span class='line'>rm -rf test  main_test.o  test.o&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ make
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g -c -fPIC test.c
+</span><span class='line'>cc -shared -Wl,-soname,libtest.so.0 test.o -o libtest.so
+</span><span class='line'>rm libtest.so.0 &amp;amp;&amp;amp; ln -sf libtest.so libtest.so.0
+</span><span class='line'>cc -g main_test.o -o test -L./ -ltest&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ LD_LIBRARY_PATH=&lt;code&gt;pwd&lt;/code&gt; ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>現在來比較strip前後的shared library 差異吧。
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm -a libtest.so
+</span><span class='line'>0000000000000000 a
+</span><span class='line'>0000000000201048 b .bss
+</span><span class='line'>0000000000201048 B &lt;strong&gt;bss_start
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000201048 b completed.6973
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>                 w &lt;/strong&gt;cxa_finalize@@GLIBC_2.2.5
+</span><span class='line'>0000000000201030 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000650 t deregister_tm_clones
+</span><span class='line'>00000000000006c0 t &lt;strong&gt;do_global_dtors_aux
+</span><span class='line'>0000000000200df0 t &lt;/strong&gt;do_global_dtors_aux_fini_array_entry
+</span><span class='line'>0000000000201030 d &lt;strong&gt;dso_handle
+</span><span class='line'>0000000000200e00 d .dynamic
+</span><span class='line'>0000000000200e00 d &lt;em&gt;DYNAMIC
+</span><span class='line'>0000000000000398 r .dynstr
+</span><span class='line'>0000000000000230 r .dynsym
+</span><span class='line'>0000000000201048 D &lt;/em&gt;edata
+</span><span class='line'>00000000000007c0 r .eh_frame
+</span><span class='line'>000000000000079c r .eh_frame_hdr
+</span><span class='line'>0000000000201050 B &lt;em&gt;end
+</span><span class='line'>000000000000077c T &lt;/em&gt;fini
+</span><span class='line'>000000000000077c t .fini
+</span><span class='line'>0000000000200df0 t .fini_array
+</span><span class='line'>0000000000000700 t frame_dummy
+</span><span class='line'>0000000000200de8 t &lt;/strong&gt;frame_dummy_init_array_entry
+</span><span class='line'>0000000000000840 r &lt;strong&gt;FRAME_END&lt;/strong&gt;
+</span><span class='line'>0000000000201000 d &lt;em&gt;GLOBAL_OFFSET_TABLE&lt;/em&gt;
+</span><span class='line'>                 w &lt;strong&gt;gmon_start&lt;/strong&gt;
+</span><span class='line'>0000000000201038 D g_myStr
+</span><span class='line'>00000000000001f0 r .gnu.hash
+</span><span class='line'>000000000000045c r .gnu.version
+</span><span class='line'>0000000000000480 r .gnu.version_r
+</span><span class='line'>0000000000200fd0 d .got
+</span><span class='line'>0000000000201000 d .got.plt
+</span><span class='line'>0000000000201040 d gp_myStr
+</span><span class='line'>00000000000005f0 T &lt;em&gt;init
+</span><span class='line'>00000000000005f0 t .init
+</span><span class='line'>0000000000200de8 t .init_array
+</span><span class='line'>                 w &lt;/em&gt;ITM_deregisterTMCloneTable
+</span><span class='line'>                 w &lt;em&gt;ITM_registerTMCloneTable
+</span><span class='line'>0000000000200df8 d .jcr
+</span><span class='line'>0000000000200df8 d &lt;strong&gt;JCR_END&lt;/strong&gt;
+</span><span class='line'>0000000000200df8 d &lt;strong&gt;JCR_LIST&lt;/strong&gt;
+</span><span class='line'>                 w &lt;/em&gt;Jv_RegisterClasses
+</span><span class='line'>00000000000001c8 r .note.gnu.build-id
+</span><span class='line'>0000000000000610 t .plt
+</span><span class='line'>                 U printf@@GLIBC_2.2.5
+</span><span class='line'>0000000000000680 t register_tm_clones
+</span><span class='line'>00000000000004a0 r .rela.dyn
+</span><span class='line'>00000000000005a8 r .rela.plt
+</span><span class='line'>0000000000000785 r .rodata
+</span><span class='line'>0000000000000735 t s_test
+</span><span class='line'>0000000000000760 T test
+</span><span class='line'>0000000000000000 a test.c
+</span><span class='line'>0000000000000650 t .text
+</span><span class='line'>0000000000201048 d &lt;strong&gt;TMC_END&lt;/strong&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 9275 Nov 16 23:47 libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ strip libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 6104 Nov 16 23:47 libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ nm -a libtest.so
+</span><span class='line'>nm: libtest.so: no symbols&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ LD_LIBRARY_PATH=&lt;code&gt;pwd&lt;/code&gt; ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p>這邊變成有新的作業，dynamic link的時候沒有shared library沒有symbol怎麼拿到function address和全域變數？下次有看到再來解釋吧。</p>
+
+<h2>補充</h2>
+
+<p>如果編譯的程式碼有加入debug資訊，objdump在反組譯的時候可以加入<code>-S</code>參數比對原始碼對應的機械碼，對於想要研究系統細節的人應該有所幫助。簡單範例如下</p>
+
+<pre><code class="text"> x$ make clean
+rm -rf test  test.o  main_test.o
+$ make
+cc -g   -c -o test.o test.c
+cc -g   -c -o main_test.o main_test.c
+cc -g test.o main_test.o -o test
+
+$ objdump -S -d test
+
+test:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+00000000004003e0 &lt;_init&gt;:
+  4003e0:   48 83 ec 08             sub    $0x8,%rsp
+...
+
+0000000000400553 &lt;test&gt;:
+
+
+void test(void)
+{
+  400553:   55                      push   %rbp
+  400554:   48 89 e5                mov    %rsp,%rbp
+    printf("Hello ");
+  400557:   bf 24 06 40 00          mov    $0x400624,%edi
+  40055c:   b8 00 00 00 00          mov    $0x0,%eax
+  400561:   e8 aa fe ff ff          callq  400410 &lt;printf@plt&gt;
+    s_test();
+  400566:   e8 c2 ff ff ff          callq  40052d &lt;s_test&gt;
+}
+  40056b:   5d                      pop    %rbp
+  40056c:   c3                      retq   
+
+...
+</code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>Binary Hacks：駭客秘傳技巧一百招</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

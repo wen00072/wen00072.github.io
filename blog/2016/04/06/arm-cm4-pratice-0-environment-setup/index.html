@@ -1,0 +1,675 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>ARM CM4 Pratice (0): Environment Setup - My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="很久以前買了STM32F4 Disco的開發版（繁體中文資訊），最近開始想要學習ARM架構和硬體控制等技術。在設定目標，規劃進度前，一定要先把編譯和燒錄環境架設起來，整理如下： 目錄 安裝作業系統環境
+安裝步驟 安裝Toolchain
+手動安裝燒錄和除錯工具 安裝需要套件
+手動安裝st-link &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">ARM CM4 Pratice (0): Environment Setup</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-04-06T22:15:15+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>10:15 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>很久以前買了<a href="http://www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF259090">STM32F4 Disco的開發版</a>（<a href="http://wiki.csie.ncku.edu.tw/embedded/STM32F429">繁體中文資訊</a>），最近開始想要學習ARM架構和硬體控制等技術。在設定目標，規劃進度前，一定要先把編譯和燒錄環境架設起來，整理如下：</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#cm4-0-env">安裝作業系統環境</a></li>
+<li><a href="#cm4-0-steps">安裝步驟</a>
+
+<ul>
+<li><a href="#cm4-0-steps-tl">安裝Toolchain</a></li>
+<li><a href="#cm4-0-steps-pkg-install">手動安裝燒錄和除錯工具</a>
+
+<ul>
+<li><a href="#cm4-0-steps-pkg-install-prepare">安裝需要套件</a></li>
+<li><a href="#cm4-0-steps-pkg-install-stlink">手動安裝st-link</a></li>
+<li><a href="#cm4-0-steps-pkg-install-openocd">手動安裝OpenOCD</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#cm4-0-test">驗證燒錄</a>
+
+<ul>
+<li><a href="#cm4-0-test-prepare">事前準備</a></li>
+<li><a href="#cm4-0-test-stflash">使用st-flash 開發版燒錄</a></li>
+<li><a href="#cm4-0-test-openocd">使用openocd 開發版燒錄</a></li>
+</ul>
+</li>
+<li><a href="#cm4-0-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="cm4-0-env"></a></p>
+
+<h2>安裝作業系統環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.4 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cm4-0-steps"></a></p>
+
+<h2>安裝步驟</h2>
+
+<p>要開發非本機的平台，我們會需要安裝</p>
+
+<ul>
+<li>Toolchain：提供編譯，函數，分析binary等功能</li>
+<li>燒錄軟體</li>
+<li>除錯工具</li>
+</ul>
+
+
+<p>st-link和openocd同時有燒錄和開發版軟體除錯的功能，因此我們兩個都安裝。</p>
+
+<p><a name="cm4-0-steps-tl"></a></p>
+
+<h3>安裝Toolchain</h3>
+
+<p>網路上找到<a href="https://launchpad.net/gcc-arm-embedded">GCC ARM Embedded (ARM R和M系列使用 )</a>的PPA。簡單找一下網路，<strong><font color="red">沒有直接證據說這邊的PPA是由ARM官方維護</font></strong>。不過在<a href="http://yottadocs.mbed.com/#installing-on-linux">mbed(ARM 成立的IoT作業系統)網站裏面</a>的確有提到這個PPA，暫時當作間接證據。<strong><font color="red">目前我還沒有驗證這個Toolchain編譯出來的binary是否可以在開發版上正常動作</font></strong>。</p>
+
+<figure class='code'><figcaption><span>安裝Toolchain指令</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
+</span><span class='line'>sudo apt-get update
+</span><span class='line'>sudo apt-get install gcc-arm-embedded
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cm4-0-steps-pkg-install"></a></p>
+
+<h3>手動安裝燒錄和除錯工具</h3>
+
+<p><a name="cm4-0-steps-pkg-install-prepare"></a></p>
+
+<h4>安裝需要套件</h4>
+
+<figure class='code'><figcaption><span>系統安裝設定STM32F4環境相關套件 </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt-get install git
+</span><span class='line'>sudo apt-get install libtool
+</span><span class='line'>sudo apt-get install automake
+</span><span class='line'>sudo apt-get install autoconf
+</span><span class='line'>sudo apt-get install pkg-config
+</span><span class='line'>sudo apt-get install libusb-1.0-0-dev
+</span><span class='line'>sudo apt-get install libftdi-dev   # 當openocd要支援MPSSE mode才需要裝，這是啥我不知道。
+</span><span class='line'>sudo apt-get install libhidapi-dev # 當openocd要支援CMSIS-DAP才會用到，這是啥我不知道。
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我自己的習慣是非必要不會放在系統中，<strong>接下來的指令都是預設<code>st-link</code>和<code>openocd</code>裝到<code>$HOME/bin</code>中</strong>，Ubuntu在登入時會自動將<code>~/bin</code>加入<code>PATH</code>中。</p>
+
+<p>如果您沒有~/bin的話，請使用下面指令建立。</p>
+
+<figure class='code'><figcaption><span>系統安裝設定STM32F4環境相關套件 </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>mkdir ~/bin/
+</span><span class='line'>. ~/.profile # 強迫系統自動將`~/bin`加入`PATH`中
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cm4-0-steps-pkg-install-stlink"></a></p>
+
+<h4>手動安裝st-link</h4>
+
+<p>簡單講一下，就是下載、編譯、安裝軟體。特別要注意的是，為了要讓你的PC在使用Mini USB連到開發版後能夠讓Ubuntu的<code>udev</code>服務可以順利地偵測到開發版，需要加入相關設定並重新啟動<code>udev</code>服務。</p>
+
+<p>下載Source code</p>
+
+<figure class='code'><figcaption><span>下載Source code  </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone https://github.com/texane/stlink
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>編譯stlink</p>
+
+<figure class='code'><figcaption><span>編譯</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>cd stlink/
+</span><span class='line'>./autogen.sh
+</span><span class='line'>./configure
+</span><span class='line'>make
+</span><span class='line'>cp st-* ~/bin
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>設定並重新起動udev</p>
+
+<figure class='code'><figcaption><span>設定並重新起動udev</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo cp 49-stlinkv* /etc/udev/rules.d/ -rv
+</span><span class='line'>sudo service udev restart
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>驗證一下是否可以偵測到開發版，請確定測試前開發版已經和您的電腦透過Mini USB連線，以及有設定<code>udev</code>並且重新啟動。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ st-probe
+</span><span class='line'>Found 1 stlink programmers
+</span><span class='line'>30303030303030303030303100
+</span><span class='line'>   flash: 2097152 (pagesize: 16384)
+</span><span class='line'>    sram: 262144
+</span><span class='line'>  chipid: 0x0419
+</span><span class='line'>   descr: F42x and F43x device
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cm4-0-steps-pkg-install-openocd"></a></p>
+
+<h4>手動安裝OpenOCD</h4>
+
+<p>下載Source code</p>
+
+<figure class='code'><figcaption><span>下載Source code</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone git://git.code.sf.net/p/openocd/code openocd-code
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>編譯</p>
+
+<figure class='code'><figcaption><span>編譯</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>cd openocd-code/
+</span><span class='line'>./bootstrap
+</span><span class='line'>./configure # script會自動偵測系統是否有相依開發套件
+</span><span class='line'>make
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>安裝</p>
+
+<figure class='code'><figcaption><span>安裝</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>cp src/openocd ~/bin
+</span><span class='line'>cp tcl/board/stm32f429discovery.cfg ~/.openocd/openocd.cfg
+</span><span class='line'>cp tcl/* ~/.openocd
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>驗證一下是否可以偵測到開發版，請確定測試前開發版已經和您的電腦透過Mini USB連線。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ openocd
+</span><span class='line'>Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-07-22:20)
+</span><span class='line'>Licensed under GNU GPL v2
+</span><span class='line'>For bug reports, read
+</span><span class='line'>  http://openocd.org/doc/doxygen/bugs.html
+</span><span class='line'>Info : The selected transport took over low-level target control. The results might differ compared to plain JTAG/SWD
+</span><span class='line'>adapter speed: 2000 kHz
+</span><span class='line'>adapter_nsrst_delay: 100
+</span><span class='line'>none separate
+</span><span class='line'>srst_only separate srst_nogate srst_open_drain connect_deassert_srst
+</span><span class='line'>Info : Unable to match requested speed 2000 kHz, using 1800 kHz
+</span><span class='line'>Info : Unable to match requested speed 2000 kHz, using 1800 kHz
+</span><span class='line'>Info : clock speed 1800 kHz
+</span><span class='line'>Info : STLINK v2 JTAG v17 API v2 SWIM v0 VID 0x0483 PID 0x3748
+</span><span class='line'>Info : using stlink api v2
+</span><span class='line'>Info : Target voltage: 2.862887
+</span><span class='line'>Info : stm32f4x.cpu: hardware has 6 breakpoints, 4 watchpoints
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cm4-0-test"></a></p>
+
+<h2>驗證燒錄</h2>
+
+<p><a name="cm4-0-test-parepare"></a></p>
+
+<h3>事前準備</h3>
+
+<p>下載jserv整理的STM 軔體</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone https://github.com/jserv/stm32f429-demos
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>將source中的hex轉成binary</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>cd stm32f429-demos/
+</span><span class='line'>make
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>使用下載提供的Makefile燒錄，裏面會先用openocd燒錄，失敗的話自動切到st-flash燒錄，非常建議讀一下Makefile。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>make flash-demo檔案
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>目前套件內蒐集的demo檔案</p>
+
+<ul>
+<li>flash-GamesInJava</li>
+<li>flash-STM32F429I-DISCOVERY_Demo_V1.0.1</li>
+<li>flash-Paint</li>
+<li>flash-TouchGFX-demo2014</li>
+<li>flash-STM32CubeDemo_STM32F429I-Discovery</li>
+</ul>
+
+
+<p><a name="cm4-0-test-stflash"></a></p>
+
+<h3>使用st-flash 開發版燒錄</h3>
+
+<ul>
+<li><code>st-flash write 軔體binary檔案名稱 0x8000000</code></li>
+</ul>
+
+
+<p>為什麼是<code>0x800000</code>呢？可以查一下<a href="http://www.st.com/web/en/resource/technical/document/datasheet/DM00071990.pdf">手冊</a>，上面有說這塊記憶體是分配給flash memory。</p>
+
+<p><a name="cm4-0-test-openocd"></a></p>
+
+<h4>使用openocd 開發版燒錄</h4>
+
+<p>從<a href="https://github.com/jserv/stm32f429-demos">GitHub: jserv/stm32f429-demos</a>裏面的Makefile抄來的。指令比較長，不過這是因為openocd可以把一系列的命令連發的關係</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>openocd -f interface/stlink-v2.cfg  -f target/stm32f4x.cfg  -c &quot;init&quot;  -c &quot;reset init&quot;  -c &quot;stm32f2x unlock 0&quot;  -c &quot;flash probe 0&quot;  -c &quot;flash info 0&quot;  -c &quot;flash write_image erase 軔體binary檔案名稱 0x8000000&quot;  -c &quot;reset run&quot; -c shutdown
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>使用比較好看的排版</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>openocd -f interface/stlink-v2.cfg  \
+</span><span class='line'>        -f target/stm32f4x.cfg      \
+</span><span class='line'>        -c &quot;init&quot;                   \
+</span><span class='line'>        -c &quot;reset init&quot;             \
+</span><span class='line'>        -c &quot;stm32f2x unlock 0&quot;      \
+</span><span class='line'>        -c &quot;flash probe 0&quot;          \
+</span><span class='line'>        -c &quot;flash info 0&quot;           \
+</span><span class='line'>        -c &quot;flash write_image erase 軔體binary檔案名稱 0x8000000&quot; \
+</span><span class='line'>        -c &quot;reset run&quot; -c shutdown
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h4>參數說明</h4>
+
+<ul>
+<li><code>-f</code>
+
+<ul>
+<li>指定config檔案。你可能會想問說interface目錄在那邊，還記得<a href="cm4-0-steps-pkg-install-openocd">前面</a>的動作嘛？</li>
+<li>可以指定
+
+<ul>
+<li>interface: 除錯使用的介面</li>
+<li>target: 執行的平台CPU如STM32F4</li>
+<li>board: 開發版</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>-c</code>
+
+<ul>
+<li>執行openocd指令</li>
+</ul>
+</li>
+</ul>
+
+
+<h4>指令說明</h4>
+
+<ul>
+<li><code>-f interface/stlink-v2.cfg</code></li>
+<li><code>-f target/stm32f4x.cfg</code></li>
+<li><code>-c "init"</code>
+
+<ul>
+<li>結束config stage，開始進入run stage (<a href="http://openocd.org/doc/html/Daemon-Configuration.html#Entering-the-Run-Stage">出處</a>)</li>
+</ul>
+</li>
+<li><code>-c "reset init"</code>
+
+<ul>
+<li>reset 開發版，重新開機(<a href="http://openocd.org/doc/html/General-Commands.html#Target-State-handling">出處</a>)後進入init狀態。</li>
+</ul>
+</li>
+<li><code>-c "stm32f2x unlock 0"</code>
+
+<ul>
+<li>將開發版的flash解鎖(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
+</ul>
+</li>
+<li><code>-c "flash probe 0"</code>
+
+<ul>
+<li>偵測開發版的flash(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
+</ul>
+</li>
+<li><code>-c "flash info 0"</code>
+
+<ul>
+<li>顯示開發版的flash資訊(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
+</ul>
+</li>
+<li><code>-c "flash write_image erase 軔體binary檔案名稱 0x8000000"</code>
+
+<ul>
+<li>將檔案寫入flash(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
+</ul>
+</li>
+<li><code>-c "reset run" -c shutdown</code>
+
+<ul>
+<li>正常重新開機(<a href="http://openocd.org/doc/html/General-Commands.html#Target-State-handling">出處</a>)</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cm4-0-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://yottadocs.mbed.com/#installing-on-linux">yotta Documentation: Install on Linux</a></li>
+<li><a href="https://launchpad.net/gcc-arm-embedded">ARM Embedded PPA網站</a></li>
+<li><a href="https://launchpad.net/~team-gcc-arm-embedded/+archive/ubuntu/ppa">GNU ARM Embedded Toolchain</a></li>
+<li><a href="https://github.com/jserv/stm32f429-demos">GitHub: jserv/stm32f429-demos</a></li>
+<li><a href="http://openocd.org/doc/html/">OpenOCD手冊</a></li>
+</ul>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Wen Liao</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-04-06T22:15:15+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>10:15 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/arm/'>arm</a>, <a class='category' href='/blog/categories/stm32/'>stm32</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/" data-via="" data-counturl="http://wen00072.github.io/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/01/24/talk-more-about-git-remote/" title="Previous Post: 再談 git remote">&laquo; 再談 git remote</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2016/04/10/use-strace-to-trace-missing-files/" title="Next Post: 使用strace找出程式缺少的檔案路徑">使用strace找出程式缺少的檔案路徑 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://wen00072.github.io/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/';
+        var disqus_url = 'http://wen00072.github.io/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

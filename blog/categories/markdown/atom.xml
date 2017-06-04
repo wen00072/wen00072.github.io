@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Markdown | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/markdown/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Octopress Markdown 支援syntax Highlight列表]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/29/markdown-supported-program-syntex/"/>
+    <updated>2015-03-29T21:09:05+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/29/markdown-supported-program-syntex</id>
+    <content type="html"><![CDATA[<p>看<a href="http://octopress.org/docs/blogging/">Octopress手冊</a>看到支援的列表，貼出來方便以後查詢。</p>
+
+<ul>
+<li><a href="http://pygments.org/docs/lexers/">Pyments 支援語法</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[學習: Markdown語法簡介]]></title>
+    <link href="http://wen00072.github.io/blog/2013/09/15/learning-markdown-syntax/"/>
+    <updated>2013-09-15T13:53:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/09/15/learning-markdown-syntax</id>
+    <content type="html"><![CDATA[<p>對於技術文件寫作來說，能夠省去複雜語法和繁複操作，同時又能方便的寫出好的架構和論述很重要。因此我需要</p>
+
+<ul>
+<li>直接在本文中加入簡單的Tag語法省去滑鼠操作時間</li>
+<li>明顯地文章段落顯示方式</li>
+<li>方便的支援巢狀條列語法</li>
+<li>美觀地顯示程式語言代碼</li>
+</ul>
+
+
+<p>為了做出好的文件，了解並學習Markdown語法是必經的路程。就讓我邊查資料現學現賣吧。</p>
+
+<p><a name="content"></a></p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#ref">參考資料</a></li>
+<li><a href="#syntax">語法說明</a>
+
+<ul>
+<li><a href="#header">標題</a></li>
+<li><a href="#blist">Bullet List</a></li>
+<li><a href="#nlist">數字 List</a></li>
+<li><a href="#mlist">撒尿牛丸 List</a></li>
+<li><a href="#seperater">分隔線</a></li>
+<li><a href="#font">字型</a></li>
+<li><a href="#link">連結</a></li>
+<li><a href="#code">Code</a></li>
+<li><a href="#quote">引用</a></li>
+<li><a href="#pbreak">段落用斷行</a></li>
+</ul>
+</li>
+<li><a href="#content_how">如何做出目錄</a></li>
+<li><a href="#gfm_syntax">GitHub Flavored Markdown語法</a>
+
+<ul>
+<li> <a href="#del_line">刪除線</a></li>
+<li> <a href="#fcb">Fenced code blocks</a>
+
+<ul>
+<li><a href="#gfmfcb">GitHub Flavored Markdown語法</a></li>
+<li><a href="#opfcb">Octopress語法</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://daringfireball.net/projects/markdown/">Markdown 官方網站(英)</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Markdown">Markdown Wiki說明(英)</a></li>
+<li><a href="http://stackoverflow.com/editing-help">Stackoverflow Markdown Help(英)</a></li>
+<li><a href="https://github.com/adam-p/markdown-here/wiki/Markdown-Cheatsheet">Markdown Cheatsheet(英)</a></li>
+<li><a href="https://help.github.com/articles/github-flavored-markdown">GitHub Flavored Markdown(英)</a></li>
+<li><a href="http://octopress.org/docs/blogging/code/">Octopress: Sharing Code Snippets(英)</a></li>
+<li><a href="http://www.openfoundry.org/tw/resourcecatalog/Program-Development/Markup-Languages/markdown">自由軟體鑄造場的Markdown簡介(中)</a></li>
+<li><a href="http://markdown.tw/">Markdown 語法說明(中)</a></li>
+</ul>
+
+
+<p><a name="syntax"></a></p>
+
+<h2>語法說明</h2>
+
+<p><strong>注意！有些效果可以透過不同語法達成。</strong>
+<strong>本文只列出我感興趣的語法，並沒有列出完整的語法。</strong>
+<a name="header"></a></p>
+
+<h3>標題</h3>
+
+<pre><code>## 主標題
+### 次要標題
+#### 更次要標題，最多到6個#
+</code></pre>
+
+<h2>主標題</h2>
+
+<h3>次要標題</h3>
+
+<h4>更次要標題，最多到6個</h4>
+
+<p><a name="blist"></a></p>
+
+<h3>Bullet List</h3>
+
+<pre><code>- 第一層List
+    - 第二層List，和第一層隔4個空白字元或是tab
+        - 第三層List，和第二層隔4個空白字元或是tab
+</code></pre>
+
+<ul>
+<li>第一層List
+
+<ul>
+<li>第二層List，和第一層隔4個空白字元或是tab
+
+<ul>
+<li>第三層List，和第二層隔4個空白字元或是tab</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="nlist"></a></p>
+
+<h3>數字 List</h3>
+
+<pre><code>1. 第一層List
+    1. 第二層List，和第一層隔4個空白字元或是tab
+        1. 第三層List，和第二層隔4個空白字元或是tab
+</code></pre>
+
+<ol>
+<li>第一層List
+
+<ol>
+<li>第二層List，和第一層隔4個空白字元或是tab
+
+<ol>
+<li>第三層List，和第二層隔4個空白字元或是tab</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+
+
+<p><a name="mlist"></a></p>
+
+<h3>撒尿牛丸 List</h3>
+
+<pre><code>1. 第一層List
+    - 第二層List，和第一層隔4個空白字元或是tab
+        1. 第三層List，和第二層隔4個空白字元或是tab
+</code></pre>
+
+<ol>
+<li>第一層List
+
+<ul>
+<li>第二層List，和第一層隔4個空白字元或是tab
+
+<ol>
+<li>第三層List，和第二層隔4個空白字元或是tab</li>
+</ol>
+</li>
+</ul>
+</li>
+</ol>
+
+
+<p><a name="seperater"></a></p>
+
+<h3>分隔線</h3>
+
+<pre><code>***
+</code></pre>
+
+<hr />
+
+<p><a name="font"></a></p>
+
+<h3>字型</h3>
+
+<pre><code>*斜體字，字和星號中間不能空白*
+</code></pre>
+
+<p><em>斜體字，字和星號中間不能空白</em></p>
+
+<pre><code>**粗體字，字和星號中間不能空白**
+</code></pre>
+
+<p><strong>粗體字，字和星號中間不能空白</strong></p>
+
+<p><a name="link"></a></p>
+
+<h3>連結</h3>
+
+<pre><code>[本站](http://wen00072.github.io)
+</code></pre>
+
+<p><a href="http://wen00072.github.io">本站</a></p>
+
+<p><a name="code"></a></p>
+
+<h3>Code</h3>
+
+<ul>
+<li>因為要顯示程式碼，所以不會Markdown的語法
+
+<ul>
+<li>方式
+
+<ol>
+<li>行首以tab或8個空白開始</li>
+<li>使用成對的`把程式碼包起來</li>
+</ol>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>　- 這個bullit 效果沒有出來
+　- 這個bullit 效果沒有出來</p>
+
+<p>　̀我是程式碼　̀
+<code>我是程式碼</code></p>
+
+<p><a name="quote"></a></p>
+
+<h3>引用</h3>
+
+<pre><code>&gt; 第一層引用
+&gt;&gt; 第二層引用
+</code></pre>
+
+<blockquote><p>第一層引用</p>
+
+<blockquote><p>第二層引用</p></blockquote></blockquote>
+
+<p><a name="pbreak"></a></p>
+
+<h3>段落用斷行</h3>
+
+<pre><code>行尾沒有空白字元
+第二行
+</code></pre>
+
+<p>行尾沒有空白字元
+第二行</p>
+
+<pre><code>行尾加上兩個以上空白字元  
+第二行
+</code></pre>
+
+<p>行尾加上兩個以上空白字元<br/>
+第二行</p>
+
+<p><a name="content_how"></a></p>
+
+<h2>如何做出目錄</h2>
+
+<ol>
+<li>在文件中嵌入HTML的anchor tag</li>
+<li>同樣的文件中指定連結</li>
+</ol>
+
+
+<pre><code>&lt;a name="test"&gt;&lt;/a&gt;
+[連連看](#test)
+</code></pre>
+
+<p><a name="test"></a>
+<a href="#test">連連看</a></p>
+
+<p><a name="gfm_syntax"></a></p>
+
+<h2>GitHub Flavored Markdown</h2>
+
+<p><a name="del_line"></a></p>
+
+<h3>刪除線</h3>
+
+<pre><code>~~打我啊笨蛋，~和句子中間一樣不能有空白~~
+</code></pre>
+
+<p><del>打我啊笨蛋，~和句子中間一樣不能有空白</del></p>
+
+<p><a name="fcb"></a></p>
+
+<h3>Fenced code blocks</h3>
+
+<p><a name="gfmfcb"></a></p>
+
+<h4>GitHub Flavored Markdown語法</h4>
+
+<p>使用<pre><code>&lt;/pre&gt;把程式包起來
+</code>
+ <code>
+ #include &lt;stdio.h&gt;
+ int main(void)
+ {
+    printf("Hello World\n");
+    return 0;
+ }
+</code>
+<code>
+</code>
+ #include &lt;stdio.h>
+ int main(void)
+ {
+    printf(&ldquo;Hello World\n&rdquo;);
+    return 0;
+ }
+&#8220;`
+<a name="opfcb"></a></p>
+
+<h4>Octopress的語法</h4>
+
+<p><a href="http://octopress.org/docs/blogging/code/">Octopress的語法</a>讓使用者提供</p>
+
+<ul>
+<li>指定語言Highlight</li>
+<li>標題</li>
+<li>URL</li>
+<li>URL文字說明</li>
+</ul>
+
+
+<p><code>
+</code>c 標題 <a href="http://wen00072.github.io">http://wen00072.github.io</a> URL文字說明
+ #include &lt;stdio.h>
+ int main(void)
+ {
+    printf(&ldquo;Hello World\n&rdquo;);
+    return 0;
+ }
+ <code>
+</code>
+<code>c 標題 http://wen00072.github.io URL文字說明
+ #include &lt;stdio.h&gt;
+ int main(void)
+ {
+    printf("Hello World\n");
+    return 0;
+ }
+</code></p>
+]]></content>
+  </entry>
+  
+</feed>

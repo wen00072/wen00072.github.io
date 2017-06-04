@@ -1,0 +1,754 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Macro | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/macro/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[GNU: The C Preprocessor 導讀]]></title>
+    <link href="http://wen00072.github.io/blog/2013/10/13/talk-about-c-macros/"/>
+    <updated>2013-10-13T05:13:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/10/13/talk-about-c-macros</id>
+    <content type="html"><![CDATA[<p>C語言的前置處理(CPP: C preprocessor)是個很有趣的題目，知道在對的時機使用他們絕對能夠對於開發軟體有巨大的幫助。以下是我閱讀<a href="http://gcc.gnu.org/onlinedocs/cpp/index.html">GNU: The C Preprocessor</a>的筆記。請注意這只是筆記，詳細資料請自行參考原本網頁。</p>
+
+<p><a name="目錄"></a></p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#%E6%B8%AC%E8%A9%A6%E7%92%B0%E5%A2%83">測試環境</a></li>
+<li><a href="#%E6%B8%AC%E8%A9%A6%E7%92%B0%E5%A2%83">概論</a></li>
+<li><a href="#Header%20Files">Header Files</a></li>
+<li><a href="#%E5%B7%A8%E9%9B%86">巨集</a></li>
+<li><a href="#Preprocessor%20Output">Preprocessor Output</a></li>
+<li><a href="#gcc%E5%92%8CCPP%E7%9B%B8%E9%97%9C%E7%9A%84%E5%8F%83%E6%95%B8">gcc和CPP相關的參數</a></li>
+<li><a href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99">參考資料</a></li>
+</ul>
+
+
+<p><a name="測試環境"></a></p>
+
+<h2>測試環境</h2>
+
+<ul>
+<li><p>Ubuntu 12.04</p></li>
+<li><p><a href="#%E7%9B%AE%E9%8C%84">回目錄</a></p></li>
+</ul>
+
+
+<p><a name="概論"></a></p>
+
+<h2>概論</h2>
+
+<ul>
+<li>Preprocesser: 輸入文字，產生更動過的文字x。產生出來文字會當作另外執行程式的輸入資料。 <a href="http://en.wikipedia.org/wiki/Preprocessor">出處</a></li>
+<li>CNU C有自訂專用的Preprocessor指令，如果程式有移植性考量，gcc可以加入<code>-std=c90</code>, <code>-std=c99</code>或<code>-std=c11</code>參數檢查。全開就用<code>-pedantic</code>參數</li>
+</ul>
+
+
+<h3>編碼</h3>
+
+<ul>
+<li>Source character set
+
+<ul>
+<li>為gcc內部CPP處理的字元編碼</li>
+<li>gcc 讀入原始碼後會以UTF-8同構的字元編碼處理程式碼，CPP處理時的文字輸出(如gcc -E)也是使用Source character set</li>
+<li>可使用<code>-finput-charset=</code>參數指定source file 字元編碼</li>
+</ul>
+</li>
+<li>Execution character set
+
+<ul>
+<li>CPP處理結束後會將結果轉換成指定的編碼，預設仍然是UTF8</li>
+<li>後面看不懂，不想看</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>初始行為</h3>
+
+<ul>
+<li>Load檔案到記憶體內。GCC 支援不同Line end 格式(LF, CR LF, CR)
+
+<ul>
+<li>標準C 最後一行沒有line end是未定義行為，GCC會跳出警告訊息</li>
+</ul>
+</li>
+<li>處理trigraphs
+
+<ul>
+<li>史前遺跡，早期有些電腦沒有C需要的字元而使用trigraphs代替。如<code>??/</code> 代表 <code>\</code></li>
+<li>需要gcc參數設定才會支援</li>
+</ul>
+</li>
+<li>將\斷行的statemenet合併成一行</li>
+<li>把註解換成空白字元</li>
+</ul>
+
+
+<h3>取Token</h3>
+
+<ul>
+<li>空白鍵為分隔空白的單位</li>
+<li>由左至右順序取token <code>a+++++b</code> -> <code>a++ ++ +b</code>而不是<code>a++ + ++b</code></li>
+<li>Preprocessor token分類
+
+<ul>
+<li>identifiers: 單純的C合法token 如keyword, 字母和數字的組合</li>
+<li>preprocessing numbers: 一般來說就是數字</li>
+<li>String literals: 兩個<code>"</code>中間包含的字串，包括<code>#include "test.h"</code></li>
+<li>Punctuators: @ $ ` 以外ASCII的標點符號</li>
+<li>other: 直接pass到preprocessr output，一般來說C compiler會把other token打槍。
+
+<ul>
+<li>Other chars:
+
+<ul>
+<li>@</li>
+<li>$</li>
+<li>`</li>
+<li>不是NUL的control char</li>
+<li>ASCII 0x7F–0xFF (因為要支援國際字元、未來會討論存廢)</li>
+</ul>
+</li>
+<li>NUL在註解中會被忽略，一般程式碼則視為空白</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>基本上，preprocesser 輸出就是一個token</li>
+</ul>
+
+
+<pre><code class="c">#define MY() ddd
+int main(void)
+{
+    int i,MY()__;
+    return
+}
+</code></pre>
+
+<p>展開後就是</p>
+
+<pre><code class="c">## 1 "b.c"
+## 1 "&lt;built-in&gt;"
+## 1 "&lt;command-line&gt;"
+## 1 "b.c"
+
+int main(void)
+{
+    int i,ddd __;
+    return
+}
+</code></pre>
+
+<h3>Preprossessor 語法概要</h3>
+
+<ul>
+<li>包含指令(directives)和巨集(macros)</li>
+<li>提供
+
+<ul>
+<li>include檔案</li>
+<li>巨集展開</li>
+<li>條件式編譯</li>
+<li>行號控制：目前不是很懂，看起來是可以告訴compiler編譯intermediate時該statement是從哪個檔案的那一行過來的</li>
+<li>compile時可以吐error或warning</li>
+</ul>
+</li>
+<li><p>除了gcc內建的directives外，directives以<code>#</code>開頭，前後都可以有空白</p></li>
+<li><p><a href="#%E7%9B%AE%E9%8C%84">回目錄</a></p></li>
+</ul>
+
+
+<p><a name="Header Files"></a></p>
+
+<h2>Header Files</h2>
+
+<ul>
+<li>Header file就是檔案，該檔案包含下面的元件，讓不同原始碼檔案共用。
+
+<ul>
+<li>C declarations</li>
+<li>巨集</li>
+</ul>
+</li>
+<li>原始碼檔案透過#include去取用這些Header Files的資料</li>
+<li><code>#include</code>效果和複製header file到原始碼檔案一樣。你可以用<code>gcc -E 原始碼檔名</code>看到header file被放入。之所以這樣做就是讓使用者省去複製和多次修改相同介面的時間。</li>
+</ul>
+
+
+<h3>#include語法</h3>
+
+<ul>
+<li><code>#include &lt;file&gt;</code>
+
+<ul>
+<li>使用系統內建的標頭檔。標頭檔除了放在預設的目錄外，還可以在GCC下使用<code>-I</code>參數指定標頭檔路徑</li>
+</ul>
+</li>
+<li><code>#include "file"</code>
+
+<ul>
+<li>自己原始碼專用的標頭檔。GCC搜尋順序
+
+<ul>
+<li>同一份原始檔的目錄</li>
+<li><code>-iquote</code>指定的目錄</li>
+<li><code>-I</code>指定的目錄</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>標頭擋路徑</h2>
+
+<ul>
+<li><code>echo | gcc -v -x c -E -</code>可以列出gcc 搜尋標頭檔目錄</li>
+<li>gcc搜尋標頭檔順序是
+
+<ul>
+<li>系統預設路徑</li>
+<li><code>-I</code>參數，一個以上<code>-I</code>路徑則由左至右開始搜尋</li>
+</ul>
+</li>
+<li>可以使用<code>-nostdinc</code>讓gcc不去搜尋系統標準的include path</li>
+</ul>
+
+
+<h2>避免因為多重#include重複定義</h2>
+
+<ul>
+<li>狀況說明
+
+<ul>
+<li>原始碼檔案中include &ldquo;file1&#8221;和&#8221;file2&rdquo;</li>
+<li>&ldquo;file2&#8221;也有include &#8220;file1&rdquo;</li>
+<li>最後變成原始碼檔案中放了兩份file1的內容，一方面多餘另一方面也會發生重複定義的情況</li>
+</ul>
+</li>
+<li>建議方式: <a href="http://en.wikipedia.org/wiki/Include_guard">Include guard</a></li>
+</ul>
+
+
+<pre><code class="c Include guard example">#ifndef MY_HEADER_H
+#define MY_HEADER_H
+
+#define MY_VAR (1)
+
+#endif /* MY_HEADER_H */
+</code></pre>
+
+<h2>Computed Includes</h2>
+
+<ul>
+<li>用來節省太多條件式#include如</li>
+</ul>
+
+
+<pre><code class="c 條件式include">#ifdef LINUX
+    #include &lt;linux_plat.h&gt;
+#else
+    #include &lt;windows_plat.h&gt;
+#endif
+</code></pre>
+
+<ul>
+<li>使用方式</li>
+</ul>
+
+
+<pre><code class="c C檔案">#include MY_DEF_H
+</code></pre>
+
+<pre><code class="makefile Makefile">CFLAGS=-DMY_DEF_H="&lt;linux_plat.h&gt;"
+</code></pre>
+
+<h2>System Headers</h2>
+
+<ul>
+<li><p>GCC會忽略掉系統標頭檔的Warning，如果其他一般標頭檔想要有相同的處理方式，可以使用<code>-isystem 路徑</code>讓GCC將該目錄下的標頭檔視為系統標頭導</p></li>
+<li><p><a href="#%E7%9B%AE%E9%8C%84">回目錄</a></p></li>
+</ul>
+
+
+<p><a name="巨集"></a></p>
+
+<h2>巨集</h2>
+
+<ul>
+<li>Marco分成
+
+<ul>
+<li>擬函數巨集: <code>#define foo()</code>: 重點是()，()前面不得有空格
+
+<ul>
+<li>定義完後可以直接當作function使用，所以可以玩<code>callback = foo;</code>這樣的描述</li>
+</ul>
+</li>
+<li>資料相關巨集</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>擬函數巨集</h3>
+
+<ul>
+<li>擬函數巨集可以吃參數，以<code>,</code>分開。所以<code>MAC(buf[x = 1, u + 1])</code>這樣的程式碼會被拆成兩個參數，請使用<code>MAC((buf[x = 1, u + 1]))</code></li>
+<li>擬函數巨集的參數可以空白，多個參數請用<code>,</code>隔開。</li>
+</ul>
+
+
+<pre><code class="c 擬函數巨集參數空白範例">#define MY_MAC(x,y) my_mac(x,y)
+...
+MY_MAC(,);
+MY_MAC(a,b);
+MY_MAC(a,);
+MY_MAC(,b);
+</code></pre>
+
+<ul>
+<li>擬函數巨集定義的描述如果有使用<code>"</code>並且和參數相同，最後並不會被替換。
+
+<ul>
+<li><code>FOO(X) _bar(x, "x");</code> -> <code>FOO(bar) _bar(bar, "x");</code></li>
+</ul>
+</li>
+</ul>
+
+
+<h3>字串轉換</h3>
+
+<pre><code class="c">#define ENCLOSE_QUOTE(VAR) #VAR
+</code></pre>
+
+<ul>
+<li><code>ENCLOSE_QUOTE(test);</code> -> <code>"test"</code></li>
+</ul>
+
+
+<pre><code class="c">#define PLAY 0
+#define ENCLOSE_QUOTE(VAR) #VAR
+#define TO_STR(VAR) ENCLOSE_QUOTE(VAR)
+</code></pre>
+
+<ul>
+<li><code>ENCLOSE_QUOTE(PLAY);</code> -> <code>"PLAY"</code></li>
+<li><code>TO_STR(PLAY)</code> -> <code>ENCLOSE_QUOTE(0)</code> -> <code>"0"</code>
+
+<ul>
+<li>利用擬函數巨集展開參數的特性</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>合體</h3>
+
+<p><code>echo -e "#define  MYDEF(PARAM1, PARAM2)  PARAM1##PARAM2 \n\n MYDEF(xxx, yyy)" | gcc -E -x c -</code></p>
+
+<h3>Variadic Macros:  兩種方式，不能一個巨集同時使用</h3>
+
+<ul>
+<li>C99語法：<code>#define my_printf(...) printf("myprintf: " __VA_ARGS__)</code></li>
+<li>GNU語法：<code>#define my_printf(arg...) printf("myprintf: " args)</code></li>
+<li>可以在varidic marco中明確指定參數
+
+<ul>
+<li><code>#define my_printf(format, ...) fprintf(stderr, format, __VA_ARGS__)</code>
+
+<ul>
+<li>缺點: 使用<code>my_printf("test");</code>會GG，因為被轉成<code>fprintf(stderr, "test",);</code></li>
+<li>解法: <code>#define my_printf(format, ...) fprintf(stderr, format, ##__VA_ARGS__)</code>
+
+<ul>
+<li>GNU會把<code>,</code> 硬食掉</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<h3>GNU C支援的predefined Macros (節錄)</h3>
+
+<h4>標準Macro: 可以望文生義就不解釋了</h4>
+
+<ul>
+<li><code>__FILE__</code></li>
+<li><code>__LINE__</code></li>
+<li><code>__func__</code>
+
+<ul>
+<li>GCC也有一樣功能的<code>__FUNCTION__</code></li>
+</ul>
+</li>
+<li><code>__DATE__</code></li>
+<li><code>__TIME__</code></li>
+<li><code>__STDC__</code>：顯示目前是否使用Standard C編譯程式碼</li>
+<li><code>__STDC_VERSION__</code>：Standard C版本</li>
+<li><code>__cplusplus</code>：是否為C++編譯環境</li>
+<li><code>__OBJC__</code>：是否為object C編譯環境</li>
+<li><code>__ASSEMBLER__</code>：是否在組合語言環境</li>
+</ul>
+
+
+<h4>GNU Marco</h4>
+
+<ul>
+<li><code>__COUNTER__</code>：回傳一個從0開始的數字，每次呼叫一次加一</li>
+<li>GCC版本
+
+<ul>
+<li><code>__VERSION__</code></li>
+<li>細部版號
+
+<ul>
+<li><code>__GNUC__</code></li>
+<li><code>__GNUC_MINOR__</code></li>
+<li><code>__GNUC_PATCHLEVEL__</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>__GNUG__</code>：是否是用GNU C++</li>
+<li><code>__INCLUDE_LEVEL__</code>：標頭檔被引用的深度，從0開始算。如a->b->c，c就是2</li>
+<li><code>__ELF__</code>：輸出格式是否為elf</li>
+<li><code>__TIMESTAMP__</code></li>
+</ul>
+
+
+<h3>系統內建Macro</h3>
+
+<ul>
+<li>和平台有關，使用下面指令查詢：<code>echo "" | gcc -x c -E -dM -</code></li>
+<li>C標準規範使用<code>__</code>包夾或是<code>_</code>+<code>大寫</code>為系統內建Macro，其name space保留。</li>
+</ul>
+
+
+<h3>Undefine/Redefine</h3>
+
+<pre><code class="c Undefine/Redefine範例">#define FOO BAR
+...
+#undef FOO
+#define FOO BAR2
+</code></pre>
+
+<h3>密技和怪招</h3>
+
+<h4>Misnesting</h4>
+
+<ul>
+<li>間接呼叫</li>
+</ul>
+
+
+<pre><code class="c 間接呼叫範例">#define MY_PRT(X) printf(x)
+#define P_TEST(M) M("test")
+...
+P_TEST(MY_PRT);
+</code></pre>
+
+<ul>
+<li>不對稱的括號</li>
+</ul>
+
+
+<pre><code class="c 不對稱的括號範例">#define TEST(x) func1(x, "test"
+...
+test(my_param));
+</code></pre>
+
+<ul>
+<li>硬食分號</li>
+</ul>
+
+
+<pre><code class="c test.c">#define MY_TEST(x) { printf("test\n"); }
+...
+    if (bit)
+        MY_TEST(bit);
+    else
+        printf("else\n");
+</code></pre>
+
+<p>編譯會錯誤，原因是因為分號會讓gcc判斷if statement已經結束</p>
+
+<pre><code class="text 錯誤訊息">cc     test.c   -o test
+test.c: In function ‘main’:
+test.c:23:5: error: ‘else’ without a previous ‘if’
+make: *** [test] Error 1
+</code></pre>
+
+<ul>
+<li>解法: <code>do {...} while (0)</code></li>
+</ul>
+
+
+<pre><code class="c test.c">#define MY_TEST(x) do { printf("test\n"); } while(0)
+...
+    if (bit)
+        MY_TEST(bit);
+    else
+        printf("else\n");
+</code></pre>
+
+<ul>
+<li><p>除非明確了解巨集內容，否則避免直接傳函數進去巨集。<code>MY_TEST(func(xy,xx), 10));</code></p>
+
+<ul>
+<li>原因是巨集內也許會呼叫參數好幾次，如果傳進去的函數執行成本很高，就會發生悲劇。</li>
+</ul>
+</li>
+<li><p><a href="#%E7%9B%AE%E9%8C%84">回目錄</a></p></li>
+</ul>
+
+
+<p><a name="Preprocessor Output"></a></p>
+
+<h2>Preprocessor Output</h2>
+
+<ul>
+<li>可以使用<code>gcc -E 檔案</code>或是<code>cpp 檔案</code>觀察CPP的展開，和CPP相關格式請參考<a href="http://gcc.gnu.org/onlinedocs/cpp/Preprocessor-Output.html#Preprocessor-Output">這邊</a>。</li>
+<li><a href="#%E7%9B%AE%E9%8C%84">回目錄</a></li>
+</ul>
+
+
+<p><a name="gcc和CPP相關的參數"></a></p>
+
+<h2>gcc和CPP相關的參數</h2>
+
+<ul>
+<li>大部分選項和參數可以以空白隔開(<code>-I /usr/include</code>)或是直接連在一起(<code>-I/usr/include</code>)</li>
+</ul>
+
+
+<h3>節錄</h3>
+
+<ul>
+<li><code>-D 文字</code>: 定義<code>文字</code>巨集為1
+
+<ul>
+<li>測試<code>echo "TEST" | gcc -E -xc -DTEST -</code></li>
+</ul>
+</li>
+<li><code>-D 文字=文字</code>：定義<code>文字</code>巨集
+
+<ul>
+<li>測試<code>echo "TEST" | gcc -E -xc -DTEST=CPP -</code></li>
+</ul>
+</li>
+<li><code>-U</code>: undefine 巨集，如果參數同時有<code>-U</code>和<code>-D</code>的話優先先出現的先做</li>
+<li><code>-I dir</code>:指定搜尋header file目錄
+
+<ul>
+<li><code>dir</code>以<code>=</code>開頭，gcc會取代成sysroot路徑，參考<code>--sysroot</code>和<code>-isysroot</code></li>
+</ul>
+</li>
+<li><code>-M</code>:列出要檔案要吃的source code和header files
+
+<ul>
+<li>測試:</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="makefile -M範例">$ gcc -M b.c
+b.o: b.c /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdint.h \
+ /usr/include/stdint.h /usr/include/features.h \
+ /usr/include/x86_64-linux-gnu/bits/predefs.h \
+ /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h /usr/include/stdio.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stddef.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdarg.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/sys_errlist.h b.h
+</code></pre>
+
+<ul>
+<li><code>-MM</code>:列出要檔案要吃的source code和非系統的header files</li>
+</ul>
+
+
+<pre><code class="text 範例">$ gcc -MM b.c
+b.o: b.c b.h
+</code></pre>
+
+<ul>
+<li><code>-MF file</code>:配合<code>-M</code>, <code>-MM</code>時將結果寫入<code>file</code></li>
+<li><code>-MG</code>: <code>-M</code>, <code>-MM</code>parse到header file不存在會跳錯誤，而加上<code>-MG</code>後會假裝他們存在，照樣吐出結果。</li>
+</ul>
+
+
+<pre><code class="text -MG範例">$ mv b.h a
+$ gcc   -MM b.c
+b.c:3:15: fatal error: b.h: No such file or directory
+compilation terminated.
+$ gcc -MG  -MM b.c
+b.o: b.c b.h
+</code></pre>
+
+<ul>
+<li><code>-MP</code>: 順便把depend的target加入</li>
+</ul>
+
+
+<pre><code class="text -MP範例 ">$ gcc -MP -MM b.c
+b.o: b.c b.h
+
+b.h:
+</code></pre>
+
+<ul>
+<li><code>-MT</code> :指定target</li>
+</ul>
+
+
+<pre><code class="text -MT範例 ">$ gcc -MT test -MM b.c
+test: b.c b.h
+</code></pre>
+
+<ul>
+<li><code>-MD</code>: 直接編譯，同時把會吃的檔案和header files放在*.d檔</li>
+</ul>
+
+
+<pre><code class="text -MD範例">$ rm a.out
+$ gcc -MD b.c
+$ ls a.out
+a.out
+$ cat b.d
+b.o: b.c /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdint.h \
+ /usr/include/stdint.h /usr/include/features.h \
+ /usr/include/x86_64-linux-gnu/bits/predefs.h \
+ /usr/include/x86_64-linux-gnu/sys/cdefs.h \
+ /usr/include/x86_64-linux-gnu/bits/wordsize.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs.h \
+ /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h /usr/include/stdio.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stddef.h \
+ /usr/include/x86_64-linux-gnu/bits/types.h \
+ /usr/include/x86_64-linux-gnu/bits/typesizes.h /usr/include/libio.h \
+ /usr/include/_G_config.h /usr/include/wchar.h \
+ /usr/lib/gcc/x86_64-linux-gnu/4.6/include/stdarg.h \
+ /usr/include/x86_64-linux-gnu/bits/stdio_lim.h \
+ /usr/include/x86_64-linux-gnu/bits/sys_errlist.h b.h
+</code></pre>
+
+<ul>
+<li><code>-MMD</code>: 直接編譯，同時把會吃的檔案和非系統header files放在*.d檔</li>
+</ul>
+
+
+<pre><code class="text -MMD範例">$ rm a.out
+$ gcc -MMD b.c
+$ ls a.out
+a.out
+$ cat b.d
+b.o: b.c b.h
+</code></pre>
+
+<ul>
+<li><code>-dM</code>: 列出編譯時所有的巨集，不列出展開巨集的結果, 通常配合<code>-E</code></li>
+<li><code>-dD</code>: 列出編譯時不包含predefine的巨集以及展開巨集的結果, 通常配合<code>-E</code></li>
+<li><code>-dN</code>: 和<code>-dD</code>的差別是巨集只列出名稱不列出要展開的內容, 通常配合<code>-E</code>
+
+<ul>
+<li><code>#define foo bar</code> <code>-dD</code>輸出 <code>#define foo bar</code>，<code>-dN</code>結果 <code>#define foo</code></li>
+</ul>
+</li>
+<li><code>-dI</code>:不顯是巨集，而是顯示<code>#include</code>的指令</li>
+<li><code>-C</code>: 保留註解，不包含巨集展開的部份註解</li>
+<li><code>-CC</code>: 保留註解，包含巨集展開的部份註解</li>
+<li><p><code>-H</code>:列出編譯時會參考的header files</p></li>
+<li><p><a href="#%E7%9B%AE%E9%8C%84">回目錄</a></p></li>
+</ul>
+
+
+<p><a name="參考資料"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://gcc.gnu.org/onlinedocs/cpp/index.html">GNU: The C Preprocessor</a></li>
+<li>測試檔案</li>
+</ul>
+
+
+<pre><code class="c b.c ">#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include "b.h"
+
+
+#define foo  (bit,lfsr) /* XXX */
+#define bar(x) lose(x)
+#define lose(x) (1 + (x))
+
+#if aaa
+#define ddd ddds
+#endif
+
+int main(void)
+{
+    uint16_t lfsr = time(0);
+    unsigned bit;
+    unsigned period = 0;
+    int c= 644;
+
+    printf("%s\n", __BASE_FILE__);
+    printf("%s\n", __VERSION__);
+    if (bit)
+        MY_TEST(bit);
+    else
+        MY_TEST(bit);
+        printf("%d\n", (lfsr,bit,c));
+        printf("%d\n", (bit, lfsr));
+
+#line 10
+printf("test:%d, %s\n", __LINE__, __FILE__); 
+
+#if 0
+    lfsr = typeof(bit) 10;
+#endif
+
+    bar(foo);
+printf("test:%d, %s\n", __LINE__, __FILE__); 
+
+    return 0;
+}
+</code></pre>
+
+<pre><code class="c b.h">#define MY_TEST(x) do { printf("test\n"); } while(0)
+</code></pre>
+
+<ul>
+<li><a href="#%E7%9B%AE%E9%8C%84">回目錄</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

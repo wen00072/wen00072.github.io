@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Fsf | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/fsf/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Richard Stallman: A Free Digital Society 台北演講筆記]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/19/richard-stallmana-taipei-free-digital-society-lecture-notes/"/>
+    <updated>2014-05-19T14:39:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/19/richard-stallmana-taipei-free-digital-society-lecture-notes</id>
+    <content type="html"><![CDATA[<p><a href="http://gcc.gnu.org/">GCC</a>、<a href="http://www.gnu.org/">GNU</a> OS和<a href="http://www.fsf.org/">FSF</a>協會的創辦人<a href="http://en.wikipedia.org/wiki/Richard_Stallman">Richard Stallman (RMS)</a>在2014年五月在台灣大學發表演講，題目為：「 Free Digital Society 」。用兩光的英聽整理一下演講重點，應該有聽錯的部份，請自行斟酌：</p>
+
+<p>先把數位自由的部份從裏面提出來，因為要了解RMS的<code>自由</code>概念，才能夠理解他從這樣的理念提出的看法。RMS認為軟體和使用者的關係要嘛是使用者控制操作軟體，或是被軟體控制操作；而<code>自由</code>指的是使用者控制操作的情況。所以他定義了使用者自由操作的四種要素：</p>
+
+<ul>
+<li>零. 使用者可以不受限制的執行的執行程式。</li>
+<li>壹. 使用者有研讀修改的權力。你可以隨意地更改程式碼。</li>
+</ul>
+
+
+<p>以上兩個要素只能確保個人的控制軟體能力，但是各自單獨修改的力量和進步程度當然比不上合作修改還來大。因此他又加上兩項權利。</p>
+
+<ul>
+<li>貳. 重製散佈的權利。</li>
+<li>參. 更正，改進並散佈的權利。</li>
+</ul>
+
+
+<hr />
+
+<h2>現代數位自由威脅面向</h2>
+
+<ul>
+<li>網路監控
+
+<ul>
+<li>只要資料被蒐集，就有可能被濫用。</li>
+<li>在非自由設備下，資料就有可能被監控。就算使用自由設備，基礎設備也可能被用來監控。</li>
+<li>網路監控會讓匿名揭露者身份曝光，因而妨礙言論發表，進而危害民主。</li>
+<li>對於安全理由而安裝攝影機監控必須要有夠強烈的理由，並且要保證時間內要刪除資料。</li>
+<li>網路付費應該要有匿名付費方式以避免特定團體或政府追蹤資金來源作為政治報復手段。</li>
+</ul>
+</li>
+<li>網路審查</li>
+<li>數位資料格式
+
+<ul>
+<li>Proprietary 格式、DRM、和有專利的資料格式，都會妨礙數位自由。因為你這妨礙讓你無法自由的使用數位內容。</li>
+</ul>
+</li>
+<li>Proprietary軟體
+
+<ul>
+<li>惡意軟體形式
+
+<ul>
+<li>內含監控、資料蒐集、以及間諜目的的軟體</li>
+<li>限制數位自由如妨礙分享的軟體</li>
+<li>後門軟體</li>
+</ul>
+</li>
+<li>Proprietary軟體的問題是你不知道他binary內部到底放什麼意思，無從認知他是否是惡意軟體。</li>
+<li>GPLv3針對<a href="http://en.wikipedia.org/wiki/Binary_large_object">blob</a>有加強要求要能夠讓使用者可以自行取代原本軟體內的可執行binary。(未查證)</li>
+</ul>
+</li>
+<li>網站威脅
+
+<ul>
+<li>網站的Javascript常常會安裝Proprietary軟體。</li>
+<li>網站的資料蒐集以及要求填寫個人資料。</li>
+<li>雲端運算服務也有不可控制的特性。</li>
+</ul>
+</li>
+<li>數位政治選舉 (Public vote)
+
+<ul>
+<li>太容易作假又極度難以防弊，這會威脅民主。</li>
+</ul>
+</li>
+<li>資訊分享爭議
+
+<ul>
+<li>RMS提出可以想辦法平衡藝術創作收入和分享的金錢關係。例如計算數位分享次數，由政府從歲收中依比例付給藝術家。甚至可以調整付款公式計算讓最高的收入和一般收入不要差距到幾千幾萬倍。</li>
+<li>可以降低專利保護期限讓知識更快流通。</li>
+</ul>
+</li>
+<li>數位權利
+
+<ul>
+<li>現在的問題是基礎建設都是握在私人公司中，也就是說數位權利是有可能被商業掌控。因此政府不喜歡的網站一般存取就會被限制。</li>
+<li>RMS提出common carrier system的概念防止上面的問題。</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>相關資料：</h2>
+
+<ul>
+<li><a href="https://archive.org/details/RMS-Taipei-2014">Richard Stallman - A Free Digital Society - Taipei (May 10, 2014)</a></li>
+<li><a href="http://rms.kktix.cc/events/2014-taipei">活動訊息： 台北 Richard Stallman 演講－A Free Digital Society</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Richard_Stallman">Wikipedia: Richard Stallman</a></li>
+<li><a href="http://blog.kuoe0.tw/posts/2014/05/19/your-freedom-and-privacy-dr-richard-stallman">KuoE0&rsquo;s Dots: Your freedom and privacy - Dr. Richard Stallman (Richard Stallman: 高雄演講)</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

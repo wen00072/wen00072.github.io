@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Bash | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/bash/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Bash Autocomplete for Octopress]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/31/bash-autocomplete-for-octopress/"/>
+    <updated>2015-03-31T00:39:25+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/31/bash-autocomplete-for-octopress</id>
+    <content type="html"><![CDATA[<p>被bash_completion慣壞了，所以用Octopress的指令要打參數很煩，乾脆自幹一個。如果有需要的朋友就自行取用吧..</p>
+
+<ul>
+<li><a href="https://github.com/wen00072/octopress_bash_completion">GitHub URL</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

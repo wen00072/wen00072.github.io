@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Linux Utilities | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/linux-utilities/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Linux下面快速搜尋PDF的方式]]></title>
+    <link href="http://wen00072.github.io/blog/2013/10/17/linux-quick-search-below-pdf/"/>
+    <updated>2013-10-17T07:04:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/10/17/linux-quick-search-below-pdf</id>
+    <content type="html"><![CDATA[<p>有時候手上一堆PDF檔，不知道要查的資料在那個檔案，可以用下面的指令找出</p>
+
+<ul>
+<li><code>find -name "*.pdf" -exec pdfgrep {} \;</code></li>
+<li>注意pdfgrep需要額外安裝
+
+<ul>
+<li><code>sudo apt-get install pdfgrep</code></li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[[Ubuntu 16.04] 安裝完系統後新增工具整理]]></title>
+    <link href="http://wen00072.github.io/blog/2013/10/05/ubuntu-personal-use-tool-finishing/"/>
+    <updated>2013-10-05T00:11:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/10/05/ubuntu-personal-use-tool-finishing</id>
+    <content type="html"><![CDATA[<p>安裝完作業系統後還需要裝一些平常使用的工具，順手整理一下</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#%E6%87%B6%E4%BA%BA%E5%8C%85">懶人包</a></li>
+<li><a href="#%E5%B7%A5%E5%85%B7%E5%88%86%E9%A1%9E%E5%8F%8A%E7%B0%A1%E5%96%AE%E8%AA%AA%E6%98%8E">工具分類及簡單說明</a>
+
+<ul>
+<li> <a href="#%E7%B3%BB%E7%B5%B1%E7%A8%8B%E5%BC%8F%E9%96%8B%E7%99%BC%E5%A5%97%E4%BB%B6">系統程式開發套件</a></li>
+<li> <a href="#%E7%A8%8B%E5%BC%8F%E9%96%8B%E7%99%BC%E8%BC%94%E5%8A%A9%E5%B7%A5%E5%85%B7">程式開發輔助工具</a></li>
+<li> <a href="#%E4%B8%80%E8%88%AC%E5%B7%A5%E5%85%B7">一般工具</a></li>
+<li> <a href="#%E8%B3%87%E5%AE%89%E5%B7%A5%E5%85%B7">資安工具</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="懶人包"></a></p>
+
+<h2>懶人包</h2>
+
+<ul>
+<li><p>全部來
+<code>
+sudo apt -y aptitude build-essential bison flex automake libtool intltool  libncurses5-dev git-svn tig meld cscope vim-gtk fonts-inconsolata geany joe doxygen-gui exuberant-ctags manpages-dev manpages-posix-dev minicom tree terminator ttf-mscorefonts-installer ack-grep pandoc gnome-system-tools ghex mc dict wireshark mtr pdfgrep sshfs fail2ban rkhunter bc libssl-dev cmake
+</code></p></li>
+<li><p>單一選擇
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt-get install build-essential
+</span><span class='line'>sudo apt-get install bison
+</span><span class='line'>sudo apt-get install flex
+</span><span class='line'>sudo apt-get install automake
+</span><span class='line'>sudo apt-get install libtool
+</span><span class='line'>sudo apt-get install intltool
+</span><span class='line'>sudo apt-get install libncurses5-dev
+</span><span class='line'>sudo apt-get install bc
+</span><span class='line'>sudo apt-get install libssl-dev&lt;/p&gt;&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;sudo apt-get install git-svn
+</span><span class='line'>sudo apt-get install tig
+</span><span class='line'>sudo apt-get install meld
+</span><span class='line'>sudo apt-get install cscope
+</span><span class='line'>sudo apt-get install vim-gtk
+</span><span class='line'>sudo apt-get install fonts-inconsolata
+</span><span class='line'>sudo apt-get install geany
+</span><span class='line'>sudo apt-get install joe
+</span><span class='line'>sudo apt-get install doxygen-gui
+</span><span class='line'>sudo apt-get install exuberant-ctags
+</span><span class='line'>sudo apt-get install manpages-dev
+</span><span class='line'>sudo apt-get install manpages-posix-dev
+</span><span class='line'>sudo apt-get install minicom&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;sudo apt-get install tree
+</span><span class='line'>sudo apt-get install terminator
+</span><span class='line'>sudo apt-get install ttf-mscorefonts-installer
+</span><span class='line'>sudo apt-get install ack-grep
+</span><span class='line'>sudo apt-get install pandoc
+</span><span class='line'>sudo apt-get install gnome-system-tools
+</span><span class='line'>sudo apt-get install ghex
+</span><span class='line'>sudo apt-get install mc
+</span><span class='line'>sudo apt-get install dict
+</span><span class='line'>sudo apt-get install wireshark
+</span><span class='line'>sudo apt-get install mtr
+</span><span class='line'>sudo apt-get install pdfgrep
+</span><span class='line'>sudo apt-get install sshfs
+</span><span class='line'>sduo apt-get install aptitude&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;sudo apt-get install fail2ban
+</span><span class='line'>sudo apt-get install rkhunter</span></code></pre></td></tr></table></div></figure></p>
+
+<p><a name="工具分類及簡單說明"></a></p>
+
+<h2>工具分類及簡單說明</h2>
+
+<p><a name="系統程式開發套件"></a></p>
+
+<h3>系統程式開發套件 (不解釋)</h3>
+
+<ul>
+<li>build-essential</li>
+<li>bison</li>
+<li>flex</li>
+<li>automake</li>
+<li>libtools</li>
+<li>intltool</li>
+<li>libncurses5-dev</li>
+<li>libssl-dev</li>
+<li>bc</li>
+<li>cmake</li>
+</ul>
+
+
+<p><a name="程式開發輔助工具"></a></p>
+
+<h3>程式開發輔助工具</h3>
+
+<ul>
+<li>git-svn
+
+<ul>
+<li>git, svn, git-svn三個願望一次滿足</li>
+</ul>
+</li>
+<li>tig
+
+<ul>
+<li>文字介面的git管理工具</li>
+</ul>
+</li>
+<li>meld
+
+<ul>
+<li>GUI介面的檔案比較工具</li>
+</ul>
+</li>
+<li>cscope
+
+<ul>
+<li>追蹤程式碼工具，可以查詢函數被誰呼叫，宣告等功能。請配合vim服用</li>
+</ul>
+</li>
+<li>exuberant-ctags
+
+<ul>
+<li>追蹤程式碼工具，可以切入函數呼叫等功能。請配合vim服用</li>
+</ul>
+</li>
+<li>vim-gtk
+
+<ul>
+<li>vim和gvim兩個願望一次滿足</li>
+</ul>
+</li>
+<li>fonts-inconsolata
+
+<ul>
+<li>給開發程式時的GUI編輯器使用，因為不希望因為粗體斜體等效果干擾字元對齊</li>
+</ul>
+</li>
+<li>geany
+
+<ul>
+<li>簡單好用的GUI編輯</li>
+</ul>
+</li>
+<li>joe
+
+<ul>
+<li>文字介面的WordStar式介面編輯器</li>
+</ul>
+</li>
+<li>doxygen-gui
+
+<ul>
+<li>文件產生器和他的Front UI</li>
+</ul>
+</li>
+<li>ghex
+
+<ul>
+<li>GUI 16進位檔案檢視工具</li>
+</ul>
+</li>
+<li>manpages-dev
+
+<ul>
+<li>更多男人</li>
+</ul>
+</li>
+<li>manpages-posix-dev
+
+<ul>
+<li>POSIX男人，查phread用</li>
+</ul>
+</li>
+<li>minicom
+
+<ul>
+<li>Serial port終端機工具</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="一般工具"></a></p>
+
+<h3>一般工具</h3>
+
+<ul>
+<li>tree
+
+<ul>
+<li>文字介面使用樹狀結構顯示檔案</li>
+</ul>
+</li>
+<li>terminator
+
+<ul>
+<li>增強版gnome-terminal，可以同一個畫面任意新增分割的終端</li>
+</ul>
+</li>
+<li>ttf-mscorefonts-installer
+
+<ul>
+<li>主要是要Wingdings字型，有一堆有趣的向量ICON可以用</li>
+</ul>
+</li>
+<li>ack-grep
+
+<ul>
+<li>學長推荐的加強版grep，還不熟</li>
+</ul>
+</li>
+<li>pandoc
+
+<ul>
+<li>吃markdown語法產生其他文件如pdf</li>
+</ul>
+</li>
+<li>gnome-system-tools
+
+<ul>
+<li>需要GUI使用者管理所以安裝</li>
+</ul>
+</li>
+<li>mc
+
+<ul>
+<li>文字介面的norton commander介面式檔案管理工具，除了複製搬移外、還可以解壓縮檔案</li>
+</ul>
+</li>
+<li>dict
+
+<ul>
+<li>文字介面查英文單字用</li>
+</ul>
+</li>
+<li>wireshark
+
+<ul>
+<li>分析封包的工具</li>
+</ul>
+</li>
+<li>mtr
+
+<ul>
+<li>加強版的ping + tracert工具</li>
+</ul>
+</li>
+<li>pdfgrep
+
+<ul>
+<li>grep pdf檔案的工具</li>
+</ul>
+</li>
+<li>sshfs
+
+<ul>
+<li>可以透過ssh mount遠端的帳號</li>
+</ul>
+</li>
+<li>aptitude
+
+<ul>
+<li>另外一種套件操作方式<code>aptitude upgrade --full-resolve -y</code>我常用</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="資安工具"></a></p>
+
+<h3>資安工具</h3>
+
+<ul>
+<li>rkhunter
+
+<ul>
+<li>掃rootkit 的工具</li>
+</ul>
+</li>
+<li>fail2ban
+
+<ul>
+<li>自動ban掉固定時間內重複嘗試連線ssh等的工具，<a href="http://newtoypia.blogspot.tw/2016/04/fail2ban.html">中文簡介</a></li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

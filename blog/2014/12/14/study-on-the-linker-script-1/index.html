@@ -1,0 +1,846 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>GNU LD 手冊略讀 (1): Chapter 3 ~ Chapter 3.5 - My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="下一篇
+回總目錄 本篇目錄 Linker script 格式概論
+從Linker script 範例開始
+簡易script 命令格式 檔案相關命令
+Object檔案相關格式命令
+設定記憶體區塊alias命令
+未分類的命令 (節錄） 設定symbol的值 基本運算
+HIDDEN命令 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">GNU LD 手冊略讀 (1): Chapter 3 ~ Chapter 3.5</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-12-14T23:55:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>11:55 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command">下一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents">回總目錄</a></p>
+
+<h2>本篇目錄</h2>
+
+<ul>
+<li><a href="#fmt">Linker script 格式概論</a></li>
+<li><a href="#ex">從Linker script 範例開始</a></li>
+<li><a href="#cmd">簡易script 命令格式</a>
+
+<ul>
+<li><a href="#cmd-file">檔案相關命令</a></li>
+<li><a href="#cmd-obj">Object檔案相關格式命令</a></li>
+<li><a href="#cmd-alias">設定記憶體區塊alias命令</a></li>
+<li><a href="#cmd-misc">未分類的命令 (節錄）</a></li>
+</ul>
+</li>
+<li><a href="#assign">設定symbol的值</a>
+
+<ul>
+<li><a href="#assign-op">基本運算</a></li>
+<li><a href="#assign-hid">HIDDEN命令</a></li>
+<li><a href="#assign-prov">PROVIDE命令</a></li>
+<li><a href="#assign-hid-prov">PROVIDE_HIDDEN命令</a></li>
+<li><a href="#assign-src">談談source code和linker script symbol的關係</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="fmt"></a></p>
+
+<h2>Linker script 格式概論</h2>
+
+<ul>
+<li>以文字檔存放</li>
+<li>由多個command組成</li>
+<li>command可能是
+
+<ul>
+<li>keyword + 參數</li>
+<li>設定symbol</li>
+<li>&hellip;</li>
+</ul>
+</li>
+<li>command 可以用<code>;</code>分開，空白會被忽略</li>
+<li>使用/<em> .. </em>/註解</li>
+<li>字串直接打，如果有用到script保留的字元如<code>.</code>可以用<code>"</code>包住</li>
+</ul>
+
+
+<p><a name="ex"></a></p>
+
+<h2>從Linker script 範例開始</h2>
+
+<figure class='code'><figcaption><span>link script 範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="p">.</span> <span class="o">=</span> <span class="mh">0x10000</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">text</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>  <span class="p">.</span> <span class="o">=</span> <span class="mh">0x8000000</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這個<a href="https://sourceware.org/binutils/docs/ld/Simple-Example.html#Simple-Example">抄來</a>的範例很簡單，只有一個命令<code>SECTIONS</code>。<code>SECTIONS</code>是用來描述執行的時候記憶體的規劃配置（layout）。</p>
+
+<p>說明這個指令細節</p>
+
+<ul>
+<li><code>.</code>表示記憶體位置counter，起始值為0。結束值則由linker 計算把所有input section的資料整合到output section的長度。而<code>.</code>如果沒有指定明確的記憶體位址的話，就會被設定為<strong>上一個位址counter的結束位址</strong>。<a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/46">參考示意圖: (Jim Huang) How GNU Toolchain Works投影片 </a>。</li>
+<li>設定記憶體位置counter為0x10000</li>
+<li>接下來請把所有<strong>輸入</strong>object檔案的程式機械碼中(<code>{ *(.text) }</code>)存放到<strong>輸出</strong>object檔案的<code>.text</code>section中。</li>
+<li>接設定記憶體位置counter為0x8000000</li>
+<li>先放有初始值的全域變數（.data）</li>
+<li>再放<strong>沒有</strong>初始值的全域變數（.bss）</li>
+</ul>
+
+
+<p>另外要注意的是ld會自動幫你處理<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>，所以不用擔心section之間的aligment問題。</p>
+
+<p><a name="cmd"></a></p>
+
+<h2>linker script 命令格式</h2>
+
+<ul>
+<li><code>ENTRY(symbol)</code>
+
+<ul>
+<li>設定某個symbol為程式執行的第一個指令起始點，在我的預設linker script中是<code>ENTRY(_start)</code>，然後去反組譯隨便一個C編譯出來的執行檔，找字串<code>_start</code>可以看到裏面又去呼叫了<code>__libc_start_main@plt</code>。</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>hello_word執行檔</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>Disassembly of section .text:
+</span><span class='line'>
+</span><span class='line'>0000000000400440 &lt;_start&gt;:
+</span><span class='line'>  400440:       31 ed                   xor    %ebp,%ebp
+</span><span class='line'>  400442:       49 89 d1                mov    %rdx,%r9
+</span><span class='line'>  400445:       5e                      pop    %rsi
+</span><span class='line'>  400446:       48 89 e2                mov    %rsp,%rdx
+</span><span class='line'>  400449:       48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+</span><span class='line'>  40044d:       50                      push   %rax
+</span><span class='line'>  40044e:       54                      push   %rsp
+</span><span class='line'>  40044f:       49 c7 c0 c0 05 40 00    mov    $0x4005c0,%r8
+</span><span class='line'>  400456:       48 c7 c1 50 05 40 00    mov    $0x400550,%rcx
+</span><span class='line'>  40045d:       48 c7 c7 2d 05 40 00    mov    $0x40052d,%rdi
+</span><span class='line'>  400464:       e8 b7 ff ff ff          callq  400420 &lt;__libc_start_main@plt&gt;
+</span><span class='line'>  400469:       f4                      hlt
+</span><span class='line'>  40046a:       66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cmd-file"></a></p>
+
+<h2>檔案相關命令</h2>
+
+<ul>
+<li><code>INCLUDE filename</code>
+
+<ul>
+<li>在看到這個命令的時候才去載入<code>filename</code>這個<strong>linker script</strong>。可以被放在不同的命令如SETCTION, MEMORY等。</li>
+</ul>
+</li>
+<li><code>INPUT(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入object檔案，如abc.o這樣的檔案。</li>
+</ul>
+</li>
+<li><code>GROUP(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入archieve檔案，如libabc.a這樣的檔案。</li>
+</ul>
+</li>
+<li><code>AS_NEEDED(file1 file2 ...)</code>
+
+<ul>
+<li>在<code>INPUT</code>和<code>GROUP</code>使用的命令，用來告訴linker說如果object裏面的資料有被reference到才link進來，猜測應該可以減少儲存空間。範例（未測試請自行斟酌）：<code>INPUT(file1.o file2.o AS_NEEDED(file3.o file4.o))</code></li>
+</ul>
+</li>
+<li><code>OUTPUT(filename)</code>
+
+<ul>
+<li>和<code>gcc -o filename</code> 一樣</li>
+</ul>
+</li>
+<li><code>SEARCH_DIR(path)</code>
+
+<ul>
+<li>和<code>-L path</code>一樣</li>
+</ul>
+</li>
+<li><code>STARTUP(filename)</code>
+
+<ul>
+<li>和INPUT相同，唯一差別是ld保證這個檔案一定是第一個被link</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-obj"></a></p>
+
+<h2>Object檔案相關格式命令</h2>
+
+<ul>
+<li><code>OUTPUT_FORMAT(bfdname)</code>
+
+<ul>
+<li>指定輸出object檔案的binary 檔案格式，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>OUTPUT_FORMAT(default, big, little)</code>
+
+<ul>
+<li>指定輸出object檔案預設的binary 檔案格式，big endian的binary 檔案格式以及little endian的binary 檔案格式。可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>TARGET(bfdname)</code>
+
+<ul>
+<li>告訴ld用那種binary 檔案格式讀取輸入object檔案要，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-alias"></a></p>
+
+<h2>設定記憶體區塊alias命令</h2>
+
+<ul>
+<li><code>REGION_ALIAS(alias, region)</code>
+
+<ul>
+<li>設定<code>MEMORY</code>命令中區塊的alias，一般來說，用在不同的平台需要相同的memory layout時可以使用。舉例來說，當有3個平台，記憶體layout都是相同，那麼可以
+
+<ul>
+<li>將他們平台相關的記憶體區塊<code>MEMORY</code>命令寫在個別的檔案如linkcmds.memory</li>
+<li>設定相同的alias</li>
+<li>在主要的linker script 使用<code>INCLUDE</code>載入linkcmds.memory，並且直接使用alias當作一般的區塊使用。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>詳細的範例說明可以看<a href="https://sourceware.org/binutils/docs/ld/REGION_005fALIAS.html#REGION_005fALIAS">這邊</a></p>
+
+<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">INCLUDE</span> <span class="n">linkcmds</span><span class="p">.</span><span class="n">memory</span>
+</span><span class='line'>
+</span><span class='line'> <span class="n">SECTIONS</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_TEXT</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">rodata</span> <span class="p">:</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
+</span><span class='line'>         <span class="n">rodata_end</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_RODATA</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">rodata_end</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="n">data_start</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_DATA</span>
+</span><span class='line'>     <span class="n">data_size</span> <span class="o">=</span> <span class="n">SIZEOF</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'>     <span class="n">data_load_start</span> <span class="o">=</span> <span class="n">LOADADDR</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'>     <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span>
+</span><span class='line'>       <span class="p">{</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>
+</span><span class='line'>       <span class="p">}</span> <span class="o">&gt;</span> <span class="n">REGION_BSS</span>
+</span><span class='line'>   <span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="cmd-misc"></a></p>
+
+<h2>未分類的命令 (節錄）</h2>
+
+<ul>
+<li><code>ASSERT(exp, message)</code>
+
+<ul>
+<li>條件不成立就噴訊息並結束link</li>
+</ul>
+</li>
+<li><code>EXTERN(symbol1 symbol2 ...)</code>
+
+<ul>
+<li>強迫讓指定的symbol設成undefined，手冊說一般用在刻意要使用非標準的API。例如自幹printf時可以用這個命令。 (不過變成了undefine symbol怎麼link??)</li>
+</ul>
+</li>
+<li><p><code>FORCE_COMMON_ALLOCATION</code></p>
+
+<ul>
+<li>手冊和男人說和相容性有關，手冊上是說強迫分配空間給common symbols，即使是link relocate檔案。(common symbols不知道是什麼)</li>
+</ul>
+</li>
+<li><p><code>OUTPUT_ARCH(bfdarch)</code></p>
+
+<ul>
+<li>指定輸出的平台，可以透過<code>objdump -i</code>查詢支援平台</li>
+</ul>
+</li>
+<li><code>INSERT [ AFTER | BEFORE ] output_section</code>
+
+<ul>
+<li>指定在預設linker script命令被執行之前或是之後加上或加入特定的輸入section到輸出section。以下是一個範例</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="nl">OVERLAY</span> <span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>      <span class="p">.</span><span class="n">ov1</span> <span class="p">{</span> <span class="n">ov1</span><span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>      <span class="p">.</span><span class="n">ov2</span> <span class="p">{</span> <span class="n">ov2</span><span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">INSERT</span> <span class="n">AFTER</span> <span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="assign"></a></p>
+
+<h2>設定symbol的值</h2>
+
+<p>linker script提供設定<strong>symbol</strong>數值的方法。要注意的是，這邊的symbol可以指一個全域變數、<code>SECTION</code>命令中的location counter（就是<code>.</code>開頭的資料如<code>.text</code>）</p>
+
+<p>使用方式介紹如下：</p>
+
+<p><a name="assign-op"></a></p>
+
+<h2>基本運算</h2>
+
+<figure class='code'><figcaption><span>symbol assignment operations</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">symbol</span> <span class="o">=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">+=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">-=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">*=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">/=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">&lt;&lt;=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">&gt;&gt;=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">&amp;=</span> <span class="n">expression</span> <span class="p">;</span>
+</span><span class='line'><span class="n">symbol</span> <span class="o">|=</span> <span class="n">expression</span> <span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>關於expression是三小後面會再討論。</p>
+
+<p><a href="https://sourceware.org/binutils/docs/ld/Simple-Assignments.html#Simple-Assignments">手冊上提供的範例</a>是</p>
+
+<figure class='code'><figcaption><span>symbol assign範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">floating_point</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'>  <span class="p">{</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">_etext</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="n">_bdata</span> <span class="o">=</span> <span class="p">(.</span> <span class="o">+</span> <span class="mi">3</span><span class="p">)</span> <span class="o">&amp;</span> <span class="o">~</span> <span class="mi">3</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="p">{</span> <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>從這邊可以看到幾種assign</p>
+
+<ul>
+<li>設定全域變數<code>floating_point</code>的symbol為0</li>
+<li>設定全域變數<code>_etext</code>的值為輸入object檔案<code>.text</code>合體後的offset，個人猜測可以理解成end of text。(回顧一下<code>.</code>是offset counter)</li>
+<li>設定全域變數<code>_bdata</code>的值為輸出object檔案<code>.text</code>結尾的offset 的<strong>4的倍數</strong>位址。這邊透露兩個資訊
+
+<ul>
+<li>個人猜測可以理解成begin of data</li>
+<li>四的倍數和<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>應該有關聯。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid"></a></p>
+
+<h2>HIDDEN命令</h2>
+
+<ul>
+<li><code>HIDDEN(要隱藏的symbol)</code>
+可以把他理解成加了<code>static</code>的全域變數，也就是說這個symbol只在這個處理範圍中才能摸到。</li>
+</ul>
+
+
+<p><a name="assign-prov"></a></p>
+
+<h2>PROVIDE命令</h2>
+
+<ul>
+<li><code>PROVIDE命令(symbol = expression)</code>
+
+<ul>
+<li>簡單來說，如果你的程式已經有這個symbol（函數或變數），就用你的；否則就使用這邊提供的symbol。手冊上說是給特殊的linker使用的。想知道他提的use case可以看<a href="https://sourceware.org/binutils/docs/ld/PROVIDE.html#PROVIDE">這邊</a>，我是沒什麼感覺。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid-prov"></a></p>
+
+<h2>PROVIDE_HIDDEN命令</h2>
+
+<ul>
+<li><code>PROVIDE_HIDDEN(symbol = expression)</code>
+
+<ul>
+<li>和PROVIDE命令相同，差別是這個symbol只在這個處理範圍中才能摸到，一如HIDDEN命令。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-src"></a></p>
+
+<h2>談談source code和linker script symbol的關係</h2>
+
+<p>這節很有趣，解答我的一些小問題。</p>
+
+<ul>
+<li>變數如何存放在binary中？
+
+<ul>
+<li>先把變數名稱放入symbol table內，換句話說symbol table會多一筆資料。這筆資料的欄位有
+
+<ul>
+<li>symbol的位址</li>
+<li>symbol的flags</li>
+<li>symbol屬於哪個SECTION</li>
+<li>symbol佔的記憶體空間或是alignment規範</li>
+<li>symbol的名稱</li>
+</ul>
+</li>
+<li>典型的symbol table 資料：C語言的main()
+
+<pre><code>*  `00000000004005ed g     F .text  0000000000000101              main`
+</code></pre></li>
+<li>而symbol的flag有7個groups
+
+<ul>
+<li>Group 1:
+
+<ul>
+<li><code>l</code>: local</li>
+<li><code>g</code>: global</li>
+<li><code>u</code>: unique global，GNU 用於ELF時的 symbol binding extenstion</li>
+<li><code>!</code>: 既是global也是local</li>
+</ul>
+</li>
+<li>Group 2:
+
+<ul>
+<li><code>w</code>: weak symbol</li>
+<li><code>&lt;空白&gt;</code>: strong symbol</li>
+</ul>
+</li>
+<li>Group 3:
+
+<ul>
+<li><code>C</code>: symbol 是一個constructor (不知道這邊constructor是指那個東西? )</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 4:
+
+<ul>
+<li><code>W</code>: warning symbol (不知道是三小)</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 5:
+
+<ul>
+<li><code>I</code>: 間接地reference其他的symbol</li>
+<li><code>i</code>: relocate 時要處理的function</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 6:
+
+<ul>
+<li><code>D</code>: dynamic symbol (不知道是三小)</li>
+<li><code>d</code>: debug symbol</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 7:
+
+<ul>
+<li><code>F</code>: 這是一個function</li>
+<li><code>f</code>: 這是一個檔案</li>
+<li><code>O</code>: 這是一個object</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果有初始值，順便設定初始值。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>foo = 100</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址依照symbol table的size規則將100寫入該位址。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>ptr = &amp;foo</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址寫到ptr在symbol table對應的記憶體。</li>
+</ul>
+</li>
+<li>symbol在symbol table中存放第一個欄位是<strong>symbol的值</strong>，而這個值<strong>是一個位址</strong>。</li>
+<li>在linker script設定的symbol如<code>foo = 100</code>和在程式碼中轉出的symbol如<code>foo = 100</code>差別在那？
+
+<ul>
+<li>linker script的100代表的是symbol的位址，而程式碼中轉出的symbol的100代表的是foo對應記憶體存放的值。</li>
+</ul>
+</li>
+<li>如何從C語言程式碼中摸到linker script內定義的symbol?
+
+<ul>
+<li>要先知道symbol名稱</li>
+<li>在程式碼中extern該symbol，型態為char。</li>
+<li>要知道symbol只是一個位址，所以要存取就要取位址。</li>
+<li>可以參考以前測試的<a href="http://wen00072.github.io/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux">範例：Linux中使用C語言載入data object 檔案資料</a></li>
+<li>另外有趣的是似乎section的symbol對應的位址不一定是只當位址使用。詳細測試在<a href="http://wen00072.github.io/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued">這邊：Linux中使用C語言載入data object 檔案資料 (續）</a></li>
+</ul>
+</li>
+<li>我可以反方向從linker script摸程式碼的symbol
+
+<ul>
+<li>不一定，不同的程式語言和編譯器有不同的變數和函數命名方式，也就是說你原始程式碼的symbol名稱<strong>可能不是</strong>最後存在輸出object檔案的symbol 名稱。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command">下一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents">回總目錄</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Wen Liao</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2014-12-14T23:55:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>14</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>11:55 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/binutils/'>binutils</a>, <a class='category' href='/blog/categories/linker-script/'>linker script</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/" data-via="" data-counturl="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents/" title="Previous Post: GNU LD 手冊略讀  (0): 目錄和簡介">&laquo; GNU LD 手冊略讀  (0): 目錄和簡介</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/" title="Next Post: GNU LD 手冊略讀  (2): Chapter 3.6 SETCIONS">GNU LD 手冊略讀  (2): Chapter 3.6 SETCIONS &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/';
+        var disqus_url = 'http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

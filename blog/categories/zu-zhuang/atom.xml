@@ -1,0 +1,684 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 組裝 | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/zu-zhuang/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[使用gdb 靜態分析C 語言名稱和參數相同函數的原始檔位置]]></title>
+    <link href="http://wen00072.github.io/blog/2016/10/03/locate-function-source-code-via-gdb/"/>
+    <updated>2016-10-03T14:36:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/10/03/locate-function-source-code-via-gdb</id>
+    <content type="html"><![CDATA[<h2>前言</h2>
+
+<p>感謝<a href="http://scottt.tw/">Scott</a>大大的資訊。</p>
+
+<p>忘記那邊看過的名言：「手上有了新玩具，就會想要馬上拿來用。」</p>
+
+<h2>動機</h2>
+
+<p>組裝軟體的時候，有一件事很讓我困擾。那就是當整包SDK有兩個以上名稱和參數相同的函數的時候。當這種情況發生時，trace code就很麻煩，你必須要花時間釐清到底最後會使用到那一個函數。而這些config可能用下面兩種方式切換這些名稱和參數相同的函數：</p>
+
+<ol>
+<li>巨集
+
+<ul>
+<li><code>#if</code></li>
+<li><code>#ifdef</code></li>
+</ul>
+</li>
+<li>Makefile
+
+<ul>
+<li>在檔案中根據不同變數編譯不同的檔案</li>
+</ul>
+</li>
+</ol>
+
+
+<p>我以前會視情況用下面兩種方法找到該函數編譯實際使用的原始檔位置</p>
+
+<ol>
+<li>下毒藥，只要相同名字的函數都塞入<code>#error 可以辨別的字串</code>。編譯時根據錯誤訊息判斷使用哪個函數</li>
+<li>gdb設斷點，runtime透過中斷函數的方式取得函數的檔案和行號</li>
+</ol>
+
+
+<p>不過<a href="http://scottt.tw/">Scott</a>大大的今天給的資訊讓我可以更省力的處理這個問題了。</p>
+
+<p>如果只想要知道用法，看完下面指令就可以收工回家了。</p>
+
+<pre><code class="sh">gdb -ex 'file 你的執行檔或是shared library檔' -ex 'info line 要查的函數' -ex 'quit'
+</code></pre>
+
+<p>當然用<code>gdb</code>編譯時不要忘記加debug option。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#gds_env">測試環境</a></li>
+<li><a href="#gds_files">測試檔案</a>
+
+<ul>
+<li><a href="#gds_files_1">test_same_func.c</a></li>
+<li><a href="#gds_files_2">same_func1.c</a></li>
+<li><a href="#gds_files_3">same_func2.c</a></li>
+<li><a href="#gds_files_mk">Makefile</a></li>
+</ul>
+</li>
+<li><a href="#gds_test">測試結果</a></li>
+<li><a href="#gds_ref">延伸資料</a></li>
+</ul>
+
+
+<p><a name="gds_env"></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code class="text">$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.5 LTS
+Release:    14.04
+Codename:   trusty
+</code></pre>
+
+<p><a name="gds_files"></a></p>
+
+<h2>測試檔案</h2>
+
+<p>簡單來說，就是實作切換兩種方式同樣名稱和參數的函數：</p>
+
+<ol>
+<li>巨集</li>
+<li>Makefile</li>
+</ol>
+
+
+<p>所以我們會有</p>
+
+<ol>
+<li><a href="#gds_files_1">測試檔案進入點</a></li>
+<li><a href="#gds_files_2">測試檔一</a>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和測試檔二完全一模一樣</li>
+</ul>
+</li>
+<li><a href="#gds_files_3">測試檔二</a>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和測試檔一完全一模一樣</li>
+</ul>
+</li>
+<li><a href="#gds_files_mk">Makefile</a>
+
+<ul>
+<li>除了編譯以外，還提供兩個變數，由command line傳入
+
+<ul>
+<li>USE_FILE=1
+
+<ul>
+<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
+</ul>
+</li>
+<li>EN_OP1=1
+
+<ul>
+<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+
+<p><a name="gds_files_1"></a></p>
+
+<h3>test_same_func.c</h3>
+
+<ul>
+<li>測試檔案進入點，呼叫func1()。func1()在compile time才被決定</li>
+</ul>
+
+
+<pre><code class="c test_same_func.c">#include &lt;stdio.h&gt;
+extern void func1(void);
+
+int main()
+{
+    printf("Hello World\n");
+    func1();
+
+    return 0;
+}
+</code></pre>
+
+<p><a name="gds_files_2"></a></p>
+
+<h3>same_func1.c</h3>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和<a href="#gds_files_2">same_func2</a>完全一模一樣</li>
+</ul>
+
+
+<pre><code class="c same_func1.c">#include &lt;stdio.h&gt;
+
+#if OP1
+void func1(void)
+{
+    printf("%s: %s_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#else
+void func1(void)
+{
+    printf("%s: %s_NOT_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#endif
+</code></pre>
+
+<p><a name="gds_files_3"></a></p>
+
+<h3>same_func2.c</h3>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和<a href="#gds_files_1">same_func1</a>完全一模一樣</li>
+</ul>
+
+
+<pre><code class="c same_func2.c">#include &lt;stdio.h&gt;
+
+#if OP1
+void func1(void)
+{
+    printf("%s: %s_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#else
+void func1(void)
+{
+    printf("%s: %s_NOT_OP1\n", __FILE__, __PRETTY_FUNCTION__);
+}
+#endif
+</code></pre>
+
+<p><a name="gds_files_mk"></a></p>
+
+<h3>Makefile</h3>
+
+<p>提供兩個變數，由command line傳入</p>
+
+<ul>
+<li>USE_FILE=1
+
+<ul>
+<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
+</ul>
+</li>
+<li>EN_OP1=1
+
+<ul>
+<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="makefile">CFLAGS+=-Wall -Werror -g3
+TARGET=test_same_func
+SRCS=test_same_func.c
+
+ifeq ($(USE_FILE), 1)
+    SRCS += same_func1.c
+else
+    SRCS += same_func2.c
+endif
+
+ifeq ($(EN_OP1), 1)
+    CFLAGS += -DOP1=1
+endif
+
+OBJS=$(patsubst %.c, %.o, $(SRCS))
+
+$(TARGET): $(OBJS)
+    $(CC) -o $@ $^
+    gdb -ex 'file $@' -ex 'info line func1' -ex 'quit'
+
+%.o: %.c
+    $(CC) $(CFLAGS) -c $^
+
+clean:
+    rm *.o *~ $(TARGET) -f
+</code></pre>
+
+<p><a name="gds_test"></a></p>
+
+<h2>測試結果</h2>
+
+<p>前面提過，<code>func1()</code>的實作受兩個變數影響，分別為</p>
+
+<ol>
+<li>巨集<code>OP1</code>是否有設定
+
+<ul>
+<li>只有<code>OP1</code> 被設定<strong>並且</strong>非零時才會進入<code>OP1</code>的<code>func1()</code></li>
+</ul>
+</li>
+<li>Makefile變數<code>USE_FILE</code>是否有設定
+
+<ul>
+<li>只有<code>USE_FILE</code>為1的時候才會使用<code>same_func1.c</code>，其他情形都編譯<code>same_func2.c</code></li>
+</ul>
+</li>
+</ol>
+
+
+<p>所以我們make 指令有下面四種變化</p>
+
+<ol>
+<li><a href="">巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</a></li>
+<li><a href="">設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</a></li>
+<li><a href="">巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></a></li>
+<li><a href="">全部設定巨集<code>OP1</code>和<code>USE_FILE</code></a></li>
+</ol>
+
+
+<p><a name=""></a></p>
+
+<h3>巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func2.c</code></li>
+<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean 
+default settings: OP1 disable and use same_func1.c
+rm *.o *~ test_same_func -f
+
+$ make
+cc -Wall -Werror -g3 -c test_same_func.c
+cc -Wall -Werror -g3 -c same_func2.c
+cc -o test_same_func test_same_func.o same_func2.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 11 of "same_func2.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func2.c: func1_NOT_OP1
+</code></pre>
+
+<p><a name=""></a></p>
+
+<h3>設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func2.c</code></li>
+<li>使用<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean
+rm *.o *~ test_same_func -f
+
+$ make EN_OP1=1
+cc -Wall -Werror -g3 -DOP1=1 -c test_same_func.c
+cc -Wall -Werror -g3 -DOP1=1 -c same_func2.c
+cc -o test_same_func test_same_func.o same_func2.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 5 of "same_func2.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func2.c: func1_OP1
+</code></pre>
+
+<p><a name=""></a></p>
+
+<h3>巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func1.c</code></li>
+<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean
+rm *.o *~ test_same_func -f
+
+$ make USE_FILE=1
+cc -Wall -Werror -g3 -c test_same_func.c
+cc -Wall -Werror -g3 -c same_func1.c
+cc -o test_same_func test_same_func.o same_func1.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 11 of "same_func1.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func1.c: func1_NOT_OP1
+</code></pre>
+
+<p><a name=""></a></p>
+
+<h3>全部設定巨集<code>OP1</code>和<code>USE_FILE</code></h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func1.c</code></li>
+<li>使用<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<pre><code class="sh">$ make clean
+rm *.o *~ test_same_func -f
+
+$ make EN_OP1=1 USE_FILE=1
+cc -Wall -Werror -g3 -DOP1=1 -c test_same_func.c
+cc -Wall -Werror -g3 -DOP1=1 -c same_func1.c
+cc -o test_same_func test_same_func.o same_func1.o
+
+$ gdb -ex 'file test_same_func' -ex 'info line func1' -ex 'quit'
+...
+Line 5 of "same_func1.c" starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+Hello World
+same_func1.c: func1_OP1
+</code></pre>
+
+<p><a name="gds_ref"></a></p>
+
+<h2>延伸資料</h2>
+
+<ul>
+<li><a href="https://docs.google.com/document/d/1w1nPmCLpeRN3kEYglzHwozhWXY0ddT9oe6JCZocsPNE/edit">Using GDB to Help You Read Linux Kernel Code without Running It</a>
+
+<ul>
+<li><a href="http://scottt.tw/">Scott</a>大大的文件，描述使用gdb 靜態分析Linux kernel的技巧</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[使用strace找出程式缺少的檔案路徑]]></title>
+    <link href="http://wen00072.github.io/blog/2016/04/10/use-strace-to-trace-missing-files/"/>
+    <updated>2016-04-10T01:14:38+08:00</updated>
+    <id>http://wen00072.github.io/blog/2016/04/10/use-strace-to-trace-missing-files</id>
+    <content type="html"><![CDATA[<p>這算極短篇。在組裝別人軟體的時候，常常出現缺少檔案的錯誤，運氣不好的不會跟你說缺少的檔案的期待路徑；運氣更差的就會連錯誤都不印，直接程式crash。我後來知道strace之後，才發覺它可以結省很多印log和trace程式碼的時間。</p>
+
+<p>這次就以前一篇執行openocd遇到的問題為例：第一次編譯openocd後，直接執行會出現找不到openocd.cfg檔案。經過一些試誤後才有上一篇整理出來的指令。</p>
+
+<p>錯誤訊息如下</p>
+
+<pre><code>$ openocd 
+Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-07-22:20)
+Licensed under GNU GPL v2
+For bug reports, read
+    http://openocd.org/doc/doxygen/bugs.html
+embedded:startup.tcl:60: Error: Can't find openocd.cfg
+in procedure 'script' 
+at file "embedded:startup.tcl", line 60
+Error: Debug Adapter has to be specified, see "interface" command
+embedded:startup.tcl:60: Error: 
+in procedure 'script' 
+at file "embedded:startup.tcl", line 60
+</code></pre>
+
+<p>用strace 觀察輸出訊息如下：</p>
+
+<pre><code>$ strace -f openocd 2&gt;&amp;1  | grep cfg
+open("openocd.cfg", O_RDONLY)           = -1 ENOENT (No such file or directory)
+open("/home/asdf/.openocd/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
+open("/usr/local/share/openocd/site/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
+open("/usr/local/share/openocd/scripts/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
+write(2, "embedded:startup.tcl:60: Error: "..., 118embedded:startup.tcl:60: Error: Can't find openocd.cfg
+</code></pre>
+
+<p>從輸出訊息可以知道，openocd會依下面的順序讀取openocd.cfg</p>
+
+<ul>
+<li>目前目錄的openocd.cfg</li>
+<li>~/.openocd/openocd.cfg</li>
+<li>/usr/local/share/openocd/site/openocd.cfg</li>
+<li>/usr/local/share/openocd/scripts/openocd.cfg</li>
+</ul>
+
+
+<p>所以接下來就是在openocd的原始碼中挑和你開發target可以使用config 檔案，放入~/.openocd、改成openocd.cfg。當然事情沒那麼簡單，解掉這個問題接下來還會有一些缺少檔案的問題，一樣靠strace就可以搞定。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[C語言在Linux下組裝經驗分享]]></title>
+    <link href="http://wen00072.github.io/blog/2013/11/29/c-language-assembler-under-linux-sharing/"/>
+    <updated>2013-11-29T14:19:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/11/29/c-language-assembler-under-linux-sharing</id>
+    <content type="html"><![CDATA[<p>整理組裝經驗如下，全部是Command line的文字模式</p>
+
+<ul>
+<li><a href="#%E9%9D%9ERuntime">非Runtime</a>
+
+<ul>
+<li><a href="#nr1">找出static library symbols</a></li>
+<li><a href="#nr2">找出library搜尋路徑</a></li>
+<li><a href="#nr3">列出CC 預設define和相關資訊</a></li>
+</ul>
+</li>
+<li><a href="#Runtime">Runtime</a>
+
+<ul>
+<li><a href="#r1">dump console 輸出文字</a></li>
+<li><a href="#r2">當dynamic library 不在/無法放到linker搜尋路徑造成檔案無法執行</a></li>
+<li><a href="#r3">看程式system call的行為</a></li>
+<li><a href="#r4">Linker/loader 相關</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="非Runtime"></a></p>
+
+<h2>非Runtime</h2>
+
+<p><a name="nr1"></a></p>
+
+<ul>
+<li>找出static library symbols
+
+<ul>
+<li><code>find | grep *\\.a$ | xargs nm -A | grep 要找的symbol</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="nr2"></a></p>
+
+<ul>
+<li>找出library搜尋路徑
+
+<ul>
+<li><code>ld --verbose | grep SEARCH | tr "; " "\n\r"</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="nr3"></a></p>
+
+<ul>
+<li>列出CC 預設define和相關資訊
+
+<ul>
+<li><code>echo "" | gcc -E -xc - -dM -v</code></li>
+</ul>
+</li>
+<li>grep 加regular expression萬歲</li>
+</ul>
+
+
+<hr />
+
+<p><a name="Runtime"></a></p>
+
+<h2>Runtime</h2>
+
+<p><a name="r1"></a></p>
+
+<ul>
+<li><p>dump console 輸出文字</p>
+
+<ul>
+<li>script
+
+<ul>
+<li><code>script 文字輸出檔檔名</code></li>
+<li>操作</li>
+<li>按<code>ctrl+d</code>結束dump</li>
+</ul>
+</li>
+<li>執行檔 2>&amp;1 | tee 輸出檔名
+
+<ul>
+<li>變形
+
+<ul>
+<li>執行檔 2>&amp;1 | grep 想找的文字 | tee 輸出檔名
+<a name="r2"></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>當dynamic library 不在/無法放到linker搜尋路徑造成檔案無法執行</p>
+
+<ul>
+<li>$<code>LD_LIBRARY_PATH=$LD_LIBRARY_PATH:你的library路徑 執行檔</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="r3"></a></p>
+
+<ul>
+<li>看程式system call的行為
+
+<ul>
+<li><code>strace 執行檔</code></li>
+<li><code>strace -e open 執行檔</code>
+
+<ul>
+<li>看open system call，常用，因為有時候程式爛掉是因為開檔案失敗，用這個找很快</li>
+</ul>
+</li>
+<li><code>strace -f 執行檔</code>
+
+<ul>
+<li>包含fork的process</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="r4"></a></p>
+
+<ul>
+<li>Linker/Loader 相關
+
+<ul>
+<li>ld.so會和路徑以及平台相關，以Ubuntu LTS 12.04 X86有
+
+<ul>
+<li>/lib64/ld-linux-x86-64.so.2
+
+<ul>
+<li>64-bit</li>
+</ul>
+</li>
+<li>/lib/ld-linux.so.2
+
+<ul>
+<li>32-bit</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>透過dynamic linker/loader 看檔案link的library
+
+<ul>
+<li><code>LD_TRACE_LOADED_OBJECTS=1 ld.so 執行檔</code></li>
+</ul>
+</li>
+<li>觀察dynamic linker/loader行為
+
+<ul>
+<li><code>LD_DEBUG=help /bin/ls</code>
+
+<ul>
+<li>顯示選項</li>
+</ul>
+</li>
+<li><code>LD_DEBUG=all 執行檔</code>
+
+<ul>
+<li>全部都顯示</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>合體
+
+<ul>
+<li><code>LD_DEBUG=all strace -f ld.so strace -f 執行檔</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="參考資料"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><code>man ld.so</code></li>
+<li><a href="http://tldp.org/HOWTO/Program-Library-HOWTO/shared-libraries.html">TLDP: Shared Libraries</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

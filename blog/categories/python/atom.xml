@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Python | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/python/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Python Mode for Vim簡介]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/06/introduction-to-python-mode-for-vim/"/>
+    <updated>2014-12-06T13:49:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/06/introduction-to-python-mode-for-vim</id>
+    <content type="html"><![CDATA[<p><a href="https://github.com/klen/python-mode">Python Mode</a>是一個vim下面關於Python 的plugin，快速整理一下以前看的文件。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#install">安裝</a></li>
+<li><a href="#use">使用</a></li>
+<li><a href="#vim-settings">.vimrc 設定更動</a></li>
+<li><a href="#remarks">Remarks</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="install"></a></p>
+
+<h2>安裝</h2>
+
+<h2>使用vundle</h2>
+
+<ul>
+<li>在.vim 加入</li>
+</ul>
+
+
+<pre><code>Bundle 'klen/python-mode'
+</code></pre>
+
+<ul>
+<li>在vim下打:BundleInstall
+*（不確定是否必要）離開vim 再重新啟動vim</li>
+<li>執行下面命令</li>
+</ul>
+
+
+<pre><code>:helptags ~/.vim/bundle/python-mode/doc
+</code></pre>
+
+<h2>使用Pathogen管理下的安裝</h2>
+
+<ul>
+<li>下載套件</li>
+</ul>
+
+
+<pre><code>$ cd ~/.vim/bundle
+$ git clone git://github.com/klen/python-mode.git
+</code></pre>
+
+<ul>
+<li>在.vimrc啟動，加入以下內容</li>
+</ul>
+
+
+<pre><code>" Pathogen load
+filetype off
+
+call pathogen#infect()
+call pathogen#helptags()
+
+filetype plugin indent on
+syntax on
+</code></pre>
+
+<p><a name="use"></a></p>
+
+<h2>使用</h2>
+
+<ul>
+<li>執行
+
+<ul>
+<li><code>\r</code>
+
+<ul>
+<li><code>\</code>為<code>&lt;leader&gt;</code> key的預設值</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>除錯
+
+<ul>
+<li><code>\b</code>
+
+<ul>
+<li>設定中斷點，python mode會自動偵測除錯器，我使用pdb。不過設中斷點後執行之後那些除錯命令要在那邊下還不清楚。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>查詢
+
+<ul>
+<li>游標到要查詢的keyword按<code>K</code>
+
+<ul>
+<li>查詢目前statement使用方式</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>查詢PyDoc資料
+
+<ul>
+<li><code>:PymodeDoc</code> 你要查詢的東西
+
+<ul>
+<li>ex: <code>:PymodeDoc print</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>區塊折疊/展開
+
+<ul>
+<li><code>zo</code>
+
+<ul>
+<li>展開區塊</li>
+</ul>
+</li>
+<li><code>zc</code>
+
+<ul>
+<li>折疊區塊</li>
+</ul>
+</li>
+<li><code>za</code>
+
+<ul>
+<li>toggle區塊</li>
+</ul>
+</li>
+<li>以上的操作<code>o</code>, <code>c</code>，<code>a</code>換成<code>O</code>, <code>C</code>, <code>A</code>的話表示Apply到目前區塊下面所有的子區塊</li>
+</ul>
+</li>
+<li>移動
+
+<ul>
+<li><code>[[</code>
+
+<ul>
+<li>移動到游標上方第一層的block，通常是在查詢目前trace到哪個function或是class</li>
+</ul>
+</li>
+<li><code>]]</code>
+
+<ul>
+<li>移動到游標下方第一層的block，通常是用於切換下一個function或是class</li>
+</ul>
+</li>
+<li><code>[m</code>
+
+<ul>
+<li>移動到游標上方class 第一個method</li>
+</ul>
+</li>
+<li><code>]m</code>
+
+<ul>
+<li>移動到游標下方class 第一個method</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>移動到定義(函數、class）
+
+<ul>
+<li><code>CTRL + C 後按g</code></li>
+</ul>
+</li>
+<li>區塊處理
+
+<ul>
+<li>先定義處理方式x&#8217;, x&#8217;可代換複製(y)，刪除(d)，選取(v)等</li>
+<li><code>x'aC</code>
+
+<ul>
+<li>處理整個class</li>
+</ul>
+</li>
+<li><code>x'iC</code>
+
+<ul>
+<li>inner, 處理目前游標包含的那整個class</li>
+</ul>
+</li>
+<li><code>x'aM</code>
+
+<ul>
+<li>處理一個整個method</li>
+</ul>
+</li>
+<li><code>x'iM</code>
+
+<ul>
+<li>inner, 處理目前游標包含的那整個method</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vim-settings"></a></p>
+
+<h2>.vimrc 設定更動</h2>
+
+<ul>
+<li><p>預設使用Python 2，更改使用Python 3</p>
+
+<ul>
+<li><code>let g:pymode_python = 'python3'</code>
+
+<ul>
+<li>注意！這招要確認你的vim已經支援Python3，確認方式</li>
+<li><code>$ vim --version | grep python3</code> 應該要有+python3，目前Ubuntu 14.04.1沒有看到設定語法檢查工具，放這邊主要是可以檢查是否已經裝了相關套件了。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>let g:pymode_lint_checkers = [&lsquo;pyflakes&rsquo;, &lsquo;pep8&rsquo;, &lsquo;mccabe&rsquo;]</p>
+
+<ul>
+<li>Refactor，使用rope，我沒使用過rope，故跳過</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="remarks"></a></p>
+
+<h2>Remarks</h2>
+
+<p>我安裝了下面兩個套件，用來讓Python Mode檢查語法。不過可以明顯感覺到用了速度變很慢，目前還沒打算去看是否設定有錯誤。</p>
+
+<ul>
+<li><code>sudo apt-get install python-rope</code></li>
+<li><code>sudo apt-get install pylint</code></li>
+</ul>
+
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/klen/python-mode/blob/develop/doc/pymode.txt">Python Mode說明</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[A Brief Introduction to Regular Expression With Python 2.7.3 Standard Library 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/06/16/regular-expression-with-python-standard-library-273-slides-on-line/"/>
+    <updated>2014-06-16T16:08:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/06/16/regular-expression-with-python-standard-library-273-slides-on-line</id>
+    <content type="html"><![CDATA[<p>有點心虛，很多地方並不是全盤了解，請自行斟酌。有錯誤也請務必告知，謝謝！</p>
+
+<p>2014/Jun/18: 修正Lookahead assertion和Lookbehind assertion寫反的錯誤</p>
+
+<ul>
+<li>Speaker Deck</li>
+</ul>
+
+
+<script async class="speakerdeck-embed" data-id="4d12aea0d792013122527a02c15ca02c" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+
+<ul>
+<li>Slide Share</li>
+</ul>
+
+
+<iframe src="http://www.slideshare.net/slideshow/embed_code/35927113" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/zzz00072/regular-expression-with-python-standard-library-35927113" title="Regular Expression with Python Standard Library 2.7.3" target="_blank">Regular Expression with Python Standard Library 2.7.3</a> </strong> from <strong><a href="http://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Testing in Python 2.7.3 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/05/16/testing-in-python-273-slides-on-line/"/>
+    <updated>2014-05-16T21:24:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/05/16/testing-in-python-273-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="http://www.slideshare.net/slideshow/embed_code/33924909" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> </div></p>
+]]></content>
+  </entry>
+  
+</feed>

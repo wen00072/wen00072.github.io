@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 筆記 | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/bi-ji/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[筆記：Priority Inversion on Mars]]></title>
+    <link href="http://wen00072.github.io/blog/2014/03/05/note-priority-inversion-on-mars/"/>
+    <updated>2014-03-05T03:35:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/03/05/note-priority-inversion-on-mars</id>
+    <content type="html"><![CDATA[<ul>
+<li><p><a href="http://www.slideshare.net/jserv/priority-inversion-30367388">Priority Inversion on Mars投影片</a></p></li>
+<li><p>筆記</p>
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Readers%E2%80%93writers_problem">Readers–writers problem</a></li>
+<li>  Synchronization: Basic Rules
+
+<ul>
+<li>  Process/thread的lock絕對不可互相等待</li>
+<li>當lock的順序無法確定時，使用 try_lock or try_unlock 以及對應的恢復方法</li>
+<li>mutex是critical section專用，除了critical section外process/thread要等待其他的process做完才做事這樣的行為請用semaphore</li>
+</ul>
+</li>
+<li><a href="http://en.wikipedia.org/wiki/Deadlock#Livelock">Live lock</a>
+
+<ul>
+<li>  Wiki範例：兩個有禮貌的人在長廊中互相讓路，讓來讓入大家都卡在長廊裡面。</li>
+</ul>
+</li>
+<li>Priority inversion現象之一是在waiting queue中高優先權的thread/process等待低優先權的process/thread裡面的mutex release的現象</li>
+<li>ASI:  Atmospheric Structure Investigation</li>
+<li>  MET: Meteorology</li>
+<li>Bounded priority inversion
+
+<ul>
+<li>高優先權的process/thread等待進入critical section，該critical section目前由低優先權的process/thread佔用中。因此只要低優先權的process/thread離開該critical section後高優先權的process/thread便可繼續執行</li>
+</ul>
+</li>
+<li>Unbounded priority inversion
+
+<ul>
+<li>高優先權的process/thread等待進入critical section，該critical section目前由低優先權的process/thread佔用中</li>
+<li>不幸的是，當低優先權process/thread還在critical section執行的時候，被切換到中優先權的process/thread由於高優先權的process/thread被block，而低優先權的process/thread一定會被中優先權的process/thread搶走執行權。最壞的狀況就是之後就只剩中優先權的process/thread被執行</li>
+</ul>
+</li>
+<li>  解法？
+
+<ul>
+<li>Priority inheritance
+
+<ul>
+<li>當高優先權的process/thread要進入critical section發現該section以被低優先權的process/thread佔用時，系統暫時將該低優先權的process/thread調整到高優先權直到該低優先權的process/thread離開critical section
+
+<ul>
+<li>看來可以解Unbounded priority inversion，bounded priority inversion應該還是本質無法解掉？</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>  除錯觀點
+
+<ul>
+<li>火星探測車錯誤發生的地方是在select的系統實作上有用到mutex，而低優先權的priority使用該API</li>
+<li>直接從火星打開偵錯訊息傳回地球太過不切實際。後來確認在地球可以複製錯誤後全力追蹤context switch, 中斷和sync的部份</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[筆記：from Source to Binary: How GNU Toolchain Works]]></title>
+    <link href="http://wen00072.github.io/blog/2014/03/05/note-from-source-to-binaryhow-gnu-toolchain-works/"/>
+    <updated>2014-03-05T03:25:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/03/05/note-from-source-to-binaryhow-gnu-toolchain-works</id>
+    <content type="html"><![CDATA[<h2>出處： <a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works">from Source to Binary: How GNU Toolchain Works</a></h2>
+
+<h2>筆記</h2>
+
+<ul>
+<li>微言大意：一個單純的描述背後隱含大量的細節和操作
+
+<ul>
+<li>printf放在哪裡，怎麼被系統呼叫？</li>
+<li>main()函數怎麼被呼叫？</li>
+<li><code>#include</code>到底做了什麼事？</li>
+</ul>
+</li>
+<li>傳統程式碼從Compile到執行 階段每段的最佳化都和上下階段無關，上面的資訊下面的無法存取
+
+<ul>
+<li>Compiler 知道原始碼的結構，但是沒有變數和函數怎麼放置的資訊</li>
+<li>Linker 和C ompiler相反；知道變數和函數怎麼放置，但是沒有原始碼的結構的資訊</li>
+</ul>
+</li>
+<li>一個source code從編譯到產生binary使用到的GNU toolchain
+
+<ul>
+<li>cpp: 處理巨集產生*.i檔案</li>
+<li>cc1: 產生*.s (組合語言)檔案</li>
+<li>as:  產生*.o 檔案</li>
+<li>collect2:  沒放在PATH內，Ubuntu 12.04 放在/lib/gcc/x86_64-linux-gnu/4.6/collect2。Wrap linker and generate constructor code if needed.</li>
+<li>ld: 吃link script，library, C runtime以及*.o，產生binary  *</li>
+</ul>
+</li>
+<li>gcc
+
+<ul>
+<li>GNU compiler collection</li>
+<li>compiler driver</li>
+<li>compile時幫使用者呼叫cpp, cc1, as &hellip;.等程式並處理對應的參數</li>
+</ul>
+</li>
+<li>Intermediate Representation在gcc也有不同的leve
+
+<ul>
+<li>High Level : GENERIC (Syntax Tree Style IR)</li>
+<li>Middle Level : Gimple (Tree Style IR, SSA form)</li>
+<li>Low Level : RTL (List Style IR, Register Based)</li>
+</ul>
+</li>
+<li>SSA: Static Single Assignment
+
+<ul>
+<li>每次的assign expression將變數加上版本號碼
+
+<ul>
+<li><code>a = b + 1; a++ ; b++;</code> 變成</li>
+<li><code>a1 = b1 + 1; a2++; b2++;</code></li>
+</ul>
+</li>
+<li>如果變數assign expression是條件式的結果，使用Φ函數從集合中選擇
+
+<ul>
+<li>if (cond) { a = 1} else { a = 2 }變成</li>
+<li>if (cond1) { a1 = 1} else { a2 = 2 } => a3 = Φ (a1, a2)</li>
+</ul>
+</li>
+<li>SSA的優點 (pass，每個應該是大哉問)</li>
+</ul>
+</li>
+<li>GCC最佳化
+
+<ul>
+<li>將程式碼轉成語法樹</li>
+<li>把語法樹使用binary operation方式呈現，接著轉成SSA並針對SSA最佳化</li>
+<li>將SSA轉成RTL，使用和平台相關的最佳化如pipeline最佳化、針對平台最佳化過的函數、找出可以簡化的機械碼片段取換等
+
+<ul>
+<li><a href="http://en.wikipedia.org/wiki/Peephole_optimization">Peephole optimization</a></li>
+<li><a href="http://gcc.gnu.org/onlinedocs/gcc/Other-Builtins.html">Other Built-in Functions Provided by GCC</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Instruction_scheduling">Instruction scheduling</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>as的任務
+
+<ul>
+<li>產生obj 檔案</li>
+<li> 讓linker resolve symbol: ex: test.c 呼叫了printf(&ldquo;hello\n&rdquo;);，printf在哪裡？
+
+<ul>
+<li>產生symbol table</li>
+<li>產生relocation table</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>symbol，用來協助linker找到或連結變數或是函數正確的位址
+
+<ul>
+<li>先標記檔案內的變數或函數是internal的還是external的</li>
+</ul>
+</li>
+<li>binary分類
+
+<ul>
+<li>obj file
+
+<ul>
+<li>不需要處理symbol和relocation問題</li>
+</ul>
+</li>
+<li>執行檔: linker要把需要的function或變數從*.o檔案和在一起，或是動態使用symbol。
+
+<ul>
+<li>static link
+
+<ul>
+<li>要處理symbol和relocation問題</li>
+</ul>
+</li>
+<li>dynamic link
+
+<ul>
+<li>要處理symbol和relocation問題</li>
+<li>要處理動態呼叫library的問題</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>shared library
+
+<ul>
+<li>要處理symbol和relocation問題</li>
+<li>要處理動態呼叫library的問題</li>
+<li>使用Position independent code
+
+<ul>
+<li>載入時才確認address</li>
+<li>global variable使用base + offset方式</li>
+<li>會有overhead</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>dynamic linker
+
+<ul>
+<li>優點
+
+<ul>
+<li>不同process可共用dynamic library 可共用的部份如程式碼（應該要thread safe?），想像不同process呼叫printf，而printf程式碼只需要一份放在shared library-> 節省記憶體</li>
+<li>系統只放一份shared library -> 節省空間</li>
+<li>更新library不需要重邊執行檔</li>
+<li>Load on demand</li>
+</ul>
+</li>
+<li>執行檔dynamic Link 步驟
+
+<ul>
+<li>Compile time
+
+<ul>
+<li>ld -> 從shared linker取得relocation和symbol資訊，並將資訊放到binary執行檔內</li>
+</ul>
+</li>
+<li>runtime:
+
+<ul>
+<li>使用者執行程式</li>
+<li>系統從程式中取得dynamic linker路徑。</li>
+<li>dynamic linker會把shared library相關的檔案如libc.so的.data和.text relocate到記憶體中</li>
+<li>resolve相關的symbol</li>
+<li>開始執行程式</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Unix世界中，dynamic linker屬於C library</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="text Ubuntu 12.04 64-bit dynamic linker">$ ls /lib64/ld-linux-x86-64.so.2  -l
+ld-linux-x86-64.so.2 -&gt; /lib/x86_64-linux-gnu/ld-2.15.so*
+
+$ file /lib/x86_64-linux-gnu/ld-2.15.so
+/lib/x86_64-linux-gnu/ld-2.15.so: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[sha1]=0x930bb48366d22fbd8e002ef1c09f3061a506b43e, stripped
+</code></pre>
+]]></content>
+  </entry>
+  
+</feed>

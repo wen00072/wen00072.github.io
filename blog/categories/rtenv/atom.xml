@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Rtenv | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/rtenv/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Rtenv的linker Script解釋]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/22/rtenv-linker-script-explained/"/>
+    <updated>2014-12-22T19:18:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/22/rtenv-linker-script-explained</id>
+    <content type="html"><![CDATA[<p><a href="https://github.com/southernbear/rtenv.git">rtenv</a>是成功大學資訊工程系同學寫出來給CM3的小型作業系統，之前使用rtenv寫作業的時候曾經trace變數trace到C code裏面沒有，但是卻在linker script找到。可是那時候看的感覺就是一堆符號，所以就沒繼續追下去。這也是我想要了解linker script的起點。看完liner script語法後，自然要回來看一下是否可以了解他的描述，先看完整語法。</p>
+
+<pre><code class="c main.ld">ENTRY(main)
+MEMORY
+{
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 128K
+  RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 20K
+}
+
+SECTIONS
+{
+    .text :
+    {
+        KEEP(*(.isr_vector))
+         *(.text)
+         *(.text.*)
+        *(.rodata)
+        *(.rodata*)
+        _smodule = .;
+        *(.module)
+        _emodule = .;
+        _sprogram = .;
+        *(.program)
+        _eprogram = .;
+        _sromdev = .;
+        *(.rom.*)
+        _eromdev = .;
+        _sidata = .;
+    } &gt;FLASH
+
+    /* Initialized data will initially be loaded in FLASH at the end of the .text section. */
+    .data : AT (_sidata)
+    {
+        _sdata = .;
+        *(.data)        /* Initialized data */
+        *(.data*)
+        _edata = .;
+    } &gt;RAM
+
+    .bss : {
+        _sbss = .;
+        *(.bss)         /* Zero-filled run time allocate data memory */
+        _ebss = .;
+    } &gt;RAM
+
+    _estack = ORIGIN(RAM) + LENGTH(RAM);
+}
+</code></pre>
+
+<p>很長令人害怕嗎？先從大方向拆解</p>
+
+<ul>
+<li>程式起始點是<code>main</code></li>
+<li>使用<code>MEMORY</code>指令設了兩個region，分別為<code>FLASH</code>和<code>RAM</code></li>
+<li>輸出object檔案有三個section，分別是<code>.text</code>, <code>.data</code> , <code>.bss</code></li>
+</ul>
+
+
+<p>然後我們再往下看<code>MEMORY</code>和<code>SETCIONS</code>命令的描述：</p>
+
+<h2><code>MEMORY</code></h2>
+
+<pre><code class="c">MEMORY
+{
+  FLASH (rx) : ORIGIN = 0x00000000, LENGTH = 128K
+  RAM (rwx) : ORIGIN = 0x20000000, LENGTH = 20K
+}
+</code></pre>
+
+<p>可以看到我們有兩個region</p>
+
+<ul>
+<li><code>FLASH</code>
+
+<ul>
+<li>唯讀、可執行</li>
+<li>起始位址0x00000000</li>
+<li>長度128k</li>
+</ul>
+</li>
+<li><code>RAM</code>
+
+<ul>
+<li>可讀寫和執行</li>
+<li>起始位址0x20000000</li>
+<li>長度20k</li>
+</ul>
+</li>
+</ul>
+
+
+<p>口說無憑，可以看一下CM3的<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0179b/CHDDBAEC.html">Memory map</a>，確認一下0x00000000是不是寫程式的區段，而0x20000000是不是RAM的區段（好吧是SRAM）</p>
+
+<h2><code>SECTION</code></h2>
+
+<p>剛才講過有三個section，我們一個一個分別討論：</p>
+
+<h2><code>.text</code></h2>
+
+<pre><code class="c">.text :
+{
+  KEEP(*(.isr_vector))
+  *(.text)
+  *(.text.*)
+  *(.rodata)
+  *(.rodata*)
+  _smodule = .;
+  *(.module)
+  _emodule = .;
+  _sprogram = .;
+  *(.program)
+  _eprogram = .;
+  _sromdev = .;
+  *(.rom.*)
+  _eromdev = .;
+  _sidata = .;
+} &gt;FLASH
+</code></pre>
+
+<ul>
+<li>這個section要放在FLASH的region</li>
+<li>所有輸入object檔案的8個section會放入這個輸出object檔案section，分別為
+
+<ul>
+<li><code>.isr_vector</code>，這個section不可以被garbage collect回收</li>
+<li><code>.text</code></li>
+<li>所有.text.開頭的section</li>
+<li><code>.rodata</code>
+
+<ul>
+<li>所有.rodata開頭的section</li>
+</ul>
+</li>
+<li><code>.module</code></li>
+<li><code>.program</code></li>
+<li>所有.rom.開頭的section</li>
+</ul>
+</li>
+<li>這個section有7個symbol，分別是
+
+<ul>
+<li><code>_smodule</code>
+
+<ul>
+<li><code>.module</code>起始位址</li>
+</ul>
+</li>
+<li><code>_emodule</code>
+
+<pre><code>* `.module`結束位址
+</code></pre></li>
+<li><code>_sprogram</code>
+
+<pre><code>* `.program`起始位址
+</code></pre></li>
+<li><code>_eprogram</code>
+
+<pre><code>* `.program`結束位址
+</code></pre>
+
+<ul>
+<li><code>_sromdev</code>
+
+<ul>
+<li>所有.rom.開頭的section集合的起始位址</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>_eromdev</code>
+
+<pre><code>* 所有.rom.開頭的section集合的結束位址
+</code></pre></li>
+<li><code>_sidata</code>
+
+<pre><code>* `.data` section起始位址
+</code></pre></li>
+</ul>
+</li>
+</ul>
+
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+
+<h2><code>.data</code></h2>
+
+<pre><code class="c">/* Initialized data will initially be loaded in FLASH at the end of the .text section. */
+.data : AT (_sidata)
+{
+  _sdata = .;
+  *(.data)        /* Initialized data */
+  *(.data*)
+  _edata = .;
+} &gt;RAM
+</code></pre>
+
+<p>這部份表示</p>
+
+<ul>
+<li><code>.data</code>的LMA (載入記憶體位址）是<code>_sidata</code>，就是<code>.text</code>結束的地方。另外這邊你要自己搬，有興趣請查原始碼。</li>
+<li><code>.data</code>要放在RAM的region</li>
+<li>所有輸入object檔案的2個section會放入這個輸出object檔案section，分別為
+
+<ul>
+<li><code>.data</code></li>
+<li>所有.data開頭的section</li>
+</ul>
+</li>
+<li>這個section有2個symbol，分別是
+
+<ul>
+<li><code>_sdata</code>
+
+<ul>
+<li><code>.data</code>的起始位址</li>
+</ul>
+</li>
+<li><code>_edata</code>
+
+<ul>
+<li><code>.data</code>的結束位址</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+
+<h2><code>.bss</code></h2>
+
+<pre><code class="c">.bss : {
+    _sbss = .;
+    *(.bss)         /* Zero-filled run time allocate data memory */
+    _ebss = .;
+} &gt;RAM
+</code></pre>
+
+<ul>
+<li>所有輸入object檔案的<code>.bss</code>會放入這個輸出object檔案section</li>
+<li><code>.bss</code>要放在RAM的region</li>
+<li>這個section有2個symbol，分別是
+
+<ul>
+<li><code>_sbss</code>
+
+<ul>
+<li><code>.bss</code>的起始位址</li>
+</ul>
+</li>
+<li><code>_ebss</code>
+
+<ul>
+<li><code>.bss</code>的結束位址</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+
+<h2>stack</h2>
+
+<pre><code class="c">    _estack = ORIGIN(RAM) + LENGTH(RAM);
+</code></pre>
+
+<p>有印象程式使用的stack是由記憶體最後面往前面長的嘛？沒印象？那就估狗<code>linux</code>, <code>stack</code>, <code>text</code>的圖片就可以看到了。這邊也是同樣的概念，所以他的<code>_estack</code> symbol位址會是RAM的開頭位址加上RAM的size。</p>
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+]]></content>
+  </entry>
+  
+</feed>

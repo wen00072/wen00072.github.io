@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Patch | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/patch/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Quilt初探 - 使用quilt產生和管理patch]]></title>
+    <link href="http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt/"/>
+    <updated>2014-06-08T07:33:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt</id>
+    <content type="html"><![CDATA[<p>傳統的組裝的情況，常常會需要處理patch，然而當patch數量資料多到某種程度，加上時間推移原資料更動，套用patch會讓人生不如死。而quilt是Linux下面處理多個patch檔案的管理軟體。因為組裝軟體和打包Linux 套件會使用到，所以花點時間看一下整理一下。目前感覺有點像是先用git format-patch產生一些patch檔，另外一邊用git am 去merge這些patch檔。然後merge完可以用git reset HEAD^幾次來unmerge。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#usage">透過quilt產生patch</a>
+
+<ul>
+<li><a href="#files">quilt產生的檔案</a></li>
+</ul>
+</li>
+<li><a href="#apply">透過quilt管理patch</a></li>
+<li><a href="#rc">~/.quiltrc</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p>quilt的格式是<code>quilt 命令</code>，<strong>而它處理的對象是stack</strong>，也就是說你可以使用push, pop。沒有特別指定的話，command處理的對象是stack top。</p>
+
+<hr />
+
+<p><a name="usage"></a></p>
+
+<h2>透過quilt產生patch</h2>
+
+<ul>
+<li><code>quilt new 產生的patch檔案名稱</code></li>
+<li><code>quilt add 要監督那個檔案</code></li>
+<li>更動檔案。</li>
+<li><code>quilt refresh</code>產生patch</li>
+</ul>
+
+
+<p>重複前面動作會再產生新的patch，置於stack的top。可以透過<code>quilt series</code>觀察stack的狀態。另外有兩點值得注意：</p>
+
+<ul>
+<li>假設都是重複更動同一份檔案，<code>quilt refresh</code>就是單純和最原始的檔案diff。舉例來說，下了<code>quilt add</code>後修改了三行再執行<code>quilt refresh</code>產生patch，之後再修改另外五行後執行<code>quilt refresh</code>原本的patch檔案會有第一次改的那三行再加上後來改的那五行。</li>
+<li>一個檔案a，經過<code>quilt new</code> ,<code>quilt add</code>, <code>quilt refresh</code>後，再用quilt產生另外一份檔案的patch後。要再修改檔案a會需要經過<code>quilt new</code> ,<code>quilt add</code>, <code>quilt refresh</code>產生另外全新的patch檔案。</li>
+<li>可以使用<code>quilt header -e</code>去編輯patch檔的詳細說明。另外也可以用<code>quilt header -e patch名稱</code>指定編輯特定patch名稱的詳細說明。</li>
+</ul>
+
+
+<p>quilt會將產生的patch放在目前目錄下的<code>patches</code>目錄，這部份可以透過更改<code>QUILT_PATCHES</code>的變數更改名稱。</p>
+
+<hr />
+
+<p><a name="files"></a></p>
+
+<h3>quilt產生的檔案</h3>
+
+<p><code>quilt new 要產生的patch檔案</code>被執行後會產生</p>
+
+<ul>
+<li>pactches目錄
+
+<ul>
+<li>紀錄patch 順序的series檔案</li>
+</ul>
+</li>
+<li>.pc目錄
+
+<ul>
+<li>applied-patches，和series相同</li>
+<li><code>要產生的patch檔案名稱</code>的目錄</li>
+</ul>
+</li>
+</ul>
+
+
+<p><code>quilt add 要監督那個檔案</code>被執行後會產生
+* .pc目錄/要產生的patch檔案名稱的目錄/監督檔案路徑/監督檔案
+    * ex: ./pc/fix_err_no_27113/libs/liba.c</p>
+
+<p><code>quilt refresh</code>產生patch</p>
+
+<ul>
+<li>.pc目錄/要產生的patch檔案名稱的目錄/.timestamp</li>
+<li>patches/要產生的patch檔案名稱</li>
+</ul>
+
+
+<p><strong>我們可以觀察發現<code>quilt add</code>後quilt會將未修改的原始檔複製一份到.pc目錄/要產生的patch檔案名稱的目錄/監督檔案路徑/監督檔案。之後<code>quilt refresh</code>就是單純的diff產生結果</strong></p>
+
+<hr />
+
+<p><a name="apply"></a></p>
+
+<h2>透過quilt管理patch</h2>
+
+<p>apply patch並管理的步驟是。</p>
+
+<ul>
+<li>取得未apply patch的原始套件目錄。</li>
+<li>將前面產生出來的patches目錄複製到未apply patch的原始的套件目錄當中。</li>
+<li>透過quilt 操作並管理patch</li>
+</ul>
+
+
+<p>假設你有了patches目錄，你可以做以下操作</p>
+
+<ul>
+<li>查詢
+
+<ul>
+<li><code>quilt series</code>查詢有哪些patch</li>
+<li><code>quilt applied</code>查詢已經applied那些patch</li>
+<li><code>quilt unapplied</code>查詢還沒apply那些patch</li>
+<li><code>quilt next</code>查詢下一個要apply的patch</li>
+<li><code>quilt next</code>查詢前一個已經applied的patch</li>
+<li><code>quilt header</code>顯示目前stack top的註解說明資訊及要patch的檔案</li>
+<li><code>quilt header patch名稱</code>顯示目前stack中patch名稱的註解說明資訊及要patch的檔案</li>
+</ul>
+</li>
+<li>套用/還原patch
+
+<ul>
+<li><code>quilt push</code>依照stack反順序apply patch
+
+<ul>
+<li><code>quilt push -a</code>可以一口氣apply patch</li>
+<li><code>quilt push patch名稱</code></li>
+</ul>
+</li>
+<li><code>quilt pop</code>undo 一次已經applied的patch。
+
+<ul>
+<li><code>quilt pop -a</code>可以一口氣apply patch</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>舉例來說，假設patches目錄stack有<code>01_fix</code>, <code>02_fix</code>和<code>03_fix</code>。將該目錄複製到未patch的目錄中，下兩次<code>quilt push</code>會分別patch <code>01_fix</code>, <code>02_fix</code>。之後再<code>quilt pop</code>會變成只有apply <code>01_fix</code>而已。</p>
+
+<hr />
+
+<p><a name="rc"></a></p>
+
+<h2>~/.quiltrc</h2>
+
+<p>使用者透過<code>~/.quiltrc</code>自訂quilt的行為，列舉如下</p>
+
+<ul>
+<li>QUILT_PATCHES：指定產生的patch存放的目錄，預設為patches目錄</li>
+<li>QUILT_PATCH_OPTS：讓quilt呼叫patch執行檔apply patch時傳遞的參數</li>
+<li>QUILT_REFRESH_ARGS和QUILT_DIFF_ARGS：讓quilt呼叫diff執行檔時傳遞的參數</li>
+<li>QUILT_COLORS：不用解釋吧</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>quilt手冊： /usr/share/doc/quilt/quilt.pdf.gz</li>
+<li><a href="http://raphaelhertzog.com/2012/08/08/how-to-use-quilt-to-manage-patches-in-debian-packages/">How to use quilt to manage patches in Debian packages (推)</a></li>
+<li><a href="https://wiki.debian.org/UsingQuilt">UsingQuilt</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Quilt_%28software%29">Wikipedia: Quilt</a></li>
+<li><a href="http://wiki.openwrt.org/doc/devel/patches">OpenWrt Wiki: Working with patches</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

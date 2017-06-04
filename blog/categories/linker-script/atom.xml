@@ -1,0 +1,3486 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Linker Script | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/linker-script/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[GNU LD 手冊略讀 (3): Chapter 3.7 ~ Chapter 3.11]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/"/>
+    <updated>2014-12-15T00:06:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3</id>
+    <content type="html"><![CDATA[<p><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command">上一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents">回總目錄</a></p>
+
+<h2>本篇目錄</h2>
+
+<ul>
+<li><a href="#mem">MEMORY命令</a></li>
+<li><a href="#phdr">PHDRS命令</a></li>
+<li><a href="#ver">VERSION命令</a></li>
+<li><a href="#expr">Linker script 中使用的expression</a>
+
+<ul>
+<li><a href="#expr-const">常數</a></li>
+<li><a href="#expr-sym-const">Symbolic 常數</a></li>
+<li><a href="#expr-sym">Symbol命名規則</a></li>
+<li><a href="#expr-oph-sec">孤兒 Section</a></li>
+<li><a href="#expr-lcnt">Location Counter</a></li>
+<li><a href="#expr-op">Operators</a></li>
+<li><a href="#expr-eval">計算結果</a></li>
+<li><a href="#expr-sec">Expression 計算結果和absolute/relative address的關係</a></li>
+<li><a href="#expr-btfun">內建函數</a></li>
+</ul>
+</li>
+<li><a href="#imp">Implicit Linker Scripts</a></li>
+<li><a href="#todo">待釐清項目</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="mem"></a></p>
+
+<h2>MEMORY命令</h2>
+
+<p>預設的linker會將所有的memory space視為可以分配的。然而現實生活這個假設不一定成立，例如你寫資料到ROM的記憶體就保證GG。所以linker script提供了<code>MEMORY</code>命令讓你畫地盤，告訴linker那塊地盤有什麼樣的特性。該命令會描述</p>
+
+<ul>
+<li>你給這塊記憶體取的名稱，也就是說前面一直講的region</li>
+<li>起始位址</li>
+<li>上面位址後面的記憶體大小</li>
+<li>這塊記憶體有什麼限制</li>
+</ul>
+
+
+<p>命令語法如下：</p>
+
+<pre><code class="c">MEMORY
+{
+    name [(attr)] : ORIGIN = origin, LENGTH = len
+    ...
+}
+</code></pre>
+
+<p>每個欄位說明如下</p>
+
+<ul>
+<li><code>name</code>
+
+<ul>
+<li>你給這塊記憶體取的名稱，也就是說前面一直講的region(以下以region稱呼)。這個名稱不可以和同個linker script中以下的名稱相同：
+
+<ul>
+<li>symbol名稱</li>
+<li>section名稱</li>
+<li>檔案名稱</li>
+</ul>
+</li>
+<li>每塊region都要給個名字，這些名字可以給他取alias，這部份請參考<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#cmd-alias"><code>REGION_ALIAS</code>命令</a></li>
+</ul>
+</li>
+<li><code>attr</code>
+
+<ul>
+<li>optional</li>
+<li>告訴linker這塊記憶體有什麼值得注意的地方，一個region可以有多個屬性，列出如下
+
+<pre><code>* `R`: Read only
+* `W`: 可讀寫
+* `X`: executable
+* `A`: 可allocate
+* `I`和`L`: Initialized section (三小？)
+* `!`: 將該符號後面所有的屬性inverse
+</code></pre>
+
+<ul>
+<li>如果一個section符合上面的條件，就可以放在這個region中</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>ORIGIN</code>
+
+<ul>
+<li>一個expression，表示該region的起始位址</li>
+</ul>
+</li>
+<li><code>LENGTH</code>
+
+<ul>
+<li>region 大小，單位為byte</li>
+</ul>
+</li>
+</ul>
+
+
+<p>下面的範例可以看到</p>
+
+<ul>
+<li>有兩個region</li>
+<li>region <code>rom</code>的資訊：
+
+<ul>
+<li>唯讀、可執行</li>
+<li>起始位址為<code>0</code></li>
+<li>長度為256k</li>
+</ul>
+</li>
+<li>region <code>ram</code>的資訊：
+
+<ul>
+<li>非唯讀、不可執行</li>
+<li>起始位址為<code>0x40000000</code></li>
+<li>長度為4M
+
+<ul>
+<li>使用了縮寫，縮寫規則不想翻，請自己<a href="https://sourceware.org/binutils/docs/ld/MEMORY.html#MEMORY">看這邊</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="c">MEMORY
+{
+    rom (rx)  : ORIGIN = 0, LENGTH = 256K
+    ram (!rx) : org = 0x40000000, l = 4M
+}
+</code></pre>
+
+<p>region和section的合體部份<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-output-attr-region">前面</a>有提過了。如果沒有指定region的話，linker會從目前region挑一個給你用。除此之外，你的section空間region塞不下的話linker會幫你偵測出來。</p>
+
+<p>另外ORIGIN和LENGTH可以當作查詢region的資訊，範例如下</p>
+
+<pre><code class="c">_fstack = ORIGIN(ram) + LENGTH(ram) - 4;
+</code></pre>
+
+<p><a name="phdr"></a></p>
+
+<h2>PHDRS命令</h2>
+
+<p>資源回收上一篇講的東西。<strong>基本上我不知道elf是三小，所以很有可能這部份有錯誤，請自行斟酌！</strong></p>
+
+<p>PHDR 是<a href="http://en.wikipedia.org/wiki/Executable_and_Linkable_Format">ELF</a>的program header縮寫，又稱為segment（以後以segment稱之）。當ELF loader載入ELF執行檔的時候，會看這些segment決定要如何把讀入的檔案放在記憶體中，這部份和<a href="http://en.wikipedia.org/wiki/Application_binary_interface">ABI</a>有關係，按下不表，等我那天心情好再來看ELF和ABI。你可以透過<code>objdump -p</code>觀察program header。</p>
+
+<p>一般來說，linker預設都幫你弄好elf相關的segment。但是如果你因故需要自幹的話，就可以用<code>PHDRS</code>命令，一旦使用了這個命令，linker預設的相關segment設定將被取消。另外這個命令只對elf格式輸出有意義，非elf格式輸出這部份的指令一律失效。</p>
+
+<p><code>PHDRS</code>命令格式如下：</p>
+
+<pre><code class="c">PHDRS
+{
+    name type [ FILEHDR ] [ PHDRS ] [ AT ( address ) ]
+            [ FLAGS ( flags ) ] ;
+}
+</code></pre>
+
+<ul>
+<li><code>name</code>
+
+<ul>
+<li>配合section命令使用，語法可以看<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-output-attr-output-phdr">這邊</a></li>
+<li>segment名稱因為存放在另外的name space，所以不用擔心和symbol, 檔案, section衝突。</li>
+</ul>
+</li>
+<li><code>type</code>
+
+<ul>
+<li>規範為
+
+<ul>
+<li><code>PT_NULL</code> (對應值： 0)
+
+<ul>
+<li>沒使用的segment</li>
+</ul>
+</li>
+<li><code>PT_LOAD</code> (對應值： 1)
+
+<ul>
+<li>該segment應從檔案中載入</li>
+</ul>
+</li>
+<li><code>PT_DYNAMIC</code> (對應值： 2)
+
+<ul>
+<li>存放dynamic link的資訊</li>
+</ul>
+</li>
+<li><code>PT_INTERP</code> (對應值： 3)
+
+<ul>
+<li>指定program interpretor 路徑</li>
+<li><code>readelf -l ls</code>可以看到該INTERP segment的資料是是<code>/lib64/ld-linux-x86-64.so.2</code>，這邊似乎有些好玩的線索，一樣等到想起來再來看看。</li>
+</ul>
+</li>
+<li><code>PT_NOTE</code> (對應值： 4)
+
+<ul>
+<li><code>man elf</code>說這個是存放輔助資料</li>
+</ul>
+</li>
+<li><code>PT_SHLIB</code> (對應值： 5)
+
+<ul>
+<li>保留未使用</li>
+</ul>
+</li>
+<li><code>PT_PHDR</code> (對應值： 6)
+
+<ul>
+<li>program header存放的segment</li>
+</ul>
+</li>
+<li>expression
+
+<ul>
+<li>除了以上自訂的數字，應該是保留給使用自行使用&hellip;吧？</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>每個<code>type</code>後面都可以加上<code>FILEHDR</code>或<code>PHDRS</code>，其中
+
+<ul>
+<li><code>FILEHDR</code>：表示該segment應該內含ELF file header</li>
+<li><code>PHDRS</code>：表示該segment應該內含ELF program header</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>AT</code>
+
+<ul>
+<li>指定load 位址。和section的<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-output-attr-lma">AT</a>相同</li>
+</ul>
+</li>
+<li><code>FLAGS(數字)</code>
+
+<ul>
+<li>數字是ELF的<code>p_flags</code>。<code>man elf</code>可以查到<code>p_flags</code>定義，數值我猜要去看程式碼或是ELF規格了。
+
+<ul>
+<li><code>PF_X</code>: executable segment</li>
+<li><code>PF_W</code>: write segment</li>
+<li><code>PF_R</code>: read segment</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>單個segment通常map到一個section，linker依照順序處理header給之後的loader使用。另外要注意的是如果你在某個section指定了<code>:phdr</code>後，之後的section就算沒指令，都會放在該segment。如果之後的section有<code>:phdr</code>設成<code>:NONE</code>的話，linker才不會把之後的section放到任何segment。</p>
+
+<p>如果有需要，你可以指定不同的segment都要有某個section的內容，使用方式就是在<code>section</code>命令中用多個<code>:phdr</code>。範例如下：</p>
+
+<pre><code class="c">.interp : { *(.interp) } :text :interp
+</code></pre>
+
+<p>手冊上面提供了一個比較完整的範例。望文生義應該不難理解，所以就不解釋了。</p>
+
+<pre><code class="c">PHDRS
+{
+    headers PT_PHDR PHDRS ;
+    interp PT_INTERP ;
+    text PT_LOAD FILEHDR PHDRS ;
+    data PT_LOAD ;
+    dynamic PT_DYNAMIC ;
+}
+
+SECTIONS
+{
+    . = SIZEOF_HEADERS;
+    .interp : { *(.interp) } :text :interp
+    .text : { *(.text) } :text
+    .rodata : { *(.rodata) } /* defaults to :text */
+    ...
+    . = . + 0x1000; /* move to a new page in memory */
+    .data : { *(.data) } :data
+    .dynamic : { *(.dynamic) } :data :dynamic
+    ...
+}
+</code></pre>
+
+<p><a name="ver"></a></p>
+
+<h2>VERSION命令</h2>
+
+<p>ELF檔案格式支援動態link的時候指定shared library版本。這項功能需要linker配合，<code>VERSION</code>命令就是來描述版本資訊。</p>
+
+<p>語法如下</p>
+
+<pre><code class="c">VERSION [extern "lang"] { version-script-commands }
+</code></pre>
+
+<p>其中 extern &quot;lang&quot; 的lang有支援</p>
+
+<ul>
+<li><code>C</code></li>
+<li><code>C++</code></li>
+<li><code>Java</code></li>
+</ul>
+
+
+<p>至於version-script-commands，手冊上面說和Sun(已被併購)在Solaris 2.5上的linker語法相同，估狗查version-script-commands沒查到語法，只能從手冊提供的範例來看。如果有人知道語法link請跟我說。手冊上面說這是一個樹狀結構，基本單位為一個version node。你可以在version node中設定</p>
+
+<ul>
+<li>version node名稱</li>
+<li>version node和相依性</li>
+<li>設定哪些symbol出現在該version node</li>
+<li>在該version node中指定global symbol變成local。如此一來，這些symbols就不會被shared library以外看到。</li>
+</ul>
+
+
+<p>從手冊範例可以推測version node格式如下</p>
+
+<pre><code class="c">name {
+    [global:]
+                symbol1;
+        ...
+    [local:]
+                symbol_a;
+            ...
+} [depend_name];
+</code></pre>
+
+<p>好啦，有這樣的概念後我們來看手冊範例</p>
+
+<pre><code class="c">VERS_1.1 {
+    global:
+            foo1;
+    local:
+            old*;
+            original*;
+            new*;
+};
+
+VERS_1.2 {
+    foo2;
+} VERS_1.1;
+
+VERS_2.0 {
+            bar1; bar2;
+    extern "C++" {
+                    ns::*;
+                    "f(int, double)";
+    };
+} VERS_1.2;
+</code></pre>
+
+<p>OK，開始解釋：</p>
+
+<ul>
+<li>有三個Version node，名稱為<code>VERS_1.1</code>, <code>VERS_1.2</code>, <code>VERS_2.0</code></li>
+<li><code>VERS_1.1</code>沒有相依性，<code>VERS_1.2</code>相依於<code>VERS_1.1</code>, <code>VERS_2.0</code>相依於<code>VERS_1.2</code></li>
+<li><code>VERS_1.1</code>中
+
+<ul>
+<li>symbol <code>foo1</code>和<code>VERS_1.1</code>有關</li>
+<li>old開頭、orignal開頭和new開頭的symbol都不會被外面看到</li>
+</ul>
+</li>
+<li><code>VERS_1.2</code>中
+
+<ul>
+<li>symbol <code>foo2</code>和<code>VERS_1.2</code>有關</li>
+</ul>
+</li>
+<li><code>VERS_2.0</code>中
+
+<ul>
+<li><code>bar1</code>和<code>bar2</code>和<code>VERS_2.0</code>有關</li>
+</ul>
+</li>
+</ul>
+
+
+<p>看完些描述後，可以問<strong>啊沒有指定和version node相關的symbol怎麼辦？</strong>手冊說會分配給library的base version（好吧我不知道base version是三小。）。如果你要將沒指定version node的symbol全部設成和某個version node有關的話，請在該version node中加上以下的描述：</p>
+
+<ul>
+<li><code>global: *;</code></li>
+</ul>
+
+
+<p>一般來說這個描述加再最後的version node才有意義，否則在前面的version node中把所有的symbol都被設定完畢的話，那接下來的version node就沒有辦法設定symbol關聯性的。</p>
+
+<p>手冊中指出version node名稱是給人看的，對於linker在乎的只有他們的關係。所以你要故意取成讓人看不懂的名稱也可以滴。</p>
+
+<p>如果你要指定所有的版本都使用同樣的symbol設定，那麼寫一份就好。重點是這份描述不用寫version node名稱，範例如下。</p>
+
+<pre><code class="c">{ global: foo; bar; local: *; };
+</code></pre>
+
+<p>至於在程式碼中指定版本的方式，你需要使用GNU extention語法，例如加入下面的<del>咒與</del>描述到你的程式碼中。
+語法如下：</p>
+
+<pre><code class="c">__asm__(.symver name, name2@version_node_name);
+</code></pre>
+
+<ul>
+<li><code>.symver</code>：你應該用的指令</li>
+<li><code>name</code>：你程式用到的symbol</li>
+<li><code>name2@version_node_name</code>：實際上你真正用的symbol以及對應的version node</li>
+</ul>
+
+
+<p>範例如下：</p>
+
+<pre><code class="c">__asm__(".symver original_foo,foo@VERS_1.1");
+</code></pre>
+
+<p>你也可以分別指定自己程式的symbol對應到不同版本的symbol，範例如下：</p>
+
+<pre><code class="c">__asm__(".symver original_foo,foo@");
+__asm__(".symver old_foo,foo@VERS_1.1");
+__asm__(".symver old_foo1,foo@VERS_1.2");
+__asm__(".symver new_foo,foo@@VERS_2.0");
+</code></pre>
+
+<ul>
+<li><code>foo@</code>表示未指定版號的symbol就用該symbol</li>
+<li><code>foo@@VERS_2.0</code>的<code>@@</code>表示預設使用該設定</li>
+</ul>
+
+
+<p><code>.symver</code>詳細的語法說明可以看<a href="https://sourceware.org/binutils/docs/as/Symver.html">這邊</a></p>
+
+<p><strong>下面這段是囈言囈語，因為我在描述一個我不知道什麼、以及不知道我在描述什麼的東西，請當作夢話跳過！</strong>
+當你的程式要使用shared library的symbol的時候，你的程式應該要知道要用哪個版本的symbol以及這些symbol是在哪個version node宣告（怎麼做？我寫程式還要管shared library symbol版本，看linker script？不合理）。所以runtime的時候dynamic loader可以幫你搞定resolve symbol的事情。</p>
+
+<p>跳過解釋需要version 的原因，想知道的可以看<a href="https://sourceware.org/binutils/docs/ld/VERSION.html#VERSION">原文</a>，看懂順便跟我說。</p>
+
+<p>Demangled names的注意事項懶得看，一併跳過。</p>
+
+<p><a name="expr"></a></p>
+
+<h2>Linker script 中使用的expression</h2>
+
+<p>Linker script 的 expression有幾點特性</p>
+
+<ul>
+<li>expression和C語言相同</li>
+<li>型態都是整數</li>
+<li>變數size相同，target和host為32-bit的話size就是32-bit，否則就為64-bit(為啥？那麼可不可以8, 16-bit?）。</li>
+<li>expression中允許設定和讀取symbol的值</li>
+</ul>
+
+
+<p>接下來我們來討論linker 中Expression可以使用的內建功能</p>
+
+<ul>
+<li><a href="#expr-const">常數</a></li>
+<li><a href="#expr-sym-const">Symbolic 常數</a></li>
+<li><a href="#expr-sym">Symbol命名規則</a></li>
+<li><a href="#expr-oph-sec">孤兒 Section</a></li>
+<li><a href="#expr-lcnt">Location Counter</a></li>
+<li><a href="#expr-op">Operators</a></li>
+<li><a href="#expr-eval">計算結果</a></li>
+<li><a href="#expr-sec">Section內的Expression</a></li>
+<li><a href="#expr-btfun">內建函數</a></li>
+</ul>
+
+
+<p><a name="expr-const"></a></p>
+
+<h2>常數</h2>
+
+<p>設定常數規則如下</p>
+
+<ul>
+<li>8進位
+
+<ul>
+<li><code>0</code>開頭</li>
+<li><code>o</code>結尾, <code>O</code>結尾</li>
+</ul>
+</li>
+<li>16進位
+
+<ul>
+<li><code>0x</code>開頭, <code>0X</code>開頭：</li>
+<li><code>h</code>結尾, <code>H</code>結尾</li>
+</ul>
+</li>
+<li>10進位
+
+<ul>
+<li><code>d</code>結尾, <code>D</code>結尾</li>
+</ul>
+</li>
+<li>不屬於上面的數字表示為10進位</li>
+<li><code>K</code>
+
+<ul>
+<li>1024</li>
+</ul>
+</li>
+<li><code>M</code>
+
+<ul>
+<li>1024 * 1024</li>
+</ul>
+</li>
+<li><code>K</code>和<code>M</code>不能跟下面的描述混用
+
+<ul>
+<li><code>o</code>結尾, <code>O</code>結尾</li>
+<li><code>h</code>結尾, <code>H</code>結尾</li>
+<li><code>d</code>結尾, <code>D</code>結尾</li>
+</ul>
+</li>
+</ul>
+
+
+<p>範例：</p>
+
+<pre><code class="c">_fourk_1 = 4K;
+_fourk_2 = 4096;
+_fourk_3 = 0x1000;
+_fourk_4 = 10000o;
+</code></pre>
+
+<p><a name="expr-sym-const"></a></p>
+
+<h2>Symbolic 常數</h2>
+
+<p>指令：</p>
+
+<ul>
+<li><code>CONSTANT(name)</code>
+
+<ul>
+<li>合法的<code>name</code>如下，可以望文生義所以就不解釋
+
+<ul>
+<li><code>MAXPAGESIZE</code></li>
+<li><code>COMMONPAGESIZE</code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>範例：指定<code>.text</code> section要和最大的page size對齊。</p>
+
+<pre><code class="c">.text ALIGN (CONSTANT (MAXPAGESIZE)) : { *(.text) }
+</code></pre>
+
+<p><a name="expr-sym"></a></p>
+
+<h2>Symbol命名規則</h2>
+
+<p>沒有被<code>"</code>引用的情況下：</p>
+
+<ul>
+<li>允許的開頭字元
+
+<ul>
+<li>大小寫英文字母</li>
+<li><code>_</code></li>
+<li><code>.</code></li>
+</ul>
+</li>
+<li>名稱中間允許字元
+
+<ul>
+<li>大小寫英文字母</li>
+<li>數字</li>
+<li><code>_</code></li>
+<li><code>.</code>
+
+<ul>
+<li><code>-</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>不可以和linker script keyword相同名稱</li>
+</ul>
+
+
+<p>如果你symbol名稱要用奇怪的字元或是和keyword相同的話，請將symbol名稱的開始結尾加上<code>"</code>符號，範例如下：</p>
+
+<pre><code class="c">"SECTION" = 9;
+"with a space" = "also with a space" + 10;
+</code></pre>
+
+<p>由於symbol名稱可以有非英文字母和數字，所以不建議中間有空白字元。舉例來說，<code>A-B</code>是一個符號，但是<code>A - B</code>就是一個expression操作，表示symbol <code>A</code>減去symbol <code>B</code></p>
+
+<p><a name="expr-oph-sec"></a></p>
+
+<h2>孤兒 Section</h2>
+
+<p>孤兒 Section 指的是在輸入object檔案中的section，而這些section linker script裏面並沒有描述該怎麼處理。遇到這種狀況，linker還是會把這些section放到輸出object檔案中，規則為：</p>
+
+<ul>
+<li>放在輸出object檔案相同性質section的後面，如程式碼或是資料、是否要load到記憶體等。如果是ELF格式的話，ELF flag也是性質比較的一部份。</li>
+<li>如果放不進去，就塞在檔案後面</li>
+</ul>
+
+
+<p>如果這些孤兒section符合C語言<a href="http://cs.smith.edu/~thiebaut/classes/C_Tutor/node4.html">identifier規範</a>(通常不是以<code>.</code>開頭），linker會幫忙加入兩個symbol：<code>__start_SECNAME</code>和<code>__stop_SECNAME</code>表示該section的起始和結束位址。而<code>SECNAME</code>就是該孤兒section名稱。</p>
+
+<p><a name="expr-lcnt"></a></p>
+
+<h2>Location Counter</h2>
+
+<p>前面有提過<code>.</code>這個符號是location counter。而location counter本身的涵意就是<strong>目前輸出位置</strong>。而<code>.</code>
+可以出現在<code>SECTIONS</code>命令中的任何expression。</p>
+
+<p>除了使用<code>.</code>來代表目前輸出位置外，你也可以直接更改<code>.</code>的數值，這樣做就是更動目前輸出位置。不過要注意的是不要用做減法運算，這樣代表把目前位置往前移動，往前移動表示接下來寫入的東西就很有可能蓋掉前面重疊部份的資料。另外你可以直接把<code>.</code>的值加上你要的數量，那麼下一個symbol或是section就會和目前位置有一段保留空間可以使用。我們看下面的範例：</p>
+
+<pre><code class="c">SECTIONS
+{
+    output :
+    {
+        file1(.text)
+        . = . + 1000;
+        file2(.text)
+        . += 1000;
+        file3(.text)
+    } = 0x12345678;
+}
+</code></pre>
+
+<p>這個範例我們可以看到</p>
+
+<ul>
+<li>輸出object檔案有一個section，該section名稱為<code>output</code></li>
+<li><code>output</code> section裏面存放了
+
+<ul>
+<li><code>file1</code>的<code>.text</code> section</li>
+<li><code>file2</code>的<code>.text</code> section</li>
+<li><code>file3</code>的<code>.text</code> section</li>
+</ul>
+</li>
+<li><code>file1</code>的<code>.text</code> section和<code>file2</code>的<code>.text</code> section中間相距1000</li>
+<li><code>file2</code>的<code>.text</code> section和<code>file3</code>的<code>.text</code> section中間也相距1000</li>
+<li>未始用到的空間請填入<code>0x12345678</code>，想要劇情回顧的請看<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command#sec-input-desc-ex">這邊</a></li>
+</ul>
+
+
+<p><code>.</code>雖然是location counter，然而在不同的區塊使用會有不同的意義。
+先看一個例子</p>
+
+<pre><code class="c">SECTIONS
+{
+  . = 0x100
+  .text: {
+    *(.text)
+  . = 0x200
+  }
+  . = 0x500
+  .data: {
+    *(.data)
+    . += 0x600
+  }
+}
+</code></pre>
+
+<p>我們可以看到<code>.</code>出現的地方有四個地方，在<code>.text</code>和<code>.data</code>以內有各有一個，不在<code>.text</code>和<code>.data</code>以內有兩個。也就是說一種是在section描述（就是<code>.text</code>和<code>.data</code>)之內，另外就是section描述之外。</p>
+
+<ul>
+<li><code>.</code>放在section描述<strong>裏面</strong>的話它的location是從section開頭開始算</li>
+<li><code>.</code>放在section描述<strong>外面</strong>的話它的location是從0</li>
+</ul>
+
+
+<p>有了這樣的概念後，我們再回去看這範例在講三小？</p>
+
+<ul>
+<li>輸出object檔案有兩個section，分別為<code>.text</code>和<code>.data</code></li>
+<li>所有輸入object檔案中的<code>.text</code> section請放到<code>.text</code>中</li>
+<li>所有輸入object檔案中的<code>.data</code> section請放到<code>.data</code>中</li>
+<li><code>.text</code> section 起始點為0x100</li>
+<li>由於<code>.</code>被設成0x200，以致於輸入object檔案的<code>.text</code>存放超過0x100 + 0x200的空間都有可能被後面的資料複寫掉。</li>
+<li><code>.text</code> section 結束後，請保留0x500的空間</li>
+<li><code>.text</code> section 最後0x500的位置為<code>.data</code> section的起始點</li>
+<li>最後一個輸入object檔案的<code>.data</code> section放入輸出object的<code>.data</code> section後，再從section中目前位置保留0x600的空間。</li>
+</ul>
+
+
+<p>手冊中有特別提到在section描述外面使用<code>.</code>需要特別注意的地方，它舉的例子如下：</p>
+
+<pre><code class="c">SECTIONS
+{
+  start_of_text = . ;
+  .text: { *(.text) }
+  end_of_text = . ;
+
+  start_of_data = . ;
+  .data: { *(.data) }
+    end_of_data = . ;
+}
+</code></pre>
+
+<p>這個範例在<code>.data</code>和<code>text</code>前後都加了一個symbol，數值為當時location counter的位置。看起來一切安好，然而如果輸入object檔案中有section不是<code>.data</code>也不是<code>.text</code>，例如放&quot;Hello world\n&quot;的<code>.rodata</code> (<a href="http://www.lisha.ufsc.br/teaching/os/exercise/hello.html%20%E4%BD%A0%E7%9F%A5%E9%81%93%E4%BD%A0%E5%AF%AB%E7%9A%84%22Hello%20world%22%E6%94%BE%E5%9C%A8%E4%BB%80%E9%BA%BC%E5%9C%B0%E6%96%B9%E5%98%9B%EF%BC%9F">參考資料</a>)，linker還是要把這些section放到輸出object檔案中。你覺得他會放在邊呢？手冊上說linker script中的symbol會被視為接在<strong>前一個</strong>section 後面，所以最後就會變成這樣：</p>
+
+<pre><code class="c">SECTIONS
+{
+  start_of_text = . ;
+  .text: { *(.text) }
+  end_of_text = . ;
+
+  start_of_data = . ;
+  .rodata: { *(.rodata) }
+  .data: { *(.data) }
+    end_of_data = . ;
+}
+</code></pre>
+
+<p>如此一來，如果你以為<code>start_of_data</code>就是<code>.data</code>開始位址，在你的程式中拿來做事，保證ＧＧ。因為<code>start_of_data</code>現在變成<code>.rodata</code>的起始位址了。</p>
+
+<p>要確保<code>start_of_data</code>一定在<code>.data</code> section前面的話，正確的做法是在<code>start_of_data = . ;</code>前面加上<code>. = .</code>強迫更新location counter，列出完整script如下：</p>
+
+<pre><code class="c">SECTIONS
+{
+  start_of_text = . ;
+  .text: { *(.text) }
+  end_of_text = . ;
+
+  . = . ;
+  start_of_data = . ;
+  .data: { *(.data) }
+    end_of_data = . ;
+}
+</code></pre>
+
+<p><a name="expr-op"></a></p>
+
+<h2>Operators</h2>
+
+<p>和C相容，請<a href="https://sourceware.org/binutils/docs/ld/Operators.html#Operators">自己看</a>，反正沒多少英文。</p>
+
+<p><a name="expr-eval ></a></p>
+
+<h2>計算結果</h2>
+
+<p>原來標題是「Evaluation」直接翻成評估，估算都很詭異。自作主張就是計算結果，反正這個章節就是在講這回事。</p>
+
+<p>linker很懶惰，所以不到要用的時候就不會去算expression的結果。以下是他的計算順序</p>
+
+<ul>
+<li>第一個section的起始位址，memory region size等一開始就需要取得的expression值</li>
+<li>當開始linker後才可以確定的expression，例如某個section內的symbol需要前面section處理完畢才能取得目前section的位置，然後才能開始計算裏面symbol相關的expression</li>
+<li>section size也要等該section link完畢才可能計算</li>
+<li>和<code>.</code>相關的expression同要等該section link完畢才可能計算</li>
+</ul>
+
+
+<p>由於有這樣的先後關係，如果你的script沒寫好可能就會遇到時間順序不同造成需要的expression裏面的element還沒計算完畢，然後你的linker就會噴錯誤出來。</p>
+
+<p>手冊的<a href="https://sourceware.org/binutils/docs/ld/Evaluation.html#Evaluation">範例</a>看不懂，不解釋了。</p>
+
+<p><a name="expr-sec"></a></p>
+
+<h2>Expression 計算結果和absolute/relative address的關係</h2>
+
+<p><strong> 這邊我不是很確定我有理解正確，請自行斟酌。另外看完後感覺上relative/absolute symbol和relative/absolute address是相同的東西，但是手冊上又沒有明講。所以我這邊語法會有點混亂。 </strong></p>
+
+<p>這邊要先定義兩個名詞才能理解這個section在講三小。列出如下</p>
+
+<ul>
+<li>relative symbol/address</li>
+<li>absolute symbol/address</li>
+</ul>
+
+
+<p>這兩個東西都是在講輸出object檔案的<code>SECTIONS</code>命令中的symbol或address。而這些symbol或 address可能宣告在<code>section</code>的裏面或外面。知道這樣的前提後，我們可以開始定義：</p>
+
+<ul>
+<li>relative symbol/address
+
+<ul>
+<li>這個symbol或address的值代表的是section到該symbol的offset</li>
+</ul>
+</li>
+<li>absolute symbol/address
+
+<ul>
+<li>這個symbol或address的值和section無關，而是寫死的</li>
+</ul>
+</li>
+</ul>
+
+
+<p>知道的這樣定義後，我們可以再問，然後呢？</p>
+
+<p>然後有相對特性的在relocate的時候只要更動section數值就好，而寫死的就沒有辦法動手腳。所以， relative symbol可以relocate而absolute symbol不行。</p>
+
+<p>還不是很瞭長怎麼樣嘛？先看手冊的的範例好了：</p>
+
+<pre><code class="c">SECTIONS
+{
+  . = 0x100;
+  __executable_start = 0x100;
+  .data :
+  {
+    . = 0x10;
+    __data_start = 0x10;
+    *(.data)
+  }
+  ...
+}
+</code></pre>
+
+<p>我們可以看到</p>
+
+<ul>
+<li>輸出object檔案的起始位址和<code>__executable_start</code>為0x100，這是一個<strong>absolute address/symbol</strong></li>
+<li><code>.data</code>的真正資料開始位置距離<code>.data</code>位置0x10，<code>__data_start</code>也是相同。這兩個是<strong>relative address/symbol</strong></li>
+</ul>
+
+
+<p>好啦，知道這兩個關係後，我們再回來討論計算symbol值的expression。由於linker script 命令處理回來的值有些是relative有些是absolution，所以在寫script的時候要注意。手冊描述的地方目前看不懂，懶得搞懂。不論如何，手冊提供了linker處理expresssion時對於absolute 和 relative的行為準則。</p>
+
+<ul>
+<li>計算結果為absolute
+
+<ul>
+<li>unary操作(如~0x11)absolute位置的address結果為absolute address</li>
+<li>binary操作(如A + B)，兩個operand都是absolute address的結果為absolute address</li>
+<li>binary操作(如A + B)，兩個operand都是數字的話的結果為absolute</li>
+<li>binary操作(如A + B)，兩個operand中一個是absolute address，另一個為數字的結果為absolute address</li>
+</ul>
+</li>
+<li>計算結果為relative，假設在同一個section下
+
+<ul>
+<li>unary操作(如~0x11) relative位置的address結果為relative address
+
+<ul>
+<li>binary操作(如A + B)，兩個operand都是relative address的結果為relative address</li>
+</ul>
+</li>
+<li>binary操作(如A + B)，一個operand是relative address另外一個是數字的結果為relative address</li>
+</ul>
+</li>
+<li>計算結果需要轉換後變成absolute address的情況
+
+<ul>
+<li>binary操作(如A + B)，兩個operand都是relative address，但是是不同的section，需要先轉成absolut address再操作，的結果為absolute address</li>
+<li>binary操作(如A + B)，兩個operand中一個是relative address，另外一個是absolute address，需要把relative address先轉成absolut address再操作，的結果為absolute address</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a href="http://chortle.ccsu.edu/java5/Notes/chap09B/ch09B_10.html">sub-expression</a>（就是express裏面合法的express如a+b-c，可以拆成a+b，他的結果再跟c相加，而a+b就是一個sub-expression），的處理absolute/relative規範如下：</p>
+
+<ul>
+<li>操作處理數字結果為數字</li>
+<li>比較(|| &amp;&amp;)的結果也是數字</li>
+<li>binary操作包含邏輯操作(如A + B)，兩個operand都是relative address的結果為數字</li>
+<li>binary操作包含邏輯操作(如A + B)，兩個operand都是absolute address的結果為數字</li>
+<li>不是以上的操作，兩個operand都是relative address的結果為relative address</li>
+<li>不是以上的操作，一個operand是relative address另外一個是數字的結果為relative address</li>
+<li>不是以上的操作，有absolute address的操作結果為absolute</li>
+</ul>
+
+
+<p>如果有需要，你可以使用<code>ABSOLUTE()</code>命令強迫section裏面的symbol值為absolutio，範例如下。</p>
+
+<pre><code class="c">SECTIONS
+{
+    .data : { *(.data) _edata = ABSOLUTE(.); }
+}
+</code></pre>
+
+<p><code>_edata</code>沒用<code>ABSOLUTE()</code>命令的話會是一個relative symbol，因為加了<code>ABSOLUTE()</code>命令所以linker把他視為absolution symbol。</p>
+
+<p><a name="expr-btfun"></a></p>
+
+<h2>內建函數</h2>
+
+<ul>
+<li><code>ABSOLUTE(expr)</code>
+
+<ul>
+<li>把expr內的結果視為absolute的值，通常會在section內使用，用了以後這個結果將會無法relocate</li>
+</ul>
+</li>
+<li><code>ADDR(section)</code>
+
+<ul>
+<li>取得section名稱的VMA</li>
+</ul>
+</li>
+</ul>
+
+
+<p>前面兩個命令可以用下面範例說明</p>
+
+<pre><code class="c">SECTIONS 
+{ 
+    ...
+  .output1 :
+  {
+    start_of_output_1 = ABSOLUTE(.);
+    ...
+  }
+  .output :
+  {
+    symbol_1 = ADDR(.output1);
+      symbol_2 = start_of_output_1;
+    ...
+  }
+  ... 
+}
+</code></pre>
+
+<p>這邊我們可以看到： <code>start_of_output_1</code>，<code>symbol_1</code>, 和<code>symbol_2</code>的值理論上是相同的。但是性質上<code>symbol_1</code>是relative，而其他兩個symbol是absolute。</p>
+
+<ul>
+<li><code>ALIGN(align)</code></li>
+<li><code>ALIGN(exp,align)</code>
+先講<code>ALIGN(exp,align)</code>，這個命令是計算expr後，回傳<code>align</code>位址後面第一個符合alignment的位址。而<code>ALIGN(align)</code>可以視為<code>ALIGN(., align)</code>，也就是說這個命令會回傳<code>.</code>的後面符合alignment的位址。手冊提供的範例如下，因為很容易望文生義，就不解釋了：</li>
+</ul>
+
+
+<pre><code class="c">SECTIONS 
+{ 
+    ...
+    .data ALIGN(0x2000): 
+  {
+        *(.data)
+        variable = ALIGN(0x8000);
+    }
+    ... 
+}
+</code></pre>
+
+<ul>
+<li><code>ALIGNOF(section名稱)</code>
+取得<code>section</code>後面符號alignment的位置。要注意的是section要已經被分配出來，否則linker會噴錯誤給你看。範例一樣容易望文生義，不解釋。</li>
+</ul>
+
+
+<pre><code class="c">SECTIONS
+{ 
+    ...
+  .output
+  {
+    LONG (ALIGNOF (.output))
+    ...
+  }
+    ... 
+}
+</code></pre>
+
+<ul>
+<li><code>BLOCK(exp)</code></li>
+</ul>
+
+
+<p>和<code>ALIGN()</code>相同。是舊版的linker使用的命令。</p>
+
+<ul>
+<li><code>DATA_SEGMENT_ALIGN(maxpagesize, commonpagesize)</code></li>
+<li><code>DATA_SEGMENT_END(exp)</code></li>
+<li><code>DATA_SEGMENT_RELRO_END(offset, exp)</code></li>
+</ul>
+
+
+<p><strong>看不懂，不想弄懂。跳過。</strong></p>
+
+<ul>
+<li><code>DEFINED(symbol)</code>
+如果symbol已經被收進symbol table就回傳1，否則回傳0。手冊示範如果沒定義該symbol就自己生一個如下。</li>
+</ul>
+
+
+<pre><code class="c">SECTIONS 
+{ 
+    ...
+  .text : 
+  {
+    begin = DEFINED(begin) ? begin : . ;
+    ...
+  }
+  ...
+}
+</code></pre>
+
+<ul>
+<li><p><code>LENGTH(region)</code>
+回傳你在<code>MEMORY</code>命令中設定的region size</p></li>
+<li><p><code>LOADADDR(section名稱)</code>
+回傳section的名稱的LMA位址</p></li>
+<li><p><code>LOG2CEIL(exp)</code>
+取exp的log，不知道用在啥子地方。</p></li>
+<li><p><code>MAX(exp1, exp2)</code>
+回傳exp1和exp2比較大的數值</p></li>
+<li><p><code>MIN(exp1, exp2)</code>
+回傳exp1和exp2比較小的數值</p></li>
+<li><p><code>NEXT(exp)</code>
+回傳exp計算結果的數值記憶體之後的可使用的空間。如果沒有使用<code>MEMORY</code>命令設定不連續的空間，這指令效果和<code>ALIGN</code>命令相同。</p></li>
+<li><p><code>ORIGIN(region名稱)</code>
+回傳你在<code>MEMORY</code>命令設定的region的起始位址</p></li>
+<li><p><code>SEGMENT_START(segment名稱, default)</code>
+回傳<code>segment</code>的起始位置。還記得ELF program header的segment？我不知道和這個是不是相同。<code>default</code>除非有透過<code>ld -T</code>參數更動，否則就是預設值。手冊沒有寫預設值是多少。但是從ld &ndash;verbose看到的使用範例是用在指定程式碼開始執行的地方。有沒有覺得0x400000很眼熟呢？不熟？那算了。</p></li>
+</ul>
+
+
+<pre><code class="c">  PROVIDE (__executable_start = SEGMENT_START("text-segment", 0x400000)); . = SEGMENT_START("text-segment", 0x400000) + SIZEOF_HEADERS;
+  . = SEGMENT_START("ldata-segment", .);
+</code></pre>
+
+<ul>
+<li><code>SIZEOF(section名稱)</code>
+回傳section的size，如果該section還沒被分配，linker就吐錯誤給你看。
+下面的例子中的<code>symbol_1</code>和<code>symbol_2</code>的值是相同的。這蠻容易理解，我列出來主要是要讓大家多看例子。<code>.start</code>, <code>.end</code>的用法我看過好幾次。</li>
+</ul>
+
+
+<pre><code class="c">SECTIONS
+{ 
+  ...
+  .output 
+  {
+  .start = . ;
+  ...
+  .end = . ;
+  }
+  symbol_1 = .end - .start ;
+  symbol_2 = SIZEOF(.output);
+... 
+}
+</code></pre>
+
+<ul>
+<li><code>SIZEOF_HEADERS</code></li>
+<li><code>sizeof_headers</code>
+取得輸出object檔案的header size。如果你使用ELF格式，又有自行加programer header的話，ld會噴錯誤。原因是ld預期的是ELF規範的program header，因此放不下新增的program header。所以你有多的program header的話，請不要用這個指令。</li>
+</ul>
+
+
+<p><a name="imp"></a></p>
+
+<h2>Implicit Linker Scripts</h2>
+
+<p>linker吃的檔案處理順序如下</p>
+
+<p>1 object檔，開始link
+2 不是object檔，就當linker script吃進去
+3 不是object檔案也不是linker script檔案，噴錯誤然後 GG</p>
+
+<p>所以，Implicit Linker Script指的是項目2吃進來的script。linker會把這個當作目前linker script的補強，而不是取代。另外由於吃進來的script順序不同，可能會出現先讀入並link 三個object檔案後，才讀到Implicit Linker Script，所以這個Implicit Linker Script無法對已經link處理。</p>
+
+<p><a name="todo"></a></p>
+
+<h2>待釐清項目</h2>
+
+<ul>
+<li>dynamic symbol (不知道是三小)</li>
+<li>warning symbol (不知道是三小)</li>
+<li>constructor symbol (不知道是三小)</li>
+<li>3.6.6看不懂，跳過。</li>
+<li>dynamic loader</li>
+<li>Initialize section</li>
+<li>PT_INTERP和/lib64/ld-linux-x86-64.so.2的關係</li>
+<li>DATA_SEGMENT_ALIGN(maxpagesize, commonpagesize)和他的朋友們</li>
+<li>ld -M</li>
+</ul>
+
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts">GNU linker ld: Linker Scripts</a></li>
+<li><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works">from Source to Binary: How GNU Toolchain Works</a></li>
+<li><a href="http://wiki.osdev.org/Linker_Scripts">Linker Scripts - OSDev Wiki</a></li>
+<li><a href="http://www.bravegnu.org/gnu-eprog/index.html">Embedded Programming with the GNU Toolchain</a></li>
+<li><a href="http://stackoverflow.com/questions/6666805/what-does-each-column-of-objdumps-symbol-table-mean">Stackoverflow: What does each column of objdump&rsquo;s Symbol table mean?</a></li>
+<li><a href="http://refspecs.linuxfoundation.org/elf/gabi4+/contents.html">System V Application Binary Interface - DRAFT - 24 April 2001</a></li>
+<li><a href="http://refspecs.linuxfoundation.org/">Linux Foundation: Referenced Specifications</a></li>
+<li><a href="http://refspecs.linuxfoundation.org/LSB_4.1.0/LSB-Core-generic/LSB-Core-generic/book1.html">Linux Standard Base Core Specification 4.1</a></li>
+<li><a href="http://stackoverflow.com/questions/6218384/virtual-and-physical-addresses-of-sections-in-elf-files">virtual and physical addresses of sections in elf files</a></li>
+<li><a href="http://www.cs.virginia.edu/~dww4s/articles/ld_linux.html">Understanding ld-linux.so.2</a></li>
+<li><a href="https://sourceware.org/binutils/docs/as/Symver.html">Using as: 7.11</a></li>
+<li><a href="http://www.lisha.ufsc.br/teaching/os/exercise/hello.html">The True Story of Hello World</a></li>
+<li><a href="http://ftp.gnu.org/old-gnu/Manuals/ld-2.9.1/html_chapter/ld_3.html#SEC13">Absolute symbol</a></li>
+<li><a href="http://chortle.ccsu.edu/java5/Notes/chap09B/ch09B_10.html">Sub-expression</a></li>
+<li><a href="http://en.wikipedia.org/wiki/.bss">Wikipedia: .bss</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Code_segment">Wikipedia: Code segment</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Data_segment">Wikipedia: Data segment</a></li>
+<li><a href="http://stackoverflow.com/questions/11196048/flags-in-objdump-output-of-object-file">stackoverflow: Flags in objdump output of object file</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[GNU LD 手冊略讀 (2): Chapter 3.6 SETCIONS]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/"/>
+    <updated>2014-12-14T23:59:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command</id>
+    <content type="html"><![CDATA[<p><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1">上一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3">下一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents">回總目錄</a></p>
+
+<h2>本篇目錄</h2>
+
+<ul>
+<li><a href="#sec">SECTIONS命令</a></li>
+<li><a href="#sec-output-desc">輸出object檔案的section描述</a>
+
+<ul>
+<li><a href="#sec-input-desc-basic">輸入object檔案的section 基礎概念</a></li>
+<li><a href="#sec-input-desc-wildcard">輸入object檔案的section 語法的萬用字元</a></li>
+<li><a href="#sec-input-desc-comm">輸入object檔案的COMMOM section</a></li>
+<li><a href="#sec-input-desc-keep">KEEP指令</a></li>
+<li><a href="#sec-input-desc-ex">輸入object檔案放到輸出object檔案範例</a></li>
+</ul>
+</li>
+<li><a href="#sec-output-name">輸出object檔案section 命名</a></li>
+<li><a href="#sec-output-addr">輸出object檔案section 命令: address欄位</a></li>
+<li><a href="#sec-input-desc">輸入object檔案的section描述</a></li>
+<li><a href="#sec-output-data">輸出object檔案內指定固定資料長度</a></li>
+<li><a href="#sec-output-discard">輸出object檔案捨棄的section</a></li>
+<li><a href="#sec-output-attr">輸出object檔案section其他屬性</a>
+
+<ul>
+<li><a href="#sec-output-attr-type">輸出object檔案 Section Type</a></li>
+<li><a href="#sec-output-attr-lma">輸出object檔案 Section LMA</a></li>
+<li><a href="#sec-output-attr-output-align">強制輸出object檔案的 Alignment</a></li>
+<li><a href="#sec-output-attr-input-align">強制輸入object檔案的 Alignment</a></li>
+<li><a href="#sec-output-attr-limit">輸出object檔案 Section 限制</a></li>
+<li><a href="#sec-output-attr-region">輸出object檔案 Section Region</a></li>
+<li><a href="#sec-output-attr-output-phdr">輸出object檔案 Section Phdr</a></li>
+<li><a href="#sec-output-attr-output-fill">指定輸出object檔案 Section 填空的資料</a></li>
+</ul>
+</li>
+<li><a href="#sec-overlay">OVERLAY命令</a></li>
+</ul>
+
+
+<p><a name="sec"></a></p>
+
+<h2>SETCIONS命令</h2>
+
+<p>其實一開始是為了看懂這個命令才會想看linker script的。如果接觸過很小型的Embedded OS就會發現很多都是自幹linker script；而這些scripts主要的描述命令就是<code>SETCIONS</code>命令。</p>
+
+<p>好了，廢話少說，進入主題。SETCIONS命令命令的功用是</p>
+
+<ul>
+<li>告訴linker怎麼把輸入object檔案中的SETCIONS命令對應到輸出object檔案中的sections</li>
+<li>告訴loader object檔案中的sections要放到記憶體那些地方</li>
+</ul>
+
+
+<p>SECTIONS命令長這樣子：</p>
+
+<pre><code class="c">SECTIONS
+{
+    sections-command
+    sections-command
+    ...
+}
+</code></pre>
+
+<p>望文生義地猜測可以這樣理解：
+輸出object有一些大方向的規範，並且分為不同的section，每個section有他自己的規範。</p>
+
+<p>而<code>sections-command</code>可以分為下面幾種功能</p>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#cmd">ENTRY命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#assign">設定symbol的值</a></li>
+<li><a href="#sec-output-desc">描述輸出object檔案的setcion</a></li>
+<li>Overlay描述 (不知道是三小)</li>
+</ul>
+
+
+<p>要注意的事，如果你自幹的linker script沒有描述輸出object檔案的setcion的話，linker會</p>
+
+<ul>
+<li>讀輸入object檔案section時，如果該section第一次出現，就在輸出object檔案中加入同樣名稱的section，直到處理完所有的輸入object檔案</li>
+<li>第一個吃到的輸入object檔案section將當作位址0的起始點</li>
+</ul>
+
+
+<p><a name="sec-output-desc"></a></p>
+
+<h2>輸出object檔案的section描述</h2>
+
+<pre><code class="c 輸出object檔案的section描述格式">section [address] [(type)] :
+    [AT(lma)]
+    [ALIGN(section_align) | ALIGN_WITH_INPUT]
+    [SUBALIGN(subsection_align)]
+    [constraint]
+    {
+        output-section-command
+        output-section-command
+        ...
+    } [&gt;region] [AT&gt;lma_region] [:phdr :phdr ...] [=fillexp]
+</code></pre>
+
+<p>其中<code>output-section-command</code>的功能有</p>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#assign">設定symbol的值</a></li>
+<li>描述輸入object檔案中的section要怎麼放到輸出object檔案的setcion</li>
+<li>輸出object檔案的setcion的資料存放格式如alignment等</li>
+<li>其他</li>
+</ul>
+
+
+<p>這邊很多術語需要先搞清楚，先列出來，希望之後可以看到解答</p>
+
+<ul>
+<li>type</li>
+<li>region</li>
+<li>AT(lma)</li>
+<li>lma_region</li>
+</ul>
+
+
+<p><a name="sec-output-name"></a></p>
+
+<h2>輸出object檔案的section 命名</h2>
+
+<ul>
+<li>必須符合你要輸出object檔案binary format規定。</li>
+</ul>
+
+
+<p><a name="sec-output-addr"></a></p>
+
+<h2>輸出object檔案section 命令: address欄位</h2>
+
+<p>address是<a href="#sec-output-desc">section</a>的一個optional欄位，使用的記憶體空間為<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout">VMA</a>。如果沒有指定的話，linker會依下面的方式設定輸出object檔案section 的VMA。該VMA會遵循section 的alignment規範。</p>
+
+<ul>
+<li>有設定<code>region</code>的話就從region內剩餘空間開始位址</li>
+<li>有使用<code>MEMORY</code>命令定義硬體記憶區塊的話，從定義的區塊中挑<strong>第一個</strong>符合SECTION的區塊。再將address設成該區塊內剩餘空間開始位址</li>
+<li>以上皆非的情況下，位址設成locale counter</li>
+</ul>
+
+
+<p>address欄位因為可以使用exression所以可能有下面的陷阱</p>
+
+<ul>
+<li><code>.text . : { *(.text) }</code></li>
+<li><code>.text : { *(.text) }</code>
+這兩個差一個<code>.</code>，意義就差很多。沒有<code>.</code>那個，表示沒有設定address，所以就是設成locale counter，並且linker會保證alignment。而有<code>.</code>的就表示hardcode成locale counter，所以有可能會有alignment的問題。</li>
+</ul>
+
+
+<p>另外一點要注意的設定後locale counter也會跟著改變。</p>
+
+<p><a name="sec-input-desc"></a></p>
+
+<h2>輸入object檔案的section描述</h2>
+
+<p>這部份可以說是整個<code>output-section-command</code>的重點，目的是告訴linker讀取輸入object檔案後，怎麼把這些檔案裏面的section複製到輸出object檔案裏面<strong>適當地</strong>section。</p>
+
+<p>輸入object檔案的section描述可以被分為下面幾個部份</p>
+
+<ul>
+<li><a href="#sec-input-desc-basic">輸入object檔案的section 基礎概念</a></li>
+<li><a href="#sec-input-desc-wildcard">輸入object檔案的section 語法的萬用字元</a></li>
+<li><a href="#sec-input-desc-comm">輸入object檔案的COMMOM section</a></li>
+<li><a href="#sec-input-desc-keep">KEEP指令</a></li>
+<li><a href="#sec-input-desc-ex">輸入object檔案放到輸出object檔案範例</a></li>
+</ul>
+
+
+<p><a name="sec-input-desc-basic"></a></p>
+
+<h2>輸入object檔案的section 基礎概念</h2>
+
+<p>格式為<code>檔案(section1  section2 ...)</code>，檔案支援<a href="https://sourceware.org/binutils/docs/ld/Input-Section-Wildcards.html#Input-Section-Wildcards">萬用字元</a>。</p>
+
+<p>所以常看到的<code>*(.text)</code>的意思是：所有輸入object檔案裏面的<code>.text</code> section。</p>
+
+<p>指定多個section的方式有兩種</p>
+
+<ul>
+<li><p><code>*(.sec1 .sec2)</code>：如果輸入object有兩個檔案的話，輸出object檔案裏面section會變成
+<img src="https://www.dropbox.com/s/ewidzi9p7gktx0u/ld1_section.png?raw=1" alt="" /></p></li>
+<li><p><code>*(.sec1) *(.sec2)</code>: 如果輸入object有兩個檔案的話，輸出object檔案裏面section會變成
+<img src="https://www.dropbox.com/s/xb81bwchmisgxtx/ld2_section2.png?raw=1" alt="test" /></p></li>
+</ul>
+
+
+<p>你也可以根據flag區分object檔案的section，範例如下</p>
+
+<pre><code class="c">SECTIONS {
+    .text : { INPUT_SECTION_FLAGS (SHF_MERGE &amp; SHF_STRINGS) *(.text) }
+    .text2 :  { INPUT_SECTION_FLAGS (!SHF_WRITE) *(.text) }
+}
+</code></pre>
+
+<p>望文生義可以看到上面的規範就是</p>
+
+<ul>
+<li><strong>所有</strong>輸入object檔案的<code>.text</code>section flag有SHF_MERGE 和 SHF_STRINGS的，請放在輸出object檔案的<code>.text</code> section</li>
+<li><strong>所有</strong>輸入object檔案的<code>.text</code>section flag沒有SHF_WRITE的，請放在輸出object檔案的<code>.text2</code> section</li>
+</ul>
+
+
+<p>你如果對於範例中的flag有興趣，可以看<a href="http://refspecs.linuxfoundation.org/elf/gabi4+/ch4.sheader.html">這邊</a>, <a href="http://refspecs.linuxfoundation.org/LSB_4.1.0/LSB-Core-generic/LSB-Core-generic/sections.html">這邊</a>，還有<a href="http://refspecs.linuxfoundation.org/LSB_4.1.0/LSB-Core-generic/LSB-Core-generic/specialsections.html">這邊</a>。我目前還不想看就是了。</p>
+
+<p>另外指定輸入object檔案部份，除了指定單獨的輸入object檔案，還可以指定archieve (如libwen.a, libc.a)裏面的object檔案，用法如下
+<code>archive:file</code>，隨便猜一個範例<code>libc.a:fprintf.o</code></p>
+
+<p><a name="sec-input-desc-wildcard"></a></p>
+
+<h2>輸入object檔案的section 語法的萬用字元</h2>
+
+<p>支援
+<code>*</code>：任何長度的任何字元
+<code>?</code>：單一任何字元
+<code>[]</code>：單一字元有效的範圍如<code>[a-z]</code>指小寫英文字母
+<code>\</code>：接下來的字元<strong>不是</strong>萬用字元，如<code>\*</code></p>
+
+<p>由於linker複製section的方式是多個條件滿足的話，選第一個條件滿足就處理，所以配合萬用字元可能會產生意想不到的錯誤，範例如下</p>
+
+<pre><code class="c">.data : { *(.data) }
+.data1 : { data.o(.data) }
+</code></pre>
+
+<p>由於複製section的方式是第一個條件滿足就處理，所以會造成data.o的<code>.data</code> section放字輸出object檔案的<code>.data</code> section而不是<code>.data1</code> section。手冊提供了建議處理方式，有興趣的可以<a href="https://sourceware.org/binutils/docs/ld/Input-Section-Wildcards.html#Input-Section-Wildcards">參考</a>。</p>
+
+<p><a name="sec-input-desc-comm"></a></p>
+
+<h2>輸入object檔案的COMMOM section</h2>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/09/global-variables-from-common-symbol-on-the-c-programming-language#elf-concl">這邊</a>有提到common symbol存在的原因。手冊中更進一步的提到在輸出object檔案時的命令大概是這樣：</li>
+</ul>
+
+
+<pre><code class="c">.bss { *(.bss) *(COMMON) }
+</code></pre>
+
+<p>也就是說，最後沒特別狀況，就把輸入object 檔案的COMMON section放在<code>.bss</code> section。</p>
+
+<p><a name="sec-input-desc-keep"></a></p>
+
+<h2>KEEP指令</h2>
+
+<ul>
+<li><code>KEEP(要保留的section)</code>：因為linker有garbage collection，如果要保證section不會被回收，可以用該指令。</li>
+</ul>
+
+
+<p><a name="sec-input-desc-ex"></a></p>
+
+<h2>輸入object檔案放到輸出object檔案範例</h2>
+
+<pre><code class="c">SECTIONS {
+    outputa 0x10000 :
+    {
+        all.o
+        foo.o (.input1)
+    }
+    outputb :
+    {
+        foo.o (.input2)
+        foo1.o (.input1)
+    }
+    outputc :
+    {
+        *(.input1)
+        *(.input2)
+    }
+}
+</code></pre>
+
+<p>以圖示就是
+<img src="https://www.dropbox.com/s/1ptw7s31ynun4o0/ld2_section3.png?raw=1" alt="" /></p>
+
+<p><a name="sec-output-data"></a></p>
+
+<h2>輸出object檔案內指定固定資料長度</h2>
+
+<ul>
+<li><code>長度單位命令(expression)</code>
+
+<ul>
+<li>長度單位命令
+
+<ul>
+<li><code>BYTE</code>：1 byte</li>
+</ul>
+</li>
+<li><code>SHORT</code>：2 bytes</li>
+<li><code>LONG</code>：4 bytes</li>
+<li><code>QUAD</code>：8 byte</li>
+</ul>
+</li>
+</ul>
+
+
+<p>以下的命令將會佔 5 bytes，第一個byte後面4個bytes將用來存放addr (如果我英文沒看錯的話，原文是store the byte 1 followed by the four byte value of the symbol <code>addr':)。
+</code>BYTE(1)<code>
+</code>LONG(addr)`</p>
+
+<p>關於64-bit的目前沒心情看，跳過。</p>
+
+<p>至於endian的部份，如果輸出的object檔案有規範，則依該規範存放，否則則遵守第一個讀入的輸入object檔案。</p>
+
+<ul>
+<li><code>FILL(expression)</code>：section內沒使用的空間將被填入expression計算後的數字。同樣效果的命令是<code>[=fillexp]</code>，忘記這是啥嗎?我也忘了，所以回去<a href="#sec-output-desc">找了一下</a></li>
+</ul>
+
+
+<h2>3.6.6看不懂，跳過。</h2>
+
+<p><a name="sec-output-discard"></a></p>
+
+<h2>輸出object檔案捨棄的section</h2>
+
+<p>為什麼要丟掉？原因是在設定輸出section的script有提到特定的section，但是link完畢後發現所有輸入object檔案都沒有該section的symbol。最後就是把這些section丟掉。</p>
+
+<p>另外一個情況是輸入object檔案有<code>/DISCARD/</code>既然就說要丟了就恭敬不如從命了。</p>
+
+<p><a name="sec-output-attr"></a></p>
+
+<h2>輸出object檔案section其他屬性</h2>
+
+<p>還記得前面的格式嘛？再複習一下:</p>
+
+<pre><code class="c 輸出object檔案的section描述格式">section [address] [(type)] :
+    [AT(lma)]
+    [ALIGN(section_align) | ALIGN_WITH_INPUT]
+    [SUBALIGN(subsection_align)]
+    [constraint]
+    {
+        output-section-command
+        output-section-command
+        ...
+    } [&gt;region] [AT&gt;lma_region] [:phdr :phdr ...] [=fillexp]
+</code></pre>
+
+<p>前面篇幅已經說明了<code>section</code>，<code>address</code>，以及<code>output-section-command</code>等語法和命令，我們接著要介紹其他部份如下</p>
+
+<ul>
+<li><a href="#sec-output-attr-type">輸出object檔案 Section Type</a></li>
+<li><a href="#sec-output-attr-lma">輸出object檔案 Section LMA</a></li>
+<li><a href="#sec-output-attr-output-align">強制輸出的 Alignment</a></li>
+<li><a href="#sec-output-attr-input-align">強制輸入的 Alignment</a></li>
+<li><a href="#sec-output-attr-limit">輸出object檔案 Section 限制</a></li>
+<li><a href="#sec-output-attr-region">輸出object檔案 Section Region</a></li>
+<li><a href="#sec-output-attr-output-phdr">輸出object檔案 Section Phdr</a></li>
+<li><a href="#sec-output-attr-output-fill">指定輸出object檔案 Section 填空的資料</a></li>
+</ul>
+
+
+<p><a name="sec-output-attr-type"></a></p>
+
+<h2>輸出object檔案 Section Type</h2>
+
+<p>有支援</p>
+
+<ul>
+<li><code>NOLOAD</code>
+
+<ul>
+<li>當程式執行的時候不載入到記憶體（想像ROM或是NOR FLASH）</li>
+</ul>
+</li>
+<li><code>DSECT</code></li>
+<li><code>COPY</code></li>
+<li><code>INFO</code></li>
+<li><code>OVERLAY</code>
+
+<ul>
+<li>上面四個是為了往前相容保留的type，基本上很少用了。用途都相同，指定該區段不可以分配記憶體。不過我本身不懂什麼情況下不要分配記憶體就是了。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>基本上type繼承輸入object中的type，不過你要硬上就是在輸出object檔案描述，範例如下。該範例顯示ROM 區段起始位址為0，並且在該section執行程式不要載入到記憶體。</p>
+
+<pre><code class="c">SECTIONS {
+    ROM 0 (NOLOAD) : { ... }
+    ...
+}
+</code></pre>
+
+<p><a name="sec-output-attr-lma"></a></p>
+
+<h2>輸出object檔案 Section LMA</h2>
+
+<p>前情回顧</p>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout">VMA</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout">LMA</a></li>
+</ul>
+
+
+<p>設定輸出object檔案的<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout">VMA</a>是在<a href="#sec-output-addr"><code>address欄位</code></a>中指定。請比對<a href="#sec-output-attr">section描述格式</a>的<code>address</code>。</p>
+
+<p>而<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout">LMA</a>就是<a href="#sec-output-attr">section描述格式</a>的<code>AT(lma)</code>和<code>AT&gt;lma_region</code>這兩個部份了。這兩個指令是optional的。他們的差別是：</p>
+
+<ul>
+<li><code>AT(lma)</code>中間的lma是透過expression算出來的lma位址</li>
+<li><code>AT&gt;lma_region</code>是指定<code>MEMORY</code>裏面描述的region</li>
+</ul>
+
+
+<p>如果你的section沒有指定<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout">LMA</a>的話，linker會使用下面的規則決定<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#bkg-layout">LMA</a></p>
+
+<ul>
+<li><a href="#sec-output-addr"><code>address欄位</code></a>中指定VMA，則LMA = VMA</li>
+<li>section為<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1#fmt">allocatable</a>，則LMA = VMA</li>
+<li>有設定region的情況在滿足下面的條件下，把VMA和LMA的差距會被設成該region裏面最後一個section中VMA和LMA的差距。
+
+<ul>
+<li>section滿足region條件(三小條件?)</li>
+<li>該region已經有最少一個section</li>
+</ul>
+</li>
+<li>沒有設定region的情況在找不到相容的region，linker會指令預設包含所有memory space的region，從裏面挑一個section，把VMA和LMA的差距會被設成該region裏面最後一個section中VMA和LMA的差距。 (三小？為什麼要這樣做？）</li>
+<li>找不到合適的region放section的話，就閉著眼睛把LMA = VMA吧。</li>
+</ul>
+
+
+<p>來點範例，這是一個嵌入式系統，假設所有的資料都放在唯讀記憶體中。那麼會發生什麼事呢？那就是你的<code>i++</code>就GG了，所以要把變數部份還有其他需要寫入的部份放在RAM中，所以這個script顯示了</p>
+
+<ul>
+<li>VMA的0x1000的位址放程式碼</li>
+<li>VMA的0x2000放有初始化的全域變數，而這些初始值從那邊搬到記憶體呢來呢？就是LMA描述的東西，望文生義可以知道是接在.text之後的資料。</li>
+<li>VMA的0x3000就是放未初始化的全域變數</li>
+</ul>
+
+
+<pre><code class="c">SECTIONS
+{
+        .text 0x1000 : { *(.text) _etext = . ; }
+        .mdata 0x2000 :
+            AT ( ADDR (.text) + SIZEOF (.text) )
+            { _data = . ; *(.data); _edata = . ;  }
+        .bss 0x3000 :
+            { _bstart = . ;  *(.bss) *(COMMON) ; _bend = . ;}
+}
+</code></pre>
+
+<p>當然事情沒那麼簡單，這邊只有講layout。在沒有OS幫你搞定的時候什麼事都要自己來，所以你還要自己把有初始化的全域變數一個一個搬到RAM裏面如下。請仔細比對變數和script的symbol。另外如果有興趣看<a href="http://www.arm.com/products/processors/cortex-m/cortex-microcontroller-software-interface-standard.php">CMSIS(Cortex Microcontroller Software Interface Standard)</a>的source code也可以看到類似的行為。</p>
+
+<pre><code class="c">extern char _etext, _data, _edata, _bstart, _bend;
+char *src = &amp;_etext;
+char *dst = &amp;_data;
+
+/* ROM has data at end of text; copy it.  */
+while (dst &lt; &amp;_edata)
+    *dst++ = *src++;
+
+/* Zero bss.  */
+for (dst = &amp;_bstart; dst&lt; &amp;_bend; dst++)
+    *dst = 0;
+</code></pre>
+
+<p><a name="sec-output-attr-output-align"></a></p>
+
+<h2>強制輸出object檔案的 Alignment</h2>
+
+<p>請使用<code>ALIGN</code>，或是使用<code>ALIGN_WITH_INPUT</code>將讀入的object檔案中的section設定成你要的alignment。</p>
+
+<p><a name="sec-output-attr-input-align"></a></p>
+
+<h2>強制輸入object檔案的 Alignment</h2>
+
+<p>請使用<code>SUBALIGN</code> 去指定輸入object檔案單一個section的alignment。</p>
+
+<p><a name="sec-output-attr-limit"></a></p>
+
+<h2>輸出object檔案 Section 限制</h2>
+
+<ul>
+<li><code>ONLY_IF_RO</code>
+
+<ul>
+<li>當輸入object檔案符合條件的section為唯讀才產生你要的輸出object檔案section</li>
+</ul>
+</li>
+<li><code>ONLY_IF_RW</code>
+
+<ul>
+<li>當輸入object檔案符合條件的section為可讀寫才產生你要的輸出object檔案section</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="sec-output-attr-region"></a></p>
+
+<h3>輸出object檔案 Section Region</h3>
+
+<p>使用<code>&gt;MEMORY_指令_宣告的region</code></p>
+
+<p>範例，把<code>.text</code>放ROM section，該section位址是在硬體rom記憶體區塊。
+<code>c
+MEMORY { rom : ORIGIN = 0x1000, LENGTH = 0x1000 }
+SECTIONS { ROM : { *(.text) } &gt;rom }
+</code></p>
+
+<p><a name="sec-output-attr-output-phdr"></a></p>
+
+<h2>輸出object檔案 Section Phdr</h2>
+
+<p>PHDR 是<a href="http://en.wikipedia.org/wiki/Executable_and_Linkable_Format">ELF</a>的program header縮寫，又稱為segment。當ELF loader載入ELF執行檔的時候，會看這些segment決定要如何把讀入的檔案放在記憶體中，這部份和<a href="http://en.wikipedia.org/wiki/Application_binary_interface">ABI</a>有關係，按下不表，等我那天心情好再來看ELF和ABI。</p>
+
+<p><a href="#sec-output-attr">section描述格式</a>中<code>phdr</code>的用法是</p>
+
+<ul>
+<li>宣告一個phdr</li>
+<li>指令特定的section屬於該phdr</li>
+</ul>
+
+
+<p>範例如下
+<code>c
+PHDRS { text PT_LOAD ; }
+SECTIONS { .text : { *(.text) } :text }
+</code></p>
+
+<p><a name="sec-output-attr-output-fill"></a></p>
+
+<h2>指定輸出object檔案 Section 填空的資料</h2>
+
+<p><a href="#sec-output-data">前面FILL</a>講到指令填空的資料。而<a href="#sec-output-attr">section描述格式</a>中<code>=fillexp</code>也有相同效果，範例如下</p>
+
+<pre><code class="c">SECTIONS { .text : { *(.text) } =0x90909090 }
+</code></pre>
+
+<p><a name="sec-overlay"></a></p>
+
+<h2>OVERLAY命令</h2>
+
+<p><a href="http://en.wikipedia.org/wiki/Overlay_%28programming%29">Overlay</a>是一種在記憶體小於執行檔案時的技巧。其基本概念就是</p>
+
+<ul>
+<li>把程式切成不同模組</li>
+<li>載入單個模組到記憶體並執行，當程式行為Z要另外一個模組的話，就釋放目前模組，再載入新的模組到記憶體並執行。</li>
+</ul>
+
+
+<p>對應到linker script就會格式這樣</p>
+
+<pre><code class="c OVERLAY命令格式">OVERLAY [start] : [NOCROSSREFS] [AT ( ldaddr )]
+{
+    secname1
+    {
+        output-section-command
+        output-section-command
+    ...
+    } [:phdr...] [=fill]
+    secname2
+    {
+        output-section-command
+        output-section-command
+        ...
+    } [:phdr...] [=fill]
+...
+} [&gt;region] [:phdr...] [=fill]
+</code></pre>
+
+<p>OVERLAY命令中除了<code>OVERLAY</code>和<code>section 名稱</code>以外其他都是optional。另外要注意的是<code>OVERLAY</code>命令不允許region和address的描述。而在<code>OVERLAY</code>最後面的資料固定為<code>OVERLAY起始位址</code> + <code>最大section的size</code></p>
+
+<p>由於OVERLAY就是動態切換並執行不同section，所以在VMA的位址會固定。這表示所有的section的VMA會相同。為了方便，linker會把所有<code>OVERLAY</code>中的section串接成連續的空間。</p>
+
+<p>OVERLAY用法如下</p>
+
+<ul>
+<li>linker script設定OVERLAY</li>
+<li>程式語言視情況需要切換時「人肉」搬移OVERLAY裏面的section到記憶體</li>
+</ul>
+
+
+<p>「人肉」搬移表示我們需要</p>
+
+<ul>
+<li>section 起始位址</li>
+<li>section 結束位址</li>
+</ul>
+
+
+<p>這部份linker會自動幫我們加入symbol，規則如下，很容易望文生義所以就不解釋了。</p>
+
+<ul>
+<li><code>__load_start_section_名稱</code></li>
+<li><code>__load_stop_section_名稱</code></li>
+</ul>
+
+
+<p>那麼現在看一下手冊上面的範例
+<code>c
+OVERLAY 0x1000 : AT (0x4000)
+{
+    .text0 { o1/*.o(.text) }
+    .text1 { o2/*.o(.text) }
+}
+</code></p>
+
+<p>還記得<a href="#sec-output-addr">address</a>和<a href="#sec-output-attr-lma">AT</a>命令嗎？一個是指定VMA另外一個是指定LMA。所以上面的設定白話文就是</p>
+
+<ul>
+<li>我要一個overlay，從0x4000載入到0x1000的記憶體內</li>
+<li>這個overlay有<code>.text0</code>和<code>.text1</code>兩個section</li>
+<li><code>.text0</code>裏面放的是o1目錄下所有object檔案中的<code>.text</code></li>
+<li><code>.text1</code>裏面放的是o2目錄下所有object檔案中的<code>.text</code></li>
+</ul>
+
+
+<p>那麼人肉搬移要怎麼處理呢？手冊列出如下</p>
+
+<pre><code class="c">    extern char __load_start_text1, __load_stop_text1;
+    memcpy ((char *) 0x1000, &amp;__load_start_text1,
+            &amp;__load_stop_text1 - &amp;__load_start_text1);
+</code></pre>
+
+<p>可以看到，我們說要從LMA搬到VMA，LMA的位址就由symbol內容提供。</p>
+
+<p>另外手冊這個<a href="https://sourceware.org/binutils/docs/ld/Overlay-Description.html#Overlay-Description">section</a>我跳過一些東西，有興趣的朋友可以去超級比一比。</p>
+
+<p><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1">上一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3">下一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents">回總目錄</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[GNU LD 手冊略讀 (1): Chapter 3 ~ Chapter 3.5]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/"/>
+    <updated>2014-12-14T23:55:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1</id>
+    <content type="html"><![CDATA[<p><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command">下一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents">回總目錄</a></p>
+
+<h2>本篇目錄</h2>
+
+<ul>
+<li><a href="#fmt">Linker script 格式概論</a></li>
+<li><a href="#ex">從Linker script 範例開始</a></li>
+<li><a href="#cmd">簡易script 命令格式</a>
+
+<ul>
+<li><a href="#cmd-file">檔案相關命令</a></li>
+<li><a href="#cmd-obj">Object檔案相關格式命令</a></li>
+<li><a href="#cmd-alias">設定記憶體區塊alias命令</a></li>
+<li><a href="#cmd-misc">未分類的命令 (節錄）</a></li>
+</ul>
+</li>
+<li><a href="#assign">設定symbol的值</a>
+
+<ul>
+<li><a href="#assign-op">基本運算</a></li>
+<li><a href="#assign-hid">HIDDEN命令</a></li>
+<li><a href="#assign-prov">PROVIDE命令</a></li>
+<li><a href="#assign-hid-prov">PROVIDE_HIDDEN命令</a></li>
+<li><a href="#assign-src">談談source code和linker script symbol的關係</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="fmt"></a></p>
+
+<h2>Linker script 格式概論</h2>
+
+<ul>
+<li>以文字檔存放</li>
+<li>由多個command組成</li>
+<li>command可能是
+
+<ul>
+<li>keyword + 參數</li>
+<li>設定symbol</li>
+<li>&hellip;</li>
+</ul>
+</li>
+<li>command 可以用<code>;</code>分開，空白會被忽略</li>
+<li>使用/<em> .. </em>/註解</li>
+<li>字串直接打，如果有用到script保留的字元如<code>.</code>可以用<code>"</code>包住</li>
+</ul>
+
+
+<p><a name="ex"></a></p>
+
+<h2>從Linker script 範例開始</h2>
+
+<pre><code class="c link script 範例">SECTIONS
+{
+    . = 0x10000;
+    .text : { *(.text) }
+    . = 0x8000000;
+    .data : { *(.data) }
+    .bss : { *(.bss) }
+}
+</code></pre>
+
+<p>這個<a href="https://sourceware.org/binutils/docs/ld/Simple-Example.html#Simple-Example">抄來</a>的範例很簡單，只有一個命令<code>SECTIONS</code>。<code>SECTIONS</code>是用來描述執行的時候記憶體的規劃配置（layout）。</p>
+
+<p>說明這個指令細節</p>
+
+<ul>
+<li><code>.</code>表示記憶體位置counter，起始值為0。結束值則由linker 計算把所有input section的資料整合到output section的長度。而<code>.</code>如果沒有指定明確的記憶體位址的話，就會被設定為<strong>上一個位址counter的結束位址</strong>。<a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/46">參考示意圖: (Jim Huang) How GNU Toolchain Works投影片 </a>。</li>
+<li>設定記憶體位置counter為0x10000</li>
+<li>接下來請把所有<strong>輸入</strong>object檔案的程式機械碼中(<code>{ *(.text) }</code>)存放到<strong>輸出</strong>object檔案的<code>.text</code>section中。</li>
+<li>接設定記憶體位置counter為0x8000000</li>
+<li>先放有初始值的全域變數（.data）</li>
+<li>再放<strong>沒有</strong>初始值的全域變數（.bss）</li>
+</ul>
+
+
+<p>另外要注意的是ld會自動幫你處理<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>，所以不用擔心section之間的aligment問題。</p>
+
+<p><a name="cmd"></a></p>
+
+<h2>linker script 命令格式</h2>
+
+<ul>
+<li><code>ENTRY(symbol)</code>
+
+<ul>
+<li>設定某個symbol為程式執行的第一個指令起始點，在我的預設linker script中是<code>ENTRY(_start)</code>，然後去反組譯隨便一個C編譯出來的執行檔，找字串<code>_start</code>可以看到裏面又去呼叫了<code>__libc_start_main@plt</code>。</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="text hello_word執行檔">Disassembly of section .text:
+
+0000000000400440 &lt;_start&gt;:
+  400440:       31 ed                   xor    %ebp,%ebp
+  400442:       49 89 d1                mov    %rdx,%r9
+  400445:       5e                      pop    %rsi
+  400446:       48 89 e2                mov    %rsp,%rdx
+  400449:       48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+  40044d:       50                      push   %rax
+  40044e:       54                      push   %rsp
+  40044f:       49 c7 c0 c0 05 40 00    mov    $0x4005c0,%r8
+  400456:       48 c7 c1 50 05 40 00    mov    $0x400550,%rcx
+  40045d:       48 c7 c7 2d 05 40 00    mov    $0x40052d,%rdi
+  400464:       e8 b7 ff ff ff          callq  400420 &lt;__libc_start_main@plt&gt;
+  400469:       f4                      hlt    
+  40046a:       66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+</code></pre>
+
+<p><a name="cmd-file"></a></p>
+
+<h2>檔案相關命令</h2>
+
+<ul>
+<li><code>INCLUDE filename</code>
+
+<ul>
+<li>在看到這個命令的時候才去載入<code>filename</code>這個<strong>linker script</strong>。可以被放在不同的命令如SETCTION, MEMORY等。</li>
+</ul>
+</li>
+<li><code>INPUT(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入object檔案，如abc.o這樣的檔案。</li>
+</ul>
+</li>
+<li><code>GROUP(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入archieve檔案，如libabc.a這樣的檔案。</li>
+</ul>
+</li>
+<li><code>AS_NEEDED(file1 file2 ...)</code>
+
+<ul>
+<li>在<code>INPUT</code>和<code>GROUP</code>使用的命令，用來告訴linker說如果object裏面的資料有被reference到才link進來，猜測應該可以減少儲存空間。範例（未測試請自行斟酌）：<code>INPUT(file1.o file2.o AS_NEEDED(file3.o file4.o))</code></li>
+</ul>
+</li>
+<li><code>OUTPUT(filename)</code>
+
+<ul>
+<li>和<code>gcc -o filename</code> 一樣</li>
+</ul>
+</li>
+<li><code>SEARCH_DIR(path)</code>
+
+<ul>
+<li>和<code>-L path</code>一樣</li>
+</ul>
+</li>
+<li><code>STARTUP(filename)</code>
+
+<ul>
+<li>和INPUT相同，唯一差別是ld保證這個檔案一定是第一個被link</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-obj"></a></p>
+
+<h2>Object檔案相關格式命令</h2>
+
+<ul>
+<li><code>OUTPUT_FORMAT(bfdname)</code>
+
+<ul>
+<li>指定輸出object檔案的binary 檔案格式，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>OUTPUT_FORMAT(default, big, little)</code>
+
+<ul>
+<li>指定輸出object檔案預設的binary 檔案格式，big endian的binary 檔案格式以及little endian的binary 檔案格式。可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>TARGET(bfdname)</code>
+
+<ul>
+<li>告訴ld用那種binary 檔案格式讀取輸入object檔案要，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-alias"></a></p>
+
+<h2>設定記憶體區塊alias命令</h2>
+
+<ul>
+<li><code>REGION_ALIAS(alias, region)</code>
+
+<ul>
+<li>設定<code>MEMORY</code>命令中區塊的alias，一般來說，用在不同的平台需要相同的memory layout時可以使用。舉例來說，當有3個平台，記憶體layout都是相同，那麼可以
+
+<ul>
+<li>將他們平台相關的記憶體區塊<code>MEMORY</code>命令寫在個別的檔案如linkcmds.memory</li>
+<li>設定相同的alias</li>
+<li>在主要的linker script 使用<code>INCLUDE</code>載入linkcmds.memory，並且直接使用alias當作一般的區塊使用。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>詳細的範例說明可以看<a href="https://sourceware.org/binutils/docs/ld/REGION_005fALIAS.html#REGION_005fALIAS">這邊</a>
+<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">INCLUDE</span> <span class="n">linkcmds</span><span class="p">.</span><span class="n">memory</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">SECTIONS</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_TEXT</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">rodata</span> <span class="p">:</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
+</span><span class='line'>     <span class="n">rodata_end</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_RODATA</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">rodata_end</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="n">data_start</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_DATA</span>
+</span><span class='line'> <span class="n">data_size</span> <span class="o">=</span> <span class="n">SIZEOF</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'> <span class="n">data_load_start</span> <span class="o">=</span> <span class="n">LOADADDR</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_BSS</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">a</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;cmd-misc&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="n">a</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'><span class="cp">## 未分類的命令 (節錄）</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">ASSERT</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span><span class="err">`</span>
+</span><span class='line'><span class="o">*</span> <span class="err">條件不成立就噴訊息並結束</span><span class="n">link</span>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">EXTERN</span><span class="p">(</span><span class="n">symbol1</span> <span class="n">symbol2</span> <span class="p">...)</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">強迫讓指定的</span><span class="n">symbol</span><span class="err">設成</span><span class="n">undefined</span><span class="err">，手冊說一般用在刻意要使用非標準的</span><span class="n">API</span><span class="err">。例如自幹</span><span class="n">printf</span><span class="err">時可以用這個命令。</span> <span class="p">(</span><span class="err">不過變成了</span><span class="n">undefine</span> <span class="n">symbol</span><span class="err">怎麼</span><span class="n">link</span><span class="o">??</span><span class="p">)</span>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">FORCE_COMMON_ALLOCATION</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">手冊和男人說和相容性有關，手冊上是說強迫分配空間給</span><span class="n">common</span> <span class="n">symbols</span><span class="err">，即使是</span><span class="n">link</span> <span class="n">relocate</span><span class="err">檔案。</span><span class="p">(</span><span class="n">common</span> <span class="n">symbols</span><span class="err">不知道是什麼</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">OUTPUT_ARCH</span><span class="p">(</span><span class="n">bfdarch</span><span class="p">)</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">指定輸出的平台，可以透過`</span><span class="n">objdump</span> <span class="o">-</span><span class="n">i</span><span class="err">`查詢支援平台</span>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">INSERT</span> <span class="p">[</span> <span class="n">AFTER</span> <span class="o">|</span> <span class="n">BEFORE</span> <span class="p">]</span> <span class="n">output_section</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">指定在預設</span><span class="n">linker</span> <span class="n">script</span><span class="err">命令被執行之前或是之後加上或加入特定的輸入</span><span class="n">section</span><span class="err">到輸出</span><span class="n">section</span><span class="err">。以下是一個範例</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="nl">OVERLAY</span> <span class="p">:</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="p">.</span><span class="n">ov1</span> <span class="p">{</span> <span class="n">ov1</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>    <span class="p">.</span><span class="n">ov2</span> <span class="p">{</span> <span class="n">ov2</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">INSERT</span> <span class="n">AFTER</span> <span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<p><a name="assign"></a></p>
+
+<h2>設定symbol的值</h2>
+
+<p>linker script提供設定<strong>symbol</strong>數值的方法。要注意的是，這邊的symbol可以指一個全域變數、<code>SECTION</code>命令中的location counter（就是<code>.</code>開頭的資料如<code>.text</code>）</p>
+
+<p>使用方式介紹如下：</p>
+
+<p><a name="assign-op"></a></p>
+
+<h2>基本運算</h2>
+
+<pre><code class="c symbol assignment operations">symbol = expression ;
+symbol += expression ;
+symbol -= expression ;
+symbol *= expression ;
+symbol /= expression ;
+symbol &lt;&lt;= expression ;
+symbol &gt;&gt;= expression ;
+symbol &amp;= expression ;
+symbol |= expression ;
+</code></pre>
+
+<p>關於expression是三小後面會再討論。</p>
+
+<p><a href="https://sourceware.org/binutils/docs/ld/Simple-Assignments.html#Simple-Assignments">手冊上提供的範例</a>是</p>
+
+<pre><code class="c symbol assign範例">floating_point = 0;
+SECTIONS
+{
+    .text :
+    {
+    *(.text)
+    _etext = .;
+    }
+    _bdata = (. + 3) &amp; ~ 3;
+    .data : { *(.data) }
+}
+</code></pre>
+
+<p>從這邊可以看到幾種assign</p>
+
+<ul>
+<li>設定全域變數<code>floating_point</code>的symbol為0</li>
+<li>設定全域變數<code>_etext</code>的值為輸入object檔案<code>.text</code>合體後的offset，個人猜測可以理解成end of text。(回顧一下<code>.</code>是offset counter)</li>
+<li>設定全域變數<code>_bdata</code>的值為輸出object檔案<code>.text</code>結尾的offset 的<strong>4的倍數</strong>位址。這邊透露兩個資訊
+
+<ul>
+<li>個人猜測可以理解成begin of data</li>
+<li>四的倍數和<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>應該有關聯。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid"></a></p>
+
+<h2>HIDDEN命令</h2>
+
+<ul>
+<li><code>HIDDEN(要隱藏的symbol)</code>
+可以把他理解成加了<code>static</code>的全域變數，也就是說這個symbol只在這個處理範圍中才能摸到。</li>
+</ul>
+
+
+<p><a name="assign-prov"></a></p>
+
+<h2>PROVIDE命令</h2>
+
+<ul>
+<li><code>PROVIDE命令(symbol = expression)</code>
+
+<ul>
+<li>簡單來說，如果你的程式已經有這個symbol（函數或變數），就用你的；否則就使用這邊提供的symbol。手冊上說是給特殊的linker使用的。想知道他提的use case可以看<a href="https://sourceware.org/binutils/docs/ld/PROVIDE.html#PROVIDE">這邊</a>，我是沒什麼感覺。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid-prov"></a></p>
+
+<h2>PROVIDE_HIDDEN命令</h2>
+
+<ul>
+<li><code>PROVIDE_HIDDEN(symbol = expression)</code>
+
+<ul>
+<li>和PROVIDE命令相同，差別是這個symbol只在這個處理範圍中才能摸到，一如HIDDEN命令。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-src"></a></p>
+
+<h2>談談source code和linker script symbol的關係</h2>
+
+<p>這節很有趣，解答我的一些小問題。</p>
+
+<ul>
+<li>變數如何存放在binary中？
+
+<ul>
+<li>先把變數名稱放入symbol table內，換句話說symbol table會多一筆資料。這筆資料的欄位有
+
+<ul>
+<li>symbol的位址</li>
+<li>symbol的flags</li>
+<li>symbol屬於哪個SECTION</li>
+<li>symbol佔的記憶體空間或是alignment規範</li>
+<li>symbol的名稱</li>
+</ul>
+</li>
+<li>典型的symbol table 資料：C語言的main()
+
+<pre><code>*  `00000000004005ed g     F .text  0000000000000101              main`
+</code></pre></li>
+<li>而symbol的flag有7個groups
+
+<ul>
+<li>Group 1:
+
+<ul>
+<li><code>l</code>: local</li>
+<li><code>g</code>: global</li>
+<li><code>u</code>: unique global，GNU 用於ELF時的 symbol binding extenstion</li>
+<li><code>!</code>: 既是global也是local</li>
+</ul>
+</li>
+<li>Group 2:
+
+<ul>
+<li><code>w</code>: weak symbol</li>
+<li><code>&lt;空白&gt;</code>: strong symbol</li>
+</ul>
+</li>
+<li>Group 3:
+
+<ul>
+<li><code>C</code>: symbol 是一個constructor (不知道這邊constructor是指那個東西? )</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 4:
+
+<ul>
+<li><code>W</code>: warning symbol (不知道是三小)</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 5:
+
+<ul>
+<li><code>I</code>: 間接地reference其他的symbol</li>
+<li><code>i</code>: relocate 時要處理的function</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 6:
+
+<ul>
+<li><code>D</code>: dynamic symbol (不知道是三小)</li>
+<li><code>d</code>: debug symbol</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 7:
+
+<ul>
+<li><code>F</code>: 這是一個function</li>
+<li><code>f</code>: 這是一個檔案</li>
+<li><code>O</code>: 這是一個object</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果有初始值，順便設定初始值。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>foo = 100</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址依照symbol table的size規則將100寫入該位址。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>ptr = &amp;foo</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址寫到ptr在symbol table對應的記憶體。</li>
+</ul>
+</li>
+<li>symbol在symbol table中存放第一個欄位是<strong>symbol的值</strong>，而這個值<strong>是一個位址</strong>。</li>
+<li>在linker script設定的symbol如<code>foo = 100</code>和在程式碼中轉出的symbol如<code>foo = 100</code>差別在那？
+
+<ul>
+<li>linker script的100代表的是symbol的位址，而程式碼中轉出的symbol的100代表的是foo對應記憶體存放的值。</li>
+</ul>
+</li>
+<li>如何從C語言程式碼中摸到linker script內定義的symbol?
+
+<ul>
+<li>要先知道symbol名稱</li>
+<li>在程式碼中extern該symbol，型態為char。</li>
+<li>要知道symbol只是一個位址，所以要存取就要取位址。</li>
+<li>可以參考以前測試的<a href="http://wen00072.github.io/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux">範例：Linux中使用C語言載入data object 檔案資料</a></li>
+<li>另外有趣的是似乎section的symbol對應的位址不一定是只當位址使用。詳細測試在<a href="http://wen00072.github.io/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued">這邊：Linux中使用C語言載入data object 檔案資料 (續）</a></li>
+</ul>
+</li>
+<li>我可以反方向從linker script摸程式碼的symbol
+
+<ul>
+<li>不一定，不同的程式語言和編譯器有不同的變數和函數命名方式，也就是說你原始程式碼的symbol名稱<strong>可能不是</strong>最後存在輸出object檔案的symbol 名稱。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command">下一篇</a>
+<a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents">回總目錄</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[GNU LD 手冊略讀 (0): 目錄和簡介]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents/"/>
+    <updated>2014-12-14T23:45:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-0-table-of-contents</id>
+    <content type="html"><![CDATA[<p>關於一個程式的binary要怎麼存放其實是很有趣的問題，我以前都沒有去想這個問題。後來當組裝工久了以後就忍不住會想知道這些。隨便想一下就有很多問題，例如：</p>
+
+<ul>
+<li>程式碼和資料要怎麼放？</li>
+<li>怎麼做到不同的source code共用global 變數？</li>
+<li>global 變數和local變數放的地方應該不一樣吧？那麼確實不一樣的點是？</li>
+<li>呼叫副函數這回事一定是要先找到副函數再跳過去吧？那麼「找到」到底是什麼意思？</li>
+<li>如果是用shared library的話，runtime才會找到副函數所在的地方，那麼為什麼編譯的時候不會有錯誤呢？
+&hellip;</li>
+</ul>
+
+
+<p>這些問題列出來真的是「罄竹難書」，不過我想整體來說至少在Linux下面從binutils下手應該是沒錯。第一個問題應該和linker有關係。所以我先去看<a href="https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts">GNU ld手冊的linker script部份</a>，希望可以解決我的疑惑。就算和我的問題無關，至少可以留下一些中文參考資料，造福需要的朋友。</p>
+
+<p>為了讓單篇的篇幅不要太過冗長，我把內容切割成幾個部份。這邊就先放全部的目錄和簡介的部份。</p>
+
+<h2>目錄</h2>
+
+<h2><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/">第一部份</a></h2>
+
+<ul>
+<li><a href="#intro">簡介</a></li>
+<li><a href="#bkg">背景知識</a>
+
+<ul>
+<li><a href="#bkg-sec">Section</a></li>
+<li><a href="#bkg-layout">Section 記憶體位址</a></li>
+<li><a href="#bkg-sym">Symbol</a></li>
+</ul>
+</li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#fmt">Linker script 格式概論</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#ex">從Linker script 範例開始</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#cmd">簡易script 命令格式</a>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#cmd-file">檔案相關命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#cmd-obj">Object檔案相關格式命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#cmd-alias">設定記憶體區塊alias命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#cmd-misc">未分類的命令 (節錄）</a></li>
+</ul>
+</li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#assign">設定symbol的值</a>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#assign-op">基本運算</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#assign-hid">HIDDEN命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#assign-prov">PROVIDE命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#assign-hid-prov">PROVIDE_HIDDEN命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-1/#assign-src">談談source code和linker script symbol的關係</a></li>
+</ul>
+</li>
+</ul>
+
+
+<h2><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command">第二部份</a></h2>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec">SECTIONS命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-desc">輸出object檔案的section描述</a>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-input-desc-basic">輸入object檔案的section 基礎概念</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-input-desc-wildcard">輸入object檔案的section 語法的萬用字元</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-input-desc-comm">輸入object檔案的COMMOM section</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-input-desc-keep">KEEP指令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-input-desc-ex">輸入object檔案放到輸出object檔案範例</a></li>
+</ul>
+</li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-name">輸出object檔案section 命名</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-addr">輸出object檔案section 命令: address欄位</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-input-desc">輸入object檔案的section描述</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-data">輸出object檔案內指定固定資料長度</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-discard">輸出object檔案捨棄的section</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr">輸出object檔案section其他屬性</a>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-type">輸出object檔案 Section Type</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-lma">輸出object檔案 Section LMA</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-output-align">強制輸出object檔案的 Alignment</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-input-align">強制輸入object檔案的 Alignment</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-limit">輸出object檔案 Section 限制</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-region">輸出object檔案 Section Region</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-output-phdr">輸出object檔案 Section Phdr</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-output-attr-output-fill">指定輸出object檔案 Section 填空的資料</a></li>
+</ul>
+</li>
+<li><a href="http://wen00072.github.io/blog/2014/12/14/study-on-the-linker-script-2-setcion-command/#sec-overlay">OVERLAY命令</a></li>
+</ul>
+
+
+<h2><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/">第三部份</a></h2>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#mem">MEMORY命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#phdr">PHDRS命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#ver">VERSION命令</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr">Linker script 中使用的expression</a>
+
+<ul>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-const">常數</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-sym-const">Symbolic 常數</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-sym">Symbol命名規則</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-oph-sec">孤兒 Section</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-lcnt">Location Counter</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-op">Operators</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-eval">計算結果</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-sec">Expression 計算結果和absolute/relative address的關係</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#expr-btfun">內建函數</a></li>
+</ul>
+</li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#imp">Implicit Linker Scripts</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#todo">待釐清項目</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/12/15/study-on-the-linker-script-3/#ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="intro"></a></p>
+
+<h2>簡介</h2>
+
+<p><code>ld</code>是GNU linker的程式。<code>ld</code>吃多個object (<em>.o)檔或archive (</em>.a)檔，將他們的資料relocate還有symbol reference資訊一併輸出到新的binary。link通常是compile產生binary的最後步驟。<code>ld</code>在執行的時候依照<strong>Linker command language</strong>檔案描述去產生binary。ld支援不同的binary format <a href="https://sourceware.org/binutils/docs/ld/BFD.html#BFD">(BFD: Binary File Descriptor)</a></p>
+
+<p>每次link的時候，都會依照特定的命令去產生新的object檔。而這些命令就是linker script；換句話說，linker script提供一連串的命令讓linker照表操課。Linker script描述的命令有</p>
+
+<ul>
+<li>ld吃的object檔案中的section要怎麼map到要輸出的binary檔案。</li>
+<li>要輸出的binary檔案要在記憶體中的<strong>layout</strong></li>
+<li>其他</li>
+</ul>
+
+
+<p>因為每次link一定會依據linker script去link，所以當<code>ld</code>沒有指定linker script的時候，系統會使用預設的linker script。而<code>ld --verbose</code>可以顯示預設的linkder script。link時指定自幹的linker script則使用<code>ld -T 自己的linker script</code>。</p>
+
+<p><a name="bkg"></a></p>
+
+<h2>背景知識</h2>
+
+<ul>
+<li>object 檔格式：輸入檔案和輸出檔案所遵循的格式</li>
+<li>object 檔案：linker處理時讀入的輸入檔案和將結果存放的輸出檔案</li>
+<li>executable：ld輸出的檔案，有時候會這樣稱呼</li>
+<li>每個object檔案都有好幾個section，而
+
+<ul>
+<li>input section：輸入object檔案中的section</li>
+<li>output section：輸出object檔案中的section</li>
+</ul>
+</li>
+<li>bss
+
+<ul>
+<li>存放沒有初始值的全域變數的地方 ex: <code>int g_var;</code></li>
+</ul>
+</li>
+<li>text
+
+<ul>
+<li>存放編譯過的執行機械碼的地方</li>
+</ul>
+</li>
+<li>data
+
+<ul>
+<li>存放<strong>有</strong>初始值全域變數的地方 ex: <code>int g_var = 0xdeadbeef;</code></li>
+</ul>
+</li>
+<li>locale counter
+
+<ul>
+<li>代表目前輸出object檔案位置的最後端</li>
+</ul>
+</li>
+<li>region
+
+<ul>
+<li>執行平台實體的記憶體區塊。如0x1000~0x1999是ROM, 0x5000~0x9999是RAM。那麼這個平台就可以設定成有兩個region。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="bkg-sec"></a></p>
+
+<h2>Section</h2>
+
+<ul>
+<li>obj檔案內部有一組section</li>
+<li>section包含
+
+<ul>
+<li>自己的名稱</li>
+<li>section contents</li>
+<li>section長度資訊</li>
+<li>狀態
+
+<ul>
+<li>loadable: 執行時該section是否需要被載入到記憶體</li>
+<li>allocatable: 如果section本身沒資料（如.bss）可以設成這個狀態，讓loader先保留記憶體的一塊空間</li>
+<li>section不是loadable 或allocatable 的話一般來說都是給debug用的</li>
+<li><code>objdump -h</code>顯示的狀態(<a href="http://stackoverflow.com/questions/11196048/flags-in-objdump-output-of-object-file">出處</a>)，不要問我為何和手冊不一樣，因為我也不知道。</li>
+<li><code>LOAD</code>
+
+<ul>
+<li>表示這個section需要從檔案載入到記憶體</li>
+</ul>
+</li>
+<li><code>DATA</code>
+
+<ul>
+<li>表示這個section存放資料，不可以被執行</li>
+</ul>
+</li>
+<li><code>READONLY</code>
+
+<ul>
+<li>可以望文生義吧？</li>
+</ul>
+</li>
+<li><code>ALLOC</code>
+
+<ul>
+<li>表示該section會吃記憶體，你可能會想說廢話，section不放記憶體放檔案是放心酸的嘛？還真的有，例如放除錯的section。</li>
+</ul>
+</li>
+<li><code>CONTENTS</code>
+
+<ul>
+<li>表示這個section是執行程式所需要的資訊，如程式碼或是資料。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/46">參考示意圖: (Jim Huang) How GNU Toolchain Works投影片 </a></li>
+</ul>
+
+
+<p><a name="bkg-layout"></a></p>
+
+<h3>Section 記憶體位址</h3>
+
+<ul>
+<li>Output section如果被載入記憶體，會存放兩種記憶體位址
+
+<ul>
+<li>VMA: Virtual Memory Address</li>
+<li>Runtime 的記憶體位址</li>
+<li>LMA: Load Memory Address
+
+<ul>
+<li>load time的記憶體位址</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>一般來說，VMA = LMA。不同情況有東西要燒到ROM時參考LMA。從ROM載入到記憶體執行的時候參考VMA</li>
+<li>可以使用objdump -h看VMA/LMA資訊</li>
+</ul>
+
+
+<p><a name="bkg-sym"></a></p>
+
+<h2>Symbol</h2>
+
+<ul>
+<li>一個object 檔案存放多個symbol，又稱為symbol table</li>
+<li>將名稱對應到一個記憶體位址的symbol稱為defined symbol，名稱沒有對應到記憶體位址的稱為undefined symbol</li>
+<li>名稱通常就是全域變數、靜態變數或是函數的名稱</li>
+<li>一般來說，如果把單獨的c編譯成object file時
+
+<ul>
+<li>defined symbol為該檔案內的global variable, static varible 和funciton</li>
+<li>undefined symbol為該檔案內的extern variable和外部funciton</li>
+</ul>
+</li>
+<li>可以使用objdump -t或是nm看symbol資訊</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Linker Script初探 - GNU Linker Ld手冊略讀]]></title>
+    <link href="http://wen00072.github.io/blog/2014/03/14/study-on-the-linker-script/"/>
+    <updated>2014-03-14T09:01:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/03/14/study-on-the-linker-script</id>
+    <content type="html"><![CDATA[<p>關於一個程式的binary要怎麼存放其實是很有趣的問題，我以前都沒有去想這個問題。後來當組裝工久了以後就忍不住會想知道這些。隨便想一下就有很多問題，例如：</p>
+
+<ul>
+<li>程式碼和資料要怎麼放？</li>
+<li>怎麼做到不同的source code共用global 變數？</li>
+<li>global 變數和local變數放的地方應該不一樣吧？那麼確實不一樣的點是？</li>
+<li>呼叫副函數這回事一定是要先找到副函數再跳過去吧？那麼「找到」到底是什麼意思？</li>
+<li>如果是用shared library的話，runtime才會找到副函數所在的地方，那麼為什麼編譯的時候不會有錯誤呢？
+&hellip;</li>
+</ul>
+
+
+<p>這些問題列出來真的是「罄竹難書」，不過我想整體來說至少在Linux下面從binutils下手應該是沒錯。第一個問題應該和linker有關係。所以我先去看ld文件中的linker script，希望可以解決我的疑惑。就算和我的問題無關，至少可以留下一些中文參考資料，造福需要的朋友。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#intro">簡介</a></li>
+<li><a href="#bkg">背景知識</a>
+
+<ul>
+<li><a href="#bkg-sec">Section</a>
+
+<ul>
+<li><a href="#bkg-layout">Section 記憶體位址</a></li>
+</ul>
+</li>
+<li><a href="#bkg-sym">Symbol</a></li>
+</ul>
+</li>
+<li><a href="#fmt">Linker script 格式概論</a></li>
+<li><a href="#ex">從Linker script 範例開始</a></li>
+<li><a href="#cmd">簡易script 命令格式</a>
+
+<ul>
+<li><a href="#cmd-file">檔案相關命令</a></li>
+<li><a href="#cmd-obj">Object檔案相關格式命令</a></li>
+<li><a href="#cmd-alias">設定記憶體區塊alias命令</a></li>
+<li><a href="#cmd-misc">未分類的命令 (節錄）</a></li>
+</ul>
+</li>
+<li><a href="#assign">設定symbol的值</a>
+
+<ul>
+<li><a href="#assign-op">基本運算</a></li>
+<li><a href="#assign-hid">HIDDEN命令</a></li>
+<li><a href="#assign-prov">PROVIDE命令</a></li>
+<li><a href="#assign-hid-prov">PROVIDE_HIDDEN命令</a></li>
+<li><a href="#assign-src">談談source code和linker script symbol的關係</a></li>
+</ul>
+</li>
+<li><a href="#sec">SECTIONS命令</a>
+
+<ul>
+<li><a href="#sec-output-desc">輸出object檔案的section描述</a>
+
+<ul>
+<li><a href="#sec-output-name">輸出object檔案的section 命名</a></li>
+<li><a href="#sec-output-addr">輸出object檔案section 命令: address欄位</a></li>
+<li><a href="#sec-input-desc">輸入object檔案的section描述</a></li>
+<li><a href="#sec-input-desc-basic">輸入object檔案的section 基礎概念</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#todo">待釐清項目</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="intro"></a></p>
+
+<h2>簡介</h2>
+
+<p><code>ld</code>是GNU linker的程式。<code>ld</code>吃多個object (<em>.o)檔或archive (</em>.a)檔，將他們的資料relocate還有symbol reference資訊一併輸出到新的binary。link通常是compile產生binary的最後步驟。<code>ld</code>在執行的時候依照<strong>Linker command language</strong>檔案描述去產生binary。ld支援不同的binary format <a href="https://sourceware.org/binutils/docs/ld/BFD.html#BFD">(BFD: Binary File Descriptor)</a></p>
+
+<p>每次link的時候，都會依照特定的命令去產生新的object檔。而這些命令就是linker script；換句話說，linker script提供一連串的命令讓linker照表操課。Linker script描述的命令有</p>
+
+<ul>
+<li>ld吃的object檔案中的section要怎麼map到要輸出的binary檔案。</li>
+<li>要輸出的binary檔案要在記憶體中的<strong>layout</strong></li>
+<li>其他</li>
+</ul>
+
+
+<p>因為每次link一定會依據linker script去link，所以當<code>ld</code>沒有指定linker script的時候，系統會使用預設的linker script。而<code>ld --verbose</code>可以顯示預設的linkder script。link時指定自幹的linker script則使用<code>ld -T 自己的linker script</code>。</p>
+
+<hr />
+
+<p><a name="bkg"></a></p>
+
+<h2>背景知識</h2>
+
+<ul>
+<li>object 檔格式：輸入檔案和輸出檔案所遵循的格式</li>
+<li>object 檔案：輸入檔案和輸出檔案</li>
+<li>executable：ld輸出的檔案，有時候會這樣稱呼</li>
+<li>每個object檔案都有好幾個section，而
+
+<ul>
+<li>input section：輸入object檔案中的section</li>
+<li>output section：輸出object檔案中的section</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="bkg-sec"></a></p>
+
+<h3>Section</h3>
+
+<ul>
+<li>obj檔案內部有一組section</li>
+<li>section包含
+
+<ul>
+<li>自己的名稱</li>
+<li>section contents</li>
+<li>section長度資訊</li>
+<li>狀態
+
+<pre><code>* loadable: 執行時該section是否需要被載入到記憶體
+* allocatable: 先保留記憶體的一塊空間讓程式執行時使用，如.bss
+</code></pre>
+
+<ul>
+<li>section不是loadable 或allocatable 的話一般來說都是給debug用的</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/46">參考示意圖: (Jim Huang) How GNU Toolchain Works投影片 </a></li>
+</ul>
+
+
+<p><a name="bkg-layout"></a></p>
+
+<h4>Section 記憶體位址</h4>
+
+<ul>
+<li>Output section如果被載入記憶體，會存放兩種記憶體位址
+
+<ul>
+<li>VMA: Virtual Memory Address</li>
+<li>Runtime 的記憶體位址</li>
+<li>LMA: Load Memory Address
+
+<ul>
+<li>load time的記憶體位址</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>一般來說，VMA = LMA。不同情況有東西要燒到ROM時參考LMA。從ROM載入到記憶體執行的時候參考VMA</li>
+<li>可以使用objdump -h看VMA/LMA資訊</li>
+</ul>
+
+
+<p><a name="bkg-sym"></a></p>
+
+<h3>Symbol</h3>
+
+<ul>
+<li>一個object 檔案存放多個symbol，又稱為symbol table</li>
+<li>將名稱對應到一個記憶體位址的symbol稱為defined symbol，名稱沒有對應到記憶體位址的稱為undefined symbol</li>
+<li>名稱通常就是全域變數、靜態變數或是函數的名稱</li>
+<li>一般來說，如果把單獨的c編譯成object file時
+
+<ul>
+<li>defined symbol為該檔案內的global variable, static varible 和funciton</li>
+<li>undefined symbol為該檔案內的extern variable和外部funciton</li>
+</ul>
+</li>
+<li>可以使用objdump -t或是nm看symbol資訊</li>
+</ul>
+
+
+<hr />
+
+<p><a name="fmt"></a></p>
+
+<h2>Linker script 格式概論</h2>
+
+<ul>
+<li>以文字檔存放</li>
+<li>由多個command組成</li>
+<li>command可能是
+
+<ul>
+<li>keyword + 參數</li>
+<li>設定symbol</li>
+<li>&hellip;</li>
+</ul>
+</li>
+<li>command 可以用<code>;</code>分開，空白會被忽略</li>
+<li>使用/<em> .. </em>/註解</li>
+<li>字串直接打，如果有用到script保留的字元如<code>.</code>可以用<code>"</code>包住</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ex"></a></p>
+
+<h2>從Linker script 範例開始</h2>
+
+<pre><code class="c link script 範例">SECTIONS
+{
+    . = 0x10000;
+    .text : { *(.text) }
+    . = 0x8000000;
+    .data : { *(.data) }
+    .bss : { *(.bss) }
+}
+</code></pre>
+
+<p>這個<a href="https://sourceware.org/binutils/docs/ld/Simple-Example.html#Simple-Example">抄來</a>的範例很簡單，只有一個命令<code>SECTIONS</code>。<code>SECTIONS</code>是用來描述執行的時候記憶體的規劃配置（layout）。</p>
+
+<p>說明這個指令細節</p>
+
+<ul>
+<li><code>.</code>表示記憶體位置counter，起始值為0。結束值則由linker 計算把所有input section的資料整合到output section的長度。而<code>.</code>如果沒有指定明確的記憶體位址的話，就會被設定為<strong>上一個位址counter的結束位址</strong>。<a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works/46">參考示意圖: (Jim Huang) How GNU Toolchain Works投影片 </a>。</li>
+<li>設定記憶體位置counter為0x10000</li>
+<li>接下來請把所有<strong>輸入</strong>object檔案的程式機械碼中(<code>{ *(.text) }</code>)存放到<strong>輸出</strong>object檔案的<code>.text</code>區塊中。</li>
+<li>接設定記憶體位置counter為0x8000000</li>
+<li>先放有初始值的全域變數（.data）</li>
+<li>再放<strong>沒有</strong>初始值的全域變數（.bss）</li>
+</ul>
+
+
+<p>另外要注意的是ld會自動幫你處理<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>，所以不用擔心section之間的aligment問題。</p>
+
+<hr />
+
+<p><a name="cmd"></a></p>
+
+<h2>linker script 命令格式</h2>
+
+<ul>
+<li><code>ENTRY(symbol)</code>
+
+<ul>
+<li>設定某個symbol為程式執行的第一個指令起始點，在我的預設linker script中是<code>ENTRY(_start)</code>，然後去反組譯隨便一個C編譯出來的執行檔，找字串<code>_start</code>可以看到裏面又去呼叫了<code>__libc_start_main@plt</code>。</li>
+</ul>
+</li>
+</ul>
+
+
+<pre><code class="text hello_word執行檔">Disassembly of section .text:
+
+0000000000400440 &lt;_start&gt;:
+  400440:       31 ed                   xor    %ebp,%ebp
+  400442:       49 89 d1                mov    %rdx,%r9
+  400445:       5e                      pop    %rsi
+  400446:       48 89 e2                mov    %rsp,%rdx
+  400449:       48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+  40044d:       50                      push   %rax
+  40044e:       54                      push   %rsp
+  40044f:       49 c7 c0 c0 05 40 00    mov    $0x4005c0,%r8
+  400456:       48 c7 c1 50 05 40 00    mov    $0x400550,%rcx
+  40045d:       48 c7 c7 2d 05 40 00    mov    $0x40052d,%rdi
+  400464:       e8 b7 ff ff ff          callq  400420 &lt;__libc_start_main@plt&gt;
+  400469:       f4                      hlt    
+  40046a:       66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+</code></pre>
+
+<p><a name="cmd-file"></a></p>
+
+<h3>檔案相關命令</h3>
+
+<ul>
+<li><code>INCLUDE filename</code>
+
+<ul>
+<li>在看到這個命令的時候才去載入<code>filename</code>這個<strong>linker script</strong>。可以被放在不同的命令如SETCTION, MEMORY等。</li>
+</ul>
+</li>
+<li><code>INPUT(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入object檔案，如abc.o這樣的檔案。</li>
+</ul>
+</li>
+<li><code>GROUP(file1 file2 ...)</code>
+
+<ul>
+<li>指定載入的輸入archieve檔案，如libabc.a這樣的檔案。</li>
+</ul>
+</li>
+<li><code>AS_NEEDED(file1 file2 ...)</code>
+
+<ul>
+<li>在<code>INPUT</code>和<code>GROUP</code>使用的命令，用來告訴linker說如果object裏面的資料有被reference到才link進來，猜測應該可以減少儲存空間。範例（未測試請自行斟酌）：<code>INPUT(file1.o file2.o AS_NEEDED(file3.o file4.o))</code></li>
+</ul>
+</li>
+<li><code>OUTPUT(filename)</code>
+
+<ul>
+<li>和<code>gcc -o filename</code> 一樣</li>
+</ul>
+</li>
+<li><code>SEARCH_DIR(path)</code>
+
+<ul>
+<li>和<code>-L path</code>一樣</li>
+</ul>
+</li>
+<li><code>STARTUP(filename)</code>
+
+<ul>
+<li>和INPUT相同，唯一差別是ld保證這個檔案一定是第一個被link</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-obj"></a></p>
+
+<h3>Object檔案相關格式命令</h3>
+
+<ul>
+<li><code>OUTPUT_FORMAT(bfdname)</code>
+
+<ul>
+<li>指定輸出object檔案的binary 檔案格式，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>OUTPUT_FORMAT(default, big, little)</code>
+
+<ul>
+<li>指定輸出object檔案預設的binary 檔案格式，big endian的binary 檔案格式以及little endian的binary 檔案格式。可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+<li><code>TARGET(bfdname)</code>
+
+<ul>
+<li>告訴ld用那種binary 檔案格式讀取輸入object檔案要，可以使用<code>objdump -i</code>列出支援的binary 檔案格式</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="cmd-alias"></a></p>
+
+<h3>設定記憶體區塊alias命令</h3>
+
+<ul>
+<li><code>REGION_ALIAS(alias, region)</code>
+
+<ul>
+<li>設定<code>MEMORY</code>命令中區塊的alias，一般來說，用在不同的平台需要相同的memory layout時可以使用。舉例來說，當有3個平台，記憶體layout都是相同，那麼可以
+
+<ul>
+<li>將他們平台相關的記憶體區塊<code>MEMORY</code>命令寫在個別的檔案如linkcmds.memory</li>
+<li>設定相同的alias</li>
+<li>在主要的linker script 使用<code>INCLUDE</code>載入linkcmds.memory，並且直接使用alias當作一般的區塊使用。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>詳細的範例說明可以看<a href="https://sourceware.org/binutils/docs/ld/REGION_005fALIAS.html#REGION_005fALIAS">這邊</a>
+<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">INCLUDE</span> <span class="n">linkcmds</span><span class="p">.</span><span class="n">memory</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">SECTIONS</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_TEXT</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">rodata</span> <span class="p">:</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
+</span><span class='line'>     <span class="n">rodata_end</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_RODATA</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">rodata_end</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="n">data_start</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_DATA</span>
+</span><span class='line'> <span class="n">data_size</span> <span class="o">=</span> <span class="n">SIZEOF</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'> <span class="n">data_load_start</span> <span class="o">=</span> <span class="n">LOADADDR</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
+</span><span class='line'> <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span>
+</span><span class='line'>   <span class="p">{</span>
+</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>
+</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_BSS</span>
+</span><span class='line'>   <span class="p">}</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">a</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;cmd-misc&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="n">a</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'><span class="cp">### 未分類的命令 (節錄）</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">ASSERT</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span><span class="err">`</span>
+</span><span class='line'><span class="o">*</span> <span class="err">條件不成立就噴訊息並結束</span><span class="n">link</span>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">EXTERN</span><span class="p">(</span><span class="n">symbol1</span> <span class="n">symbol2</span> <span class="p">...)</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">強迫讓指定的</span><span class="n">symbol</span><span class="err">設成</span><span class="n">undefined</span><span class="err">，手冊說一般用在刻意要使用非標準的</span><span class="n">API</span><span class="err">。例如自幹</span><span class="n">printf</span><span class="err">時可以用這個命令。</span> <span class="p">(</span><span class="err">不過變成了</span><span class="n">undefine</span> <span class="n">symbol</span><span class="err">怎麼</span><span class="n">link</span><span class="o">??</span><span class="p">)</span>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">FORCE_COMMON_ALLOCATION</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">手冊和男人說和相容性有關，手冊上是說強迫分配空間給</span><span class="n">common</span> <span class="n">symbols</span><span class="err">，即使是</span><span class="n">link</span> <span class="n">relocate</span><span class="err">檔案。</span><span class="p">(</span><span class="n">common</span> <span class="n">symbols</span><span class="err">不知道是什麼</span><span class="p">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">OUTPUT_ARCH</span><span class="p">(</span><span class="n">bfdarch</span><span class="p">)</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">指定輸出的平台，可以透過`</span><span class="n">objdump</span> <span class="o">-</span><span class="n">i</span><span class="err">`查詢支援平台</span>
+</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">INSERT</span> <span class="p">[</span> <span class="n">AFTER</span> <span class="o">|</span> <span class="n">BEFORE</span> <span class="p">]</span> <span class="n">output_section</span><span class="err">`</span>
+</span><span class='line'>  <span class="o">*</span> <span class="err">指定在預設</span><span class="n">linker</span> <span class="n">script</span><span class="err">命令被執行之前或是之後加上或加入特定的輸入</span><span class="n">section</span><span class="err">到輸出</span><span class="n">section</span><span class="err">。以下是一個範例</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="nl">OVERLAY</span> <span class="p">:</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="p">.</span><span class="n">ov1</span> <span class="p">{</span> <span class="n">ov1</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'>    <span class="p">.</span><span class="n">ov2</span> <span class="p">{</span> <span class="n">ov2</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="n">INSERT</span> <span class="n">AFTER</span> <span class="p">.</span><span class="n">text</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h2><a name="assign"></a></h2>
+
+<h2>設定symbol的值</h2>
+
+<p>linker script提供設定<strong>symbol</strong>數值的方法。要注意的是，這邊的symbol可以指一個全域變數、<code>SECTION</code>命令中的location counter（就是<code>.</code>開頭的資料如<code>.text</code>）</p>
+
+<p>使用方式介紹如下：</p>
+
+<p><a name="assign-op"></a></p>
+
+<h3>基本運算</h3>
+
+<pre><code class="c symbol assignment operations">symbol = expression ;
+symbol += expression ;
+symbol -= expression ;
+symbol *= expression ;
+symbol /= expression ;
+symbol &lt;&lt;= expression ;
+symbol &gt;&gt;= expression ;
+symbol &amp;= expression ;
+symbol |= expression ;
+</code></pre>
+
+<p>關於expression是三小後面會再討論。</p>
+
+<p><a href="https://sourceware.org/binutils/docs/ld/Simple-Assignments.html#Simple-Assignments">手冊上提供的範例</a>是</p>
+
+<pre><code class="c symbol assign範例">floating_point = 0;
+SECTIONS
+{
+    .text :
+    {
+    *(.text)
+    _etext = .;
+    }
+    _bdata = (. + 3) &amp; ~ 3;
+    .data : { *(.data) }
+}
+</code></pre>
+
+<p>從這邊可以看到幾種assign</p>
+
+<ul>
+<li>設定全域變數<code>floating_point</code>的symbol為0</li>
+<li>設定全域變數<code>_etext</code>的值為輸入object檔案<code>.text</code>合體後的offset，個人猜測可以理解成end of text。(回顧一下<code>.</code>是offset counter)</li>
+<li>設定全域變數<code>_bdata</code>的值為輸出object檔案<code>.text</code>結尾的offset 的<strong>4的倍數</strong>位址。這邊透露兩個資訊
+
+<ul>
+<li>個人猜測可以理解成begin of data</li>
+<li>四的倍數和<a href="http://en.wikipedia.org/wiki/Data_structure_alignment">alignment的問題</a>應該有關聯。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid"></a></p>
+
+<h3>HIDDEN命令</h3>
+
+<ul>
+<li><code>HIDDEN(要隱藏的symbol)</code>
+可以把他理解成加了<code>static</code>的全域變數，也就是說這個symbol只在這個處理範圍中才能摸到。</li>
+</ul>
+
+
+<p><a name="assign-prov"></a></p>
+
+<h3>PROVIDE命令</h3>
+
+<ul>
+<li><code>PROVIDE命令(symbol = expression)</code>
+
+<ul>
+<li>簡單來說，如果你的程式已經有這個symbol（函數或變數），就用你的；否則就使用這邊提供的symbol。手冊上說是給特殊的linker使用的。想知道他提的use case可以看<a href="https://sourceware.org/binutils/docs/ld/PROVIDE.html#PROVIDE">這邊</a>，我是沒什麼感覺。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-hid-prov"></a></p>
+
+<h3>PROVIDE_HIDDEN命令</h3>
+
+<ul>
+<li><code>PROVIDE_HIDDEN(symbol = expression)</code>
+
+<ul>
+<li>和PROVIDE命令相同，差別是這個symbol只在這個處理範圍中才能摸到，一如HIDDEN命令。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="assign-src"></a></p>
+
+<h3>談談source code和linker script symbol的關係</h3>
+
+<p>這節很有趣，解答我的一些小問題。</p>
+
+<ul>
+<li>變數如何存放在binary中？
+
+<ul>
+<li>先把變數名稱放入symbol table內，換句話說symbol table會多一筆資料。這筆資料的欄位有
+
+<ul>
+<li>symbol的位址</li>
+<li>symbol的flags</li>
+<li>symbol屬於哪個SECTION</li>
+<li>symbol佔的記憶體空間或是alignment規範</li>
+<li>symbol的名稱</li>
+</ul>
+</li>
+<li>典型的symbol table 資料：C語言的main()
+
+<pre><code>*  `00000000004005ed g     F .text  0000000000000101              main`
+</code></pre></li>
+<li>而symbol的flag有7個groups
+
+<ul>
+<li>Group 1:
+
+<ul>
+<li><code>l</code>: local</li>
+<li><code>g</code>: global</li>
+<li><code>u</code>: unique global，GNU 用於ELF時的 symbol binding extenstion</li>
+<li><code>!</code>: 既是global也是local</li>
+</ul>
+</li>
+<li>Group 2:
+
+<ul>
+<li><code>w</code>: weak symbol</li>
+<li><code>&lt;空白&gt;</code>: strong symbol</li>
+</ul>
+</li>
+<li>Group 3:
+
+<ul>
+<li><code>C</code>: symbol 是一個constructor (不知道這邊constructor是指那個東西? )</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 4:
+
+<ul>
+<li><code>W</code>: warning symbol (不知道是三小)</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 5:
+
+<ul>
+<li><code>I</code>: 間接地reference其他的symbol</li>
+<li><code>i</code>: relocate 時要處理的function</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 6:
+
+<ul>
+<li><code>D</code>: dynamic symbol (不知道是三小)</li>
+<li><code>d</code>: debug symbol</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+<li>Group 7:
+
+<ul>
+<li><code>F</code>: 這是一個function</li>
+<li><code>f</code>: 這是一個檔案</li>
+<li><code>O</code>: 這是一個object</li>
+<li><code>&lt;空白&gt;</code>: 一般 symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>如果有初始值，順便設定初始值。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>foo = 100</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址依照symbol table的size規則將100寫入該位址。</li>
+</ul>
+</li>
+<li>程式語言的取值<code>ptr = &amp;foo</code> runtime發生什麼事？
+
+<ul>
+<li>先去symbol table找foo存在記憶體的位址，把那個位址寫到ptr在symbol table對應的記憶體。</li>
+</ul>
+</li>
+<li>symbol在symbol table中存放第一個欄位是<strong>symbol的值</strong>，而這個值<strong>是一個位址</strong>。</li>
+<li>在linker script設定的symbol如<code>foo = 100</code>和在程式碼中轉出的symbol如<code>foo = 100</code>差別在那？
+
+<ul>
+<li>linker script的100代表的是symbol的位址，而程式碼中轉出的symbol的100代表的是foo對應記憶體存放的值。</li>
+</ul>
+</li>
+<li>如何從C語言程式碼中摸到linker script內定義的symbol?
+
+<ul>
+<li>要先知道symbol名稱</li>
+<li>在程式碼中extern該symbol，型態為char。</li>
+<li>要知道symbol只是一個位址，所以要存取就要取位址。</li>
+<li>可以參考以前測試的<a href="http://wen00072.github.io/blog/2014/04/15/loads-the-data-object-using-the-c-language-archives-data-in-linux">範例：Linux中使用C語言載入data object 檔案資料</a></li>
+<li>另外有趣的是似乎section的symbol對應的位址不一定是只當位址使用。詳細測試在<a href="http://wen00072.github.io/blog/2014/04/16/load-linux-using-c-language-data-object-archives-data-continued">這邊：Linux中使用C語言載入data object 檔案資料 (續）</a></li>
+</ul>
+</li>
+<li>我可以反方向從linker script摸程式碼的symbol
+
+<ul>
+<li>不一定，不同的程式語言和編譯器有不同的變數和函數命名方式，也就是說你原始程式碼的symbol名稱<strong>可能不是</strong>最後存在輸出object檔案的symbol 名稱。</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="sec"></a></p>
+
+<h2>SETCION命令</h2>
+
+<p>其實一開始是為了看懂這個命令才會想看linker script的。如果接觸過很小型的Embedded OS就會發現很多都是自幹linker script；而這些scripts主要的描述命令就是<code>SETCION</code>。</p>
+
+<p>好了，廢話少說，進入主題。SECTION命令的功用是</p>
+
+<ul>
+<li>告訴linker怎麼把輸入object檔案中的SECTION對應到輸出object檔案中的SECTION</li>
+<li>告訴loader object檔案中的SECTION要放到記憶體那些地方</li>
+</ul>
+
+
+<p>典型的SECTION命令長這樣子：</p>
+
+<pre><code class="c">SECTIONS
+{
+    sections-command
+    sections-command
+    ...
+}
+</code></pre>
+
+<p>望文生義地猜測可以這樣理解：
+輸出object有一些大方向的規範，並且分為不同的section，每個section有他自己的規範。</p>
+
+<p>而<code>sections-command</code>可以分為下面幾種功能</p>
+
+<ul>
+<li><a href="#cmd">ENTRY命令</a></li>
+<li><a href="#assign">設定symbol的值</a></li>
+<li><a href="#sec-output-desc">描述輸出object檔案的setcion</a></li>
+<li>Overlay描述 (不知道是三小)</li>
+</ul>
+
+
+<p>要注意的事，如果你自幹的linker script沒有描述輸出object檔案的setcion的話，linker會</p>
+
+<ul>
+<li>讀輸入object檔案section時，如果該section第一次出現，就在輸出object檔案中加入同樣名稱的section，直到處理完所有的輸入object檔案</li>
+<li>第一個吃到的輸入object檔案section將當作位址0的起始點</li>
+</ul>
+
+
+<p><a name="sec-output-desc"></a></p>
+
+<h3>輸出object檔案的section描述</h3>
+
+<pre><code class="c 輸出object檔案的section描述格式">section [address] [(type)] :
+    [AT(lma)]
+    [ALIGN(section_align) | ALIGN_WITH_INPUT]
+    [SUBALIGN(subsection_align)]
+    [constraint]
+    {
+        output-section-command
+        output-section-command
+        ...
+    } [&gt;region] [AT&gt;lma_region] [:phdr :phdr ...] [=fillexp]
+</code></pre>
+
+<p>其中<code>output-section-command</code>的功能有</p>
+
+<ul>
+<li><a href="#assign">設定symbol的值</a></li>
+<li>描述輸入object檔案中的section要怎麼放到輸出object檔案的setcion</li>
+<li>輸出object檔案的setcion的資料存放格式如alignment等</li>
+<li>其他</li>
+</ul>
+
+
+<p>這邊很多術語需要先搞清楚，先列出來，希望之後可以看到解答</p>
+
+<ul>
+<li>type</li>
+<li>region</li>
+<li>AT(lma)</li>
+<li>lma_region</li>
+<li>=fillexp</li>
+</ul>
+
+
+<p><a name="sec-output-name"></a></p>
+
+<h3>輸出object檔案的section 命名</h3>
+
+<ul>
+<li>必須符合你要輸出object檔案binary format規定。</li>
+</ul>
+
+
+<p><a name="sec-output-addr"></a></p>
+
+<h4>輸出object檔案section 命令: address欄位</h4>
+
+<p>address是<a href="#sec-output-desc">section</a>的一個optional欄位，使用的記憶體空間為<a href="#bkg-layout">VMA</a>。如果沒有指定的話，linker會依下面的方式設定輸出object檔案section 的VMA。該VMA會遵循section 的alignment規範。</p>
+
+<ul>
+<li>有設定<code>region</code>的話就從region內剩餘空間開始位址</li>
+<li>有使用<code>MEMORY</code>命令定義硬體記憶區塊的話，從定義的區塊中挑<strong>第一個</strong>符合SECTION的區塊。再將address設成該區塊內剩餘空間開始位址</li>
+<li>以上皆非的情況下，位址設成locale counter</li>
+</ul>
+
+
+<p>address欄位因為可以使用exression所以可能有下面的陷阱</p>
+
+<ul>
+<li><code>.text . : { *(.text) }</code></li>
+<li><code>.text : { *(.text) }</code>
+這兩個差一個<code>.</code>，意義就差很多。沒有<code>.</code>那個，表示沒有設定address，所以就是設成locale counter，並且linker會保證alignment。而有<code>.</code>的就表示hardcode成locale counter，所以有可能會有alignment的問題。</li>
+</ul>
+
+
+<p>另外一點要注意的設定後locale counter也會跟著改變。</p>
+
+<p><a name="sec-input-desc"></a></p>
+
+<h4>輸入object檔案的section描述</h4>
+
+<p>這部份可以說是整個<code>output-section-command</code>的重點，目的是告訴linker讀取輸入object檔案後，怎麼把這些檔案裏面的section複製到輸出object檔案裏面<strong>適當地</strong>section。</p>
+
+<p><a name="sec-input-desc-basic"></a></p>
+
+<h4>輸入object檔案的section 基礎概念</h4>
+
+<p>格式為<code>檔案(section1  section2 ...)</code>，檔案支援<a href="https://sourceware.org/binutils/docs/ld/Input-Section-Wildcards.html#Input-Section-Wildcards">萬用字元</a>。</p>
+
+<p>所以常看到的<code>*(.text)</code>的意思是：所有輸入object檔案裏面的<code>.text</code> section。</p>
+
+<p>指定多個section的方式有兩種</p>
+
+<ul>
+<li><p><code>*(.sec1 .sec2)</code>：如果輸入object有兩個檔案的話，輸出object檔案裏面section會變成
+<img src="http://user-image.logdown.io/user/3993/blog/4041/post/188334/f6Crrs5MTT2tl66gz08O_ld1_section.png" alt="ld1_section.png" /></p></li>
+<li><p><code>*(.sec1) *(.sec2)</code>: 如果輸入object有兩個檔案的話，輸出object檔案裏面section會變成
+<img src="http://user-image.logdown.io/user/3993/blog/4041/post/188334/LqhscLhZSbeN8XckduAG_ld2_section2.png" alt="ld2_section2.png" /></p></li>
+</ul>
+
+
+<hr />
+
+<p><a name="todo"></a></p>
+
+<ul>
+<li>待釐清項目
+
+<ul>
+<li>dynamic symbol (不知道是三小)</li>
+<li>warning symbol (不知道是三小)</li>
+<li>constructor symbol (不知道是三小)
+
+<ul>
+<li>Overlay描述 (不知道是三小)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>概念
+
+<ul>
+<li>名詞解釋
+
+<ul>
+<li>bss</li>
+<li>text</li>
+<li>data</li>
+</ul>
+</li>
+<li>locale counter</li>
+<li>region</li>
+</ul>
+</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts">GNU linker ld: Linker Scripts</a></li>
+<li><a href="http://www.slideshare.net/jserv/from-source-to-binary-how-gnu-toolchain-works">from Source to Binary: How GNU Toolchain Works</a></li>
+<li><a href="http://wiki.osdev.org/Linker_Scripts">Linker Scripts - OSDev Wiki</a></li>
+<li><a href="http://www.bravegnu.org/gnu-eprog/index.html">Embedded Programming with the GNU Toolchain</a></li>
+<li><a href="http://stackoverflow.com/questions/6666805/what-does-each-column-of-objdumps-symbol-table-mean">Stackoverflow: What does each column of objdump&rsquo;s Symbol table mean?</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

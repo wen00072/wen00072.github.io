@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Freertos | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/freertos/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[FreeRTOS 筆記]]></title>
+    <link href="http://wen00072.github.io/blog/2013/10/07/introduction-to-freertos-readings/"/>
+    <updated>2013-10-07T13:26:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/10/07/introduction-to-freertos-readings</id>
+    <content type="html"><![CDATA[<p><a href="http://www.aosabook.org/en/freertos.html">出處:The Architecture of Open Source Applications (Volume 2): FreeRTOS</a></p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#%E7%B0%A1%E4%BB%8B">簡介</a></li>
+<li><a href="#%E6%9E%B6%E6%A7%8B">架構</a></li>
+<li><a href="#Task%20Scheduling">Task Scheduling</a></li>
+<li><a href="#Tasks">Tasks</a>
+
+<ul>
+<li><a href="#xTaskCreate">Create Task</a></li>
+</ul>
+</li>
+<li><a href="#Lists">Lists</a></li>
+</ul>
+
+
+<p><a name="簡介"></a></p>
+
+<h2>簡介</h2>
+
+<ul>
+<li><a href="www.freertos.org/%E2%80%8E">FreeRTOS</a>是基於GPLv2授權的開源自由RTOS</li>
+<li>支援多種平台架構</li>
+</ul>
+
+
+<p><a name="架構"></a></p>
+
+<h2>架構</h2>
+
+<ul>
+<li>FreeRTOS元件有三個
+
+<ul>
+<li>Tasks：使用者行撰寫含有優先權的C語言程式碼，為RTOS執行的單位</li>
+<li>Communication：提供Tasks和中斷之間溝通的管道</li>
+<li>硬體包裝層：提供介面分隔操作實際硬體和RTOS行為</li>
+</ul>
+</li>
+<li>軟體階層
+
+<ul>
+<li>User task和ISR</li>
+<li>硬體抽象化後的程式碼</li>
+<li>硬體相關程式碼
+
+<ul>
+<li>放置於: FreeRTOS/Source/portable/平台
+
+<ul>
+<li>port.c/ portmacro.h</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>硬體</li>
+</ul>
+</li>
+<li>FreeRTOS/Demo/[平台]/FreeRTOSConfig.h存放硬體相關設定如Clock和stack size等</li>
+<li>FreeRTOS透過巨集來將硬體無關的程式碼對應到硬體相關的實作</li>
+</ul>
+
+
+<p><a name="Task Scheduling"></a></p>
+
+<h2>Task Scheduling</h2>
+
+<ul>
+<li>FreeRTOS使用陣列list來管理task Prority
+
+<ul>
+<li><code>static xList pxReadyTasksLists[ configMAX_PRIORITIES ];</code></li>
+</ul>
+</li>
+<li>每次tick中斷起來就叫一次<code>vTaskSwitchContext()</code></li>
+<li><code>vTaskSwitchContext()</code>
+
+<ul>
+<li>根據優先權從ready list由高到低挑出一個list
+
+<ul>
+<li>如果高優先權已經沒有task，再從下一個優先權list挑</li>
+</ul>
+</li>
+<li>從該list中挑出上一次跑過的task下一個task</li>
+<li>開始執行task</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="Tasks"></a></p>
+
+<h2>Tasks</h2>
+
+<ul>
+<li>TCB: Task control block，為FreeRTOS的重要資料結構，提供
+
+<ul>
+<li>Stack資訊</li>
+<li>List資訊</li>
+<li>Event資訊</li>
+<li>優先權</li>
+<li>&hellip;</li>
+</ul>
+</li>
+<li>Task狀態：每一個狀態就是對應到一個task list
+
+<ul>
+<li>Running</li>
+<li>Ready</li>
+<li>Suspend</li>
+<li>Block</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="xTaskCreate"></a></p>
+
+<h3>Create Task流程</h3>
+
+<ul>
+<li>產生並設定TCB</li>
+<li>設定stack及硬體context switch 會用到的暫存器</li>
+<li>Disable 中斷避免有人更動TCB資訊</li>
+<li>把TCB加入List中、系統初始化還會Init list
+
+<ul>
+<li>Ready list</li>
+<li>Suspend list</li>
+<li>Kill list</li>
+<li>Delay list</li>
+</ul>
+</li>
+<li>處理完list後enable中斷</li>
+</ul>
+
+
+<p><a name="Lists"></a></p>
+
+<h2>Lists</h2>
+
+<ul>
+<li>FreeRTOS list使用doule 環狀link</li>
+<li>list node會指向一個TCB</li>
+<li>list 依<code>xItemValue</code>順序排列</li>
+<li>list 會指向container，該container提供
+
+<ul>
+<li>list node個數</li>
+<li>起始node</li>
+<li>結束node</li>
+<li>指到目前系統處理的node</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

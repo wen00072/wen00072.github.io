@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 感想 | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/gan-xiang/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[島唄 - the Boom]]></title>
+    <link href="http://wen00072.github.io/blog/2015/02/28/island-the-boom/"/>
+    <updated>2015-02-28T15:14:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/02/28/island-the-boom</id>
+    <content type="html"><![CDATA[<p>這是一首反省二戰日本政府在沖繩島的決策造成大量當地人冤死悲劇的歌曲。</p>
+
+<p>在二次大戰末期，米軍開始準備入侵日本本島，因此需要佔領沖繩作為前進基地。當時的日本政府在當地強徵年輕男女學生在戰場上做雜務以及醫療協助。同時大力宣傳米軍的邪惡形象，宣稱米軍殘暴邪惡，表示與其被米軍俘虜生不如死，不如自殺比較痛快。網路上可以看到<a href="http://zh.wikipedia.org/zh-tw/%E6%B2%96%E7%B9%A9%E5%B3%B6%E6%88%B0%E5%BD%B9#.E8.87.AA.E6.AE.BA.E5.91.BD.E4.BB.A4.E7.88.AD.E8.AD.B0">日本政府會發手榴彈給當地居民的資料</a>。加上日本政府強力徵收糧食，估計戰役結束後平民死亡人數預估超過十萬人(<a href="http://zh.wikipedia.org/zh-tw/%E6%B2%96%E7%B9%A9%E5%B3%B6%E6%88%B0%E5%BD%B9#.E5.B9.B3.E6.B0.91.E5.82.B7.E4.BA.A1">出處</a>)。</p>
+
+<p>回到主題，這首歌是1992年出版的。根據Wikipedia的<a href="http://en.wikipedia.org/wiki/Shima_Uta_%28The_Boom_song%29">說明</a>，主唱者去沖繩的時候，參觀了<a href="http://www.himeyuri.or.jp/index.html">姬百合和平祈念資料館</a>，了解這片土地上發生的事情，以及館內倖存者親口說出的故事後，感到非常惆悵。當他離開姬百合和平祈念資料館的時候，映入眼前的是一整片的甘蔗田，讓他動起創作的想法。這就是The boom出版島唄(shima-uta)這首歌的由來。</p>
+
+<p>我不會日文，不過<a href="https://www.ptt.cc/bbs/Sodagreen/M.1331122309.A.EB6.html">ptt</a>有中文歌詞翻譯的歌詞，也有詳細的背景說明。希望人類記取這些慘痛的教訓，不要再放任不負責任的政府亂搞，最後導致悲劇發生。</p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://zh.wikipedia.org/zh-tw/%E6%B2%96%E7%B9%A9%E5%B3%B6%E6%88%B0%E5%BD%B9#.E8.87.AA.E6.AE.BA.E5.91.BD.E4.BB.A4.E7.88.AD.E8.AD.B0">Wikipedia: 沖繩島戰役: 自殺命令爭議</a></li>
+<li><a href="http://www.himeyuri.or.jp/index.html">姬百合和平祈念資料館</a></li>
+<li><a href="https://www.ptt.cc/bbs/Sodagreen/M.1331122309.A.EB6.html">ptt: 蘇打綠版: Re: 一個小事情(關於島唄)</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Shima_Uta_%28The_Boom_song%29">Wikipedia: Shima Uta (The boom)</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Talking About Information Technology Presentions in Taiwan]]></title>
+    <link href="http://wen00072.github.io/blog/2015/01/04/talking-about-information-technology-presentions-and-articles-in-taiwan/"/>
+    <updated>2015-01-04T20:54:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/01/04/talking-about-information-technology-presentions-and-articles-in-taiwan</id>
+    <content type="html"><![CDATA[<p>OK. This should be the first English article in my blog. I do hope this will also be the last one. English is not my mother tongue, so please bear with that. It should be clear to address my point of view although there should be some glitches throughout my article.</p>
+
+<p>The purpose of my technical articles and slides is to provide useful information for the people who uses Chinese. Since I went to college to learn computer engineering, what I saw in the class and laboratory meetings, the slides always wrote in English. Even after I graduated, it still mostly true in the events or presentations I attended locally. However, most professors and speakers uses mandarin to describe their ideas and thoughts. It is rare to have a completed English presentation in those scenarios, never to say discuss in English. If that so, why people uses English in their slides?</p>
+
+<p>Don’t get me wrong. I totally agree English is extremely important in information technology area. Most of the first hand information writes in English. If you need to cooperate with people overseas, you use English. However, the scenario I call into question is that if your audiences uses mandarin, you speak in mandarin, why bother to write slides in English? Can you make sure what you wrote are 100% grammar corrected? Will this exclude the newbie who does not familiar in English yet if they search keyword in the Internet? A ideal article in the Internet should be useful for the people who need it. If you write your article and slide in Chinese, you will benefit the people who uses Chinese. There are already plenty of useful information in English. Why don’t you just use your mother tongue to describe your thought and what you found?</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[閒聊：忍耐力]]></title>
+    <link href="http://wen00072.github.io/blog/2015/01/03/chat-endurance/"/>
+    <updated>2015-01-03T12:02:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/01/03/chat-endurance</id>
+    <content type="html"><![CDATA[<p>三四年前我聽過關於Linux下面中文輸入法的技術演講。技術內容忘得一乾二淨，然而印象最深刻的事講者說台灣人忍耐力太強，所以台灣中文輸入法就變成堪用，進度速度不夠快。
+　
+私自推論忍耐力太強的習性是造成問題長時間存在、把人類當成猴子用的悲劇原因之一。而且忍耐力強的話，到後面會把察覺到問題的能力降低或是消滅掉。我會這樣比喻：肚子痛想說忍耐一下。過幾天又在痛，想說大概最近吃到不乾淨的東西，接下來都這樣認為。直到幾個月後有天昏倒送醫才發現這是重病的症狀，而到那時候已經很難處理了。</p>
+
+<p>雖然後來後來還是沒去幫忙看程式碼（組裝工程度太差又沒耐性，大大對不起）。但是至少我會比較願意看到問題讓開發者或是負責人知道，而不是單純地認為在找別人麻煩。雖然有沒有改善並不是我該關心的，但是也許作者或是負責人他們真的沒注意到這塊，這樣來說，你是幫作者或是負責人和自己的忙。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[私密景點]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/29/private-sites/"/>
+    <updated>2014-12-29T23:38:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/29/private-sites</id>
+    <content type="html"><![CDATA[<p>以前出遊和當地居民聊天聽到兩個故事。</p>
+
+<p>第一個是在南部，一位年輕人帶我去私密景點。這個景點是個天然池塘，生態豐富，但是水草叢生，所以蚊子也不少。他說以前他們曾經有整理場地，把水草清掉，變得十分美麗。雖然沒有宣傳，但是過了中秋節以後，這地方就出現一大堆垃圾，經過清理後過一陣子水面還可以看到油光。所以他們後來就不去整理，讓雜草長回來。</p>
+
+<p>另外一個在北部靠近山區，一位大哥跟我說剛解嚴時期，他跑去以前封鎖的海邊逛，發現到處都有毛蟹，他帶了幾個回去料理，後來他再回去海岸，除了垃圾，什麼都不剩了。</p>
+
+<p>聽完這兩個故事，我決定把私密景點留在我的腦海中就好。希望那天國民水準可以提升到尊重土地，尊重生態，尊重自然。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[對作者仁慈就是對讀者殘忍]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/27/kind-to-authors-is-cruel-to-readers/"/>
+    <updated>2014-12-27T01:31:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/27/kind-to-authors-is-cruel-to-readers</id>
+    <content type="html"><![CDATA[<p>沒人看得懂的文章，或是要用力猜測才能理解的文章，就是一篇失敗的作品。</p>
+
+<p>一篇實用文的價值，就是要讓人從中可以理解實用並且正確的知識。而理解這回事要注意內容的組織架構、敘述的先後順序、以及適當地補充背景知識或是背景知識連結、沒有錯別字，以及讓人了解關鍵字。而正確的知識則需要有驗證的方式。</p>
+
+<p>因為我的個性並不是很謹慎，也很容易太快下定論，雖然我儘量依照上面的原則寫作，但是還是很擔心會讓人看不懂或是閱讀困難。如果有人看到文章出現下面的情況，請在討論區留言或是從寄電子郵件到Ｇ-Ｍail ID: wen點cf83讓我知道。</p>
+
+<ul>
+<li>錯別字</li>
+<li>文章描述錯誤的知識、分析、或結論</li>
+<li>更好的架構組織方式。不過這部份請說明理由，我不一定會接受</li>
+<li>可以有哪些延伸主體或是更好的reference</li>
+<li>其他可以讓文章更加清晰易懂的建議</li>
+</ul>
+
+
+<p>我寫部落格的動機一方面是找個主題來研究分析，更重要的是希望能讓習慣使用中文的人可以快速消化，有點概念後去讀英文資料可以快一些。「對作者仁慈就是對讀者殘忍。」，你的意見回饋將會造福之後閱讀的讀者。</p>
+]]></content>
+  </entry>
+  
+</feed>

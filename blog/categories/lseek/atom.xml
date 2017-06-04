@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Lseek | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/lseek/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Linux 檔案的hole]]></title>
+    <link href="http://wen00072.github.io/blog/2013/12/31/linux-archives-hole/"/>
+    <updated>2013-12-31T06:45:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2013/12/31/linux-archives-hole</id>
+    <content type="html"><![CDATA[<h2>大綱</h2>
+
+<p>檔案的hole檔案中連續的null 字元。</p>
+
+<p>當lseek指定的offset (假設叫o_lseek)超過目前檔案最後的offset(o_end)時，多出來的delta系統並不會寫入到實體空件，而是有人要讀取這段空間時會讀到連續的null字元。也就是說會有檔案大小遠大於實際佔用的儲存空間的特性。</p>
+
+<p>一般來說，hole會應在sparse的檔案，最典型的的例子就是Virtual machine的image檔案。</p>
+
+<ul>
+<li><a href="#%E7%AF%84%E4%BE%8B">範例</a>
+
+<ul>
+<li><a href="#%E5%9F%B7%E8%A1%8C%E7%B5%90%E6%9E%9C">執行結果</a></li>
+<li><a href="#Makefile">Makefile</a></li>
+<li><a href="#%E7%A8%8B%E5%BC%8F">程式</a></li>
+</ul>
+</li>
+<li><a href="#%E5%8F%83%E8%80%83%E8%B3%87%E6%96%99">參考資料</a></li>
+</ul>
+
+
+<p><a name="範例"></a></p>
+
+<h2>範例</h2>
+
+<p>測試程式行為描述</p>
+
+<ol>
+<li>讀入任意字串</li>
+<li>將字串寫入檔案，每個字元間隔1G的空間</li>
+</ol>
+
+
+<p><a name="執行結果"></a></p>
+
+<h2>執行結果</h2>
+
+<p>請注意檔案大小和目錄大小的差異</p>
+
+<pre><code class="text result">$ ./create_hole_file 
+Enter any text: test111
+Get test111
+, used to create test hole file
+
+$ ls -lh file_in_the_hole 
+-rw------- 1 nobody nobody 7.1G Dec 31 14:24 file_in_the_hole
+
+$ du -sh .
+128K    .
+</code></pre>
+
+<p><a name="Makefile"></a></p>
+
+<h2>Makefile</h2>
+
+<pre><code class="makefile Makefile">CFLAGS=-g -Wall -pedantic
+LDFLAGS=
+
+TARGET=create_hole_file
+HOLE_FILE_NAME=file_in_the_hole
+
+all: $(TARGET)
+create_hole_file: create_hole_file.c
+    gcc -o $@ $(CFLAGS) $^ -DHOLE_FILE_NAME="\"$(HOLE_FILE_NAME)\""
+
+clean:
+    rm -rf *.o *~ $(TARGET) $(HOLE_FILE_NAME)
+</code></pre>
+
+<p><a name="程式"></a></p>
+
+<h2>程式</h2>
+
+<pre><code class="c create_hole_file.c">#include &lt;stdio.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;string.h&gt;
+#include &lt;unistd.h&gt;
+
+#ifndef HOLE_FILE_NAME
+#error You need to define HOLE_FILE_NAME
+#endif
+
+#define MAX_CHAR_LINE  (256)
+#define HOLE_GAP       (1024*1024*1024) /* 1G */
+int main(void)
+{
+    char line[MAX_CHAR_LINE] = {0};
+    int rval = 0;
+    int fd   = 0;
+    int i    = 0;
+
+    off_t   lseek_offset = 0;
+    ssize_t write_size   = 0;
+
+    /* Open file */
+    fd = open(HOLE_FILE_NAME, O_CREAT | O_WRONLY, S_IRUSR  | S_IWUSR);
+    if (fd == -1) {
+        fprintf(stderr, "%d: %s\n", __LINE__, strerror(errno));
+        return -1;
+    }
+
+    /* Get string from stdin */
+    fprintf(stderr, "Enter any text: ");
+    fgets(line, MAX_CHAR_LINE, stdin);
+
+    fprintf(stderr, "Get %s, used to create test hole file\n", line);
+
+    /* Implent hole */
+    for (i = 0; i &lt; strlen(line); i++) {
+        write_size = write(fd, &amp;line[i], sizeof(char));
+        if (write_size == -1) {
+            fprintf(stderr, "%d: %s\n", __LINE__, strerror(errno));
+            return -1;
+        }
+
+        /* file in the hole! */
+        lseek_offset = lseek(fd, HOLE_GAP, SEEK_CUR);
+        if (lseek_offset == -1) {
+            fprintf(stderr, "%d: %s\n", __LINE__, strerror(errno));
+            return -1;
+        }
+
+    }
+
+    /* Close */
+    rval = close(fd);
+    if (rval == -1) {
+        fprintf(stderr, "%d: %s\n", __LINE__, strerror(errno));
+        return -1;
+    }
+    return 0;
+}
+</code></pre>
+
+<p><a name="參考資料"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>man lseek</li>
+<li>The Linux Programming Interface: Chapter 4</li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>

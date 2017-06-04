@@ -1,0 +1,2706 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="Sept/1/2015 更新：下面的方法有個問題，目錄的頁面會有從ii開始的羅馬數字頁碼。當known issue吧，猜測要從xsl修正，/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl應該有線索。 前言 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/posts/4/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/08/27/use-dbdoclet-to-create-manual/">Ubuntu 14.04下使用dbdoclet 產生pdf手冊</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-08-27T21:48:07+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>27</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:48 pm</span></time>
+        
+           | <a href="/blog/2015/08/27/use-dbdoclet-to-create-manual/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/27/use-dbdoclet-to-create-manual/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Sept/1/2015 更新：下面的方法有個問題，目錄的頁面會有從<code>ii</code>開始的羅馬數字頁碼。當known issue吧，猜測要從xsl修正，<code>/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl</code>應該有線索。</p>
+
+<h2>前言</h2>
+
+<p>Javadoc是一個掃描Java原始碼自動產生網頁文件的工具。除此之外，Javadoc還提供了API讓人實作doclet的功能。Javadoc把產出資料餵給doclet，doclet自行決定該怎麼處理，如</p>
+
+<ul>
+<li>轉成pdf文件</li>
+<li>轉成LaTeX文件</li>
+<li>轉成docbook文件</li>
+<li>&hellip;</li>
+</ul>
+
+
+<p>回到主題，為了要產生PDF手冊，並且需要符合下面的要求：</p>
+
+<ul>
+<li>封面</li>
+<li>版權宣告、版本變動紀錄</li>
+<li>目錄</li>
+<li>SDK簡介，包含方塊圖</li>
+<li>API使用方式</li>
+<li>範例</li>
+</ul>
+
+
+<h2>doclet 評估</h2>
+
+<p>目前找到幾個免費產生pdf的doclet，簡單的試玩結果如下</p>
+
+<ul>
+<li>pdfdoclet
+
+<ul>
+<li>直接輸出pdf，沒有目錄、針對手冊需求增加修改資料極度困難</li>
+</ul>
+</li>
+<li>AurigaDoclet
+
+<ul>
+<li>和樓上的主要差別在多了目錄</li>
+</ul>
+</li>
+<li>ltxdoclet
+
+<ul>
+<li>產出LaTeX檔案，可透過pdflatex輸出pdf。有亂碼，美觀程度不如上面兩個</li>
+</ul>
+</li>
+<li>TeXdoclet
+
+<ul>
+<li>產出LaTeX，不支援pdflatex，直接放棄。</li>
+</ul>
+</li>
+<li>dbdoclet
+
+<ul>
+<li>產出docbook，透過一些方式可以達到目標，雖然美觀程度還是比不上pdfdoclet和AurigaDoclet，但是比doxygen和ltxdoclet好，最後用這個產生手冊。</li>
+</ul>
+</li>
+<li>其他族繁不及記載
+
+<h2>使用dbdoclet 產生pdf手冊步驟</h2></li>
+</ul>
+
+
+<p>詳細指令大家自行估狗，這邊單純提供key word。大略步驟如下：</p>
+
+<ol>
+<li>透過任何方式(openoffice, LaTeX, etc)產生封面、版權宣告的pdf的檔案，假設為<code>cover.pdf</code>。</li>
+<li>撰寫針對你要產出手冊的XSL style sheet，我寫了三個東西。這邊要注意的是建議直接在XSL import docbook.xsl。
+
+<ul>
+<li>人肉產生page break的指令，原因docbook不夠聰明，有些東西還是得人肉加page break。如一個段落之後就是範例程式的程式碼。這時候範例程式的程式碼放在頁面開頭的話，閱讀應該比較輕鬆。</li>
+<li>header的描述</li>
+<li>footer的描述，可塞入圖片</li>
+</ul>
+</li>
+<li>以docbook格式撰寫你要塞的內容如
+
+<ul>
+<li>簡介</li>
+<li>範例程式</li>
+</ul>
+</li>
+<li>透過javadoc執行dbdoclet，我這邊跑完會產生<code>Reference.xml</code>。</li>
+<li>使用sed或是你順手的字串工具
+
+<ul>
+<li>修改產出的<code>Reference.xml</code>，找對的地方include自己寫的內容</li>
+<li>如果有必要，修改針對你要產出手冊的XSL style sheet</li>
+</ul>
+</li>
+<li>透過<code>xsltproc</code>產生fo檔。幾點要注意的
+
+<ul>
+<li>要加&ndash;xinclude，不然程式不會去include你自己寫的xml</li>
+<li>/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl不用指定，因為你自己寫的XSL style sheet已經import了，這個問題卡了我一陣子時間。</li>
+</ul>
+</li>
+<li>使用<code>fop</code>將fo轉成pdf檔，假設為<code>draft.pdf</code>。</li>
+<li>使用<code>pdftk</code>做
+
+<ul>
+<li>把你的<code>draft.pdf</code>目錄前面頁面全部幹掉，另存新檔如<code>temp.pdf</code></li>
+<li>把<code>cover.pdf</code>和<code>temp.pdf</code>合併，就會有封面和含目錄以及你設定的手冊了。</li>
+</ul>
+</li>
+</ol>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/08/25/use-doxygen-to-create-manual/">Ubuntu 14.04下使用Doxygen 產生pdf手冊</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-08-25T23:13:44+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:13 pm</span></time>
+        
+           | <a href="/blog/2015/08/25/use-doxygen-to-create-manual/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/25/use-doxygen-to-create-manual/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>一個pdf程式SDK手冊，你會期待有</p>
+
+<ul>
+<li>封面</li>
+<li>版權宣告、版本變動紀錄</li>
+<li>目錄</li>
+<li>SDK簡介，包含方塊圖</li>
+<li>API使用方式</li>
+<li>範例</li>
+</ul>
+
+
+<p>Doxygen是一個open source的文件產生工具，預設是產生HTML。不過它也可以產生很正規的文件，快速紀錄一下，細節還是要自行補完。要達到上面的目的另外前題是你要會估狗查詢使用LaTeX的用法。</p>
+
+<ol>
+<li>安裝doxywizard</li>
+<li>安裝doxygen-latex</li>
+<li>執行<code>doxywizard</code>，透過GUI設定
+
+<ul>
+<li>文件輸出目錄</li>
+<li>原始碼目錄</li>
+<li>開啟latex輸出</li>
+<li>(需要塞範例程式) export -> Input -> EXAMPLE_PATH</li>
+</ul>
+</li>
+<li>細項設定完成後，存檔。</li>
+<li>到輸出文件的latex目錄中，開啟refman.tex。剪貼
+
+<ul>
+<li><code>%--- Begin generated contents ---</code>之前的文字，另存成header.tex</li>
+<li><code>%--- End generated contents ---</code>之後的文字，另存成end.tex</li>
+</ul>
+</li>
+<li>重新執行<code>doxywizard 你剛才存的Doxyfile</code>
+
+<ul>
+<li>expert -> LaTeX -> 打開
+
+<ul>
+<li>LATEX_HEADER -> 選你剛才存的header.tex</li>
+<li>LATEX_FOOTER -> 選你剛才存的end.tex</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>存檔</li>
+<li>修改header.tex，可以加入
+
+<ul>
+<li>封面</li>
+<li>版權宣告</li>
+<li>你產生API文件前的任何東西如簡介，方塊圖，貓的照片等</li>
+<li>自訂的header/footer</li>
+</ul>
+</li>
+<li>(需要塞範例程式)
+
+<ul>
+<li>在程式碼註解塞入<code>\example 範例程式檔名</code></li>
+<li>將<code>範例程式檔名</code>存到前面EXAMPLE_PATH的路徑中</li>
+</ul>
+</li>
+<li><code>doxygen 你剛才存的Doxyfile</code></li>
+<li>到輸出文件的latex目錄中
+
+<ul>
+<li>make，目錄由程式自動產生</li>
+</ul>
+</li>
+<li>開啟refman.pdf，檢查輸出是不是你要的，不是的話回到第八步</li>
+</ol>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/08/08/notes-what-a-c-programmer-should-know-about-memory/">雜記: What a C Programmer Should Know About Memory</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-08-08T15:30:00+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>3:30 pm</span></time>
+        
+           | <a href="/blog/2015/08/08/notes-what-a-c-programmer-should-know-about-memory/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/08/notes-what-a-c-programmer-should-know-about-memory/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>出處: <a href="http://marek.vavrusa.com/c/memory/2015/02/20/memory/">What a C programmer should know about memory</a></p>
+
+<p>這是筆記，不是導讀。單純放我覺得特別的東西和感想。不會自我要求可讀性和文章架構，請自行斟酌。</p>
+
+<h2>Understanding virtual memory - the plot thickens</h2>
+
+<ul>
+<li><p>The virtual memory allocator (VMA) may give you a memory it doesn&rsquo;t have, all in a vain hope that you&rsquo;re not going to use it. Just like banks today. 幹原來銀行是虛擬記憶體</p></li>
+<li><p>malloc給valid pointer不要太高興，等你要開始用的時候搞不好OS給個OOM說人肉鹹鹹。簡單來說就是一張支票，能不能拿來開等到兌現才知道（煙）</p></li>
+</ul>
+
+
+<h2>Understanding stack allocation</h2>
+
+<p>原來C99的variable length array的運作是因為stack frame的特性，反正你要多少stack在橋的時候順便加一加。malloa一樣的原則。又學到了</p>
+
+<h2>When to bother with a custom allocator</h2>
+
+<ul>
+<li>今日英文(?): GP allocator, General purpose allocator，你每天用的malloc是也。什麼，沒用malloc過啊，還真是幸福（煙）。</li>
+</ul>
+
+
+<h3>Slab allocator</h3>
+
+<ul>
+<li>有的時候程式會allocte並使用多個不連續的記憶體區塊，如樹狀的資料結構。這時候對於系統來說有幾個問題，一是fragment、二是因為不連續，無法使用cache增快效能。</li>
+</ul>
+
+
+<p>作者posix_memalign()可解決這類的問題。目前看範例，看不懂，感覺上和malloc很大的記憶體空間，自己管理差不多。先跳過，有大大路過可以留言解惑一下。</p>
+
+<h2>Demand paging explained</h2>
+
+<ul>
+<li><p>Linux系統提供一系列的記憶體管理API</p>
+
+<ul>
+<li>分配，釋放</li>
+<li>記憶體管理API
+
+<ul>
+<li>mlock，禁止被swapped out</li>
+</ul>
+</li>
+<li>madvise，提供管道告訴系統page管理方式如
+
+<ul>
+<li>MADV_RANDOM，期待記憶體page讀取行為是隨機的。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>laze loading：allocate記憶體先給位址。等到process要存取的時候OS就會發現存取到沒摸過的記憶體，於是就產生page fault，這時候才去處理page分配的問題。</p></li>
+<li><p>每次page fault 就像kernel發動白金之星，然後就有一個白痴驚訝地發現自己樓梯怎麼走都走不完，但是他完全無法感受/了解發生了什麼事。</p></li>
+</ul>
+
+
+<h2>Fun with flags memory mapping</h2>
+
+<ul>
+<li>long page_size = sysconf(_SC_PAGESIZE);
+
+<ul>
+<li>取得系統的page size。</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>Fixed memory mappings</h2>
+
+<p>投降輸一半，不懂Fixed memory mappings是啥、以及什麼時候需要這樣的東西。</p>
+
+<h2>File-backed memory maps</h2>
+
+<p>透過mmap，可以將檔案內容mmap到記憶體中，如此一來可以加快存取速度。配合參數，多個process可以共用同一塊記憶體。不過衍生出來有幾個問題</p>
+
+<ol>
+<li>如何寫回檔案
+
+<ul>
+<li>man msync</li>
+<li>其他方式：fsync/pwrite</li>
+</ul>
+</li>
+<li>如何調整檔案/記憶體長度
+
+<ul>
+<li>man ftruncate</li>
+</ul>
+</li>
+</ol>
+
+
+<h3>Copy-on-write</h3>
+
+<p>有些情況是一個process要吃別的process已經map到記憶體的內容，而不要把自己改過的資料放回原本的記憶體。也就是說最終會有兩塊記憶體(兩份資料)。當然每次都複製有點多餘，因此系統使用了Copy-on-write機制。要怎麼做呢？就是在mmap使用MAP_PRIVATE參數即可。</p>
+
+<h3>mmap不是萬能丹，極端情況下連續page fault可能會比原本的開檔獨資料還慢。</h3>
+
+<hr />
+
+<h1>延伸參考資料，我都沒看</h1>
+
+<ul>
+<li><a href="http://www.akkadia.org/drepper/cpumemory.pdf">What every programmer should know about memory</a></li>
+<li><a href="http://landley.net/writing/memory-faq.txt">Memeory FAQ</a></li>
+<li><a href="https://www.kernel.org/doc/gorman/pdf/thesis.pdf">An Investigation Into the Theoretical Foundations and Implementation of the Linux Virtual Memory Manager</a></li>
+<li><a href="https://www.kernel.org/doc/gorman/pdf/understand.pdf">Understanding the Linux Virtual Memory Manager</a>
+
+<ul>
+<li>爆炸長，講Linux的VM管理</li>
+</ul>
+</li>
+<li><a href="http://www.ualberta.ca/CNS/RESEARCH/LinuxClusters/mem.html">Understanding Memory</a></li>
+<li><a href="http://duartes.org/gustavo/blog/post/anatomy-of-a-program-in-memory/">Anatomy of a Program in Memory</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/05/24/notes-on-using-as/">Using as 手冊筆記</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-05-24T20:48:02+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>8:48 pm</span></time>
+        
+           | <a href="/blog/2015/05/24/notes-on-using-as/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/05/24/notes-on-using-as/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><strong>先承認我自己很不滿意這篇，太亂了。只能當工具查keyword用。不過as 手冊的確就是指令和語法。原本是以英文字母順序說明，我只是把這些用自認的方式重新分類。很多地方也真的只有句意翻譯。就把他當作看手冊的導讀，有找的需要的再進去看<a href="https://sourceware.org/binutils/docs/as/index.html">手冊</a>吧。</strong></p>
+
+<p>本篇只討論ELF部份，其他binary format跳過。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#as_param">as參數</a></li>
+<li><a href="#as_term">名詞解釋</a>
+
+<ul>
+<li><a href="#as_term_const">常數</a></li>
+<li><a href="#as_term_sec">Section</a>
+
+<ul>
+<li><a href="#as_term_sec_undef">undefined section</a></li>
+</ul>
+</li>
+<li><a href="#as_term_rel">relocation</a></li>
+</ul>
+</li>
+<li><a href="#as_expr">Expression</a>
+
+<ul>
+<li><a href="#as_expr_emp">Empty expression</a></li>
+<li><a href="#as_expr_int">Integer expression</a>
+
+<ul>
+<li><a href="#as_expr_int_arg">Arguments</a></li>
+<li><a href="#as_expr_int_op">Operators</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#as_dit">directives</a>
+
+<ul>
+<li><a href="#as_dit_var">變數相關</a></li>
+<li><a href="#as_dit_sym_desc">Symbol的描述</a></li>
+<li><a href="#as_dit_sym_type">Symbole type</a></li>
+<li><a href="#as_dit_sym_other">其他Symbol 相關</a></li>
+<li><a href="#as_dit_sec">Section</a></li>
+<li><a href="#as_dit_cond">條件以及控制相關</a></li>
+<li><a href="#as_dit_mac">巨集</a>
+
+<ul>
+<li><a href="#as_dit_mac_alt">altmacro</a></li>
+</ul>
+</li>
+<li><a href="#as_dit_elf">ELF相關</a>
+
+<ul>
+<li><a href="#as_dit_elf_stack">ELF section stack</a></li>
+<li><a href="#as_dit_elf_vis">ELF visibility</a></li>
+</ul>
+</li>
+<li><a href="#as_dit_dbg">除錯相關</a></li>
+<li><a href="#as_dit_misc">未分類</a></li>
+</ul>
+</li>
+<li><a href="#as_ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="as_param"></a></p>
+
+<h2><code>as</code>參數</h2>
+
+<p>只提幾個我有興趣的部份</p>
+
+<ul>
+<li><code>-Z</code>：硬上，就算有錯誤照樣組譯沒有錯的部份。</li>
+<li><code>--gstabs+</code>：好東西，可以幫你加入debug資訊，然後直接用gdb除錯。</li>
+<li>如果檔案副檔名為<code>.s</code>，就是普通的組合語言原始檔。</li>
+<li>如果檔案副檔名為<code>.S</code>，就可以使用<code>cpp</code>（還記得c preporcessor吧?)來處理前置處理。</li>
+</ul>
+
+
+<p><a name="as_term"></a></p>
+
+<h2>名詞解釋</h2>
+
+<ul>
+<li><code>symbol</code>：由字母、數字、和<code>_</code>、<code>.</code>、<code>$</code>組成的字串。不得以數字開頭。
+
+<ul>
+<li><code>label</code>：  <code>symbol</code>後面加<code>:</code></li>
+</ul>
+</li>
+<li><code>.</code>開頭的symbol是gas 的<code>directive</code></li>
+<li><code>expression</code>：運算式，結果代表不是位址就是單純的數字</li>
+<li>原始碼不是以上的情況，由英文字母開頭組成的字串就是instruction</li>
+<li>原始碼最後一行一定要是<code>\n</code>。目前網友Carl有提供為什麼這樣規定的<a href="chrome-extension://klbibkeccnjlkjkiokjodocebajanakg/suspended.html#uri=http://unix.stackexchange.com/questions/18743/whats-the-point-in-adding-a-new-line-to-the-end-of-a-file">link</a>。</li>
+</ul>
+
+
+<p><a name="as_term_const"></a></p>
+
+<h3>常數</h3>
+
+<ul>
+<li>字元常數：
+
+<ul>
+<li><code>'字元</code></li>
+<li>顯示\： <code>'\\</code></li>
+</ul>
+</li>
+<li>字串：<code>"字串"</code></li>
+</ul>
+
+
+<p><a name="as_term_sec"></a></p>
+
+<h3>Section</h3>
+
+<p>一個連續的記憶體空間。這段連續空間都是為了處理某些單一特定的任務如執行程式碼、存放global變數等。</p>
+
+<p>題外話，<code>.bss</code>存在的目的是節省儲存空間，沒有初始的全域變數當然不需要在檔案中保留儲存空間。</p>
+
+<p><a name="as_term_sec_undef"></a></p>
+
+<h4>undefined section</h4>
+
+<p>在組譯的時段只要位址無法決定的symbol，一律放到undefined section。然後祈禱linker幫你搞定。</p>
+
+<p><a name="as_term_rel"></a></p>
+
+<h3>relocation</h3>
+
+<p>前面的文有提到，linker功能之一就是把不同的object檔案<strong>黏</strong>成一個執行檔。要怎麼<strong>黏</strong>呢？</p>
+
+<p>每個object 檔案的起始點都是address 0。由linker計算並設定每個object檔案最後在執行檔放置的address，避免這些object的內容互相覆蓋。</p>
+
+<p>而linker要怎麼搬移和設定最後的位址呢？這是因為object檔案內已經有規範好的不同名稱的好幾個連續空間，也就是section。所以linker把這些object檔案中相同section名稱的連續空間搬到執行檔內相同名稱的空間，並且保證執行檔內這些section的空間也是連續的。而搬移的動作並設定section的runtime address就稱為<code>relocation</code>。</p>
+
+<p>Linker在relocation時需要考慮的問題，as也幫他處理了，這些問題是</p>
+
+<ul>
+<li>目前這個位址要對應到object檔案的哪個地方?</li>
+<li>這個位址會需要佔用多少byte的空間?不懂？int和char吃的空間總會不一樣吧。</li>
+<li>目前位址對應到的是哪個section? 這個位址和對應section的offset為何？</li>
+<li>目前的位址是絕對位址還是和program counter相對的位址?</li>
+</ul>
+
+
+<p>另外要注意的是，大部分的位址可以表示成</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'> <span class="err">(</span><span class="nf">section</span><span class="p">)</span> <span class="err">+</span> <span class="p">(</span><span class="no">offset</span> <span class="no">into</span> <span class="no">section</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="as_expr"></a></p>
+
+<h2>Expression</h2>
+
+<p>expression的結果代表不是位址就是單純的數字。這些數字要嘛是絕對位址、要嘛就是某個section的offset。而expression之間可以有空白。</p>
+
+<p><a name="as_expr_emp"></a></p>
+
+<h3>Empty expression</h3>
+
+<p>空白字元或是null，其值會被設為0</p>
+
+<p><a name="as_expr_int"></a></p>
+
+<h3>Integer expression</h3>
+
+<p>由一個以上的argument和operator組成的expression</p>
+
+<p><a name="as_expr_int_arg"></a></p>
+
+<h4>Arguments</h4>
+
+<p>包含 symbols, numbers 或subexpressions，分別討論</p>
+
+<ul>
+<li>symbol：結果將會是 {section setction的offset數值}，數值會是32位元的二的補數（就是有正負值啦）</li>
+<li>numbers：一般來說，是正整數。如果你要處理浮點數或是大數（超過32位元的數字）as會噴警告。你需要自己處理這種情況。</li>
+<li>subexpressions：指的是
+
+<ul>
+<li>(expression)</li>
+<li>prefix operator 伴隨一個 argument</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="as_expr_int_op"></a></p>
+
+<h4>Operators</h4>
+
+<p>用來協助運算section中的offset位址。</p>
+
+<ul>
+<li>Infix Operators
+
+<ul>
+<li>就一般的binary operator如<code>+</code>, <code>-</code>等</li>
+</ul>
+</li>
+<li>Prefix Operators
+
+<ul>
+<li><code>-</code>：負號</li>
+<li><code>~</code>：補數，就是將argument的每個位元inverse</li>
+</ul>
+</li>
+</ul>
+
+
+<p>Infix也和C語言一樣，有優先順序、符號定義也大致相同，列出如下</p>
+
+<ul>
+<li>最優先
+
+<ul>
+<li><code>*</code>, <code>/</code>, <code>&gt;&gt;</code>, <code>&lt;&lt;</code></li>
+</ul>
+</li>
+<li>第二順位
+
+<ul>
+<li><code>|</code>, <code>&amp;</code>, <code>^</code>, <code>!</code></li>
+</ul>
+</li>
+<li>第三順位
+
+<ul>
+<li><code>+</code>, <code>-</code>, <code>==</code>, <code>&lt;&gt;</code>, <code>!=</code>, <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>
+
+<ul>
+<li><code>&lt;&gt;</code>就是<code>!=</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>最低順位
+
+<ul>
+<li><code>&amp;&amp;</code>, <code>||</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="as_dit"></a></p>
+
+<h2>directives</h2>
+
+<p>重頭戲。directive又稱pseudo-ops，一律以<code>.</code>開頭。照字面理解，這東西是用來協助使用開發，而不是真正的CPU instruction。這邊我只列出<del>看得懂</del>我感興趣的部份。有興趣請參考<a href="https://sourceware.org/binutils/docs/as/Pseudo-Ops.html#Pseudo-Ops">出處</a>。另外和硬體相依的directive請參考<a href="https://sourceware.org/binutils/docs/as/Machine-Dependencies.html#Machine-Dependencies">這邊</a>。</p>
+
+<p><a name="as_dit_var"></a></p>
+
+<h3>變數相關</h3>
+
+<ul>
+<li><code>.ascii "字串"</code>：可以用多個字串，中間以<code>,</code>隔開。這些字串最終會被一起放在連續的記憶體中。</li>
+<li><code>.asciz "字串"</code>：和樓上的差別是字串後面會自動填<code>\0</code>，和C語言的字串表示方式相同。</li>
+<li><code>.balign[wl] abs-expr, abs-expr, abs-expr</code>：和<code>.align</code>差別在b是<code>byte</code>，w是<code>2-byte</code>，l是<code>4-byte</code>。這代表什麼呢？代表要pad的數字(如果有指定的話)要注意fill byte數量。如<code>.balignw 8, 0xbeef</code>。</li>
+<li><code>.byte expressions</code>：<code>expression</code>數量可以從0個到多個，中間以<code>,</code>隔開。這些<code>expression</code>會依照順序排列。那麼要幹什麼用呢？你可以這樣玩。</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="na">.byte</span> <span class="mi">0x48</span><span class="p">,</span> <span class="mi">0x65</span><span class="p">,</span> <span class="mi">0x6c</span><span class="p">,</span> <span class="mi">0x6c</span><span class="p">,</span> <span class="mi">0x6f</span><span class="p">,</span> <span class="mi">0x00</span> <span class="err">/</span><span class="p">*</span> <span class="s">&quot;Hello&quot;</span> <span class="p">*</span><span class="err">/</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>還有其他玩法，請參考<a href="http://stackoverflow.com/questions/7290318/use-of-byte-assembler-directive-in-gnu-assembly">這邊</a>和<a href="http://www-ug.eecg.toronto.edu/msl/assembler.html">這邊</a></p>
+
+<ul>
+<li><code>.int expressions</code></li>
+<li><code>.long expressions</code>
+
+<ul>
+<li>上面兩個有同樣效果，<code>expression</code>為16-bit寬度。可以用<code>,</code>隔開。和<code>.byte</code>用法類似。長度以及order會和CPU架構相關。</li>
+</ul>
+</li>
+<li><code>.hword expressions</code></li>
+<li><code>.short expressions</code>
+
+<ul>
+<li>上面兩個有同樣效果，<code>expression</code>為16-bit寬度。可以用<code>,</code>隔開。和<code>.byte</code>用法類似。</li>
+</ul>
+</li>
+<li><code>.double flonums</code>：就浮點數，可以用<code>,</code>隔開。和<code>.byte</code>用法類似。表示方式要看target CPU架構。</li>
+<li><code>.float flonums</code>：就浮點數，可以用<code>,</code>隔開。和<code>.byte</code>用法類似。表示方式要看target CPU架構。</li>
+<li><code>.lcomm symbol, length</code>：為<code>symbol</code>保留<code>length</code>的空間，該symbol型態不會是<code>global</code>，並且會被放在<code>.bss</code> section。</li>
+<li><code>.octa 大數字</code>：為16-byte寬度。可以用<code>,</code>隔開。和<code>.byte</code>用法類似。</li>
+<li><code>.quad 大數字</code>：為8-byte寬度。可以用<code>,</code>隔開。和<code>.byte</code>用法類似。</li>
+<li><code>.string "字串"</code>：將字串放到object file中，看不出來和<code>.ascii</code>差在那。</li>
+<li><code>.string16 "字串"</code>：將字串放到object file中，字串中的單個字元將會展開成2個bytes。看不出來和<code>.ascii</code>差在那。</li>
+<li><code>.string32 "字串"</code>：將字串放到object file中，字串中的單個字元將會展開成4個bytes。看不出來和<code>.ascii</code>差在那。</li>
+<li><code>.string64 "字串"</code>：將字串放到object file中，字串中的單個字元將會展開成8個bytes。看不出來和<code>.ascii</code>差在那。</li>
+<li><code>.set symbol, expression</code>：將<code>symbol</code>的值設成<code>expression</code>的值。</li>
+<li><code>.size symbol, expression</code>：設定<code>symbol</code>空間為<code>expression</code>的值。</li>
+</ul>
+
+
+<p><a name="as_dit_sym_desc"></a></p>
+
+<h3>Symbol的描述</h3>
+
+<p>visibility：local, global or weak</p>
+
+<ul>
+<li><code>.extern</code>：單純是相容性使用，特地列出來只是因為手冊說as將所有<code>undefined symbols</code>視為<code>extern</code></li>
+<li><code>.global symbol</code></li>
+<li><code>.globl symbol</code>
+
+<ul>
+<li>以上兩個同樣效果，就是讓<code>linker</code>看得到這個<code>symbol</code>，也就是說透過<code>nm</code>觀察binary也可以看得到這些<code>symbol</code>。</li>
+</ul>
+</li>
+<li><code>.local symbol</code>：讓<code>linker</code>看<font color=red>不</font>到這個<code>symbol</code>。手冊上另外有提到<code>.local</code><a href="https://sourceware.org/binutils/docs/as/Local.html#Local">不支援alignment的問題和解法</a>。<font color="red">我看不懂</font>，有興趣自行去連結參考。</li>
+<li><code>.weak symbol</code>：組譯器找不到<code>symbol</code>會產生一個。</li>
+</ul>
+
+
+<p><a name="as_dit_sym_type"></a></p>
+
+<h3>Symbol type</h3>
+
+<ul>
+<li><code>.type symbol, type</code>：type 描述方式有<a href="https://sourceware.org/binutils/docs/as/Type.html#Type">五種</a>。我只用我看順眼的那種說明。
+
+<ul>
+<li><code>"function"</code>：這個<code>symbol</code>是個function</li>
+<li><code>"object"</code>：這個<code>symbol</code>用來存放資料</li>
+<li><code>"tls_object"</code>：這個<code>symbol</code>用來存放thread local資料</li>
+<li><code>"notype"</code>：沒有指定</li>
+<li><code>"gnu_unique_object"</code>：保證該<code>symbol</code>是唯一的symbol</li>
+<li><code>"gnu_indirect_function"</code>：看不懂</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="as_dit_sym_other"></a></p>
+
+<h3>其他Symbol 相關</h3>
+
+<ul>
+<li><code>.desc symbol, abs-expression</code>：提供描述symbol的特性，細節請參考<a href="#as_dit_sym_desc">前面</a>的說明。</li>
+<li><code>.equ symbol, expression</code>：將<code>symbol</code>設成<code>expression</code>的值</li>
+<li><code>.equiv symbol, expression</code>：和上面類似，但是如果該<code>symbol</code>之前已經定義過，就會噴錯誤。</li>
+</ul>
+
+
+<p><a name="as_dit_sec"></a></p>
+
+<h3>Section</h3>
+
+<ul>
+<li><code>.data</code>：不解釋</li>
+<li><code>.test</code>：不解釋</li>
+<li><code>.section name</code>：讓as把以下的東西組成<code>name</code>的section。名字雖然可以亂取，但是也要看binary format有沒有支援。如<code>a.out</code>就沒有這東西。</li>
+</ul>
+
+
+<h4>ELF 下的Section directive</h4>
+
+<p>ELF的話，這個directive有加料。說明如下： <code>[]</code>表示optional</p>
+
+<ul>
+<li><code>.section name [, "flags"[, @type[,flag_specific_arguments]]]</code>
+
+<ul>
+<li><code>flags</code>：可由下面的flag合體組成
+
+<ul>
+<li><code>a</code>：allocatable，就是要在記憶體內吃空間，但是loader不一定會載入東西到該section</li>
+<li><code>e</code>：非executable或是shared library的section</li>
+<li><code>w</code>：可寫入</li>
+<li><code>x</code>：可執行</li>
+<li><code>M</code>：可被merge</li>
+<li><code>S</code>：該section有 zero terminated 字串</li>
+<li><code>G</code>：屬於某個section group</li>
+<li><code>T</code>：給thread local存放東西用 (存放三小？)</li>
+<li><code>?</code>：看不懂，跳過</li>
+</ul>
+</li>
+<li><code>type</code>
+
+<ul>
+<li><code>@progbits</code>：section有資料 (怎麼有種廢話的感覺？)</li>
+<li><code>@nobits</code>：沒有資料，如<code>.bss</code>這樣的section</li>
+<li><code>@note</code>：不是給程式執行的時候使用的section</li>
+<li><code>@init_array</code>：該section 有個pointer arrary 指到init 函數(<a href="http://stackoverflow.com/questions/10468531/whats-init-array-section-in-elf-binary">補充說明1</a> <a href="https://sourceware.org/ml/binutils/2009-01/msg00286.html">補充說明2</a>)</li>
+<li><code>@fini_array</code>：該section 有個pointer arrary 指到fini 函數</li>
+<li><code>@preinit_array</code>：該section 有個pointer arrary 指到pre-init 函數</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>由於<code>@</code>在某些平台如ARM上是註解的符號，這種情況需要用<code>%</code>替代。</p>
+
+<p><code>G</code>和<code>M</code>有特別規範，必須隔離在雙引號外面。而同時要用這兩個flag要以<code>MG</code>順序擺放，範例如下：</p>
+
+<ul>
+<li><code>.section name , "flags"MG,...</code></li>
+</ul>
+
+
+<p>Section group目前先假裝沒看到，有機會又看到再回來討論。</p>
+
+<p><a name="as_dit_cond"></a></p>
+
+<h3>條件以及控制相關</h3>
+
+<ul>
+<li>if 部份有點雜亂，懶得想範例測試，想像成C語言的<code>#ifdef</code>。剩下自己看<a href="https://sourceware.org/binutils/docs/as/If.html">手冊</a>。</li>
+<li><code>.irp symbol,values...</code>：和巨集概念很類似，把<code>.irp ...</code>到<code>.endr</code>之間的instruction用到<code>symbol</code>的部份全部換成value。範例如下。</li>
+</ul>
+
+
+<p>.irp item, 2, 3, 4
+    mov    %r\item, $\item
+.endr</p>
+
+<p>會展開成</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="nf">mov</span> <span class="nv">%r2</span><span class="p">,</span> <span class="no">$2</span>
+</span><span class='line'><span class="nf">mov</span> <span class="nv">%r3</span><span class="p">,</span> <span class="no">$3</span>
+</span><span class='line'><span class="nf">mov</span> <span class="nv">%r4</span><span class="p">,</span> <span class="no">$4</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>.irpc  symbol,values...</code>：手冊上面的說明幾乎和<code>irp</code>相同，悲劇的是範例和<code>.irp</code>完全一致。唯一差別是<code>.iprc</code>中有提到character，只能猜測c是character。</li>
+<li><code>.offset loc</code>：將locale counter設定成loc。</li>
+<li><code>.org new-lc, fill</code>：同樣是更動locale counter，但是只能在同一個section中移動。另外一個要注意的是這個指令只能增加locale counter，硬要減少是不可能的。當locale couter移動後，中間的空白會填入<code>fill</code>的值。不加上<code>, fill</code> as會填0。</li>
+<li><code>.rept 次數</code>：重複<code>.rept</code>到<code>.endr</code>指定的次數。</li>
+<li><code>.skip size, fill</code>：產生<code>size</code>長度，<code>fill</code>值的資料。</li>
+<li><p><code>.fill repeat, size, value</code>：產生<code>value</code>，佔用空間為<code>size</code>。是否要產生多個，否的話<code>repeat</code>填<code>0</code>，是的話<code>repeat</code>填要產生的個數。<code>size</code>和<code>value</code>為optional，<code>size</code>預設為<code>1</code>，<code>value</code>預設為<code>0</code>。</p>
+
+<ul>
+<li><code>.fill 2,,</code></li>
+<li><code>.fill 2,,10</code></li>
+<li><code>.fill 2,4,</code></li>
+</ul>
+</li>
+<li><p><code>.warning "string"</code>：印出警告訊息。</p></li>
+<li><code>.err</code>：噴錯誤，除非as有-Z指令，不然別想產生obj檔。</li>
+<li><p><code>.error "錯誤訊息"</code>：印出錯誤訊息然後GG。不帶錯誤訊息as會印出檔案名稱和用了<code>.error</code>那行。</p></li>
+<li><p><code>.fail expression</code>：<code>expression</code>值大於五百噴警告，小於五百噴錯誤。用在複雜的巢狀巨集或是條件式組合語言中。</p></li>
+<li><code>.print "字串"</code>：組譯的時候stdout會印出字串。</li>
+<li><code>.end</code>：表示組合語言程式結束</li>
+</ul>
+
+
+<p><a name="as_dit_mac"></a></p>
+
+<h3>巨集</h3>
+
+<p>跳過，自行看<a href="https://sourceware.org/binutils/docs/as/Macro.html">手冊</a></p>
+
+<p><a name="as_dit_elf"></a></p>
+
+<h3>ELF相關</h3>
+
+<ul>
+<li><code>.symver symbol, symbol2@nodename</code>：指定symbol的版本號碼，一般用在shared library中。<a href="https://sourceware.org/binutils/docs/as/Symver.html#Symver">詳細說明</a>懶得看，那天GG再回來看。</li>
+</ul>
+
+
+<p><a name="as_dit_elf_stack"></a></p>
+
+<h4>ELF section stack</h4>
+
+<ul>
+<li><code>.subsection name</code>：把目前的section push到section stack中，並且把目前的subsection置換成<code>name</code>。</li>
+<li><code>.popsection</code>：從section stack中pop最上面的section去覆蓋目前的section</li>
+<li><code>.pushsection name [, subsection] [, "flags"[, @type[,arguments]]]</code>：把目前的section push到section stack中，並且把目前的section置換成<code>name</code>以及<code>subsection</code>，<code>type</code>和<code>argument</code>和<code>.section</code>的參數相同。</li>
+</ul>
+
+
+<p><a name="as_dit_elf_vis"></a></p>
+
+<h4>ELF visibility</h4>
+
+<ul>
+<li><code>.protected symbol</code>：不但外部看不到該symbol，連內部要使用讀取該symbol的另外一個symbol也要在內部定義。直接舉個虛擬C語言。</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>ex.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">int</span> <span class="n">whatever</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">func</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">local</span> <span class="o">=</span> <span class="n">whatever</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>.hidden symbol</code>：想像C語言在function前面加上<code>static</code>，觀念類似，讓該symbol無法被其他component看見。手冊這樣的symbol通常被視為<a href="https://sourceware.org/binutils/docs/as/Hidden.html#Hidden"><code>.protect symbol</code></a>，目前懶得寫程式測試。單純猜測這兩個有不同，不然幹嘛要分成兩個指令。</li>
+<li><code>.internal symbol</code>：手冊上提到除了和<code>.hidden</code>有同樣效果外，不同的CPU會針對這個symbol做特別處理，到底是哪些特別處理，手冊沒說。</li>
+</ul>
+
+
+<p><a name="as_dit_dbg"></a></p>
+
+<h3>除錯相關</h3>
+
+<p>大部分跳過，太多背景需要補完。</p>
+
+<ul>
+<li><code>.def</code></li>
+<li><code>.endef</code></li>
+<li><code>.dim</code>：給compiler產生除錯用。</li>
+<li><code>.file 檔案行號 檔名</code>：<a href="http://en.wikipedia.org/wiki/DWARF">DWARF2</a>用的除錯，除錯時對應的原始碼行號。</li>
+<li><p><code>.func name[,label]</code>：只有開啟除錯有效，必須在結尾加入<code>.endfunc</code>。<code>label</code>就是組合語言內的<code>label</code>，也就是該function的進入點。不填的話，就在<code>name</code>加上prefix 字元當作進入點，通常prefix字元為<code>_</code>。</p></li>
+<li><p><code>.loc fileno lineno [column] [options]</code>：<a href="http://en.wikipedia.org/wiki/DWARF">DWARF2</a>用的除錯。整理如下</p>
+
+<ul>
+<li><font color="red">手冊假設我們很瞭debug內部資訊，但是我不會。看下來他們有提到
+
+<ul>
+<li><code>.debug_line</code> 狀態機</li>
+<li><code>.debug_line</code> line number matrix</li>
+<li>不明暫存器：<code>is_stmt</code> register，<code>isa</code> register等</font></li>
+</ul>
+</li>
+<li>資訊放在binary 的<code>.debug_line</code> section。</li>
+<li>在debuger(?)載入<code>.debug_line</code>資訊時，讀到該行，會把參數<code>fileno</code>, <code>lineno</code>,等參數一併載入。</li>
+<li>options:
+
+<ul>
+<li><code>basic_block</code>：設定 <code>.debug_line</code>狀態為<code>basic_block</code></li>
+<li><code>prologue_end</code>：設定 <code>.debug_line</code>狀態為<code>prologue_end</code></li>
+<li><code>epilogue_begin</code>：設定 <code>.debug_line</code>狀態為<code>epilogue_begin</code></li>
+<li><code>is_stmt value</code>：設定 <code>is_stmt</code> register 在<code>.debug_line</code>狀態為<code>value</code>，合法數值只有<code>0</code>或<code>1</code>。</li>
+<li><code>isa value</code>：設定 <code>isa</code> register 在<code>.debug_line</code>狀態為<code>value</code>，合法數值只有<code>0</code>或<code>1</code>。</li>
+<li><code>discriminator value</code>：設定 <code>discriminator</code> register 在<code>.debug_line</code>狀態為<code>value</code>，合法數值只有<code>0</code>或<code>1</code>。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>.loc_mark_labels enable</code>：是否enble，<code>basic_block register</code>，<font color="red">細節完全看不懂</font>。只知道和debug line number entry有關。</li>
+<li><code>.stabs symbol, type, other, desc, value</code>：用來提供資訊給symbolic debuger。詳細資訊請看<a href="https://sourceware.org/binutils/docs/as/Stab.html#Stab">手冊</a></li>
+<li><code>.tag structname</code>：compiler產生的輔助directive。用來從symbol table中找出<code>structname</code>的instance。</li>
+<li><code>.val addr</code>：看不懂。自己看<a href="https://sourceware.org/binutils/docs/as/Val.html#Val">手冊</a>。看起來是紀錄<code>addr</code>的值，但是怎麼會和symbol table扯上關係？？</li>
+</ul>
+
+
+<p><a name="as_dit_misc"></a></p>
+
+<h3>未分類</h3>
+
+<ul>
+<li><code>.include "file"</code>：從目前的位置，把<code>file</code>全部原封不動地放到之後的位置。</li>
+<li><code>.align abs-expr1, abs-expr2, abs-expr3</code>：<code>local counter</code> (請參考前面linker script文)結束要對齊的位址倍數。
+
+<ul>
+<li><code>abs-expr1</code>：必填。要對齊的數字。根據CPU，數字代表可能是byte，有些代表的是bit。所以要對齊8有的CPU要填8，有些CPU要填3。心理的OS，欠揍。</li>
+<li><code>abs-expr2</code>：optional。如果需要填空，可以指定填入的數值。不填就使用預設值，0。</li>
+<li><code>abs-expr3</code>：optional。指定跳過數字最多可以幾個，超過就直接不對齊了。<font color="red">(手冊用skip而不用pad讓我在想這到底差別在那？)</font></li>
+</ul>
+</li>
+</ul>
+
+
+<p>如果後面兩個都不想填，可以直接下<code>.align abs-expr1,,</code>收工。</p>
+
+<ul>
+<li><p><code>.comm symbol, length</code>：我是這樣理解啦，就是很多C語言檔案要用同一個全域變數。先摸到的先贏。可以看<a href="http://wen00072.github.io/blog/2014/12/09/global-variables-from-common-symbol-on-the-c-programming-language/">我以前整理</a>的說明。另外有兩點要注意</p>
+
+<ul>
+<li>如果有同樣的symbol，在不同檔案中，設定的長度又不同，gas會選最大的。</li>
+<li>ELF有隱藏的第3參數，用來指定alignment。</li>
+</ul>
+</li>
+<li><p><code>.gnu_attribute tag, value</code>：GNU屬性<a href="https://sourceware.org/binutils/docs/as/GNU-Object-Attributes.html#GNU-Object-Attributes">自己查</a></p></li>
+<li><code>.ident 字串</code>：不同binary format有不同處理，在ELF中會把字串放到<code>.comment</code> section中。要注意，<code>file</code>包括command line參數中<code>-I</code>指定的路徑。</li>
+<li><code>.incbin "file"[,skip[,count]]</code>：從目前的位置，把<code>file</code>原封不動地放到之後的位置。你可以透過<code>skip</code>指定從檔案起始地幾個byte後跳過。另外你也可以透過<code>count</code>指定檔案最多include幾個bytes。</li>
+</ul>
+
+
+<p>另外一點要注意，<code>file</code>包括command line參數中<code>-I</code>指定的路徑。</p>
+
+<ul>
+<li><code>.version "string"</code>：產生<code>.note</code> section並且將字串放入該section。</li>
+</ul>
+
+
+<p><a name="as_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://sourceware.org/binutils/docs/as/index.html#Top">Using as</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/05/08/conversion-in-c/">C 語言的潛規則型態轉換</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-05-08T23:37:45+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:37 pm</span></time>
+        
+           | <a href="/blog/2015/05/08/conversion-in-c/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/05/08/conversion-in-c/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>同樣是看過<a href="http://knking.com/books/c2/index.html">C Programming: A Modern Approach</a>的筆記整理。一樣，寫的時候手上沒書，請自行斟酌，盡信書不如無書，更何況是組裝工亂寫的東西呢。</p>
+
+<p>一般來說，變數型態可以強制轉換，這學過C 語言應該都知道。不過看了書上才發現不只強制轉換，compiler也會幫你的程式碼加料、做型態轉換。更恐怖的是，沒注意到的話，會發生慘劇。</p>
+
+<p>本文開始之前，先定義專有名詞：</p>
+
+<ul>
+<li>promotion
+
+<ul>
+<li>當然不是升官還是促銷。而是把變數的型態升級，如short int -> int。為什麼要這樣幹呢？因為expression裏面變數不只一個，做運算的時候需要把某些變數升級，以免計算結果超過預期。諷刺的是，因為這樣的方式，也可能讓你的程式行為和你預期的不同。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>書中提到潛規則型態轉換發生的時機如下</p>
+
+<ul>
+<li>expression中變數型態不同</li>
+<li>assign的left value和right value型態不同</li>
+<li>函數中的參數變數型態和函數內部使用該變數時的型態不同</li>
+<li>函數的回傳值和宣告的不同</li>
+</ul>
+
+
+<p>後面兩種大概就是下面這樣的情況吧</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">long</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">i</span> <span class="o">=</span> <span class="mf">0.5f</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>書中用下面的方式分類C 語言的潛規則型態轉換規則，分別整理如下，偷懶不講C99了。</p>
+
+<h2>assignment</h2>
+
+<p>這個最簡單，等號左邊用啥型態右邊就得轉成這樣的型態。這也是為何</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mf">11.039</span><span class="p">;</span>
+</span><span class='line'><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>結果會是11的原因。</p>
+
+<h2>expression</h2>
+
+<p>一樣這是compiler的術語。此這邊就是一堆的歡樂的型態排列組合，C99還有<code>_Complex</code>和<code>_Bool</code>參戰。</p>
+
+<p>一樣先分類</p>
+
+<ul>
+<li>expression中的變數只有小數點那種型態，依下面順序promote: <code>float</code> -> <code>double</code> -> <code>long double</code></li>
+<li>expression中的變數只有整數，就變成
+
+<ul>
+<li>promote時要判斷使用<code>unsigned</code> 還是<code>signed</code>整數依照下面的順序promote:
+
+<ul>
+<li>&hellip; <code>int</code> -> <code>unsigned int</code> -> <code>long int</code> -> <code>unsigned long int</code> &hellip;</li>
+</ul>
+</li>
+<li>這種情況沒注意的話，可能就會出現下面的悲劇</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>implicit.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">implicit_conv</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;expected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;GG</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">implicit_conv</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>執行結果如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make implicit
+</span><span class='line'>cc     implicit.c   -o implicit
+</span><span class='line'>
+</span><span class='line'>$ ./implicit
+</span><span class='line'>GG
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>為何會GG呢，因為 <code>i &lt; j</code>是一個<strong>expression</strong>，照上面的規矩，expression同時有<code>int</code>和<code>unsigned int</code>的話，<code>int</code>會被promote的<code>unsigned int</code>，<code>-1</code>的二進位不知道的人，可能要先搞懂再來學C吧？</p>
+
+<p>如果你擔心程式有類似的問題，可以把<code>gcc</code>最囉唆的檢查打開，就會噴出錯誤如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make implicit CFLAGS=&quot;-Wall -Wextra -Werror&quot;
+</span><span class='line'>cc -Wall -Wextra -Werror   -c -o implicit.o implicit.c
+</span><span class='line'>implicit.c: In function ‘implicit_conv’:
+</span><span class='line'>implicit.c:7:11: error: comparison between signed and unsigned integer expressions [-Werror=sign-compare]
+</span><span class='line'>     if (i &lt; j) {
+</span><span class='line'>           ^
+</span><span class='line'>implicit.c: In function ‘main’:
+</span><span class='line'>implicit.c:15:14: error: unused parameter ‘argc’ [-Werror=unused-parameter]
+</span><span class='line'> int main(int argc, char **argv)
+</span><span class='line'>              ^
+</span><span class='line'>implicit.c:15:27: error: unused parameter ‘argv’ [-Werror=unused-parameter]
+</span><span class='line'> int main(int argc, char **argv)
+</span><span class='line'>                           ^
+</span><span class='line'>cc1: all warnings being treated as errors
+</span><span class='line'>make: *** [implicit.o] Error 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>你可能會問，那有小數點的型態和整數型態亂戰會怎樣呢？自己估狗或看書吧。</p>
+
+<h2>題外話</h2>
+
+<h3>題外話一</h3>
+
+<p>由於這些潛規則，在轉換型態的時候，可以看到這樣的statement。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">double</span> <span class="n">whatsoever</span><span class="p">;</span>
+</span><span class='line'><span class="n">whatsoever</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">3</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>為什麼<code>3</code>不用型態轉換呢？你必須要比對C語言的<a href="http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B#Operator_precedence">Operator precedence</a>，也就是運算元處理順序。可以知道C 語法會處理順序如下</p>
+
+<ul>
+<li><code>10</code> cast成<code>double</code>型態</li>
+<li>因為潛規則，<code>3</code>也會被promote成<code>double</code></li>
+<li>計算<code>10 / 3</code></li>
+<li>將結果assign給 <code>=</code> 左邊的變數</li>
+</ul>
+
+
+<h3>題外話二</h3>
+
+<p>在C語言中有小數點的常數預設型態可是<code>double</code>唷。所以你如果有<code>float</code>最好使用下面的方式轉換型態。至於為什麼會規定是<code>double</code>呢？書中有講八卦，就不破梗了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">float</span> <span class="n">whatsoever</span> <span class="o">=</span> <span class="mf">3.14f</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>致謝</h3>
+
+<ul>
+<li>2016/Oct/28: 感謝網友<code>Jeffery Chang</code>糾正typo</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/05/06/format-string-in-c/">C 語言的format String</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-05-06T22:34:43+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:34 pm</span></time>
+        
+           | <a href="/blog/2015/05/06/format-string-in-c/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/05/06/format-string-in-c/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>format string也是看過<a href="http://knking.com/books/c2/index.html">C Programming: A Modern Approach</a>才注意的。寫文的當下沒帶這本書，問男人好了。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ man 3 printf</span></code></pre></td></tr></table></div></figure>
+
+
+<p>簡單來說，format string是由</p>
+
+<ul>
+<li>普通文字，不包含單獨的<code>%</code>字元</li>
+<li>conversion specifications，就是你看到的<code>%s</code>之類的的東西</li>
+<li>每個conversion specifier有對應的參數</li>
+</ul>
+
+
+<p>整理conversion specifier如下</p>
+
+<ul>
+<li>結構
+
+<ul>
+<li>以<code>%</code>開頭</li>
+<li>以conversion specifier 結尾</li>
+<li>中間有些<del>特異功能</del>optional的描述如
+
+<ul>
+<li><a href="#fs_fl">Flags</a></li>
+<li><a href="#fs_wd">最少欄位寬度規範</a></li>
+<li><a href="#fs_prec">精確度描述</a></li>
+<li><a href="#fs_sz">變數size輔助描述</a></li>
+</ul>
+</li>
+<li><code>Conversion specifier</code>結尾，就是我們看過的<code>d</code>, <code>f</code> 等</li>
+</ul>
+</li>
+</ul>
+
+
+<p>示意如下</p>
+
+<ul>
+<li><code>%</code>[<font color="red">Flag</font>][<font color="green">最少欄位寬度規範</font>][<font color="red">精確度描述</font>][<font color="green">變數size描述</font>]<code>Conversion specifier</code></li>
+</ul>
+
+
+<p>接下來依上面的部份說明如下</p>
+
+<p><a name="fs_fl"></a></p>
+
+<h2>Flags</h2>
+
+<ul>
+<li><code>#</code>
+
+<ul>
+<li>自動對指定的數字進位數（八進位、十進位、十六進位等）加上合適的prefix如<code>0x</code>, <code>0</code>等。</li>
+</ul>
+</li>
+<li><code>0</code>
+
+<ul>
+<li>填入<code>0</code>作為pad。pad是啥呢？中文意思是填充物，自己體會吧。</li>
+</ul>
+</li>
+<li><code>-</code>
+
+<ul>
+<li>預設format string是靠右對齊，用了這個會變成靠左對齊。和樓上<code>0</code>一起會不會數字多好幾倍如<code>432</code>變<code>4320000</code>？不會，兩個同時出現<code>0</code>會被省略。</li>
+</ul>
+</li>
+<li><code>+</code>
+
+<ul>
+<li>指定數字最前面要加正負號</li>
+</ul>
+</li>
+<li><code>' '</code>
+
+<ul>
+<li>如果有設定數字要先顯示正負號，會在前面多加一個空白</li>
+</ul>
+</li>
+</ul>
+
+
+<p>以上是C 語言規範的，不同編譯器有加碼，懶得寫，自己問男人吧。</p>
+
+<p><a name="fs_wd"></a></p>
+
+<h2>最少欄位寬度規範</h2>
+
+<p>一定要正整數，當印出的數字長度少於這邊指定的參數，會自動填空白或是0。印出超過這邊指定的寬度的話呢？超過就超過，不然要怎麼辦？</p>
+
+<p>另外預設是往右邊對齊，想要往左對齊，請參考<code>-</code> flag。</p>
+
+<p><a name="fs_prec"></a></p>
+
+<h2>精確度描述</h2>
+
+<p>以<code>.十進位數字表示</code>，不同的變數型態有不同的精確度定義。</p>
+
+<p>舉例來說</p>
+
+<ul>
+<li>整數，<strong>最少</strong>要出現的數字長度，少於這樣的數字，會直接在左邊或是基底符號（0, 0x)後面填零補完。</li>
+<li>實數，也就是有小數點的，就是小數點後面<strong>最多</strong>可以出現的數字長度，超過了就截掉。</li>
+</ul>
+
+
+<p><a name="fs_sz"></a></p>
+
+<h2>變數size輔助描述</h2>
+
+<p>一般來說，我們會知道<code>d</code>是整數，但是在C語言還是有<code>long int</code>，<code>long long int</code>這樣型態的整數，為了能夠更精確的顯示，format string提供了這樣的描述，讓你加在<code>Conversion specifier</code>，如</p>
+
+<ul>
+<li><code>l</code>: long</li>
+<li><code>h</code>: short</li>
+</ul>
+
+
+<p>詳細列表和排列組合請問男人。</p>
+
+<h2>其他</h2>
+
+<p>flag除了C規格定的以外，不同廠商有加料，一樣去問男人，不過要用這個的話要考慮porting的問題。</p>
+
+<p>除此之外，男人有列出所有的<code>Conversion specifier</code>，除了熟悉的<code>d</code>, <code>f</code>, <code>s</code>, <code>c</code>, <code>x</code>以外，我列幾個我感興趣的如下</p>
+
+<ul>
+<li><code>a</code>, <code>A</code>: C99專用，實數的十六進位表示法</li>
+<li><code>p</code>: void * 的位址</li>
+</ul>
+
+
+<h2>怪招</h2>
+
+<p>format string還有<code>*</code>和<code>%m$</code>這種鬼東西，目前搞不清楚為什麼要這樣幹。
+不過幾然花了時間搞懂，就整理一下</p>
+
+<ul>
+<li><code>*</code>指目前對應的參數的<strong>下一個</strong>參數</li>
+<li><code>%m$*n$</code>把第n個的參數和第m個顯示<strong>交換</strong></li>
+</ul>
+
+
+<p>不知道是什麼鬼對不對？我也是，所以寫了程式測試一下</p>
+
+<figure class='code'><figcaption><span>test_format_string.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;@@%*d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* print third argument then first argument */</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;!!%3$*1$d, %1$*2$d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>看看輸出吧，一樣懶得寫Makefile</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make test_format_string
+</span><span class='line'>cc     test_format_string.c   -o test_format_string
+</span><span class='line'>
+</span><span class='line'>$ ./test_format_string
+</span><span class='line'>@@ 3
+</span><span class='line'>!! 4,   2
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>結論</h2>
+
+<p>這篇文章文章我介紹了</p>
+
+<ul>
+<li>format string和他的語法簡單說明</li>
+<li>make 的implicit rule</li>
+<li>取得Linux 下執行程式結束回傳值</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><code>man 3 printf</code></li>
+<li><a href="http://alvinalexander.com/programming/printf-format-cheat-sheet">A printf format reference page (cheat sheet)</a></li>
+<li><a href="http://www.cprogramming.com/tutorial/printf-format-strings.html">Printf Format Strings</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/05/04/comma-in-c/">C 語言的逗號</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-05-04T22:49:53+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:49 pm</span></time>
+        
+           | <a href="/blog/2015/05/04/comma-in-c/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/05/04/comma-in-c/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>因為只能和 C語言裝熟，只好看書看能不能裝更熟點。感謝成大同學推荐的書本：<a href="http://knking.com/books/c2/index.html">C Programming: A Modern Approach</a>。今天看到逗號的用法，手癢來用一下。</p>
+
+<p>簡單來說，<code>,</code>就是把<a href="http://en.wikipedia.org/wiki/Expression_(computer_science)">expression</a>串在一起，然後回傳最後一個expression的值。注意的是expression是compiler專有名詞，自己看連結，不解釋。</p>
+
+<p>知道這個特性，當然來個小實驗。照慣例還是要講一下測試環境。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.2 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來寫個小程式：</p>
+
+<figure class='code'><figcaption><span>comma.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>程式太簡單，懶得寫Makefile，直接make：</p>
+
+<figure class='code'><figcaption><span>comma.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">make</span> <span class="n">comma</span>
+</span><span class='line'><span class="n">cc</span>     <span class="n">comma</span><span class="p">.</span><span class="n">c</span>   <span class="o">-</span><span class="n">o</span> <span class="n">comma</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是驗收</p>
+
+<figure class='code'><figcaption><span>comma.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">comma</span>
+</span><span class='line'><span class="err">$</span> <span class="n">echo</span> <span class="err">$</span><span class="o">?</span>
+</span><span class='line'><span class="mi">10</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來要問問題時間</p>
+
+<ul>
+<li>為啥要這樣幹？</li>
+<li>這個要用在這什麼地方？</li>
+</ul>
+
+
+<p>先回答第一個問題，就是要把一堆expression擠到被認為是一個expression。有了這樣的想法後，很多語法會只有一個express，如<code>if</code>, <code>for</code>, <code>while</code>，這時候想要在裏面多做事想得不得了的時候就可以用<code>,</code>，不過和條件有關的情況下，記得注意僅回傳最後一個expression的特色。</p>
+
+<p>題外話，這個<code>,</code>目前我印象中除了變數宣告和<code>for</code>以外，只看過<a href="https://github.com/embedded2013/rtenv/blob/master/kernel.c#L365">一次</a>，那次看到讓我有點反應不過來，感覺單純只是想省掉<code>{}</code>而已。</p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/22/hello-assembly/">Hello Linux ARM 組合語言</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-22T21:34:16+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2015</span></span> <span class='time'>9:34 pm</span></time>
+        
+           | <a href="/blog/2015/04/22/hello-assembly/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/04/22/hello-assembly/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>目錄</h2>
+
+<ul>
+<li><a href="#hello-asm-syntax">前言</a></li>
+<li><a href="#hello-asm-env">測試環境</a></li>
+<li><a href="#hello-asm-ex1">範例：版本一</a></li>
+<li><a href="#hello-asm-ex2">範例：版本二</a></li>
+<li><a href="#hello-asm-ex3">範例：版本三</a></li>
+<li><a href="#hello-asm-ex4">範例：版本四</a></li>
+<li><a href="#hello-asm-conl">總結</a></li>
+<li><a href="#hello-asm-ext">延伸閱讀及致謝</a></li>
+<li><a href="#hello-asm-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="hello-asm-syntax"></a></p>
+
+<h2>前言</h2>
+
+<p>之前的文章有不少在討論執行檔該長怎麼樣。簡單來說，一個執行檔會有</p>
+
+<ul>
+<li>Sections：程式行為和資料會分開放在不同的sections</li>
+<li>進入點，也就是system call開始執行你的程式的地方</li>
+</ul>
+
+
+<p>以這樣的觀點，來看組合語言，會比較有感覺。</p>
+
+<p>這次主要想要試看看如何使用組合語言印出Hello world。學過作業系統的朋友應該知道OS真正提供給使用者的介面叫作system call。有興趣的朋友可以使用<code>strace</code>研究執行檔呼叫了那些system call。這次的Hello world我有兩個線索</p>
+
+<ul>
+<li>在command line執行的process會有3個馬上可以使用的file descriptor（不知道那啥的請自行估狗）分別是
+
+<ul>
+<li><code>0</code>: standard in</li>
+<li><code>1</code>: standard out</li>
+<li><code>2</code>: standard error</li>
+</ul>
+</li>
+<li>有一個system call叫作<code>write</code>，你可以透過他把任何資料寫到指令的file descriptor</li>
+</ul>
+
+
+<p>綜合以上，我們要幹的事就是透過組合語言做出</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">&quot;Hello world</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="mi">12</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這又表示組合語言中我們要做</p>
+
+<ul>
+<li>呼叫system call</li>
+<li>帶參數給system call，這部份需要有
+
+<ul>
+<li>ABI的背景知識</li>
+<li>定址方式，更精確的說，如何宣告<code>"Hello world\n"</code>，讓runtime時放在在process address space中，並將它的位址傳給system call</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="hello-asm-env"></a></p>
+
+<h2>測試環境</h2>
+
+<ul>
+<li>Host</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.2 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>Guest OS on Qemu
+
+<ul>
+<li>這邊很奇怪我的kernel用更新過的版本Qemu完全無法開機。目前裝死中。</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Debian
+</span><span class='line'>Description:  Debian GNU/Linux 8.0 (jessie)
+</span><span class='line'>Release:  8.0
+</span><span class='line'>Codename: jessie
+</span><span class='line'>
+</span><span class='line'>$ cat /proc/cpuinfo
+</span><span class='line'>Processor : ARM926EJ-S rev 5 (v5l)
+</span><span class='line'>BogoMIPS  : 643.48
+</span><span class='line'>Features  : swp half thumb fastmult vfp edsp java
+</span><span class='line'>CPU implementer   : 0x41
+</span><span class='line'>CPU architecture: 5TEJ
+</span><span class='line'>CPU variant   : 0x0
+</span><span class='line'>CPU part  : 0x926
+</span><span class='line'>CPU revision  : 5
+</span><span class='line'>
+</span><span class='line'>Hardware  : ARM-Versatile AB
+</span><span class='line'>Revision  : 0000
+</span><span class='line'>Serial        : 0000000000000000
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="hello-asm-ex1"></a></p>
+
+<h2>範例：版本一</h2>
+
+<p>我本來想說慢慢來，先來個完全沒意義的r0 = 0; r1 = 1; r2 = r0 + r1。程式如下：</p>
+
+<figure class='code'><figcaption><span>hello.s</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="na">.text</span>
+</span><span class='line'><span class="na">.global</span> <span class="no">_start</span>
+</span><span class='line'><span class="nl">_start:</span>
+</span><span class='line'>    <span class="nf">mov</span> <span class="nv">%r0</span><span class="p">,</span> <span class="no">$0</span>
+</span><span class='line'>    <span class="nf">mov</span> <span class="nv">%r1</span><span class="p">,</span> <span class="no">$1</span>
+</span><span class='line'>    <span class="nf">add</span> <span class="nv">%r2</span><span class="p">,</span> <span class="nv">%r0</span><span class="p">,</span> <span class="nv">%r1</span>
+</span><span class='line'><span class="na">.end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>幾點說明：</p>
+
+<ul>
+<li><code>$</code>或是<code>#</code>代表一個數字(<a href="https://sourceware.org/binutils/docs/as/ARM_002dChars.html#ARM_002dChars">出處</a>)</li>
+<li><code>%r1</code>代表ARM的<code>r1</code>暫存器，但是為何用<code>%</code>目前沒找到手冊上有說明。</li>
+<li><code>.text</code>前面的文章有看應該覺得很眼熟，就是告訴編譯器以下是程式行為。</li>
+<li><code>global</code>是讓symbol可以外露，白話來說就是<code>nm</code>等binutil可以看的到這個symbol。</li>
+<li><code>_start</code>是一個程式執行的起始點，有看過<a href="http://wen00072.github.io/blog/2015/02/14/main-linux-whos-going-to-call-in-c-language/">之前文章</a>就會覺得很眼熟。</li>
+<li><p><a href="https://sourceware.org/binutils/docs/as/End.html#End">.end表示程式結束點</a>，不過目前用起來有沒有加好像沒有差別。</p></li>
+<li><p>Makefile</p></li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">TARGET</span><span class="o">=</span>hello
+</span><span class='line'><span class="nv">AS_FILE</span><span class="o">=</span><span class="k">$(</span>addsuffix .s, <span class="k">$(</span>TARGET<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">AS_FILE</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>AS<span class="k">)</span> <span class="nv">$^</span> -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>TARGET<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>想法很簡單，就是直接編譯應該可以跑，雖然完全不會有畫面。<font color="red">錯！</font>跑出來會這樣</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make
+</span><span class='line'>as hello.s -o hello
+</span><span class='line'>
+</span><span class='line'>$ ls -gG
+</span><span class='line'>total 12
+</span><span class='line'>-rw-r--r-- 1 588 Apr 20 18:04 hello
+</span><span class='line'>-rw-r--r-- 1  83 Apr 20 17:58 hello.s
+</span><span class='line'>-rw-r--r-- 1 113 Apr 20 17:58 Makefile
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這代表什麼，hello編譯完後的binary本身沒有執行權限。改改權限看可不可以跑？</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ chmod +x hello
+</span><span class='line'>$ ./hello
+</span><span class='line'>bash: ./hello: cannot execute binary file: Exec format error
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>怎麼回事？分析一下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ readelf hello -h
+</span><span class='line'>ELF Header:
+</span><span class='line'>  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00
+</span><span class='line'>  Class:                             ELF32
+</span><span class='line'>  Data:                              2&#39;s complement, little endian
+</span><span class='line'>  Version:                           1 (current)
+</span><span class='line'>  OS/ABI:                            UNIX - System V
+</span><span class='line'>  ABI Version:                       0
+</span><span class='line'>  Type:                              REL (Relocatable file)
+</span><span class='line'>  Machine:                           ARM
+</span><span class='line'>  Version:                           0x1
+</span><span class='line'>  Entry point address:               0x0
+</span><span class='line'>  Start of program headers:          0 (bytes into file)
+</span><span class='line'>  Start of section headers:          268 (bytes into file)
+</span><span class='line'>  Flags:                             0x5000000, Version5 EABI
+</span><span class='line'>  Size of this header:               52 (bytes)
+</span><span class='line'>  Size of program headers:           0 (bytes)
+</span><span class='line'>  Number of program headers:         0
+</span><span class='line'>  Size of section headers:           40 (bytes)
+</span><span class='line'>  Number of section headers:         8
+</span><span class='line'>  Section header string table index: 5
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>看不出來對不對？我是這樣啦，所以先比對<code>/bin/ls</code>的輸出吧</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ readelf /bin/ls -h
+</span><span class='line'>ELF Header:
+</span><span class='line'>  Magic:   7f 45 4c 46 01 01 01 00 00 00 00 00 00 00 00 00
+</span><span class='line'>  Class:                             ELF32
+</span><span class='line'>  Data:                              2&#39;s complement, little endian
+</span><span class='line'>  Version:                           1 (current)
+</span><span class='line'>  OS/ABI:                            UNIX - System V
+</span><span class='line'>  ABI Version:                       0
+</span><span class='line'>  Type:                              EXEC (Executable file)
+</span><span class='line'>  Machine:                           ARM
+</span><span class='line'>  Version:                           0x1
+</span><span class='line'>  Entry point address:               0x14354
+</span><span class='line'>  Start of program headers:          52 (bytes into file)
+</span><span class='line'>  Start of section headers:          99372 (bytes into file)
+</span><span class='line'>  Flags:                             0x5000202, has entry point, Version5 EABI, soft-float ABI
+</span><span class='line'>  Size of this header:               52 (bytes)
+</span><span class='line'>  Size of program headers:           32 (bytes)
+</span><span class='line'>  Number of program headers:         9
+</span><span class='line'>  Size of section headers:           40 (bytes)
+</span><span class='line'>  Number of section headers:         27
+</span><span class='line'>  Section header string table index: 26
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>仔細看一下<code>Type:</code>，<code>/bin/ls</code>是<code>EXEC</code>而<code>hello</code>是<code>REL</code>，<code>man elf</code>可以看到<code>REL</code>是relocate file，那是啥呢？根據<a href="http://www.sco.com/developers/gabi/latest/contents.html">System V Application Binary Interface - DRAFT - 10 June 2013第四章的簡介</a>，簡單來說就是object檔案，也就是說link時吃的檔案。所以我們加入Link吧。</p>
+
+<p><a name="hello-asm-ex2"></a></p>
+
+<h2>範例：版本二</h2>
+
+<p>單純加入linker看看會怎樣？</p>
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">TARGET</span><span class="o">=</span>hello
+</span><span class='line'><span class="nv">AS_FILE</span><span class="o">=</span><span class="k">$(</span>addsuffix .s, <span class="k">$(</span>TARGET<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">AS_FILE</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>AS<span class="k">)</span> <span class="nv">$^</span> -o <span class="nv">$@</span>.o
+</span><span class='line'>  <span class="k">$(</span>LD<span class="k">)</span> <span class="nv">$@</span>.o -o <span class="nv">$@</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -rf <span class="k">$(</span>TARGET<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>kerker，一樣GG。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make
+</span><span class='line'>as hello.s -o hello.o
+</span><span class='line'>ld hello.o -o hello
+</span><span class='line'>$ ./hello
+</span><span class='line'>Illegal instruction
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>估狗到的組合語言的<a href="http://peterdn.com/post/e28098Hello-World!e28099-in-ARM-assembly.aspx">Hello world範例</a>最後會呼叫<code>exit</code> system call，照著呼叫<code>exit</code>就可以正常結束，這就是第三版。至於為何會出現<code>Illegal instruction</code>，根據<a href="http://scottt.tw/">Scott Tsai大大</a>的提示，當你的程式碼跑完後，接下來記憶體有啥CPU就跑啥，跑到不認識的opcode當然就GG了。</p>
+
+<p><a name="hello-asm-ex3"></a></p>
+
+<h2>範例：版本三</h2>
+
+<figure class='code'><figcaption><span>hello.s</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="na">.text</span>
+</span><span class='line'><span class="na">.global</span> <span class="no">_start</span>
+</span><span class='line'><span class="nl">_start:</span>
+</span><span class='line'>    <span class="nf">mov</span>     <span class="nv">%r0</span><span class="p">,</span> <span class="no">$0</span>
+</span><span class='line'>    <span class="nf">mov</span>     <span class="nv">%r7</span><span class="p">,</span> <span class="no">$1</span>
+</span><span class='line'>    <span class="nf">svc</span>     <span class="no">$0</span>
+</span><span class='line'><span class="na">.end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>單純叫了<code>exit</code>而已，有幾點注意的
+根據<a href="https://wiki.debian.org/ArmEabiPort#System_call_interface">Debian ARM system call interface</a>，可以知道</p>
+
+<ul>
+<li>r0 ~ r6是函數的帶入參數</li>
+<li>r7 是system call number，而system call number是啥呢？就是你要的system call 對應的數字。</li>
+</ul>
+
+
+<p>所以要呼叫<code>exit(0)</code> system 表示</p>
+
+<ul>
+<li>傳一個參數，數值為<code>0</code></li>
+<li>要設定<code>exit</code>對應的system call number為<code>1</code>。</li>
+</ul>
+
+
+<p>為何system call number是<code>1</code>呢？可以看看<a href="https://git.kernel.org/cgit/linux/kernel/git/rpi/linux-rpi.git/tree/arch/arm/include/asm/unistd.h">unistd.h</a>裏面system call number的定義，exit的system call number為<code>1</code>。</p>
+
+<p>設定完傳給<code>exit</code>參數後呼叫了一個組合語言指令<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0489g/Cihidabi.htmll"><code>svc</code></a>，這個指令主要是切換到Supervisor模式。Linux下面也許太過複雜，不太容易從user mode一路追到kernel然後又看懂這些system call的行為。沒關係成大資工作業有比較看得懂的範例可以參考。例如<a href="https://github.com/embedded2014/rtenv/blob/master/syscall.s#L6">包裝呼叫system call的函數</a>以及<a href="https://github.com/embedded2014/rtenv/blob/master/kernel.c#L1135">Kernel中對應的system call服務實作</a>。</p>
+
+<p>根據<a href="https://git.kernel.org/cgit/linux/kernel/git/rpi/linux-rpi.git/tree/arch/arm/include/asm/unistd.h">unistd.h</a>定義的system call number，<code>write</code>的system call number 是<code>4</code>，所以我們可以開始寫最後的版本了。</p>
+
+<p><a name="hello-asm-ex4"></a></p>
+
+<h2>範例：版本四</h2>
+
+<p>開始之前，先來看男人怎麼介紹write system call的</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">ssize_t</span> <span class="nf">write</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這代表</p>
+
+<ul>
+<li>有三個參數要傳給system call</li>
+<li>有回傳值可以吃</li>
+<li>其中一個參數是位址，這個位址我們會放<code>"Hello World\n"</code>字串</li>
+</ul>
+
+
+<p>那麼我先來看看怎麼放字串到記憶體</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">.</span><span class="n">data</span>
+</span><span class='line'><span class="nl">hello_str</span><span class="p">:</span>
+</span><span class='line'>    <span class="p">.</span><span class="n">ascii</span> <span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>.data</code>如果有看我以前的文章，就知道這是放有初始值全域變數的地方。</p>
+
+<p>而<code>hello_str</code>呢?嗯，對<code>_start:</code>有印象嗎？</p>
+
+<p>這叫作label，是GNU組語中symbol的一種，有興趣可以看<a href="https://sourceware.org/binutils/docs/as/Labels.html#Labels">這邊</a>。根據手冊，label還有一個功能，代表目前跑到的位址。所以<code>_start:</code>就是<code>.text</code> section的起始位址。而<code>hello_str</code>就是<code>.data</code> section的起始位址。從這兩個label可以看到label只是一個位址，可以指向函數或是資料，這和C語言的指標有異曲同工之妙。有興趣的朋友可以去找function pointer和C語言的callback函數。</p>
+
+<p>而<a href="https://sourceware.org/binutils/docs/as/Ascii.html#Ascii"><code>.ascii</code></a>，單純就是宣告字串指令。</p>
+
+<p>呼叫<code>write</code> system call來還有兩個問題要處理</p>
+
+<ul>
+<li>如何取得<code>hello_str</code>對應的位址放到暫存器<code>r1</code>上面？</li>
+<li>要怎麼算出<code>hello_str</code>字串的長度?</li>
+</ul>
+
+
+<p>關於第一個問題，<a href="https://sourceware.org/binutils/docs/as/ARM-Opcodes.html#ARM-Opcodes">GNU ARM組合語言有中將數值或位址放到暫存器的虛擬指令</a></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="nf">ldr</span> <span class="err">&lt;</span><span class="no">register</span><span class="err">&gt;</span> <span class="p">,</span> <span class="err">=</span> <span class="err">&lt;</span><span class="no">expression</span><span class="err">&gt;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://sourceware.org/binutils/docs/as/Expressions.html#Expressions">expression</a>是一種表示<strong>位置</strong>或是<strong>數值</strong>的方式。</p>
+
+<p>恰巧<a href="https://sourceware.org/binutils/docs/as/Arguments.html#Arguments">symbol也算是一個expression</a>，所以可以表示成：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="nf">ldr</span> <span class="nv">%r1</span><span class="p">,</span> <span class="err">=</span><span class="no">hello_str</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>第二個問題呢？要介紹<a href="https://sourceware.org/binutils/docs/as/Dot.html#Dot"><code>.</code></a>了。之前看過linker script的朋友應該對於locale counter還有印象。locale counter代表目前的位置。加上<a href="https://sourceware.org/binutils/docs/as/Prefix-Ops.html#Prefix-Ops"><code>expression</code>也支援運算</a>。利用<code>hello_str</code>是<code>.data</code>
+開頭，我們可以這樣做:</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="na">.data</span>
+</span><span class='line'><span class="nl">hello_str:</span>
+</span><span class='line'>    <span class="nf">ascii</span> <span class="err">&quot;</span><span class="no">Hello</span> <span class="no">World</span><span class="err">\</span><span class="no">n</span><span class="err">&quot;</span>
+</span><span class='line'><span class="nf">hello_len</span> <span class="err">=</span> <span class="p">.</span> <span class="p">-</span> <span class="no">hello_str</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>綜合上面的討論，版本四組合語言會是</p>
+
+<figure class='code'><figcaption><span>hello.s</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='asm'><span class='line'><span class="na">.data</span>
+</span><span class='line'><span class="nl">hello_str:</span>
+</span><span class='line'>    <span class="na">.ascii</span> <span class="s">&quot;Hello World\n&quot;</span>
+</span><span class='line'><span class="nf">hello_len</span> <span class="err">=</span> <span class="p">.</span> <span class="p">-</span> <span class="no">hello_str</span>
+</span><span class='line'>
+</span><span class='line'><span class="na">.text</span>
+</span><span class='line'><span class="na">.global</span> <span class="no">_start</span>
+</span><span class='line'><span class="nl">_start:</span>
+</span><span class='line'>    <span class="err">/*</span> <span class="err">%</span><span class="nf">r0</span> <span class="err">=</span> <span class="no">write</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="no">hello_str</span><span class="p">,</span> <span class="no">hello_len</span><span class="p">)</span><span class="err">;</span> <span class="p">*</span><span class="err">/</span>
+</span><span class='line'>    <span class="nf">mov</span>     <span class="nv">%r0</span><span class="p">,</span> <span class="no">$1</span>
+</span><span class='line'>    <span class="nf">ldr</span>     <span class="nv">%r1</span><span class="p">,</span> <span class="err">=</span><span class="no">hello_str</span>
+</span><span class='line'>    <span class="nf">ldr</span>     <span class="nv">%r2</span><span class="p">,</span> <span class="err">=</span><span class="no">hello_len</span>
+</span><span class='line'>    <span class="nf">mov</span>     <span class="nv">%r7</span><span class="p">,</span> <span class="no">$4</span>
+</span><span class='line'>    <span class="nf">svc</span>     <span class="no">$0</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="err">/*</span> <span class="nf">exit</span><span class="p">(</span><span class="nv">%r0</span><span class="p">)</span> <span class="p">*</span><span class="err">/</span>
+</span><span class='line'>    <span class="nf">mov</span>     <span class="nv">%r7</span><span class="p">,</span> <span class="no">$1</span>
+</span><span class='line'>    <span class="nf">svc</span>     <span class="no">$0</span>
+</span><span class='line'>
+</span><span class='line'><span class="na">.end</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>等等，不是說有回傳值？還是要看<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ihi0042e/index.html">Procedure Call Standard for the ARM Architecture
+ABI r2.09手冊</a>，上面提到回傳資料會放到<code>r0</code>，剛好接下來的<code>exit</code> system call帶的第一個參數也要存放在r0，那麼我們可以直接觀察執行後回傳值如下：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make
+</span><span class='line'>as hello.s -o hello.o
+</span><span class='line'>ld hello.o -o hello
+</span><span class='line'>
+</span><span class='line'>$ ./hello
+</span><span class='line'>Hello World
+</span><span class='line'>$ echo $?
+</span><span class='line'>12
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>補充</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>ldr &lt;register&gt; , = &lt;expression&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這是個有趣的指令，這個指令事實上是個虛擬指令。怎麼說呢，因為這個指令的目標是<strong>把數值塞到指定的暫存器</strong>。這個數值是位址還是啥死人骨頭並不重要。重要的是，由於opcode的限制，把數值塞到指定的暫存器會有限制滴。例如<code>ARM Cortex M0</code>的<code>MOV</code>的數值只有8-bit，要塞32-bit的數值就需要配合其他的指令做連續技。因此</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>ldr &lt;register&gt; , = &lt;expression&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這樣的指令就可以讓你寫起來比較輕鬆。</p>
+
+<p>另外一個值得一提是，如果組譯器無法把<code>ldr &lt;register&gt; , = &lt;expression&gt;</code>虛擬指令轉換成<code>MOV</code>或<code>MVN</code>指令，把你的數值塞到暫存器的話。組譯器會把你的值放在一塊記憶體中，使用<strong>真的</strong>ldr把這塊記憶體的值載入到暫存器中。這個方法稱為literal pool，細節可以看<a href="http://infocenter.arm.com/help/index.jsp?topic=%2Fcom.arm.doc.dui0473c%2FBgbccbdi.html">這邊</a>。</p>
+
+<p><a name="hello-asm-conl"></a></p>
+
+<h2>總結</h2>
+
+<p>本文從會GG的組合語言一路改到可以印出Hello World，並且在程式結束後回傳字串長度。在文章中簡單提到了GNU as的</p>
+
+<ul>
+<li>組合語言中section</li>
+<li>組合語言的編譯方式</li>
+<li>組合語言中的symbol和字串表示方式</li>
+<li>組合語言中的expression</li>
+<li>ABI實例</li>
+</ul>
+
+
+<p>希望對有需要的朋友有所幫助。</p>
+
+<p><a name="hello-asm-ext"></a></p>
+
+<h2>延伸閱讀及致謝</h2>
+
+<p>感謝<a href="http://scottt.tw/">Scott Tsai大大</a>提供的資料以及指出文章中錯誤的地方。另外他也有提到其他有趣的部份，當作以後的作業。先列出如下</p>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/28831763/hello-world-program-in-nasm-x86-64-prints-hello-world-continuously/28837680#28837680">從組合語言直接呼叫header file內的system call</a></li>
+<li><a href="http://www.arm.linux.org.uk/developer/memory.txt">Kernel Memory Layout on ARM Linux</a>
+
+<ul>
+<li>這邊主要討論的是<code>objdump -d</code>發現obj檔和執行檔差別只在進入點位址的差別，而進入點位址如何決定呢？這邊有規範，另外也可以看default linker script看看如何設定的。</li>
+</ul>
+</li>
+<li><a href="https://gist.github.com/scottt/a57220efc15d15569a2e">Scott大大的範例程式</a>
+
+<ul>
+<li>可以看到，這個版本和我參考寫出來的版本差異有
+
+<ul>
+<li>把<code>"Hello world"</code>放在<code>.rodata</code> section中，這比<code>.data</code>更實際，因為這個字串的確沒有必要設成全域變數。</li>
+<li>使用了preprocess方式。</li>
+<li>提供了反組譯的結果</li>
+<li>提供X86-64版本的組合語言比較</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>感謝<a href="http://vh21.github.io">Viler Hsiao大大</a>寫文回答我的問題。</p>
+
+<ul>
+<li><a href="http://vh21.github.io/assembly/2015/04/20/read-assembly-code.html">Viler Hsiao: 閱讀assembly code</a></li>
+</ul>
+
+
+<p><a name="hello-asm-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://peterdn.com/post/e28098Hello-World!e28099-in-ARM-assembly.aspx">『Hello World!』 in ARM assembly</a>
+
+<ul>
+<li>本篇程式碼大量參考這篇。</li>
+</ul>
+</li>
+<li><a href="https://sourceware.org/binutils/docs/as/index.html">GNU Manual: Using as</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/10/script-for-octopress/">加快Octopress 編輯文章的script</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-10T08:30:41+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>8:30 am</span></time>
+        
+           | <a href="/blog/2015/04/10/script-for-octopress/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/04/10/script-for-octopress/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="http://wen00072.github.io/blog/2015/04/01/speed-up-octopress-new-post-generating">之前</a>有提到Octopress在文章夠多的時候產生網頁很慢，有號溝的方法。每次要用的時候都要打一狗票。<strong>偷懶是組裝工的美德</strong>，所以寫了一個script，喜歡的人自己拿去用吧。</p>
+
+<p>這個script主要是</p>
+
+<ul>
+<li>例行檢查</li>
+<li>isolate、preview、generate文件</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="c"># Check parameter</span>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> <span class="s2">&quot;$#&quot;</span> <span class="o">=</span> <span class="s2">&quot;0&quot;</span> <span class="o">]</span> <span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="s2">&quot;usage: $(basename $0) [octopress markdown flie]&quot;</span>
+</span><span class='line'>    <span class="nb">exit</span>
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Check file</span>
+</span><span class='line'><span class="k">if</span> <span class="o">[</span> ! -f <span class="s2">&quot;$1&quot;</span> <span class="o">]</span> <span class="p">;</span> <span class="k">then</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="s2">&quot;No such file: $1&quot;</span>
+</span><span class='line'>    <span class="nb">exit</span>
+</span><span class='line'><span class="k">fi</span>
+</span><span class='line'>
+</span><span class='line'><span class="c"># Let&#39;s create and process markdown</span>
+</span><span class='line'>rake isolate<span class="o">[</span><span class="nv">$1</span><span class="o">]</span>
+</span><span class='line'>rake generate
+</span><span class='line'>rake preview
+</span><span class='line'>rake integrate
+</span><span class='line'>rake generate
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/03/boot-linux-form-usb-and-vm/">透過 Virtualbox 安裝Linux到USB Disk上</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-03T19:21:01+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>7:21 pm</span></time>
+        
+           | <a href="/blog/2015/04/03/boot-linux-form-usb-and-vm/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/04/03/boot-linux-form-usb-and-vm/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>想說裝個Ubuntu 到USB 3.0 Disk上，隨手紀錄一下</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#usb_prepare">事先準備</a></li>
+<li><a href="#usb_env">測試環境</a></li>
+<li><a href="#usb_install">使用Virtualbox 安裝Linux 到 USB disk</a></li>
+<li><a href="#usb_boot">使用Virtualbox 從USB Disk 開機</a></li>
+<li><a href="#usb_setup">安裝後設定</a></li>
+<li><a href="#usb_ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="usb_prepare"></a></p>
+
+<h2>事先準備</h2>
+
+<ul>
+<li>USB 3.0 Disk，寫入速度愈快愈好。另外你要看你喜歡的Linux Distribution決定USB空間大小。我是隨便買個299號稱寫入速度20MB的16G USB Disk。</li>
+<li>安裝VirtualBox</li>
+<li>你喜歡的 Linux Distribution iso檔案</li>
+<li>USB 插槽要2.0，很遺憾3.0目前為止Virtual Box不支援。不用鐵齒，我在這邊浪費三小時生命。</li>
+</ul>
+
+
+<p><a name="usb_env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.2 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ vboxmanage --version
+</span><span class='line'>4.3.26r98988</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="usb_install"></a></p>
+
+<h2>使用Virtualbox 安裝Linux 到 USB disk</h2>
+
+<ul>
+<li>Virtualbox 新增machine，只要把光碟設成ISO檔。不用新增硬碟。</li>
+<li>開機Virtualbox machine，出現GUI後，到Virtualbox machine　的 Device -> USB 挑你要安裝的USB volume。</li>
+<li>開始安裝。因為USB disk有寫入次數限制，所以我不開swap。剩下就是下一步下一步，除非你玩Arch Linux或是Ubuntu server。順帶一題，我安裝Ubuntu server 到USB失敗kerker。</li>
+</ul>
+
+
+<p><a name="usb_boot"></a></p>
+
+<h2>使用Virtualbox 從USB Disk 開機</h2>
+
+<p>這邊有幾個要注意的地方</p>
+
+<ul>
+<li>你要有USB 的對應partition 的device node權限。精確的來說，你要在<code>disk</code>的group中。請用下面的指令
+
+<ul>
+<li><code>sudo usermod -G -a disk $USER</code></li>
+<li><font color="red">血的教訓，<code>usermod -G</code>一定要加<code>-a</code>，不然你group就會只有<code>disk</code>，如果剛好你的帳號是唯一在<code>sudo</code>group的話，就只好拿rescue disk開機救回了。</font></li>
+<li>目前我只能logout session重新login才能更新group。</li>
+</ul>
+</li>
+<li>你要讓virtualbox 可以直接用USB disk對應的partition 開機。請用下面的指令。
+
+<ul>
+<li><code>VBoxManage internalcommands createrawvmdk -filename /path/to/file.vmdk -rawdisk /dev/sdx</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>接下來就是開另外一個新的Virtualbox machine，指定該檔案。打完收工！</p>
+
+<p><a name="usb_setup"></a></p>
+
+<h2>安裝後設定</h2>
+
+<p>主要是要減少寫入Disk的機會，目前找到的方式有</p>
+
+<ul>
+<li>關掉瀏覽器的cache</li>
+<li>mount disk option加入noatime</li>
+<li>安裝zram-config</li>
+<li>把/tmp改成tmpfs</li>
+</ul>
+
+
+<p><a name="usb_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://raspberrypi.stackexchange.com/questions/169/how-can-i-extend-the-life-of-my-sd-card">stackexchange: How can I extend the life of my SD card?</a></li>
+<li><a href="https://www.virtualbox.org/manual/ch09.html#rawdisk">Virtualbox manual: 9.9.1.1. Access to entire physical hard disk</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+      <a class="prev" href="/posts/5">&larr; Older</a>
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+    <a class="next" href="/posts/3">Newer &rarr;</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2017 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        var disqus_script = 'count.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>

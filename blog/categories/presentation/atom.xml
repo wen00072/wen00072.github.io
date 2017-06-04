@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Presentation | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/presentation/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[GNU as 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2015/08/30/using-as-slide-is-online/"/>
+    <updated>2015-08-30T11:44:36+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/08/30/using-as-slide-is-online</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/key/vAKND86uAQxxJj" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/gnu-as" title="GNU AS簡介" target="_blank">GNU AS簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="161641ad32e84a3893c81b2c65437720" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[UPnP 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2015/08/30/upnp-slide-is-online/"/>
+    <updated>2015-08-30T11:32:31+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/08/30/upnp-slide-is-online</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/key/2NbiO9hlIL8aXu" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/upnp-10" title="UPnP 1.0 簡介" target="_blank">UPnP 1.0 簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="0461edaf0ae947e8b989cfb9ef670ab0" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[故事：自由軟體和 Richard Stallman 投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line/"/>
+    <updated>2015-03-15T23:44:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/45855449" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/richard-stallman-45855449" title="故事：自由軟體和 Richard Stallman" target="_blank">故事：自由軟體和 Richard Stallman</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="c20dc69814f0439d8e8db97761ca012c" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Hello World在那邊？背景說明投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2015/01/24/hello-world-in-where-background-note-slides-on-line/"/>
+    <updated>2015-01-24T16:35:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/01/24/hello-world-in-where-background-note-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/43848623" width="425" height="355" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-43848623" title="Hello world在那邊？背景說明" target="_blank">Hello world在那邊？背景說明</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="d8f1004085d00132de3b7a1c3ec56d64" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[A Successful Git Branching Model 導讀投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2015/01/10/-guide-to-a-successful-git-branching-model-slides-on-line/"/>
+    <updated>2015-01-10T21:38:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/01/10/-guide-to-a-successful-git-branching-model-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/43382196" width="425" height="355" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/a-successful-git-branching-model-43382196" title="A successful git branching model 導讀" target="_blank">A successful git branching model 導讀</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="c2525af07afb01328ff846860cd29960" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+</feed>

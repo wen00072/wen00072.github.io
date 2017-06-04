@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Doxygen | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/doxygen/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Ubuntu 14.04下使用Doxygen 產生pdf手冊]]></title>
+    <link href="http://wen00072.github.io/blog/2015/08/25/use-doxygen-to-create-manual/"/>
+    <updated>2015-08-25T23:13:44+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/08/25/use-doxygen-to-create-manual</id>
+    <content type="html"><![CDATA[<p>一個pdf程式SDK手冊，你會期待有</p>
+
+<ul>
+<li>封面</li>
+<li>版權宣告、版本變動紀錄</li>
+<li>目錄</li>
+<li>SDK簡介，包含方塊圖</li>
+<li>API使用方式</li>
+<li>範例</li>
+</ul>
+
+
+<p>Doxygen是一個open source的文件產生工具，預設是產生HTML。不過它也可以產生很正規的文件，快速紀錄一下，細節還是要自行補完。要達到上面的目的另外前題是你要會估狗查詢使用LaTeX的用法。</p>
+
+<ol>
+<li>安裝doxywizard</li>
+<li>安裝doxygen-latex</li>
+<li>執行<code>doxywizard</code>，透過GUI設定
+
+<ul>
+<li>文件輸出目錄</li>
+<li>原始碼目錄</li>
+<li>開啟latex輸出</li>
+<li>(需要塞範例程式) export -> Input -> EXAMPLE_PATH</li>
+</ul>
+</li>
+<li>細項設定完成後，存檔。</li>
+<li>到輸出文件的latex目錄中，開啟refman.tex。剪貼
+
+<ul>
+<li><code>%--- Begin generated contents ---</code>之前的文字，另存成header.tex</li>
+<li><code>%--- End generated contents ---</code>之後的文字，另存成end.tex</li>
+</ul>
+</li>
+<li>重新執行<code>doxywizard 你剛才存的Doxyfile</code>
+
+<ul>
+<li>expert -> LaTeX -> 打開
+
+<ul>
+<li>LATEX_HEADER -> 選你剛才存的header.tex</li>
+<li>LATEX_FOOTER -> 選你剛才存的end.tex</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>存檔</li>
+<li>修改header.tex，可以加入
+
+<ul>
+<li>封面</li>
+<li>版權宣告</li>
+<li>你產生API文件前的任何東西如簡介，方塊圖，貓的照片等</li>
+<li>自訂的header/footer</li>
+</ul>
+</li>
+<li>(需要塞範例程式)
+
+<ul>
+<li>在程式碼註解塞入<code>\example 範例程式檔名</code></li>
+<li>將<code>範例程式檔名</code>存到前面EXAMPLE_PATH的路徑中</li>
+</ul>
+</li>
+<li><code>doxygen 你剛才存的Doxyfile</code></li>
+<li>到輸出文件的latex目錄中
+
+<ul>
+<li>make，目錄由程式自動產生</li>
+</ul>
+</li>
+<li>開啟refman.pdf，檢查輸出是不是你要的，不是的話回到第八步</li>
+</ol>
+
+]]></content>
+  </entry>
+  
+</feed>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Osm | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/osm/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2017-06-04T21:25:45+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[開放街圖 自助旅行的好幫手投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2015/09/20/kai-fang-jie-tu-zi-zhu-lu-xing-de-hao-bang-shou/"/>
+    <updated>2015-09-20T00:33:25+08:00</updated>
+    <id>http://wen00072.github.io/blog/2015/09/20/kai-fang-jie-tu-zi-zhu-lu-xing-de-hao-bang-shou</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/key/4SPxqlHI6W9za3" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/ss-52900264" title="開放街圖 自助旅行的好幫手" target="_blank">開放街圖 自助旅行的好幫手</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="8d6935b9c3014b949c05effa288d4a7b" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+</feed>
