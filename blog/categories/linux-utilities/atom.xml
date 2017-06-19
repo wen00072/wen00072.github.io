@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux Utilities | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/linux-utilities/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2017-06-19T21:31:13+08:00</updated>
+  <updated>2017-06-19T21:51:43+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -66,92 +66,51 @@
 sudo apt -y aptitude build-essential bison flex automake libtool intltool  libncurses5-dev git-svn tig meld cscope vim-gtk fonts-inconsolata geany joe doxygen-gui exuberant-ctags manpages-dev manpages-posix-dev minicom tree terminator ttf-mscorefonts-installer ack-grep pandoc gnome-system-tools ghex mc dict wireshark mtr pdfgrep sshfs fail2ban rkhunter bc libssl-dev cmake
 </code></p></li>
 <li><p>單一選擇
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt-get install build-essential
-</span><span class='line'>sudo apt-get install bison
-</span><span class='line'>sudo apt-get install flex
-</span><span class='line'>sudo apt-get install automake
-</span><span class='line'>sudo apt-get install libtool
-</span><span class='line'>sudo apt-get install intltool
-</span><span class='line'>sudo apt-get install libncurses5-dev
-</span><span class='line'>sudo apt-get install bc
-</span><span class='line'>sudo apt-get install libssl-dev&lt;/p&gt;&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;sudo apt-get install git-svn
-</span><span class='line'>sudo apt-get install tig
-</span><span class='line'>sudo apt-get install meld
-</span><span class='line'>sudo apt-get install cscope
-</span><span class='line'>sudo apt-get install vim-gtk
-</span><span class='line'>sudo apt-get install fonts-inconsolata
-</span><span class='line'>sudo apt-get install geany
-</span><span class='line'>sudo apt-get install joe
-</span><span class='line'>sudo apt-get install doxygen-gui
-</span><span class='line'>sudo apt-get install exuberant-ctags
-</span><span class='line'>sudo apt-get install manpages-dev
-</span><span class='line'>sudo apt-get install manpages-posix-dev
-</span><span class='line'>sudo apt-get install minicom&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;sudo apt-get install tree
-</span><span class='line'>sudo apt-get install terminator
-</span><span class='line'>sudo apt-get install ttf-mscorefonts-installer
-</span><span class='line'>sudo apt-get install ack-grep
-</span><span class='line'>sudo apt-get install pandoc
-</span><span class='line'>sudo apt-get install gnome-system-tools
-</span><span class='line'>sudo apt-get install ghex
-</span><span class='line'>sudo apt-get install mc
-</span><span class='line'>sudo apt-get install dict
-</span><span class='line'>sudo apt-get install wireshark
-</span><span class='line'>sudo apt-get install mtr
-</span><span class='line'>sudo apt-get install pdfgrep
-</span><span class='line'>sudo apt-get install sshfs
-</span><span class='line'>sduo apt-get install aptitude&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;sudo apt-get install fail2ban
-</span><span class='line'>sudo apt-get install rkhunter</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`
+sudo apt-get install build-essential
+sudo apt-get install bison
+sudo apt-get install flex
+sudo apt-get install automake
+sudo apt-get install libtool
+sudo apt-get install intltool
+sudo apt-get install libncurses5-dev
+sudo apt-get install bc
+sudo apt-get install libssl-dev</p></li>
+</ul>
+
+
+<p>sudo apt-get install git-svn
+sudo apt-get install tig
+sudo apt-get install meld
+sudo apt-get install cscope
+sudo apt-get install vim-gtk
+sudo apt-get install fonts-inconsolata
+sudo apt-get install geany
+sudo apt-get install joe
+sudo apt-get install doxygen-gui
+sudo apt-get install exuberant-ctags
+sudo apt-get install manpages-dev
+sudo apt-get install manpages-posix-dev
+sudo apt-get install minicom</p>
+
+<p>sudo apt-get install tree
+sudo apt-get install terminator
+sudo apt-get install ttf-mscorefonts-installer
+sudo apt-get install ack-grep
+sudo apt-get install pandoc
+sudo apt-get install gnome-system-tools
+sudo apt-get install ghex
+sudo apt-get install mc
+sudo apt-get install dict
+sudo apt-get install wireshark
+sudo apt-get install mtr
+sudo apt-get install pdfgrep
+sudo apt-get install sshfs
+sduo apt-get install aptitude</p>
+
+<p>sudo apt-get install fail2ban
+sudo apt-get install rkhunter
+&#8220;`</p>
 
 <p><a name="工具分類及簡單說明"></a></p>
 
