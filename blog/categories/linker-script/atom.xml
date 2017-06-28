@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linker Script | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/linker-script/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2017-06-19T21:44:19+08:00</updated>
+  <updated>2017-06-28T21:32:34+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -1974,113 +1974,61 @@ OVERLAY 0x1000 : AT (0x4000)
 
 
 <p>詳細的範例說明可以看<a href="https://sourceware.org/binutils/docs/ld/REGION_005fALIAS.html#REGION_005fALIAS">這邊</a>
-<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">INCLUDE</span> <span class="n">linkcmds</span><span class="p">.</span><span class="n">memory</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">SECTIONS</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_TEXT</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">rodata</span> <span class="p">:</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
-</span><span class='line'>     <span class="n">rodata_end</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_RODATA</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">rodata_end</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="n">data_start</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_DATA</span>
-</span><span class='line'> <span class="n">data_size</span> <span class="o">=</span> <span class="n">SIZEOF</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
-</span><span class='line'> <span class="n">data_load_start</span> <span class="o">=</span> <span class="n">LOADADDR</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_BSS</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">a</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;cmd-misc&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="n">a</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
-</span><span class='line'><span class="cp">## 未分類的命令 (節錄）</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">ASSERT</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span><span class="err">`</span>
-</span><span class='line'><span class="o">*</span> <span class="err">條件不成立就噴訊息並結束</span><span class="n">link</span>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">EXTERN</span><span class="p">(</span><span class="n">symbol1</span> <span class="n">symbol2</span> <span class="p">...)</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">強迫讓指定的</span><span class="n">symbol</span><span class="err">設成</span><span class="n">undefined</span><span class="err">，手冊說一般用在刻意要使用非標準的</span><span class="n">API</span><span class="err">。例如自幹</span><span class="n">printf</span><span class="err">時可以用這個命令。</span> <span class="p">(</span><span class="err">不過變成了</span><span class="n">undefine</span> <span class="n">symbol</span><span class="err">怎麼</span><span class="n">link</span><span class="o">??</span><span class="p">)</span>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">FORCE_COMMON_ALLOCATION</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">手冊和男人說和相容性有關，手冊上是說強迫分配空間給</span><span class="n">common</span> <span class="n">symbols</span><span class="err">，即使是</span><span class="n">link</span> <span class="n">relocate</span><span class="err">檔案。</span><span class="p">(</span><span class="n">common</span> <span class="n">symbols</span><span class="err">不知道是什麼</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">OUTPUT_ARCH</span><span class="p">(</span><span class="n">bfdarch</span><span class="p">)</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">指定輸出的平台，可以透過`</span><span class="n">objdump</span> <span class="o">-</span><span class="n">i</span><span class="err">`查詢支援平台</span>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">INSERT</span> <span class="p">[</span> <span class="n">AFTER</span> <span class="o">|</span> <span class="n">BEFORE</span> <span class="p">]</span> <span class="n">output_section</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">指定在預設</span><span class="n">linker</span> <span class="n">script</span><span class="err">命令被執行之前或是之後加上或加入特定的輸入</span><span class="n">section</span><span class="err">到輸出</span><span class="n">section</span><span class="err">。以下是一個範例</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">SECTIONS</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'><span class="nl">OVERLAY</span> <span class="p">:</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="p">.</span><span class="n">ov1</span> <span class="p">{</span> <span class="n">ov1</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
-</span><span class='line'>    <span class="p">.</span><span class="n">ov2</span> <span class="p">{</span> <span class="n">ov2</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="n">INSERT</span> <span class="n">AFTER</span> <span class="p">.</span><span class="n">text</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`c 範例
+     INCLUDE linkcmds.memory</p>
+
+<pre><code> SECTIONS
+   {
+     .text :
+       {
+         *(.text)
+       } &gt; REGION_TEXT
+     .rodata :
+       {
+         *(.rodata)
+         rodata_end = .;
+       } &gt; REGION_RODATA
+     .data : AT (rodata_end)
+       {
+         data_start = .;
+         *(.data)
+       } &gt; REGION_DATA
+     data_size = SIZEOF(.data);
+     data_load_start = LOADADDR(.data);
+     .bss :
+       {
+         *(.bss)
+       } &gt; REGION_BSS
+   }
+</code></pre>
+
+<pre><code>
+&lt;a name="cmd-misc"&gt;&lt;/a&gt; 
+## 未分類的命令 (節錄）
+
+* `ASSERT(exp, message)`
+    * 條件不成立就噴訊息並結束link
+* `EXTERN(symbol1 symbol2 ...)`
+  * 強迫讓指定的symbol設成undefined，手冊說一般用在刻意要使用非標準的API。例如自幹printf時可以用這個命令。 (不過變成了undefine symbol怎麼link??)
+* `FORCE_COMMON_ALLOCATION`
+  * 手冊和男人說和相容性有關，手冊上是說強迫分配空間給common symbols，即使是link relocate檔案。(common symbols不知道是什麼) 
+
+* `OUTPUT_ARCH(bfdarch)`
+  * 指定輸出的平台，可以透過`objdump -i`查詢支援平台
+* `INSERT [ AFTER | BEFORE ] output_section`
+  * 指定在預設linker script命令被執行之前或是之後加上或加入特定的輸入section到輸出section。以下是一個範例
+</code></pre>
+
+<p>SECTIONS
+{
+    OVERLAY :
+    {
+        .ov1 { ov1<em>(.text) }
+        .ov2 { ov2</em>(.text) }
+    }
+}
+INSERT AFTER .text;
+&#8220;`</p>
 
 <p><a name="assign"></a></p>
 
@@ -2963,113 +2911,61 @@ SECTIONS
 
 
 <p>詳細的範例說明可以看<a href="https://sourceware.org/binutils/docs/ld/REGION_005fALIAS.html#REGION_005fALIAS">這邊</a>
-<figure class='code'><figcaption><span>範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">INCLUDE</span> <span class="n">linkcmds</span><span class="p">.</span><span class="n">memory</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span> <span class="n">SECTIONS</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_TEXT</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">rodata</span> <span class="p">:</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
-</span><span class='line'>     <span class="n">rodata_end</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_RODATA</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">rodata_end</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="n">data_start</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_DATA</span>
-</span><span class='line'> <span class="n">data_size</span> <span class="o">=</span> <span class="n">SIZEOF</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
-</span><span class='line'> <span class="n">data_load_start</span> <span class="o">=</span> <span class="n">LOADADDR</span><span class="p">(.</span><span class="n">data</span><span class="p">);</span>
-</span><span class='line'> <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span>
-</span><span class='line'>   <span class="p">{</span>
-</span><span class='line'>     <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>
-</span><span class='line'>   <span class="p">}</span> <span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span> <span class="n">REGION_BSS</span>
-</span><span class='line'>   <span class="p">}</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span>
-</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">a</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;cmd-misc&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="n">a</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
-</span><span class='line'><span class="cp">### 未分類的命令 (節錄）</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">ASSERT</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span><span class="err">`</span>
-</span><span class='line'><span class="o">*</span> <span class="err">條件不成立就噴訊息並結束</span><span class="n">link</span>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">EXTERN</span><span class="p">(</span><span class="n">symbol1</span> <span class="n">symbol2</span> <span class="p">...)</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">強迫讓指定的</span><span class="n">symbol</span><span class="err">設成</span><span class="n">undefined</span><span class="err">，手冊說一般用在刻意要使用非標準的</span><span class="n">API</span><span class="err">。例如自幹</span><span class="n">printf</span><span class="err">時可以用這個命令。</span> <span class="p">(</span><span class="err">不過變成了</span><span class="n">undefine</span> <span class="n">symbol</span><span class="err">怎麼</span><span class="n">link</span><span class="o">??</span><span class="p">)</span>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">FORCE_COMMON_ALLOCATION</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">手冊和男人說和相容性有關，手冊上是說強迫分配空間給</span><span class="n">common</span> <span class="n">symbols</span><span class="err">，即使是</span><span class="n">link</span> <span class="n">relocate</span><span class="err">檔案。</span><span class="p">(</span><span class="n">common</span> <span class="n">symbols</span><span class="err">不知道是什麼</span><span class="p">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">OUTPUT_ARCH</span><span class="p">(</span><span class="n">bfdarch</span><span class="p">)</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">指定輸出的平台，可以透過`</span><span class="n">objdump</span> <span class="o">-</span><span class="n">i</span><span class="err">`查詢支援平台</span>
-</span><span class='line'><span class="o">*</span> <span class="err">`</span><span class="n">INSERT</span> <span class="p">[</span> <span class="n">AFTER</span> <span class="o">|</span> <span class="n">BEFORE</span> <span class="p">]</span> <span class="n">output_section</span><span class="err">`</span>
-</span><span class='line'>  <span class="o">*</span> <span class="err">指定在預設</span><span class="n">linker</span> <span class="n">script</span><span class="err">命令被執行之前或是之後加上或加入特定的輸入</span><span class="n">section</span><span class="err">到輸出</span><span class="n">section</span><span class="err">。以下是一個範例</span>
-</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">SECTIONS</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'><span class="nl">OVERLAY</span> <span class="p">:</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="p">.</span><span class="n">ov1</span> <span class="p">{</span> <span class="n">ov1</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
-</span><span class='line'>    <span class="p">.</span><span class="n">ov2</span> <span class="p">{</span> <span class="n">ov2</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span> <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="n">INSERT</span> <span class="n">AFTER</span> <span class="p">.</span><span class="n">text</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`c 範例
+     INCLUDE linkcmds.memory</p>
+
+<pre><code> SECTIONS
+   {
+     .text :
+       {
+         *(.text)
+       } &gt; REGION_TEXT
+     .rodata :
+       {
+         *(.rodata)
+         rodata_end = .;
+       } &gt; REGION_RODATA
+     .data : AT (rodata_end)
+       {
+         data_start = .;
+         *(.data)
+       } &gt; REGION_DATA
+     data_size = SIZEOF(.data);
+     data_load_start = LOADADDR(.data);
+     .bss :
+       {
+         *(.bss)
+       } &gt; REGION_BSS
+   }
+</code></pre>
+
+<pre><code>
+&lt;a name="cmd-misc"&gt;&lt;/a&gt; 
+### 未分類的命令 (節錄）
+
+* `ASSERT(exp, message)`
+    * 條件不成立就噴訊息並結束link
+* `EXTERN(symbol1 symbol2 ...)`
+  * 強迫讓指定的symbol設成undefined，手冊說一般用在刻意要使用非標準的API。例如自幹printf時可以用這個命令。 (不過變成了undefine symbol怎麼link??)
+* `FORCE_COMMON_ALLOCATION`
+  * 手冊和男人說和相容性有關，手冊上是說強迫分配空間給common symbols，即使是link relocate檔案。(common symbols不知道是什麼) 
+
+* `OUTPUT_ARCH(bfdarch)`
+  * 指定輸出的平台，可以透過`objdump -i`查詢支援平台
+* `INSERT [ AFTER | BEFORE ] output_section`
+  * 指定在預設linker script命令被執行之前或是之後加上或加入特定的輸入section到輸出section。以下是一個範例
+</code></pre>
+
+<p>SECTIONS
+{
+    OVERLAY :
+    {
+        .ov1 { ov1<em>(.text) }
+        .ov2 { ov2</em>(.text) }
+    }
+}
+INSERT AFTER .text;
+&#8220;`</p>
 
 <h2><a name="assign"></a></h2>
 

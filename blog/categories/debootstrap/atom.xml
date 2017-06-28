@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Debootstrap | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/debootstrap/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2017-06-19T21:44:19+08:00</updated>
+  <updated>2017-06-28T21:32:34+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -107,24 +107,17 @@ $ tree -L 1 -d
 <h2>使用chroot切換到用debootstrap安裝的root file system</h2>
 
 <p>先確認我電腦上的Ubuntu版本
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID: Ubuntu
-</span><span class='line'>Description:    Ubuntu 14.04.1 LTS
-</span><span class='line'>Release:    14.04
-</span><span class='line'>Codename:   trusty&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;$ file /bin/ls
-</span><span class='line'>/bin/ls: ELF 64-bit LSB  executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.24, BuildID[sha1]=64d095bc6589dd4bfbf1c6d62ae985385965461b, stripped</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`
+$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 14.04.1 LTS
+Release:    14.04
+Codename:   trusty</p>
+
+<p>$ file /bin/ls
+/bin/ls: ELF 64-bit LSB  executable, x86-64, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.24, BuildID[sha1]=64d095bc6589dd4bfbf1c6d62ae985385965461b, stripped
+&#8220;`</p>
 
 <p>切換指令如下</p>
 

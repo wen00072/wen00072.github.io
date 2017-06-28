@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Ld | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/ld/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2017-06-19T21:44:19+08:00</updated>
+  <updated>2017-06-28T21:32:34+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -73,63 +73,37 @@ execve("/usr/bin/ld", ["/usr/bin/ld", "--sysroot=/", ...
 </code></pre>
 
 <p>最後的Makefile版本變成
-<figure class='code'><figcaption><span>ld最後參數</p></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">&lt;h1&gt;LD_FLAGS&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nv">LD_FLAGS</span><span class="o">=</span> <span class="se">\</span>
-</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span><span class="nv">sysroot</span><span class="o">=</span>/ <span class="se">\</span>
-</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span>build-id <span class="se">\</span>
-</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span>no-add-needed <span class="p">&amp;</span>ndash<span class="p">;</span>as-needed <span class="p">&amp;</span>ndash<span class="p">;</span>eh-frame-hdr <span class="se">\</span>
-</span><span class='line'>    -m elf_x86_64 <span class="p">&amp;</span>ndash<span class="p">;</span><span class="nb">hash</span>-style<span class="o">=</span>gnu <span class="se">\</span>
-</span><span class='line'>    -dynamic-linker /lib64/ld-linux-x86-64.so.2 <span class="se">\</span>
-</span><span class='line'>    -z relro /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o<span class="se">\</span>
-</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o <span class="se">\</span>
-</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o <span class="se">\</span>
-</span><span class='line'>    -L/usr/lib/gcc/x86_64-linux-gnu/4.6 <span class="se">\</span>
-</span><span class='line'>    -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu <span class="se">\</span>
-</span><span class='line'>    -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib <span class="se">\</span>
-</span><span class='line'>    -L/lib/x86_64-linux-gnu <span class="se">\</span>
-</span><span class='line'>    -L/lib/../lib -L/usr/lib/x86_64-linux-gnu <span class="se">\</span>
-</span><span class='line'>    -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../..<span class="se">\</span>
-</span><span class='line'>    -lgcc <span class="p">&amp;</span>ndash<span class="p">;</span>as-needed -lgcc_s <span class="p">&amp;</span>ndash<span class="p">;</span>no-as-needed -lc -lgcc <span class="p">&amp;</span>ndash<span class="p">;</span>as-needed -lgcc_s <span class="se">\</span>
-</span><span class='line'>    <span class="p">&amp;</span>ndash<span class="p">;</span>no-as-needed <span class="se">\</span>
-</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o <span class="se">\</span>
-</span><span class='line'>    /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'><span class="err">&lt;h1&gt;Build</span> <span class="err">Rules&lt;/h1&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nv">TARGET</span><span class="o">=</span><span class="nb">test</span>&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'><span class="nf">&lt;p&gt;$(OUT_DIR)/$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
-</span><span class='line'>    ld -o <span class="nv">$@</span> <span class="nv">$^</span> <span class="k">$(</span>LD_FLAGS<span class="k">)</span>
-</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`makefile ld最後參數</p>
+
+<h1>LD_FLAGS</h1>
+
+<p>LD_FLAGS= \
+    &ndash;sysroot=/ \
+    &ndash;build-id \
+    &ndash;no-add-needed &ndash;as-needed &ndash;eh-frame-hdr \
+    -m elf_x86_64 &ndash;hash-style=gnu \
+    -dynamic-linker /lib64/ld-linux-x86-64.so.2 \
+    -z relro /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crt1.o\
+    /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crti.o \
+    /usr/lib/gcc/x86_64-linux-gnu/4.6/crtbegin.o \
+    -L/usr/lib/gcc/x86_64-linux-gnu/4.6 \
+    -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu \
+    -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../../../lib \
+    -L/lib/x86_64-linux-gnu \
+    -L/lib/../lib -L/usr/lib/x86_64-linux-gnu \
+    -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/4.6/../../..\
+    -lgcc &ndash;as-needed -lgcc_s &ndash;no-as-needed -lc -lgcc &ndash;as-needed -lgcc_s \
+    &ndash;no-as-needed \
+    /usr/lib/gcc/x86_64-linux-gnu/4.6/crtend.o \
+    /usr/lib/gcc/x86_64-linux-gnu/4.6/../../../x86_64-linux-gnu/crtn.o</p>
+
+<h1>Build Rules</h1>
+
+<p>TARGET=test</p>
+
+<p>$(OUT_DIR)/$(TARGET): $(OUT_OBJS)
+    ld -o $@ $^ $(LD_FLAGS)
+&#8220;`</p>
 
 <p>結論如下</p>
 
