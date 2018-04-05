@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Vim | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/vim/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2017-08-28T16:54:48+08:00</updated>
+  <updated>2018-04-06T02:23:19+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -14,116 +14,11 @@
 
   
   <entry>
-    <title type="html"><![CDATA[Bash下自動完成gvim --remote-tab]]></title>
-    <link href="http://wen00072.github.io/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/"/>
-    <updated>2017-03-28T21:15:16+08:00</updated>
-    <id>http://wen00072.github.io/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng</id>
-    <content type="html"><![CDATA[<p>在gvim需要開tab要打<code>--remote-tab</code>，打久就開始厭煩想偷懶。後來整理網路上的bash_completion相關資料拼湊一個堪用的版本分享一下。因為我只是想偷懶，所以完全沒有去了解bash_completion的細節。嘛，反正可以組裝需要的功能就好。</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#ac_env">測試環境</a></li>
-<li><a href="#ac_inst">安裝方式</a></li>
-<li><a href="#ac_use">使用方式</a></li>
-<li><a href="#ac_gvf">gvim bash_completion script</a></li>
-<li><a href="#ac_ref">參考資料</a></li>
-</ul>
-
-
-<p><a name="ac_env"></a></p>
-
-<h2>測試環境</h2>
-
-<pre><code>$ lsb_release  -a
-No LSB modules are available.
-Distributor ID: Ubuntu
-Description:    Ubuntu 16.04.2 LTS
-Release:    16.04
-Codename:   xenial
-</code></pre>
-
-<p><a name="ac_inst"></a></p>
-
-<h2>安裝方式</h2>
-
-<ol>
-<li>將<a href="#ac_gvf">下面</a>文字貼到編輯器，存成<code>/etc/bash_completion.d/gvim</code></li>
-<li>使用下面指令新增gvim completion</li>
-</ol>
-
-
-<pre><code class="text 新增gvim completion指令">$ . /etc/bash_completion.d/gvim
-</code></pre>
-
-<p><a name="ac_use"></a></p>
-
-<h2>使用方式</h2>
-
-<ul>
-<li>一般使用，直接gvim <code>tab</code> 顯示檔案或目錄</li>
-</ul>
-
-
-<pre><code>$ gvim `tab`
-changelog.Debian.gz  copyright            README.emacs         RelNotes/
-changelog.gz         NEWS.Debian.gz       README.md            
-contrib/             README.Debian        README.source 
-</code></pre>
-
-<ul>
-<li>要使用tab時，下gvim -<code>tab</code> 就會自動填入<code>--remote-tab</code>，接下來再按<code>tab</code>即可選擇檔案或目錄</li>
-</ul>
-
-
-<pre><code>$ gvim --remote-tab 
-changelog.Debian.gz  copyright            README.emacs         RelNotes/
-changelog.gz         NEWS.Debian.gz       README.md            
-contrib/             README.Debian        README.source 
-</code></pre>
-
-<p><a name="ac_gvf"></a></p>
-
-<h2>gvim bash_completion script</h2>
-
-<pre><code class="sh gvim">_gvim()
-{
-    local cur prev
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts="--remote-tab"
-
-    if [[ ${cur} == -* ]] ; then
-        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-        return 0
-    fi
-
-    compopt -o default; COMPREPLY=()
-    return 0
-}
-complete -F _gvim gvim
-</code></pre>
-
-<p><a name="ac_ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="https://debian-administration.org/article/316/An_introduction_to_bash_completion_part_1">An introduction to bash completion: part 1</a></li>
-<li><a href="https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2">An introduction to bash completion: part 2</a></li>
-<li><a href="http://stackoverflow.com/questions/12933362/getting-compgen-to-include-slashes-on-directories-when-looking-for-files">stackoverflow: Getting compgen to include slashes on directories when looking for files</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Trace C 程式碼的vim設定]]></title>
-    <link href="http://wen00072.github.io/blog/2016/11/26/vim-setup-for-trace-c-code/"/>
-    <updated>2016-11-26T04:03:41+08:00</updated>
-    <id>http://wen00072.github.io/blog/2016/11/26/vim-setup-for-trace-c-code</id>
-    <content type="html"><![CDATA[<p>分享使用<code>vim</code> 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體<code>cscope</code>和<code>ctags</code>來trace C語言的程式碼。</p>
+    <title type="html"><![CDATA[給自己剪貼用的vim設定]]></title>
+    <link href="http://wen00072.github.io/blog/2018/02/15/vim-setup-for-trace-c-code/"/>
+    <updated>2018-02-15T04:03:41+08:00</updated>
+    <id>http://wen00072.github.io/blog/2018/02/15/vim-setup-for-trace-c-code</id>
+    <content type="html"><![CDATA[<p>分享使用<code>vim</code> 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體<code>cscope</code>和<code>ctags</code>來trace <code>C</code>語言的程式碼以及編輯<code>Python</code>程式碼相關設定。</p>
 
 <ul>
 <li>致謝，感謝網友<a href="http://scottt.tw/">Scott</a>介紹vim register概念，<a href="http://yodalee.blogspot.tw/">葉闆</a>介紹的tagbar，和Kyle Lin介紹的airline。</li>
@@ -134,6 +29,7 @@ complete -F _gvim gvim
 
 <ul>
 <li><a href="#vtr-env">測試環境</a></li>
+<li><a href="#vtr-pkg">懶人包</a></li>
 <li><a href="#vtr-set">設定.vimrc以及Vundle plugins</a>
 
 <ul>
@@ -156,7 +52,7 @@ complete -F _gvim gvim
 <li><a href="#vtr-set-vdplg-vbw">vim-better-whitespace</a></li>
 </ul>
 </li>
-<li><a href="#vtr-set-vdplg-tr">Trace 程式碼相關</a>
+<li><a href="#vtr-set-vdplg-tr">Trace C語言程式碼相關</a>
 
 <ul>
 <li><a href="#vtr-set-vdplg-tr-cm">cscope_maps</a></li>
@@ -165,6 +61,22 @@ complete -F _gvim gvim
 <li><a href="#vtr-set-vdplg-tr-nd">nerdtree</a></li>
 <li><a href="#vtr-set-vdplg-tr-tri">Trinity</a></li>
 <li><a href="#vtr-set-vdplg-tr-tgb">tagbar</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-md">Markdown 語法支援</a>
+
+<ul>
+<li><a href="#vtr-set-md-pdoc">vim-pandoc-syntax</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-py">Python開發相關</a>
+
+<ul>
+<li><a href="#vtr-set-py-prepare">準備工作</a></li>
+<li><a href="#vtr-set-py-pm">python-mode</a></li>
+<li><a href="#vtr-set-py-sc">syntastic</a></li>
+<li><a href="#vtr-set-py-pt">python_match</a></li>
+<li><a href="#vtr-set-py-id">indentpython</a></li>
 </ul>
 </li>
 </ul>
@@ -180,7 +92,6 @@ complete -F _gvim gvim
 </ul>
 </li>
 <li><a href="#vtr-test">參考資料</a></li>
-<li><a href="#vtr-pkg">懶人包</a></li>
 </ul>
 
 
@@ -188,22 +99,24 @@ complete -F _gvim gvim
 
 <h2>測試環境</h2>
 
-<pre><code class="text">$ lsb_release -a
+<pre><code class="text">$ lsb_release  -a
 No LSB modules are available.
 Distributor ID: Ubuntu
-Description:    Ubuntu 14.04.5 LTS
-Release:    14.04
-Codename:   trusty
+Description:    Ubuntu 16.04.3 LTS
+Release:    16.04
+Codename:   xenial
+
 
 $ ctags --version
 Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
 ...
 
 $ cscope --version
-cscope: version 15.8a
+cscope: version 15.8b
 
 $ vim --version
-VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Jan  2 2014 19:39:47)
+VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Nov 24 2016 16:44:48)
+Included patches: 1-1689
 ...
 </code></pre>
 
@@ -269,15 +182,6 @@ Plugin 'VundleVim/Vundle.vim'
 " Write your plugins here
 "===============================================================
 Plugin 'Yggdroot/indentLine'
-Plugin 'ntpeters/vim-better-whitespace'
-Plugin 'vim-airline/vim-airline'
-Plugin 'tpope/vim-fugitive'
-Plugin 'chazy/cscope_maps'
-Plugin 'vim-scripts/taglist.vim'
-Plugin 'scrooloose/nerdtree'
-Plugin 'wesleyche/SrcExpl'
-Plugin 'wesleyche/Trinity'
-Plugin 'majutsushi/tagbar'
 
 "====================================================================
 " Run vundle
@@ -512,6 +416,79 @@ nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
 <p>以下是按下<code>F7</code> 的畫面，可以注意右邊視窗會更進一步地顯示資料結構的成員名稱
 <img src=/images/vim_ind10.jpg></p>
 
+<p><a name="vtr-set-md"></a></p>
+
+<h3>Markdown 語法支援</h3>
+
+<p><a name="vtr-set-md-pdoc"></a></p>
+
+<h4>vim-pandoc-syntax</h4>
+
+<p>單純就是讓<code>vim</code>可以顯示<code>Markdown</code> syntax highlight，範例如下圖:
+<img src=/images/vim_ind12.jpg></p>
+
+<p><a name="vtr-set-py"></a></p>
+
+<h3>Python開發相關</h3>
+
+<p><a name="vtr-set-py-prepare"></a></p>
+
+<h4>準備工作</h4>
+
+<p>主要是語法檢查套件相關安裝，指令如下</p>
+
+<pre><code>sudo apt install -y flake8 python-rope pylint
+</code></pre>
+
+<p><a name="vtr-set-py-pm"></a></p>
+
+<h4>python-mode</h4>
+
+<p><a href="blog/2014/12/06/introduction-to-python-mode-for-vim/">之前</a>有介紹過，偷懶跳過。也許Python用到一陣子可以上手後可以再分享心得。</p>
+
+<p><a name="vtr-set-py-sc"></a></p>
+
+<h4>syntastic</h4>
+
+<p>泛用形語法檢查工具，請參考<a href="https://github.com/vim-syntastic/syntastic">Syntax checking hacks for vim</a>說明。
+目前是我靠他幫忙檢查寫的程式是否符合<a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>規範，要注意的是Ubuntu 16.04中<code>vim</code> 套件預設只支援<code>Python 3</code>，要使用vim 編寫<code>Python 2</code>的朋友請自行估狗。我之前是自行編譯<code>vim</code>解決的。</p>
+
+<p>語法檢查範例如下圖
+<img src=/images/vim_ind13.jpg></p>
+
+<p><a name="vtr-set-py-pt"></a></p>
+
+<h4>python_match</h4>
+
+<p>讓Python 也可以使用<code>vim</code>中切換配對的快捷鍵<code>%</code></p>
+
+<p><a name="vtr-set-py-py"></a></p>
+
+<h4>python</h4>
+
+<p>提供下列快捷鍵，節錄自Plugin註解:</p>
+
+<ul>
+<li><code>]t</code>      &ndash; Jump to beginning of block</li>
+<li><code>]e</code>      &ndash; Jump to end of block</li>
+<li><code>]v</code>      &ndash; Select (Visual Line Mode) block</li>
+<li><code>]&lt;</code>      &ndash; Shift block to left</li>
+<li><code>]&gt;</code>      &ndash; Shift block to right</li>
+<li><code>]#</code>      &ndash; Comment selection</li>
+<li><code>]u</code>      &ndash; Uncomment selection</li>
+<li><code>]c</code>      &ndash; Select current/previous class</li>
+<li><code>]d</code>      &ndash; Select current/previous function</li>
+<li><code>]&lt;up&gt;</code>   &ndash; Jump to previous line with the same/lower indentation</li>
+<li><code>]&lt;down&gt;</code> &ndash; Jump to next line with the same/lower indentation</li>
+</ul>
+
+
+<p><a name="vtr-set-py-id"></a></p>
+
+<h4>indentpython</h4>
+
+<p>確保你的程式碼符合<a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>的indent規範</p>
+
 <p><a name="vtr-set-misc"></a></p>
 
 <h3>和Plugin 無關的設定</h3>
@@ -532,7 +509,7 @@ nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
 <li>設定gvim 的字型和大小
 
 <ul>
-<li><code>set guifont=inconsolata\ 20</code></li>
+<li><code>set guifont=Inconsolata\ for\ Powerline\ 32</code></li>
 </ul>
 </li>
 <li>將找到的字串設成高亮度
@@ -658,6 +635,30 @@ nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
 <li><a href="https://github.com/wesleyche/SrcExpl">Source Explorer</a></li>
 <li><a href="https://github.com/wesleyche/Trinity">Trinity</a></li>
 <li><a href="http://stackoverflow.com/questions/4998582/show-whitespace-characters-in-gvim">Stackoverflow: Show white space and tab in vim</a></li>
+<li>Python 相關
+
+<ul>
+<li>Plugins
+
+<ul>
+<li><a href="https://github.com/python-mode/python-mode">Python Mode</a></li>
+<li><a href="https://github.com/vim-scripts/python.vim">Python</a></li>
+<li><a href="https://github.com/vim-scripts/indentpython.vim">Indent Python</a></li>
+<li><a href="https://github.com/vim-syntastic/syntastic">Syntax checking hacks for vim</a></li>
+<li><a href="https://github.com/vim-scripts/python_match.vim">python_match</a></li>
+<li><a href="https://stackoverflow.com/questions/19209139/syntastic-and-python-mode-together">Stackoverflow: Syntastic and Python-mode together?
+</a></li>
+</ul>
+</li>
+<li><code>vim</code>設定相關
+
+<ul>
+<li><a href="https://wiki.python.org/moin/Vim">Python Wiki: vim</a></li>
+<li><a href="https://realpython.com/vim-and-python-a-match-made-in-heaven/">VIM and Python – A Match Made in Heaven</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li>和plugin無關的vim trace code資料
 
 <ul>
@@ -684,14 +685,14 @@ nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
 </ul>
 
 
-<pre><code class="text">sudo apt-get install exuberant-ctags cscope vim-gtk git
+<pre><code class="text">sudo apt-get install -y exuberant-ctags cscope vim-gtk git flake8 python-rope pylint
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 git clone https://github.com/powerline/fonts
 cd fonts &amp;&amp; ./install.sh
 </code></pre>
 
 <ul>
-<li>剪貼下面的文字並放到 ~/.vimrc</li>
+<li>剪貼下面的文字並存放到 ~/.vimrc</li>
 </ul>
 
 
@@ -714,10 +715,25 @@ Plugin 'VundleVim/Vundle.vim'
 "===============================================================
 " Write your plugins here
 "===============================================================
+" Layouts
 Plugin 'Yggdroot/indentLine'
 Plugin 'ntpeters/vim-better-whitespace'
+
+" Markdown
+Plugin 'vim-pandoc/vim-pandoc-syntax'
+
+" Python related
+Plugin 'python-mode/python-mode'
+Plugin 'vim-scripts/indentpython.vim'
+Plugin 'vim-syntastic/syntastic'
+Plugin 'vim-scripts/python_match.vim'
+Plugin 'vim-scripts/python.vim'
+
+" Misc tools
+Plugin 'kien/ctrlp.vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'tpope/vim-fugitive'
+Plugin 'Valloric/YouCompleteMe'
 Plugin 'chazy/cscope_maps'
 Plugin 'vim-scripts/taglist.vim'
 Plugin 'scrooloose/nerdtree'
@@ -746,23 +762,23 @@ filetype plugin indent on    " required
 "====================================================================
 " Tagbar Settings
 "====================================================================
-" Open and close the tagbar separately 
-nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt; 
+" Open and close the tagbar separately
+nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
 
 "====================================================================
 " Trinity Settings
 "====================================================================
-" Open and close all the three plugins on the same time 
-nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt; 
+" Open and close all the three plugins on the same time
+nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt;
 
-" Open and close the Source Explorer separately 
-nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt; 
+" Open and close the Source Explorer separately
+nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt;
 
-" Open and close the Taglist separately 
-nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt; 
+" Open and close the Taglist separately
+nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt;
 
-" Open and close the NERD Tree separately 
-nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt; 
+" Open and close the NERD Tree separately
+nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt;
 
 "====================================================================
 " Airline settings
@@ -771,12 +787,30 @@ let g:airline_powerline_fonts = 1
 set laststatus=2
 
 "====================================================================
+" syntastic settings
+"====================================================================
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+"====================================================================
+" pymode settings
+"====================================================================
+let g:pymode_lint = 0    " Prefer to use syntastic to check lint
+let g:pymode_folding = 0 " Unfold all
+
+"====================================================================
 " Editor and display Settings
 "====================================================================
 colorscheme koehler         " Color for gvim
 
 set hlsearch                " Highlight search
-set guifont=Inconsolata\ for\ Powerline\ 20 " Font 
+set guifont=Inconsolata\ for\ Powerline\ 32 " Font
 set cursorline              " Hight background at current cursor line
 set nu                      " Display line numbers
 
@@ -787,6 +821,9 @@ highlight ColorColumn guibg=#202020
 " Show tabs
 set listchars=tab:\|.
 set list
+
+" Ensure syntax is on
+syntax on
 
 "====================================================================
 " Indent Settings
@@ -805,6 +842,23 @@ vnoremap &gt; &gt;gv
 "====================================================================
 " Shared unamed regitered with primary selection
 set clipboard+=unnamed
+
+" uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
+set encoding=utf-8
+set fileencoding=utf-8
+
+"====================================================================
+" Python Settings
+"====================================================================
+au BufNewFile,BufRead *.py
+    \ set tabstop=4 |
+    \ set softtabstop=4 |
+    \ set shiftwidth=4 |
+    \ set textwidth=79 |
+    \ set expandtab |
+    \ set autoindent |
+    \ set fileformat=unix
+let python_highlight_all=1
 </code></pre>
 
 <ul>
@@ -840,6 +894,111 @@ set clipboard+=unnamed
 
 <pre><code class="text">user@host:/tmp/linux-stable$ gvim fs/select.c
 </code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Bash下自動完成gvim --remote-tab]]></title>
+    <link href="http://wen00072.github.io/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/"/>
+    <updated>2017-03-28T21:15:16+08:00</updated>
+    <id>http://wen00072.github.io/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng</id>
+    <content type="html"><![CDATA[<p>在gvim需要開tab要打<code>--remote-tab</code>，打久就開始厭煩想偷懶。後來整理網路上的bash_completion相關資料拼湊一個堪用的版本分享一下。因為我只是想偷懶，所以完全沒有去了解bash_completion的細節。嘛，反正可以組裝需要的功能就好。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#ac_env">測試環境</a></li>
+<li><a href="#ac_inst">安裝方式</a></li>
+<li><a href="#ac_use">使用方式</a></li>
+<li><a href="#ac_gvf">gvim bash_completion script</a></li>
+<li><a href="#ac_ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="ac_env"></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code>$ lsb_release  -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 16.04.2 LTS
+Release:    16.04
+Codename:   xenial
+</code></pre>
+
+<p><a name="ac_inst"></a></p>
+
+<h2>安裝方式</h2>
+
+<ol>
+<li>將<a href="#ac_gvf">下面</a>文字貼到編輯器，存成<code>/etc/bash_completion.d/gvim</code></li>
+<li>使用下面指令新增gvim completion</li>
+</ol>
+
+
+<pre><code class="text 新增gvim completion指令">$ . /etc/bash_completion.d/gvim
+</code></pre>
+
+<p><a name="ac_use"></a></p>
+
+<h2>使用方式</h2>
+
+<ul>
+<li>一般使用，直接gvim <code>tab</code> 顯示檔案或目錄</li>
+</ul>
+
+
+<pre><code>$ gvim `tab`
+changelog.Debian.gz  copyright            README.emacs         RelNotes/
+changelog.gz         NEWS.Debian.gz       README.md            
+contrib/             README.Debian        README.source 
+</code></pre>
+
+<ul>
+<li>要使用tab時，下gvim -<code>tab</code> 就會自動填入<code>--remote-tab</code>，接下來再按<code>tab</code>即可選擇檔案或目錄</li>
+</ul>
+
+
+<pre><code>$ gvim --remote-tab 
+changelog.Debian.gz  copyright            README.emacs         RelNotes/
+changelog.gz         NEWS.Debian.gz       README.md            
+contrib/             README.Debian        README.source 
+</code></pre>
+
+<p><a name="ac_gvf"></a></p>
+
+<h2>gvim bash_completion script</h2>
+
+<pre><code class="sh gvim">_gvim()
+{
+    local cur prev
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts="--remote-tab"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    compopt -o default; COMPREPLY=()
+    return 0
+}
+complete -F _gvim gvim
+</code></pre>
+
+<p><a name="ac_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://debian-administration.org/article/316/An_introduction_to_bash_completion_part_1">An introduction to bash completion: part 1</a></li>
+<li><a href="https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2">An introduction to bash completion: part 2</a></li>
+<li><a href="http://stackoverflow.com/questions/12933362/getting-compgen-to-include-slashes-on-directories-when-looking-for-files">stackoverflow: Getting compgen to include slashes on directories when looking for files</a></li>
+</ul>
+
 ]]></content>
   </entry>
   

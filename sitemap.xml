@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://wen00072.github.io/blog/2018/02/15/vim-setup-for-trace-c-code/</loc>
+<lastmod>2018-02-15T04:03:41+08:00</lastmod>
+</url>
+<url>
 <loc>http://wen00072.github.io/blog/2017/06/04/qemu-x86-64-with-gdb/</loc>
 <lastmod>2017-06-04T16:11:15+08:00</lastmod>
 </url>
@@ -11,10 +15,6 @@
 <url>
 <loc>http://wen00072.github.io/blog/2016/12/18/review-gnu-coding-style/</loc>
 <lastmod>2016-12-18T21:34:23+08:00</lastmod>
-</url>
-<url>
-<loc>http://wen00072.github.io/blog/2016/11/26/vim-setup-for-trace-c-code/</loc>
-<lastmod>2016-11-26T04:03:41+08:00</lastmod>
 </url>
 <url>
 <loc>http://wen00072.github.io/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/</loc>
@@ -591,10 +591,10 @@
 <loc>http://wen00072.github.io/blog/archives/</loc>
 </url>
 <url>
-<loc>http://wen00072.github.io/categories/</loc>
+<loc>http://wen00072.github.io/about/</loc>
 </url>
 <url>
-<loc>http://wen00072.github.io/about/</loc>
+<loc>http://wen00072.github.io/categories/</loc>
 </url>
 <url>
 <loc>http://wen00072.github.io/blog/categories/git/</loc>
@@ -837,6 +837,9 @@
 <loc>http://wen00072.github.io/blog/categories/buildroot/</loc>
 </url>
 <url>
+<loc>http://wen00072.github.io/blog/categories/kernel/</loc>
+</url>
+<url>
 <loc>http://wen00072.github.io/blog/categories/cscope/</loc>
 </url>
 <url>
@@ -849,18 +852,15 @@
 <loc>http://wen00072.github.io/blog/categories/vim-plugin/</loc>
 </url>
 <url>
-<loc>http://wen00072.github.io/blog/categories/kernel/</loc>
-</url>
-<url>
 <loc>http://wen00072.github.io/files/javadoc-20150830/test_final.pdf</loc>
-<lastmod>2016-12-18T21:34:00+08:00</lastmod>
-</url>
-<url>
-<loc>http://wen00072.github.io/files/javadoc-20150830/test_init.pdf</loc>
-<lastmod>2016-12-18T21:34:00+08:00</lastmod>
+<lastmod>1504-01-16T00:00:00+08:06</lastmod>
 </url>
 <url>
 <loc>http://wen00072.github.io/files/javadoc-20150830/test_overview_package_info.pdf</loc>
-<lastmod>2016-12-18T21:34:00+08:00</lastmod>
+<lastmod>1504-01-16T00:00:00+08:06</lastmod>
+</url>
+<url>
+<loc>http://wen00072.github.io/files/javadoc-20150830/test_init.pdf</loc>
+<lastmod>1504-01-16T00:00:00+08:06</lastmod>
 </url>
 </urlset>

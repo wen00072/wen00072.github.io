@@ -11,12 +11,7 @@
 
 
   
-  <meta name="description" content="問題描述 本篇文章主要是解決使用gdb 設Qemu x86_64 模擬執行x86_64 buildroot kernel開機的中斷點時遇到下面的錯誤訊息 Remote &#39;g' packet reply is too long: 詳細訊息如下 1
-2
-3
-4
-5
-6 &hellip;">
+  <meta name="description" content="分享使用vim 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體cscope和ctags來trace C語言的程式碼以及編輯Python程式碼相關設定。 致謝，感謝網友Scott介紹vim register概念，葉闆介紹的tagbar，和Kyle &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -75,6 +70,1201 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2018/02/15/vim-setup-for-trace-c-code/">給自己剪貼用的vim設定</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-02-15T04:03:41+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>4:03 am</span></time>
+        
+           | <a href="/blog/2018/02/15/vim-setup-for-trace-c-code/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2018/02/15/vim-setup-for-trace-c-code/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>分享使用<code>vim</code> 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體<code>cscope</code>和<code>ctags</code>來trace <code>C</code>語言的程式碼以及編輯<code>Python</code>程式碼相關設定。</p>
+
+<ul>
+<li>致謝，感謝網友<a href="http://scottt.tw/">Scott</a>介紹vim register概念，<a href="http://yodalee.blogspot.tw/">葉闆</a>介紹的tagbar，和Kyle Lin介紹的airline。</li>
+</ul>
+
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#vtr-env">測試環境</a></li>
+<li><a href="#vtr-pkg">懶人包</a></li>
+<li><a href="#vtr-set">設定.vimrc以及Vundle plugins</a>
+
+<ul>
+<li>  <a href="#vtr-set-prep">事前準備</a></li>
+<li>  <a href="#vtr-set-insvd">安裝Vundle</a></li>
+<li>  <a href="#vtr-set-vdplg">我安裝的Vundle Plugins</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-ed">編輯器相關</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-al">airline</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-al-pre">安裝準備</a></li>
+<li><a href="#vtr-set-vdplg-al-set">設定airline</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-vdplg-ed-itl">indentLine</a></li>
+<li><a href="#vtr-set-vdplg-vbw">vim-better-whitespace</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-vdplg-tr">Trace C語言程式碼相關</a>
+
+<ul>
+<li><a href="#vtr-set-vdplg-tr-cm">cscope_maps</a></li>
+<li><a href="#vtr-set-vdplg-tr-se">SrcExpl</a></li>
+<li><a href="#vtr-set-vdplg-tr-tl">taglist</a></li>
+<li><a href="#vtr-set-vdplg-tr-nd">nerdtree</a></li>
+<li><a href="#vtr-set-vdplg-tr-tri">Trinity</a></li>
+<li><a href="#vtr-set-vdplg-tr-tgb">tagbar</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-md">Markdown 語法支援</a>
+
+<ul>
+<li><a href="#vtr-set-md-pdoc">vim-pandoc-syntax</a></li>
+</ul>
+</li>
+<li><a href="#vtr-set-py">Python開發相關</a>
+
+<ul>
+<li><a href="#vtr-set-py-prepare">準備工作</a></li>
+<li><a href="#vtr-set-py-pm">python-mode</a></li>
+<li><a href="#vtr-set-py-sc">syntastic</a></li>
+<li><a href="#vtr-set-py-pt">python_match</a></li>
+<li><a href="#vtr-set-py-id">indentpython</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>  <a href="#vtr-set-misc">和Plugin 無關的設定</a>
+
+<ul>
+<li><a href="#vtr-set-misc-ed">編輯器和顯示特殊字元相關設定</a></li>
+<li><a href="#vtr-set-misc-ind">Indent相關設定</a></li>
+<li><a href="#vtr-set-misc-msc">其他</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#vtr-test">參考資料</a></li>
+</ul>
+
+
+<p><a name="vtr-env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release  -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 16.04.3 LTS
+</span><span class='line'>Release:  16.04
+</span><span class='line'>Codename: xenial
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>$ ctags --version
+</span><span class='line'>Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>$ cscope --version
+</span><span class='line'>cscope: version 15.8b
+</span><span class='line'>
+</span><span class='line'>$ vim --version
+</span><span class='line'>VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Nov 24 2016 16:44:48)
+</span><span class='line'>Included patches: 1-1689
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="vtr-set"></a></p>
+
+<h2>設定.vimrc以及Vundle plugins</h2>
+
+<p><a name="vtr-set-prep"></a></p>
+
+<h3>事前準備</h3>
+
+<p>您需要確認</p>
+
+<ul>
+<li>vim版本為7.4以上</li>
+<li>安裝ctags和cscope，指令如下
+<code>sudo apt-get install exuberant-ctags cscope</code></li>
+</ul>
+
+
+<p><a name="vtr-set-insvd"></a></p>
+
+<h3>安裝Vundle</h3>
+
+<p><code>Vundle</code>是vim plugin 管理工具，他可以透過URL, github, 以及local FS等方式安裝甚至更新Plugin。類似的工具還有不少，我只是挑看到的第一個而已。</p>
+
+<p><code>Vundle</code>常用的指令如下，還蠻容易望文生義所以我就不解釋了</p>
+
+<ul>
+<li><code>:PluginList</code></li>
+<li><code>:PluginInstall</code></li>
+<li><code>:PluginClean</code></li>
+<li><code>:PluginUpdate</code></li>
+</ul>
+
+
+<p>安裝方式如下</p>
+
+<ul>
+<li><p>首先你要下載<code>Vundle</code>，指令如下
+<code>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim</code></p></li>
+<li><p>接下來在你的.vimrc加入下面這段，我是從<a href="https://github.com/VundleVim/Vundle.vim">官方網頁</a>改的，其實只是把他的範例Plugin幹掉並加上分隔線及分隔線內的註解而已</p></li>
+</ul>
+
+
+<figure class='code'><figcaption><span>.vimrc 要加的部份</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Start vundle
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>set nocompatible              &quot; be iMproved, required
+</span><span class='line'>filetype off                  &quot; required
+</span><span class='line'>
+</span><span class='line'>&quot; set the runtime path to include Vundle and initialize
+</span><span class='line'>set rtp+=~/.vim/bundle/Vundle.vim
+</span><span class='line'>call vundle#begin()
+</span><span class='line'>
+</span><span class='line'>&quot; alternatively, pass a path where Vundle should install plugins
+</span><span class='line'>&quot;call vundle#begin(&#39;~/some/path/here&#39;)
+</span><span class='line'>
+</span><span class='line'>&quot; let Vundle manage Vundle, required
+</span><span class='line'>Plugin &#39;VundleVim/Vundle.vim&#39;
+</span><span class='line'>
+</span><span class='line'>&quot;===============================================================
+</span><span class='line'>&quot; Write your plugins here
+</span><span class='line'>&quot;===============================================================
+</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Run vundle
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; All of your Plugins must be added before the following line
+</span><span class='line'>call vundle#end()            &quot; required
+</span><span class='line'>filetype plugin indent on    &quot; required
+</span><span class='line'>&quot; To ignore plugin indent changes, instead use:
+</span><span class='line'>&quot;filetype plugin on
+</span><span class='line'>&quot;
+</span><span class='line'>&quot; Brief help
+</span><span class='line'>&quot; :PluginList       - lists configured plugins
+</span><span class='line'>&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+</span><span class='line'>&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
+</span><span class='line'>&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+</span><span class='line'>&quot;
+</span><span class='line'>&quot; see :h vundle for more details or wiki for FAQ
+</span><span class='line'>&quot; Put your non-Plugin stuff after this line
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注意下面列出的這幾行statements，你要新增或移除Plugin就是改這個地方。這些Plugin將會在後面介紹。剛好我要安裝的Plugin都是在<a href="https://github.com">GitHub</a>上開發或有mirror。而<code>Vundle</code>可以用直接指定Plugin 專案在GitHub相對路徑即可安裝。這些描述也是<code>Vundle</code>載入Plugin　的順序，沒寫對順序有可能有相依問題請自行注意。</p>
+
+<p>例如<code>https://github.com/Yggdroot/indentLine</code> 就寫成<code>Yggdroot/indentLine</code></p>
+
+<figure class='code'><figcaption><span>我安裝的Plugin</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;===============================================================
+</span><span class='line'>&quot; Write your plugins here
+</span><span class='line'>&quot;===============================================================
+</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
+</span><span class='line'>Plugin &#39;ntpeters/vim-better-whitespace&#39;
+</span><span class='line'>Plugin &#39;vim-airline/vim-airline&#39;
+</span><span class='line'>Plugin &#39;tpope/vim-fugitive&#39;
+</span><span class='line'>Plugin &#39;chazy/cscope_maps&#39;
+</span><span class='line'>Plugin &#39;vim-scripts/taglist.vim&#39;
+</span><span class='line'>Plugin &#39;scrooloose/nerdtree&#39;
+</span><span class='line'>Plugin &#39;wesleyche/SrcExpl&#39;
+</span><span class='line'>Plugin &#39;wesleyche/Trinity&#39;
+</span><span class='line'>Plugin &#39;majutsushi/tagbar&#39;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>確定新增/刪除Plugin後，就可以執行vim/gvim，使用下面命令
+
+<ul>
+<li><code>:PluginInstall</code></li>
+<li><code>:PluginClean</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-set-vdplg"></a></p>
+
+<h3>我安裝的Vundle Plugins</h3>
+
+<p>因為安裝方式已經在上面了，這邊就以介紹為主</p>
+
+<p><a name="vtr-set-vdplg-ed"></a></p>
+
+<h4>編輯器相關</h4>
+
+<p><a name="vtr-set-vdplg-al"></a></p>
+
+<h5>airline</h5>
+
+<p><a name="vtr-set-vdplg-al-pre"></a></p>
+
+<h6>安裝準備</h6>
+
+<p>先看圖，圖中最下方的那行就是airline，可以顯示一些有用的資訊
+<img src=/images/vim_ind11.jpg></p>
+
+<p>由左到右我們可以看到Vim 模式，Git branch 等資訊。以及一些比較特別的符號，這表示我們需要</p>
+
+<ul>
+<li>讓airline取得git資訊</li>
+<li>讓airline取得特別符號</li>
+</ul>
+
+
+<p>也就是說，在安裝<code>airline</code>前要做一些前置動作如下</p>
+
+<ul>
+<li>讓airline取得git資訊
+
+<ul>
+<li>很簡單，安裝<code>vim-fugitive</code> plugin即可</li>
+</ul>
+</li>
+<li>讓airline取得特別符號
+這也不難，就是安裝特殊字型，並且設定GUI時存取這些字型。方式如下</li>
+</ul>
+
+
+<p><strong>取得字型</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone https://github.com/powerline/fonts
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong>安裝字型</strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>cd fonts &amp;&amp; ./install.sh
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><strong> .vimrc中指定安裝的字型 </strong></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>set guifont=Inconsolata\ for\ Powerline\ 20
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="vtr-set-vdplg-al-set"></a></p>
+
+<h6>設定airline</h6>
+
+<p>把下面的資料放入<code>.vimrc</code>即可</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>let g:airline_powerline_fonts = 1
+</span><span class='line'>set laststatus=2
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="vtr-set-vdplg-ed-itl"></a></p>
+
+<h5>indentLine</h5>
+
+<p>當Ident為空白增加以下的Indent 對齊參考資線
+<img src=/images/vim_ind2.jpg></p>
+
+<p><strong>注意此Plugin在Ident為tab同時又加上顯示tab字元時自動失效，目前workaround就是顯示tab字元為<code>|</code>，接下來以<code>.</code>延伸作為辨別。範例如下：</strong>
+<img src=/images/vim_ind1.jpg></p>
+
+<p><a name="vtr-set-vdplg-vbw"></a></p>
+
+<h5>vim-better-whitespace</h5>
+
+<p>將<a href="http://stackoverflow.com/questions/22273233/what-is-meant-by-%0Atrailing-space-and-whats-the-difference-between-it-and-a-blank">trailing space</a>顯示成明顯的紅色
+<img src=/images/vim_ind3.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr"></a></p>
+
+<h4>Trace 程式碼相關</h4>
+
+<p><a name="vtr-set-vdplg-tr-cm"></a></p>
+
+<h5>cscope_maps</h5>
+
+<p>簡單來說，就是把cscope指令對應到Hot key</p>
+
+<p>先列出find部份的指令</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>find : Query for a pattern            (Usage: find c|d|e|f|g|i|s|t name)
+</span><span class='line'>       c: Find functions calling this function
+</span><span class='line'>       d: Find functions called by this function
+</span><span class='line'>       e: Find this egrep pattern
+</span><span class='line'>       f: Find this file
+</span><span class='line'>       g: Find this definition
+</span><span class='line'>       i: Find files #including this file
+</span><span class='line'>       s: Find this C symbol
+</span><span class='line'>       t: Find this text string
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>他的使用方法也很簡單，就是先把游標移動到你要查的statement，再按<code>ctrl</code> + <code>\</code> + <code>c|d|e|f|g|i|s|t 其中一個</code>。</p>
+
+<p>舉例來說，我在下圖中把游標移動到<code>core_sys_select</code>函數後按下<code>ctrl</code> + <code>\</code> + <code>c</code>的結果如下
+<img src=/images/vim_ind4.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-se"></a></p>
+
+<h5>SrcExpl</h5>
+
+<p>當啟動時，您的游標在那個敘述，Source explorer 會切割視窗，印出該敘述的定義。舉例來說，當我游標在138行的<code>free_poll_entry</code>的話，顯示的畫面如下。</p>
+
+<p><img src=/images/vim_ind5.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-tl"></a></p>
+
+<h5>taglist</h5>
+
+<p>列出目前檔案所有symbol並且可以選擇symbol切換到該symbol在檔案中的位置
+<img src=/images/vim_ind6.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-nd"></a></p>
+
+<h5>nerdtree</h5>
+
+<p>以樹狀顯示目前檔案所在目錄結構，看圖就知道
+<img src=/images/vim_ind7.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-tri"></a></p>
+
+<h5>Trinity</h5>
+
+<p>看完以上三個，你可能會覺得奇怪好像沒提到怎麼啟動。這就是<code>Trinity</code>大顯身手的地方了。你安裝Trinity後，再Vundle後面加上下面的敘述就可以有</p>
+
+<ul>
+<li><code>F8</code> : 同時打開或關閉<code>nerdtree</code>, <code>Source explorer</code>, 以及<code>tag list</code></li>
+<li><code>F9</code> : 打開或關閉<code>Source explorer</code></li>
+<li><code>F10</code>: 打開或關閉<code>tag list</code></li>
+<li><code>F11</code>: 打開或關閉<code>nerdtree</code></li>
+</ul>
+
+
+<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Trinity Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Open and close all the three plugins on the same time
+</span><span class='line'>nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot; Open and close the Source Explorer separately
+</span><span class='line'>nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot; Open and close the Taglist separately
+</span><span class='line'>nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot; Open and close the NERD Tree separately
+</span><span class='line'>nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>以下是按下<code>F8</code> 的畫面
+<img src=/images/vim_ind8.jpg></p>
+
+<p><a name="vtr-set-vdplg-tr-tgb"></a></p>
+
+<h5>tagbar</h5>
+
+<p>網友推荐的taglist改良版 plugin，為什麼不換掉taglist呢？因為我喜歡source explorer。除了安裝Plugin外，我也順便設定按下<code>F7</code>可以切換，設定如下。</p>
+
+<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Tagbar Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Open and close the tagbar separately
+</span><span class='line'>nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>以下是按下<code>F7</code> 的畫面，可以注意右邊視窗會更進一步地顯示資料結構的成員名稱
+<img src=/images/vim_ind10.jpg></p>
+
+<p><a name="vtr-set-md"></a></p>
+
+<h3>Markdown 語法支援</h3>
+
+<p><a name="vtr-set-md-pdoc"></a></p>
+
+<h4>vim-pandoc-syntax</h4>
+
+<p>單純就是讓<code>vim</code>可以顯示<code>Markdown</code> syntax highlight，範例如下圖:
+<img src=/images/vim_ind12.jpg></p>
+
+<p><a name="vtr-set-py"></a></p>
+
+<h3>Python開發相關</h3>
+
+<p><a name="vtr-set-py-prepare"></a></p>
+
+<h4>準備工作</h4>
+
+<p>主要是語法檢查套件相關安裝，指令如下</p>
+
+<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt install -y flake8 python-rope pylint
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="vtr-set-py-pm"></a></p>
+
+<h4>python-mode</h4>
+
+<p><a href="blog/2014/12/06/introduction-to-python-mode-for-vim/">之前</a>有介紹過，偷懶跳過。也許Python用到一陣子可以上手後可以再分享心得。</p>
+
+<p><a name="vtr-set-py-sc"></a></p>
+
+<h4>syntastic</h4>
+
+<p>泛用形語法檢查工具，請參考<a href="https://github.com/vim-syntastic/syntastic">Syntax checking hacks for vim</a>說明。
+目前是我靠他幫忙檢查寫的程式是否符合<a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>規範，要注意的是Ubuntu 16.04中<code>vim</code> 套件預設只支援<code>Python 3</code>，要使用vim 編寫<code>Python 2</code>的朋友請自行估狗。我之前是自行編譯<code>vim</code>解決的。</p>
+
+<p>語法檢查範例如下圖
+<img src=/images/vim_ind13.jpg></p>
+
+<p><a name="vtr-set-py-pt"></a></p>
+
+<h4>python_match</h4>
+
+<p>讓Python 也可以使用<code>vim</code>中切換配對的快捷鍵<code>%</code></p>
+
+<p><a name="vtr-set-py-py"></a></p>
+
+<h4>python</h4>
+
+<p>提供下列快捷鍵，節錄自Plugin註解:</p>
+
+<ul>
+<li><code>]t</code>      &ndash; Jump to beginning of block</li>
+<li><code>]e</code>      &ndash; Jump to end of block</li>
+<li><code>]v</code>      &ndash; Select (Visual Line Mode) block</li>
+<li><code>]&lt;</code>      &ndash; Shift block to left</li>
+<li><code>]&gt;</code>      &ndash; Shift block to right</li>
+<li><code>]#</code>      &ndash; Comment selection</li>
+<li><code>]u</code>      &ndash; Uncomment selection</li>
+<li><code>]c</code>      &ndash; Select current/previous class</li>
+<li><code>]d</code>      &ndash; Select current/previous function</li>
+<li><code>]&lt;up&gt;</code>   &ndash; Jump to previous line with the same/lower indentation</li>
+<li><code>]&lt;down&gt;</code> &ndash; Jump to next line with the same/lower indentation</li>
+</ul>
+
+
+<p><a name="vtr-set-py-id"></a></p>
+
+<h4>indentpython</h4>
+
+<p>確保你的程式碼符合<a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>的indent規範</p>
+
+<p><a name="vtr-set-misc"></a></p>
+
+<h3>和Plugin 無關的設定</h3>
+
+<p>以下都加在<code>.vimrc中</code>，建議加到<code>Vundle</code>設定結束後以確保可能會用到的Plugin已經啟動</p>
+
+<p><a name="vtr-set-misc-ed"></a></p>
+
+<h4>編輯器和顯示特殊字元相關設定</h4>
+
+<ul>
+<li>設定gvim 的配色，請自行找Color scheme
+
+<ul>
+<li><code>colorscheme koehler</code></li>
+</ul>
+</li>
+<li>設定gvim 的字型和大小
+
+<ul>
+<li><code>set guifont=Inconsolata\ for\ Powerline\ 32</code></li>
+</ul>
+</li>
+<li>將找到的字串設成高亮度
+
+<ul>
+<li><code>set hlsearch</code></li>
+</ul>
+</li>
+<li>游標在的該行背景高亮度
+
+<ul>
+<li><code>set cursorline</code></li>
+</ul>
+</li>
+<li>顯示行號
+
+<ul>
+<li><code>set nu</code></li>
+</ul>
+</li>
+<li>第八十字元地方顯示高亮度區塊（這是連續兩個描述)
+
+<ul>
+<li><code>set colorcolumn=80</code></li>
+<li><code>highlight ColorColumn guibg=#202020</code></li>
+</ul>
+</li>
+<li>顯示tab （這是連續兩個描述)
+
+<ul>
+<li><code>set listchars=tab:»\</code>
+
+<ul>
+<li><strong>注意<code>\</code>後面有一個空白</strong></li>
+</ul>
+</li>
+<li><code>set list</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>效果如下圖
+<img src=/images/vim_ind9.jpg></p>
+
+<p><a name="vtr-set-misc-ind"></a></p>
+
+<h4>Indent相關設定</h4>
+
+<ul>
+<li>Tab相關設定
+
+<ul>
+<li><code>set ts=4</code>
+
+<ul>
+<li>tab space 為4個字元</li>
+</ul>
+</li>
+<li><code>set expandtab</code>
+
+<ul>
+<li>不使用tab，用空白字元代替</li>
+</ul>
+</li>
+<li><code>set shiftwidth=4</code>
+
+<ul>
+<li>Auto indent的移動字元數量</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>visual 模式下一次移動一個indent
+
+<ul>
+<li><code>vnoremap &lt; &lt;gv</code>
+
+<ul>
+<li>往左移動一個indent</li>
+</ul>
+</li>
+<li><code>vnoremap &gt; &gt;gv</code>
+
+<ul>
+<li>往右移動一個indent</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-set-misc-msc"></a></p>
+
+<h4>其他</h4>
+
+<ul>
+<li><code>set clipboard+=unnamed</code>
+
+<ul>
+<li>PRIMARY selection的register <code>"*</code>包含vim的unnamed register。白話講就是其他的APP如gedit中滑鼠選字後可以用<code>"*p</code>貼到vim，同樣的<code>"*y6y</code>的結果可以貼在其他的APP如gedit上。這部份有vim <code>register</code>副本，建議到參考資料的副本區一讀。再次感謝<a href="http://scottt.tw/">Scott</a>大大。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/VundleVim/Vundle.vim">Vundle Github</a></li>
+<li><a href="https://github.com/vim-airline/vim-airline">vim-airline</a></li>
+<li><a href="https://github.com/tpope/vim-fugitive">vim-fugitive</a></li>
+<li><a href="https://github.com/powerline/fonts">Powerline fonts</a></li>
+<li><a href="https://majutsushi.github.io/tagbar/">Tagbar</a></li>
+<li><a href="https://github.com/Yggdroot/indentLine">indentLine</a></li>
+<li><a href="https://github.com/ntpeters/vim-better-whitespace">Vim Better Whitespace Plugin</a></li>
+<li><a href="https://github.com/chazy/cscope_maps">cscope maps</a></li>
+<li><a href="https://github.com/vim-scripts/taglist.vim">taglist</a></li>
+<li><a href="https://github.com/scrooloose/nerdtree">Nerd Tree</a></li>
+<li><a href="https://github.com/wesleyche/SrcExpl">Source Explorer</a></li>
+<li><a href="https://github.com/wesleyche/Trinity">Trinity</a></li>
+<li><a href="http://stackoverflow.com/questions/4998582/show-whitespace-characters-in-gvim">Stackoverflow: Show white space and tab in vim</a></li>
+<li>Python 相關
+
+<ul>
+<li>Plugins
+
+<ul>
+<li><a href="https://github.com/python-mode/python-mode">Python Mode</a></li>
+<li><a href="https://github.com/vim-scripts/python.vim">Python</a></li>
+<li><a href="https://github.com/vim-scripts/indentpython.vim">Indent Python</a></li>
+<li><a href="https://github.com/vim-syntastic/syntastic">Syntax checking hacks for vim</a></li>
+<li><a href="https://github.com/vim-scripts/python_match.vim">python_match</a></li>
+<li><a href="https://stackoverflow.com/questions/19209139/syntastic-and-python-mode-together">Stackoverflow: Syntastic and Python-mode together?
+</a></li>
+</ul>
+</li>
+<li><code>vim</code>設定相關
+
+<ul>
+<li><a href="https://wiki.python.org/moin/Vim">Python Wiki: vim</a></li>
+<li><a href="https://realpython.com/vim-and-python-a-match-made-in-heaven/">VIM and Python – A Match Made in Heaven</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>和plugin無關的vim trace code資料
+
+<ul>
+<li><a href="http://blog.vgod.tw/2009/12/08/vim-cheat-sheet-for-programmers/">給程式設計師的Vim入門圖解說明</a></li>
+<li><a href="http://wen00072.github.io/blog/2014/11/24/the-skin-slides-to-trace-code-on-line/">Trace 程式碼之皮投影片上線</a></li>
+</ul>
+</li>
+<li>副本: vim 的register概念
+
+<ul>
+<li><a href="http://usevim.com/2012/04/13/registers/">usevim: Vim 101: Registers</a></li>
+<li><a href="http://stackoverflow.com/questions/11489428/how-to-make-vim-paste-from-and-copy-to-systems-clipboard">Stackoverflow: How to make vim paste from (and copy to) system&rsquo;s clipboard?</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vtr-pkg"></a></p>
+
+<h2>懶人包</h2>
+
+<ul>
+<li>安裝相關軟體，Vundle和airline字型</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt-get install -y exuberant-ctags cscope vim-gtk git flake8 python-rope pylint
+</span><span class='line'>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+</span><span class='line'>git clone https://github.com/powerline/fonts
+</span><span class='line'>cd fonts &amp;&amp; ./install.sh
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>剪貼下面的文字並存放到 ~/.vimrc</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>.vimrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Start vundle
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>set nocompatible              &quot; be iMproved, required
+</span><span class='line'>filetype off                  &quot; required
+</span><span class='line'>
+</span><span class='line'>&quot; set the runtime path to include Vundle and initialize
+</span><span class='line'>set rtp+=~/.vim/bundle/Vundle.vim
+</span><span class='line'>call vundle#begin()
+</span><span class='line'>
+</span><span class='line'>&quot; alternatively, pass a path where Vundle should install plugins
+</span><span class='line'>&quot;call vundle#begin(&#39;~/some/path/here&#39;)
+</span><span class='line'>
+</span><span class='line'>&quot; let Vundle manage Vundle, required
+</span><span class='line'>Plugin &#39;VundleVim/Vundle.vim&#39;
+</span><span class='line'>
+</span><span class='line'>&quot;===============================================================
+</span><span class='line'>&quot; Write your plugins here
+</span><span class='line'>&quot;===============================================================
+</span><span class='line'>&quot; Layouts
+</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
+</span><span class='line'>Plugin &#39;ntpeters/vim-better-whitespace&#39;
+</span><span class='line'>
+</span><span class='line'>&quot; Markdown
+</span><span class='line'>Plugin &#39;vim-pandoc/vim-pandoc-syntax&#39;
+</span><span class='line'>
+</span><span class='line'>&quot; Python related
+</span><span class='line'>Plugin &#39;python-mode/python-mode&#39;
+</span><span class='line'>Plugin &#39;vim-scripts/indentpython.vim&#39;
+</span><span class='line'>Plugin &#39;vim-syntastic/syntastic&#39;
+</span><span class='line'>Plugin &#39;vim-scripts/python_match.vim&#39;
+</span><span class='line'>Plugin &#39;vim-scripts/python.vim&#39;
+</span><span class='line'>
+</span><span class='line'>&quot; Misc tools
+</span><span class='line'>Plugin &#39;kien/ctrlp.vim&#39;
+</span><span class='line'>Plugin &#39;vim-airline/vim-airline&#39;
+</span><span class='line'>Plugin &#39;tpope/vim-fugitive&#39;
+</span><span class='line'>Plugin &#39;Valloric/YouCompleteMe&#39;
+</span><span class='line'>Plugin &#39;chazy/cscope_maps&#39;
+</span><span class='line'>Plugin &#39;vim-scripts/taglist.vim&#39;
+</span><span class='line'>Plugin &#39;scrooloose/nerdtree&#39;
+</span><span class='line'>Plugin &#39;wesleyche/SrcExpl&#39;
+</span><span class='line'>Plugin &#39;wesleyche/Trinity&#39;
+</span><span class='line'>Plugin &#39;majutsushi/tagbar&#39;
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Run vundle
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; All of your Plugins must be added before the following line
+</span><span class='line'>call vundle#end()            &quot; required
+</span><span class='line'>filetype plugin indent on    &quot; required
+</span><span class='line'>&quot; To ignore plugin indent changes, instead use:
+</span><span class='line'>&quot;filetype plugin on
+</span><span class='line'>&quot;
+</span><span class='line'>&quot; Brief help
+</span><span class='line'>&quot; :PluginList       - lists configured plugins
+</span><span class='line'>&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
+</span><span class='line'>&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
+</span><span class='line'>&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
+</span><span class='line'>&quot;
+</span><span class='line'>&quot; see :h vundle for more details or wiki for FAQ
+</span><span class='line'>&quot; Put your non-Plugin stuff after this line
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Tagbar Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Open and close the tagbar separately
+</span><span class='line'>nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Trinity Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Open and close all the three plugins on the same time
+</span><span class='line'>nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot; Open and close the Source Explorer separately
+</span><span class='line'>nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot; Open and close the Taglist separately
+</span><span class='line'>nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot; Open and close the NERD Tree separately
+</span><span class='line'>nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt;
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Airline settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>let g:airline_powerline_fonts = 1
+</span><span class='line'>set laststatus=2
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; syntastic settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>set statusline+=%#warningmsg#
+</span><span class='line'>set statusline+=%{SyntasticStatuslineFlag()}
+</span><span class='line'>set statusline+=%*
+</span><span class='line'>
+</span><span class='line'>let g:syntastic_always_populate_loc_list = 1
+</span><span class='line'>let g:syntastic_auto_loc_list = 1
+</span><span class='line'>let g:syntastic_check_on_open = 1
+</span><span class='line'>let g:syntastic_check_on_wq = 0
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; pymode settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>let g:pymode_lint = 0    &quot; Prefer to use syntastic to check lint
+</span><span class='line'>let g:pymode_folding = 0 &quot; Unfold all
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Editor and display Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>colorscheme koehler         &quot; Color for gvim
+</span><span class='line'>
+</span><span class='line'>set hlsearch                &quot; Highlight search
+</span><span class='line'>set guifont=Inconsolata\ for\ Powerline\ 32 &quot; Font
+</span><span class='line'>set cursorline              &quot; Hight background at current cursor line
+</span><span class='line'>set nu                      &quot; Display line numbers
+</span><span class='line'>
+</span><span class='line'>&quot; Set background color at colum 80
+</span><span class='line'>set colorcolumn=80
+</span><span class='line'>highlight ColorColumn guibg=#202020
+</span><span class='line'>
+</span><span class='line'>&quot; Show tabs
+</span><span class='line'>set listchars=tab:\|.
+</span><span class='line'>set list
+</span><span class='line'>
+</span><span class='line'>&quot; Ensure syntax is on
+</span><span class='line'>syntax on
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Indent Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Tabs
+</span><span class='line'>set ts=4
+</span><span class='line'>set expandtab
+</span><span class='line'>set shiftwidth=4
+</span><span class='line'>
+</span><span class='line'>&quot; visual indent shift
+</span><span class='line'>vnoremap &lt; &lt;gv
+</span><span class='line'>vnoremap &gt; &gt;gv
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; MISC Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Shared unamed regitered with primary selection
+</span><span class='line'>set clipboard+=unnamed
+</span><span class='line'>
+</span><span class='line'>&quot; uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
+</span><span class='line'>set encoding=utf-8
+</span><span class='line'>set fileencoding=utf-8
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; Python Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>au BufNewFile,BufRead *.py
+</span><span class='line'>    \ set tabstop=4 |
+</span><span class='line'>    \ set softtabstop=4 |
+</span><span class='line'>    \ set shiftwidth=4 |
+</span><span class='line'>    \ set textwidth=79 |
+</span><span class='line'>    \ set expandtab |
+</span><span class='line'>    \ set autoindent |
+</span><span class='line'>    \ set fileformat=unix
+</span><span class='line'>let python_highlight_all=1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>gvim -> <code>:PluginInstall</code> 安裝Plugin重新開啟收工</li>
+</ul>
+
+
+<h3>其他</h3>
+
+<ul>
+<li>cscope產生database供vim使用
+
+<ul>
+<li><code>cscope -bqkR</code>
+
+<ul>
+<li>k表示使用kernel mode，不把/usr/include之類的加入資料庫。Cross compile也不會使用host 的header file，所以請自行斟酌。其他參數請自己問男人。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>ctags產生database供vim使用
+
+<ul>
+<li><code>ctags -R</code></li>
+</ul>
+</li>
+<li>要在vim使用到ctags和cscope的話，請記得<strong>vim一定要開在database同一層目錄!</strong></li>
+</ul>
+
+
+<p>舉例來說，你在/tmp/linux-stable目錄下了上面兩個指令。要開啟檔案請在/tmp/linux-stable目錄中指定對應路徑。範例如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>user@host:/tmp/linux-stable$ gvim fs/select.c
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -812,994 +2002,6 @@
 <ul>
 <li><a href="https://www.gnu.org/prep/standards/html_node/">GNU Coding Standards</a></li>
 </ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-11-26T04:03:41+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>4:03 am</span></time>
-        
-           | <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2016/11/26/vim-setup-for-trace-c-code/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>分享使用<code>vim</code> 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體<code>cscope</code>和<code>ctags</code>來trace C語言的程式碼。</p>
-
-<ul>
-<li>致謝，感謝網友<a href="http://scottt.tw/">Scott</a>介紹vim register概念，<a href="http://yodalee.blogspot.tw/">葉闆</a>介紹的tagbar，和Kyle Lin介紹的airline。</li>
-</ul>
-
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#vtr-env">測試環境</a></li>
-<li><a href="#vtr-set">設定.vimrc以及Vundle plugins</a>
-
-<ul>
-<li>  <a href="#vtr-set-prep">事前準備</a></li>
-<li>  <a href="#vtr-set-insvd">安裝Vundle</a></li>
-<li>  <a href="#vtr-set-vdplg">我安裝的Vundle Plugins</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-ed">編輯器相關</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-al">airline</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-al-pre">安裝準備</a></li>
-<li><a href="#vtr-set-vdplg-al-set">設定airline</a></li>
-</ul>
-</li>
-<li><a href="#vtr-set-vdplg-ed-itl">indentLine</a></li>
-<li><a href="#vtr-set-vdplg-vbw">vim-better-whitespace</a></li>
-</ul>
-</li>
-<li><a href="#vtr-set-vdplg-tr">Trace 程式碼相關</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-tr-cm">cscope_maps</a></li>
-<li><a href="#vtr-set-vdplg-tr-se">SrcExpl</a></li>
-<li><a href="#vtr-set-vdplg-tr-tl">taglist</a></li>
-<li><a href="#vtr-set-vdplg-tr-nd">nerdtree</a></li>
-<li><a href="#vtr-set-vdplg-tr-tri">Trinity</a></li>
-<li><a href="#vtr-set-vdplg-tr-tgb">tagbar</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>  <a href="#vtr-set-misc">和Plugin 無關的設定</a>
-
-<ul>
-<li><a href="#vtr-set-misc-ed">編輯器和顯示特殊字元相關設定</a></li>
-<li><a href="#vtr-set-misc-ind">Indent相關設定</a></li>
-<li><a href="#vtr-set-misc-msc">其他</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#vtr-test">參考資料</a></li>
-<li><a href="#vtr-pkg">懶人包</a></li>
-</ul>
-
-
-<p><a name="vtr-env"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.5 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span><span class='line'>
-</span><span class='line'>$ ctags --version
-</span><span class='line'>Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
-</span><span class='line'>...
-</span><span class='line'>
-</span><span class='line'>$ cscope --version
-</span><span class='line'>cscope: version 15.8a
-</span><span class='line'>
-</span><span class='line'>$ vim --version
-</span><span class='line'>VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Jan  2 2014 19:39:47)
-</span><span class='line'>...
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vtr-set"></a></p>
-
-<h2>設定.vimrc以及Vundle plugins</h2>
-
-<p><a name="vtr-set-prep"></a></p>
-
-<h3>事前準備</h3>
-
-<p>您需要確認</p>
-
-<ul>
-<li>vim版本為7.4以上</li>
-<li>安裝ctags和cscope，指令如下
-<code>sudo apt-get install exuberant-ctags cscope</code></li>
-</ul>
-
-
-<p><a name="vtr-set-insvd"></a></p>
-
-<h3>安裝Vundle</h3>
-
-<p><code>Vundle</code>是vim plugin 管理工具，他可以透過URL, github, 以及local FS等方式安裝甚至更新Plugin。類似的工具還有不少，我只是挑看到的第一個而已。</p>
-
-<p><code>Vundle</code>常用的指令如下，還蠻容易望文生義所以我就不解釋了</p>
-
-<ul>
-<li><code>:PluginList</code></li>
-<li><code>:PluginInstall</code></li>
-<li><code>:PluginClean</code></li>
-<li><code>:PluginUpdate</code></li>
-</ul>
-
-
-<p>安裝方式如下</p>
-
-<ul>
-<li><p>首先你要下載<code>Vundle</code>，指令如下
-<code>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim</code></p></li>
-<li><p>接下來在你的.vimrc加入下面這段，我是從<a href="https://github.com/VundleVim/Vundle.vim">官方網頁</a>改的，其實只是把他的範例Plugin幹掉並加上分隔線及分隔線內的註解而已</p></li>
-</ul>
-
-
-<figure class='code'><figcaption><span>.vimrc 要加的部份</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Start vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>set nocompatible              &quot; be iMproved, required
-</span><span class='line'>filetype off                  &quot; required
-</span><span class='line'>
-</span><span class='line'>&quot; set the runtime path to include Vundle and initialize
-</span><span class='line'>set rtp+=~/.vim/bundle/Vundle.vim
-</span><span class='line'>call vundle#begin()
-</span><span class='line'>
-</span><span class='line'>&quot; alternatively, pass a path where Vundle should install plugins
-</span><span class='line'>&quot;call vundle#begin(&#39;~/some/path/here&#39;)
-</span><span class='line'>
-</span><span class='line'>&quot; let Vundle manage Vundle, required
-</span><span class='line'>Plugin &#39;VundleVim/Vundle.vim&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>&quot; Write your plugins here
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
-</span><span class='line'>Plugin &#39;ntpeters/vim-better-whitespace&#39;
-</span><span class='line'>Plugin &#39;vim-airline/vim-airline&#39;
-</span><span class='line'>Plugin &#39;tpope/vim-fugitive&#39;
-</span><span class='line'>Plugin &#39;chazy/cscope_maps&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/taglist.vim&#39;
-</span><span class='line'>Plugin &#39;scrooloose/nerdtree&#39;
-</span><span class='line'>Plugin &#39;wesleyche/SrcExpl&#39;
-</span><span class='line'>Plugin &#39;wesleyche/Trinity&#39;
-</span><span class='line'>Plugin &#39;majutsushi/tagbar&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Run vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; All of your Plugins must be added before the following line
-</span><span class='line'>call vundle#end()            &quot; required
-</span><span class='line'>filetype plugin indent on    &quot; required
-</span><span class='line'>&quot; To ignore plugin indent changes, instead use:
-</span><span class='line'>&quot;filetype plugin on
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; Brief help
-</span><span class='line'>&quot; :PluginList       - lists configured plugins
-</span><span class='line'>&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-</span><span class='line'>&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
-</span><span class='line'>&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; see :h vundle for more details or wiki for FAQ
-</span><span class='line'>&quot; Put your non-Plugin stuff after this line
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>注意下面列出的這幾行statements，你要新增或移除Plugin就是改這個地方。這些Plugin將會在後面介紹。剛好我要安裝的Plugin都是在<a href="https://github.com">GitHub</a>上開發或有mirror。而<code>Vundle</code>可以用直接指定Plugin 專案在GitHub相對路徑即可安裝。這些描述也是<code>Vundle</code>載入Plugin　的順序，沒寫對順序有可能有相依問題請自行注意。</p>
-
-<p>例如<code>https://github.com/Yggdroot/indentLine</code> 就寫成<code>Yggdroot/indentLine</code></p>
-
-<figure class='code'><figcaption><span>我安裝的Plugin</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;===============================================================
-</span><span class='line'>&quot; Write your plugins here
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
-</span><span class='line'>Plugin &#39;ntpeters/vim-better-whitespace&#39;
-</span><span class='line'>Plugin &#39;vim-airline/vim-airline&#39;
-</span><span class='line'>Plugin &#39;tpope/vim-fugitive&#39;
-</span><span class='line'>Plugin &#39;chazy/cscope_maps&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/taglist.vim&#39;
-</span><span class='line'>Plugin &#39;scrooloose/nerdtree&#39;
-</span><span class='line'>Plugin &#39;wesleyche/SrcExpl&#39;
-</span><span class='line'>Plugin &#39;wesleyche/Trinity&#39;
-</span><span class='line'>Plugin &#39;majutsushi/tagbar&#39;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>確定新增/刪除Plugin後，就可以執行vim/gvim，使用下面命令
-
-<ul>
-<li><code>:PluginInstall</code></li>
-<li><code>:PluginClean</code></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-set-vdplg"></a></p>
-
-<h3>我安裝的Vundle Plugins</h3>
-
-<p>因為安裝方式已經在上面了，這邊就以介紹為主</p>
-
-<p><a name="vtr-set-vdplg-ed"></a></p>
-
-<h4>編輯器相關</h4>
-
-<p><a name="vtr-set-vdplg-al"></a></p>
-
-<h5>airline</h5>
-
-<p><a name="vtr-set-vdplg-al-pre"></a></p>
-
-<h6>安裝準備</h6>
-
-<p>先看圖，圖中最下方的那行就是airline，可以顯示一些有用的資訊
-<img src=/images/vim_ind11.jpg></p>
-
-<p>由左到右我們可以看到Vim 模式，Git branch 等資訊。以及一些比較特別的符號，這表示我們需要</p>
-
-<ul>
-<li>讓airline取得git資訊</li>
-<li>讓airline取得特別符號</li>
-</ul>
-
-
-<p>也就是說，在安裝<code>airline</code>前要做一些前置動作如下</p>
-
-<ul>
-<li>讓airline取得git資訊
-
-<ul>
-<li>很簡單，安裝<code>vim-fugitive</code> plugin即可</li>
-</ul>
-</li>
-<li>讓airline取得特別符號
-這也不難，就是安裝特殊字型，並且設定GUI時存取這些字型。方式如下</li>
-</ul>
-
-
-<p><strong>取得字型</strong></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone https://github.com/powerline/fonts
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>安裝字型</strong></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>cd fonts &amp;&amp; ./install.sh
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong> .vimrc中指定安裝的字型 </strong></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>set guifont=Inconsolata\ for\ Powerline\ 20
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vtr-set-vdplg-al-set"></a></p>
-
-<h6>設定airline</h6>
-
-<p>把下面的資料放入<code>.vimrc</code>即可</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>let g:airline_powerline_fonts = 1
-</span><span class='line'>set laststatus=2
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vtr-set-vdplg-ed-itl"></a></p>
-
-<h5>indentLine</h5>
-
-<p>當Ident為空白增加以下的Indent 對齊參考資線
-<img src=/images/vim_ind2.jpg></p>
-
-<p><strong>注意此Plugin在Ident為tab同時又加上顯示tab字元時自動失效，目前workaround就是顯示tab字元為<code>|</code>，接下來以<code>.</code>延伸作為辨別。範例如下：</strong>
-<img src=/images/vim_ind1.jpg></p>
-
-<p><a name="vtr-set-vdplg-vbw"></a></p>
-
-<h5>vim-better-whitespace</h5>
-
-<p>將<a href="http://stackoverflow.com/questions/22273233/what-is-meant-by-%0Atrailing-space-and-whats-the-difference-between-it-and-a-blank">trailing space</a>顯示成明顯的紅色
-<img src=/images/vim_ind3.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr"></a></p>
-
-<h4>Trace 程式碼相關</h4>
-
-<p><a name="vtr-set-vdplg-tr-cm"></a></p>
-
-<h5>cscope_maps</h5>
-
-<p>簡單來說，就是把cscope指令對應到Hot key</p>
-
-<p>先列出find部份的指令</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>find : Query for a pattern            (Usage: find c|d|e|f|g|i|s|t name)
-</span><span class='line'>       c: Find functions calling this function
-</span><span class='line'>       d: Find functions called by this function
-</span><span class='line'>       e: Find this egrep pattern
-</span><span class='line'>       f: Find this file
-</span><span class='line'>       g: Find this definition
-</span><span class='line'>       i: Find files #including this file
-</span><span class='line'>       s: Find this C symbol
-</span><span class='line'>       t: Find this text string
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>他的使用方法也很簡單，就是先把游標移動到你要查的statement，再按<code>ctrl</code> + <code>\</code> + <code>c|d|e|f|g|i|s|t 其中一個</code>。</p>
-
-<p>舉例來說，我在下圖中把游標移動到<code>core_sys_select</code>函數後按下<code>ctrl</code> + <code>\</code> + <code>c</code>的結果如下
-<img src=/images/vim_ind4.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-se"></a></p>
-
-<h5>SrcExpl</h5>
-
-<p>當啟動時，您的游標在那個敘述，Source explorer 會切割視窗，印出該敘述的定義。舉例來說，當我游標在138行的<code>free_poll_entry</code>的話，顯示的畫面如下。</p>
-
-<p><img src=/images/vim_ind5.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-tl"></a></p>
-
-<h5>taglist</h5>
-
-<p>列出目前檔案所有symbol並且可以選擇symbol切換到該symbol在檔案中的位置
-<img src=/images/vim_ind6.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-nd"></a></p>
-
-<h5>nerdtree</h5>
-
-<p>以樹狀顯示目前檔案所在目錄結構，看圖就知道
-<img src=/images/vim_ind7.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-tri"></a></p>
-
-<h5>Trinity</h5>
-
-<p>看完以上三個，你可能會覺得奇怪好像沒提到怎麼啟動。這就是<code>Trinity</code>大顯身手的地方了。你安裝Trinity後，再Vundle後面加上下面的敘述就可以有</p>
-
-<ul>
-<li><code>F8</code> : 同時打開或關閉<code>nerdtree</code>, <code>Source explorer</code>, 以及<code>tag list</code></li>
-<li><code>F9</code> : 打開或關閉<code>Source explorer</code></li>
-<li><code>F10</code>: 打開或關閉<code>tag list</code></li>
-<li><code>F11</code>: 打開或關閉<code>nerdtree</code></li>
-</ul>
-
-
-<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Trinity Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close all the three plugins on the same time
-</span><span class='line'>nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Source Explorer separately
-</span><span class='line'>nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Taglist separately
-</span><span class='line'>nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the NERD Tree separately
-</span><span class='line'>nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>以下是按下<code>F8</code> 的畫面
-<img src=/images/vim_ind8.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-tgb"></a></p>
-
-<h5>tagbar</h5>
-
-<p>網友推荐的taglist改良版 plugin，為什麼不換掉taglist呢？因為我喜歡source explorer。除了安裝Plugin外，我也順便設定按下<code>F7</code>可以切換，設定如下。</p>
-
-<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Tagbar Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close the tagbar separately
-</span><span class='line'>nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>以下是按下<code>F7</code> 的畫面，可以注意右邊視窗會更進一步地顯示資料結構的成員名稱
-<img src=/images/vim_ind10.jpg></p>
-
-<p><a name="vtr-set-misc"></a></p>
-
-<h3>和Plugin 無關的設定</h3>
-
-<p>以下都加在<code>.vimrc中</code>，建議加到<code>Vundle</code>設定結束後以確保可能會用到的Plugin已經啟動</p>
-
-<p><a name="vtr-set-misc-ed"></a></p>
-
-<h4>編輯器和顯示特殊字元相關設定</h4>
-
-<ul>
-<li>設定gvim 的配色，請自行找Color scheme
-
-<ul>
-<li><code>colorscheme koehler</code></li>
-</ul>
-</li>
-<li>設定gvim 的字型和大小
-
-<ul>
-<li><code>set guifont=inconsolata\ 20</code></li>
-</ul>
-</li>
-<li>將找到的字串設成高亮度
-
-<ul>
-<li><code>set hlsearch</code></li>
-</ul>
-</li>
-<li>游標在的該行背景高亮度
-
-<ul>
-<li><code>set cursorline</code></li>
-</ul>
-</li>
-<li>顯示行號
-
-<ul>
-<li><code>set nu</code></li>
-</ul>
-</li>
-<li>第八十字元地方顯示高亮度區塊（這是連續兩個描述)
-
-<ul>
-<li><code>set colorcolumn=80</code></li>
-<li><code>highlight ColorColumn guibg=#202020</code></li>
-</ul>
-</li>
-<li>顯示tab （這是連續兩個描述)
-
-<ul>
-<li><code>set listchars=tab:»\</code>
-
-<ul>
-<li><strong>注意<code>\</code>後面有一個空白</strong></li>
-</ul>
-</li>
-<li><code>set list</code></li>
-</ul>
-</li>
-</ul>
-
-
-<p>效果如下圖
-<img src=/images/vim_ind9.jpg></p>
-
-<p><a name="vtr-set-misc-ind"></a></p>
-
-<h4>Indent相關設定</h4>
-
-<ul>
-<li>Tab相關設定
-
-<ul>
-<li><code>set ts=4</code>
-
-<ul>
-<li>tab space 為4個字元</li>
-</ul>
-</li>
-<li><code>set expandtab</code>
-
-<ul>
-<li>不使用tab，用空白字元代替</li>
-</ul>
-</li>
-<li><code>set shiftwidth=4</code>
-
-<ul>
-<li>Auto indent的移動字元數量</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>visual 模式下一次移動一個indent
-
-<ul>
-<li><code>vnoremap &lt; &lt;gv</code>
-
-<ul>
-<li>往左移動一個indent</li>
-</ul>
-</li>
-<li><code>vnoremap &gt; &gt;gv</code>
-
-<ul>
-<li>往右移動一個indent</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-set-misc-msc"></a></p>
-
-<h4>其他</h4>
-
-<ul>
-<li><code>set clipboard+=unnamed</code>
-
-<ul>
-<li>PRIMARY selection的register <code>"*</code>包含vim的unnamed register。白話講就是其他的APP如gedit中滑鼠選字後可以用<code>"*p</code>貼到vim，同樣的<code>"*y6y</code>的結果可以貼在其他的APP如gedit上。這部份有vim <code>register</code>副本，建議到參考資料的副本區一讀。再次感謝<a href="http://scottt.tw/">Scott</a>大大。</li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="https://github.com/VundleVim/Vundle.vim">Vundle Github</a></li>
-<li><a href="https://github.com/vim-airline/vim-airline">vim-airline</a></li>
-<li><a href="https://github.com/tpope/vim-fugitive">vim-fugitive</a></li>
-<li><a href="https://github.com/powerline/fonts">Powerline fonts</a></li>
-<li><a href="https://majutsushi.github.io/tagbar/">Tagbar</a></li>
-<li><a href="https://github.com/Yggdroot/indentLine">indentLine</a></li>
-<li><a href="https://github.com/ntpeters/vim-better-whitespace">Vim Better Whitespace Plugin</a></li>
-<li><a href="https://github.com/chazy/cscope_maps">cscope maps</a></li>
-<li><a href="https://github.com/vim-scripts/taglist.vim">taglist</a></li>
-<li><a href="https://github.com/scrooloose/nerdtree">Nerd Tree</a></li>
-<li><a href="https://github.com/wesleyche/SrcExpl">Source Explorer</a></li>
-<li><a href="https://github.com/wesleyche/Trinity">Trinity</a></li>
-<li><a href="http://stackoverflow.com/questions/4998582/show-whitespace-characters-in-gvim">Stackoverflow: Show white space and tab in vim</a></li>
-<li>和plugin無關的vim trace code資料
-
-<ul>
-<li><a href="http://blog.vgod.tw/2009/12/08/vim-cheat-sheet-for-programmers/">給程式設計師的Vim入門圖解說明</a></li>
-<li><a href="http://wen00072.github.io/blog/2014/11/24/the-skin-slides-to-trace-code-on-line/">Trace 程式碼之皮投影片上線</a></li>
-</ul>
-</li>
-<li>副本: vim 的register概念
-
-<ul>
-<li><a href="http://usevim.com/2012/04/13/registers/">usevim: Vim 101: Registers</a></li>
-<li><a href="http://stackoverflow.com/questions/11489428/how-to-make-vim-paste-from-and-copy-to-systems-clipboard">Stackoverflow: How to make vim paste from (and copy to) system&rsquo;s clipboard?</a></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-pkg"></a></p>
-
-<h2>懶人包</h2>
-
-<ul>
-<li>安裝相關軟體，Vundle和airline字型</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt-get install exuberant-ctags cscope vim-gtk git
-</span><span class='line'>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-</span><span class='line'>git clone https://github.com/powerline/fonts
-</span><span class='line'>cd fonts &amp;&amp; ./install.sh
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>剪貼下面的文字並放到 ~/.vimrc</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>.vimrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Start vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>set nocompatible              &quot; be iMproved, required
-</span><span class='line'>filetype off                  &quot; required
-</span><span class='line'>
-</span><span class='line'>&quot; set the runtime path to include Vundle and initialize
-</span><span class='line'>set rtp+=~/.vim/bundle/Vundle.vim
-</span><span class='line'>call vundle#begin()
-</span><span class='line'>
-</span><span class='line'>&quot; alternatively, pass a path where Vundle should install plugins
-</span><span class='line'>&quot;call vundle#begin(&#39;~/some/path/here&#39;)
-</span><span class='line'>
-</span><span class='line'>&quot; let Vundle manage Vundle, required
-</span><span class='line'>Plugin &#39;VundleVim/Vundle.vim&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>&quot; Write your plugins here
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
-</span><span class='line'>Plugin &#39;ntpeters/vim-better-whitespace&#39;
-</span><span class='line'>Plugin &#39;vim-airline/vim-airline&#39;
-</span><span class='line'>Plugin &#39;tpope/vim-fugitive&#39;
-</span><span class='line'>Plugin &#39;chazy/cscope_maps&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/taglist.vim&#39;
-</span><span class='line'>Plugin &#39;scrooloose/nerdtree&#39;
-</span><span class='line'>Plugin &#39;wesleyche/SrcExpl&#39;
-</span><span class='line'>Plugin &#39;wesleyche/Trinity&#39;
-</span><span class='line'>Plugin &#39;majutsushi/tagbar&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Run vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; All of your Plugins must be added before the following line
-</span><span class='line'>call vundle#end()            &quot; required
-</span><span class='line'>filetype plugin indent on    &quot; required
-</span><span class='line'>&quot; To ignore plugin indent changes, instead use:
-</span><span class='line'>&quot;filetype plugin on
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; Brief help
-</span><span class='line'>&quot; :PluginList       - lists configured plugins
-</span><span class='line'>&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-</span><span class='line'>&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
-</span><span class='line'>&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; see :h vundle for more details or wiki for FAQ
-</span><span class='line'>&quot; Put your non-Plugin stuff after this line
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Tagbar Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close the tagbar separately
-</span><span class='line'>nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Trinity Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close all the three plugins on the same time
-</span><span class='line'>nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Source Explorer separately
-</span><span class='line'>nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Taglist separately
-</span><span class='line'>nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the NERD Tree separately
-</span><span class='line'>nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Airline settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>let g:airline_powerline_fonts = 1
-</span><span class='line'>set laststatus=2
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Editor and display Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>colorscheme koehler         &quot; Color for gvim
-</span><span class='line'>
-</span><span class='line'>set hlsearch                &quot; Highlight search
-</span><span class='line'>set guifont=Inconsolata\ for\ Powerline\ 20 &quot; Font
-</span><span class='line'>set cursorline              &quot; Hight background at current cursor line
-</span><span class='line'>set nu                      &quot; Display line numbers
-</span><span class='line'>
-</span><span class='line'>&quot; Set background color at colum 80
-</span><span class='line'>set colorcolumn=80
-</span><span class='line'>highlight ColorColumn guibg=#202020
-</span><span class='line'>
-</span><span class='line'>&quot; Show tabs
-</span><span class='line'>set listchars=tab:\|.
-</span><span class='line'>set list
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Indent Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Tabs
-</span><span class='line'>set ts=4
-</span><span class='line'>set expandtab
-</span><span class='line'>set shiftwidth=4
-</span><span class='line'>
-</span><span class='line'>&quot; visual indent shift
-</span><span class='line'>vnoremap &lt; &lt;gv
-</span><span class='line'>vnoremap &gt; &gt;gv
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; MISC Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Shared unamed regitered with primary selection
-</span><span class='line'>set clipboard+=unnamed
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>gvim -> <code>:PluginInstall</code> 安裝Plugin重新開啟收工</li>
-</ul>
-
-
-<h3>其他</h3>
-
-<ul>
-<li>cscope產生database供vim使用
-
-<ul>
-<li><code>cscope -bqkR</code>
-
-<ul>
-<li>k表示使用kernel mode，不把/usr/include之類的加入資料庫。Cross compile也不會使用host 的header file，所以請自行斟酌。其他參數請自己問男人。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>ctags產生database供vim使用
-
-<ul>
-<li><code>ctags -R</code></li>
-</ul>
-</li>
-<li>要在vim使用到ctags和cscope的話，請記得<strong>vim一定要開在database同一層目錄!</strong></li>
-</ul>
-
-
-<p>舉例來說，你在/tmp/linux-stable目錄下了上面兩個指令。要開啟檔案請在/tmp/linux-stable目錄中指定對應路徑。範例如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>user@host:/tmp/linux-stable$ gvim fs/select.c
-</span></code></pre></td></tr></table></div></figure>
-
-
 
 </div>
   
@@ -4810,6 +5012,10 @@ Codename:   trusty
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/02/15/vim-setup-for-trace-c-code/">給自己剪貼用的vim設定</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
       </li>
     
@@ -4819,10 +5025,6 @@ Codename:   trusty
     
       <li class="post">
         <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/11/26/vim-setup-for-trace-c-code/">Trace C 程式碼的vim設定</a>
       </li>
     
       <li class="post">
@@ -4838,11 +5040,11 @@ Codename:   trusty
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (3)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (31)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (1)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 104.39024390243902%'>python(3)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 145.3658536585366%'>c(31)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 101.46341463414635%'>c99(1)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.85365853658537%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
 </section>
 
 
@@ -4855,7 +5057,7 @@ Codename:   trusty
   </div>
   <footer role="contentinfo"><p>
 <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
-  Copyright &copy; 2017 - Wen Liao -
+  Copyright &copy; 2018 - Wen Liao -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
