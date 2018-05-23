@@ -1,6 +1,6 @@
 ---
 layout: post
-title: '[Ubuntu 14.04] 安裝完系統後新增工具整理'
+title: '[Ubuntu 16.04] 安裝完系統後新增工具整理'
 date: 2013-10-05 00:11
 comments: true
 categories: [Ubuntu, Linux Utilities]
@@ -18,16 +18,48 @@ categories: [Ubuntu, Linux Utilities]
 
 <a name="懶人包"></a>
 ## 懶人包
+* 第一次更新
+```
+sudo apt update && sudo apt install aptitude && sudo aptitude upgrade -y --full-resolve
+```
+
+* 更新
+```
+sudo apt update && sudo aptitude upgrade -y --full-resolve && sudo apt autoremove
+```
+
+* 全部來
+```
+sudo apt install -y aptitude build-essential bison flex automake libtool intltool  libncurses5-dev git-svn tig meld cscope vim-gtk fonts-inconsolata geany joe doxygen-gui exuberant-ctags manpages-dev manpages-posix-dev minicom tree terminator ttf-mscorefonts-installer ack-grep pandoc gnome-system-tools ghex mc dict wireshark mtr pdfgrep sshfs fail2ban rkhunter bc libssl-dev cmake gdb libatk-adaptor libgail-common
+```
+
+* 從Server安裝後再裝Mate，安裝完記得關掉`/etc/network/interfaces`
+```
+sudo apt install -y lightdm mate-desktop-environment language-selector-gnome hime lightdm-gtk-greeter
+```
+
+* 從Server安裝後再裝LxQT，安裝完記得關掉`/etc/network/interfaces`
+```
+sudo apt install -y lightdm lxqt language-selector-gnome hime lightdm-gtk-greeter
+```
+
+* 安裝Hardware Enhance 相關套件
+```
+sudo apt install -y linux-image-generic-hwe-16.04 xserver-xorg-hwe-16.04 
+```
+
+* 單一選擇
 ```
 sudo apt-get install build-essential
-sudo apt-get install ccache
 sudo apt-get install bison 
 sudo apt-get install flex
 sudo apt-get install automake
-sudo apt-get install libtools
+sudo apt-get install libtool
 sudo apt-get install intltool
-sudo apt-get install libgtk2.0-dev
 sudo apt-get install libncurses5-dev
+sudo apt-get install bc
+sudo apt-get install libssl-dev
+sudo apt-get install gdb
 
 sudo apt-get install git-svn
 sudo apt-get install tig
@@ -56,24 +88,32 @@ sudo apt-get install wireshark
 sudo apt-get install mtr
 sudo apt-get install pdfgrep
 sudo apt-get install sshfs
+sduo apt-get install aptitude
 
 sudo apt-get install fail2ban
 sudo apt-get install rkhunter
+
+sudo apt-get install libatk-adaptor
+sudo apt-get install libgail-common
 ```
+
+
 <a name="工具分類及簡單說明"></a>
 ## 工具分類及簡單說明
 <a name="系統程式開發套件"></a>
 ### 系統程式開發套件 (不解釋)
 
 - build-essential
-- ccache
 - bison 
 - flex
 - automake
 - libtools
 - intltool
-- libgtk2.0-dev
 - libncurses5-dev
+- libssl-dev
+- bc
+- cmake
+- gdb
 
 <a name="程式開發輔助工具"></a>
 
@@ -135,7 +175,16 @@ sudo apt-get install rkhunter
     - grep pdf檔案的工具
 - sshfs
     - 可以透過ssh mount遠端的帳號
-    
+- aptitude
+    - 另外一種套件操作方式`aptitude upgrade --full-resolve -y`我常用
+- `libatk-adaptor` `libgail-common`
+    - 跑`gvim`不會出現下面錯誤訊息
+
+```
+Gtk-Message: Failed to load module "gail"
+Gtk-Message: Failed to load module "atk-bridge"
+```
+  
 <a name="資安工具"></a>
 ### 資安工具
 

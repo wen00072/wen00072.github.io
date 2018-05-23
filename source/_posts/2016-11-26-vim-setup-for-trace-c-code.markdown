@@ -1,17 +1,18 @@
 ---
 layout: post
-title: "Trace C 程式碼的vim設定"
-date: 2016-11-26 04:03:41 +0800
+title: "給自己剪貼用的vim設定"
+date: 2018-02-15 04:03:41 +0800
 comments: true
-categories: [C, vim, cscope, ctags, vundle, Vim Plugin]
+categories: [C, vim, cscope, ctags, vundle, Vim Plugin, Python]
 ---
-分享使用`vim` 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體`cscope`和`ctags`來trace C語言的程式碼。
+分享使用`vim` 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體`cscope`和`ctags`來trace `C`語言的程式碼以及編輯`Python`程式碼相關設定。
 
 * 致謝，感謝網友[Scott](http://scottt.tw/)介紹vim register概念，[葉闆](http://yodalee.blogspot.tw/)介紹的tagbar，和Kyle Lin介紹的airline。
 
 ## 目錄
 
 * [測試環境](#vtr-env)
+* [懶人包](#vtr-pkg)
 * [設定.vimrc以及Vundle plugins](#vtr-set)
      *  [事前準備](#vtr-set-prep)
      *  [安裝Vundle](#vtr-set-insvd)
@@ -22,40 +23,49 @@ categories: [C, vim, cscope, ctags, vundle, Vim Plugin]
                 * [設定airline](#vtr-set-vdplg-al-set)
             * [indentLine](#vtr-set-vdplg-ed-itl)
             * [vim-better-whitespace](#vtr-set-vdplg-vbw)
-        * [Trace 程式碼相關](#vtr-set-vdplg-tr)
+        * [Trace C語言程式碼相關](#vtr-set-vdplg-tr)
             * [cscope_maps](#vtr-set-vdplg-tr-cm)
             * [SrcExpl](#vtr-set-vdplg-tr-se)
             * [taglist](#vtr-set-vdplg-tr-tl)
             * [nerdtree](#vtr-set-vdplg-tr-nd)
             * [Trinity](#vtr-set-vdplg-tr-tri)
             * [tagbar](#vtr-set-vdplg-tr-tgb)
+        * [Markdown 語法支援](#vtr-set-md)
+            * [vim-pandoc-syntax](#vtr-set-md-pdoc)
+        * [Python開發相關](#vtr-set-py)
+            * [準備工作](#vtr-set-py-prepare)
+            * [python-mode](#vtr-set-py-pm)
+            * [syntastic](#vtr-set-py-sc)
+            * [python_match](#vtr-set-py-pt)
+            * [indentpython](#vtr-set-py-id)
      *  [和Plugin 無關的設定](#vtr-set-misc)
         * [編輯器和顯示特殊字元相關設定](#vtr-set-misc-ed)
         * [Indent相關設定](#vtr-set-misc-ind)
         * [其他](#vtr-set-misc-msc)
 * [參考資料](#vtr-test)
-* [懶人包](#vtr-pkg)
 
 <a name="vtr-env"></a>
 ## 測試環境
 
 ```text
-$ lsb_release -a
+$ lsb_release  -a
 No LSB modules are available.
 Distributor ID:	Ubuntu
-Description:	Ubuntu 14.04.5 LTS
-Release:	14.04
-Codename:	trusty
+Description:	Ubuntu 16.04.3 LTS
+Release:	16.04
+Codename:	xenial
+
 
 $ ctags --version
 Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
 ...
 
 $ cscope --version
-cscope: version 15.8a
+cscope: version 15.8b
 
 $ vim --version
-VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Jan  2 2014 19:39:47)
+VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Nov 24 2016 16:44:48)
+Included patches: 1-1689
 ...
 ```
 
@@ -109,15 +119,6 @@ Plugin 'VundleVim/Vundle.vim'
 " Write your plugins here
 "===============================================================
 Plugin 'Yggdroot/indentLine'
-Plugin 'ntpeters/vim-better-whitespace'
-Plugin 'vim-airline/vim-airline'
-Plugin 'tpope/vim-fugitive'
-Plugin 'chazy/cscope_maps'
-Plugin 'vim-scripts/taglist.vim'
-Plugin 'scrooloose/nerdtree'
-Plugin 'wesleyche/SrcExpl'
-Plugin 'wesleyche/Trinity'
-Plugin 'majutsushi/tagbar'
 
 "====================================================================
 " Run vundle
@@ -317,6 +318,64 @@ nmap <F7> :TagbarToggle<CR>
 <img src=/images/vim_ind10.jpg>
 
 
+<a name="vtr-set-md"></a>
+### Markdown 語法支援
+
+<a name="vtr-set-md-pdoc"></a>
+#### vim-pandoc-syntax 
+單純就是讓`vim`可以顯示`Markdown` syntax highlight，範例如下圖:
+<img src=/images/vim_ind12.jpg>
+
+
+<a name="vtr-set-py"></a>
+### Python開發相關
+
+<a name="vtr-set-py-prepare"></a>
+#### 準備工作
+主要是語法檢查套件相關安裝，指令如下
+
+```
+sudo apt install -y flake8 python-rope pylint
+```
+
+<a name="vtr-set-py-pm"></a>
+#### python-mode
+[之前](blog/2014/12/06/introduction-to-python-mode-for-vim/)有介紹過，偷懶跳過。也許Python用到一陣子可以上手後可以再分享心得。
+
+<a name="vtr-set-py-sc"></a>
+#### syntastic
+泛用形語法檢查工具，請參考[Syntax checking hacks for vim](https://github.com/vim-syntastic/syntastic)說明。
+目前是我靠他幫忙檢查寫的程式是否符合[PEP8](https://www.python.org/dev/peps/pep-0008/)規範，要注意的是Ubuntu 16.04中`vim` 套件預設只支援`Python 3`，要使用vim 編寫`Python 2`的朋友請自行估狗。我之前是自行編譯`vim`解決的。
+
+
+語法檢查範例如下圖
+<img src=/images/vim_ind13.jpg>
+
+<a name="vtr-set-py-pt"></a>
+#### python_match
+讓Python 也可以使用`vim`中切換配對的快捷鍵`%`
+
+<a name="vtr-set-py-py"></a>
+#### python
+提供下列快捷鍵，節錄自Plugin註解:
+
+
+* `]t`      -- Jump to beginning of block
+* `]e`      -- Jump to end of block
+* `]v`      -- Select (Visual Line Mode) block
+* `]<`      -- Shift block to left
+* `]>`      -- Shift block to right
+* `]#`      -- Comment selection
+* `]u`      -- Uncomment selection
+* `]c`      -- Select current/previous class
+* `]d`      -- Select current/previous function
+* `]<up>`   -- Jump to previous line with the same/lower indentation
+* `]<down>` -- Jump to next line with the same/lower indentation
+
+<a name="vtr-set-py-id"></a>
+#### indentpython
+確保你的程式碼符合[PEP8](https://www.python.org/dev/peps/pep-0008/)的indent規範
+
 <a name="vtr-set-misc"></a>
 ### 和Plugin 無關的設定
 以下都加在`.vimrc中`，建議加到`Vundle`設定結束後以確保可能會用到的Plugin已經啟動
@@ -326,7 +385,7 @@ nmap <F7> :TagbarToggle<CR>
 * 設定gvim 的配色，請自行找Color scheme
     * `colorscheme koehler`
 * 設定gvim 的字型和大小
-    * `set guifont=inconsolata\ 20`
+    * `set guifont=Inconsolata\ for\ Powerline\ 32` 
 * 將找到的字串設成高亮度
     * `set hlsearch`
 * 游標在的該行背景高亮度
@@ -381,6 +440,18 @@ nmap <F7> :TagbarToggle<CR>
 * [Source Explorer](https://github.com/wesleyche/SrcExpl)
 * [Trinity](https://github.com/wesleyche/Trinity)
 * [Stackoverflow: Show white space and tab in vim](http://stackoverflow.com/questions/4998582/show-whitespace-characters-in-gvim)
+* Python 相關
+    * Plugins
+        * [Python Mode](https://github.com/python-mode/python-mode)
+        * [Python](https://github.com/vim-scripts/python.vim)
+        * [Indent Python](https://github.com/vim-scripts/indentpython.vim)
+        * [Syntax checking hacks for vim](https://github.com/vim-syntastic/syntastic)
+        * [python_match](https://github.com/vim-scripts/python_match.vim)
+        * [Stackoverflow: Syntastic and Python-mode together?
+](https://stackoverflow.com/questions/19209139/syntastic-and-python-mode-together)
+    * `vim`設定相關
+        * [Python Wiki: vim](https://wiki.python.org/moin/Vim)
+        * [VIM and Python – A Match Made in Heaven](https://realpython.com/vim-and-python-a-match-made-in-heaven/)
 * 和plugin無關的vim trace code資料
     * [給程式設計師的Vim入門圖解說明](http://blog.vgod.tw/2009/12/08/vim-cheat-sheet-for-programmers/)
     * [Trace 程式碼之皮投影片上線](http://wen00072.github.io/blog/2014/11/24/the-skin-slides-to-trace-code-on-line/)
@@ -394,13 +465,13 @@ nmap <F7> :TagbarToggle<CR>
 * 安裝相關軟體，Vundle和airline字型
 
 ```text
-sudo apt-get install exuberant-ctags cscope vim-gtk git
+sudo apt-get install -y exuberant-ctags cscope vim-gtk git flake8 python-rope pylint
 git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 git clone https://github.com/powerline/fonts
 cd fonts && ./install.sh
 ```
 
-* 剪貼下面的文字並放到 ~/.vimrc
+* 剪貼下面的文字並存放到 ~/.vimrc
 
 ```text .vimrc
 "====================================================================
@@ -422,10 +493,25 @@ Plugin 'VundleVim/Vundle.vim'
 "===============================================================
 " Write your plugins here
 "===============================================================
+" Layouts
 Plugin 'Yggdroot/indentLine'
 Plugin 'ntpeters/vim-better-whitespace'
+
+" Markdown
+Plugin 'vim-pandoc/vim-pandoc-syntax'
+
+" Python related
+Plugin 'python-mode/python-mode'
+Plugin 'vim-scripts/indentpython.vim'
+Plugin 'vim-syntastic/syntastic'
+Plugin 'vim-scripts/python_match.vim'
+Plugin 'vim-scripts/python.vim'
+
+" Misc tools
+Plugin 'kien/ctrlp.vim'
 Plugin 'vim-airline/vim-airline'
 Plugin 'tpope/vim-fugitive'
+Plugin 'Valloric/YouCompleteMe'
 Plugin 'chazy/cscope_maps'
 Plugin 'vim-scripts/taglist.vim'
 Plugin 'scrooloose/nerdtree'
@@ -454,23 +540,23 @@ filetype plugin indent on    " required
 "====================================================================
 " Tagbar Settings
 "====================================================================
-" Open and close the tagbar separately 
-nmap <F7> :TagbarToggle<CR> 
+" Open and close the tagbar separately
+nmap <F7> :TagbarToggle<CR>
 
 "====================================================================
 " Trinity Settings
 "====================================================================
-" Open and close all the three plugins on the same time 
-nmap <F8>  :TrinityToggleAll<CR> 
+" Open and close all the three plugins on the same time
+nmap <F8>  :TrinityToggleAll<CR>
 
-" Open and close the Source Explorer separately 
-nmap <F9>  :TrinityToggleSourceExplorer<CR> 
+" Open and close the Source Explorer separately
+nmap <F9>  :TrinityToggleSourceExplorer<CR>
 
-" Open and close the Taglist separately 
-nmap <F10> :TrinityToggleTagList<CR> 
+" Open and close the Taglist separately
+nmap <F10> :TrinityToggleTagList<CR>
 
-" Open and close the NERD Tree separately 
-nmap <F11> :TrinityToggleNERDTree<CR> 
+" Open and close the NERD Tree separately
+nmap <F11> :TrinityToggleNERDTree<CR>
 
 "====================================================================
 " Airline settings
@@ -479,12 +565,30 @@ let g:airline_powerline_fonts = 1
 set laststatus=2
 
 "====================================================================
+" syntastic settings
+"====================================================================
+set statusline+=%#warningmsg#
+set statusline+=%{SyntasticStatuslineFlag()}
+set statusline+=%*
+
+let g:syntastic_always_populate_loc_list = 1
+let g:syntastic_auto_loc_list = 1
+let g:syntastic_check_on_open = 1
+let g:syntastic_check_on_wq = 0
+
+"====================================================================
+" pymode settings
+"====================================================================
+let g:pymode_lint = 0    " Prefer to use syntastic to check lint
+let g:pymode_folding = 0 " Unfold all
+
+"====================================================================
 " Editor and display Settings
 "====================================================================
 colorscheme koehler         " Color for gvim
 
 set hlsearch                " Highlight search
-set guifont=Inconsolata\ for\ Powerline\ 20 " Font 
+set guifont=Inconsolata\ for\ Powerline\ 32 " Font
 set cursorline              " Hight background at current cursor line
 set nu                      " Display line numbers
 
@@ -495,6 +599,9 @@ highlight ColorColumn guibg=#202020
 " Show tabs
 set listchars=tab:\|.
 set list
+
+" Ensure syntax is on
+syntax on
 
 "====================================================================
 " Indent Settings
@@ -513,6 +620,24 @@ vnoremap > >gv
 "====================================================================
 " Shared unamed regitered with primary selection
 set clipboard+=unnamed
+
+" uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
+set encoding=utf-8
+set fileencoding=utf-8
+
+"====================================================================
+" Python Settings
+"====================================================================
+au BufNewFile,BufRead *.py
+    \ set tabstop=4 |
+    \ set softtabstop=4 |
+    \ set shiftwidth=4 |
+    \ set textwidth=79 |
+    \ set expandtab |
+    \ set autoindent |
+    \ set fileformat=unix
+let python_highlight_all=1
+
 ```
 
 * gvim -> `:PluginInstall` 安裝Plugin重新開啟收工

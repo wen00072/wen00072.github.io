@@ -1,0 +1,165 @@
+---
+layout: post
+title: "Fix: Qemu x86_64下gdb debug kernel出現Remote &#39;g' packet reply is too long:"
+date: 2017-06-04 16:11:15 +0800
+comments: true
+categories: [C, gdb, Kernel, Qemu]
+---
+## 問題描述
+本篇文章主要是解決使用gdb 設Qemu x86_64 模擬執行x86_64 buildroot kernel開機的中斷點時遇到下面的錯誤訊息
+
+**<font color="red">Remote &#39;g' packet reply is too long:</font>**
+
+詳細訊息如下
+```
+0x0000000000000000 in irq_stack_union ()
+(gdb) b x86_64_start_kernel
+Breakpoint 1 at 0xffffffff8188429b: file arch/x86/kernel/head64.c, line 134.
+(gdb) c
+Continuing.
+Remote 'g' packet reply is too long: 9b428881ffffffff0000000000000000010100c000000000ffffffff00000000804001000000000080400100000000000000000000000000f03f8081ffffffff00a080010000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000009b428881ffffffff4600000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000801f0000
+```
+
+## 目錄
+* [測試環境](#qxg-env)
+* [buildroot 事先準備](#qxg-prepare)
+* [gdb 錯誤訊息解法](#qxg-fix)
+* [懶人包](#qxg-pkg)
+    * [讓qemu-system-x86_64 在console 可以登入](#qxg-tty)
+* [參考資料](#qxg-ref)
+
+<a name="qxg-env"></a>
+## 測試環境
+
+* [Buildroot](https://git.buildroot.net/buildroot)
+    * Commit: `bfc90a5621c680000f8b19e8afea944da5c2a469`
+* Target kernel 版本
+
+```
+# uname -a
+Linux buildroot 4.9.6 #2 SMP Sun Jun 4 18:46:27 CST 2017 x86_64 GNU/Linux
+```
+
+* Qemu 執行指令
+
+```
+$ qemu-system-x86_64 -M pc -kernel output/images/bzImage                        \
+                     -drive file=output/images/rootfs.ext2,if=virtio,format=raw \
+                     -append "root=/dev/vda console=ttyS0"                      \
+                     -net nic,model=virtio -net user -nographic -S -s
+```
+
+基本上是從[這邊](https://git.buildroot.net/buildroot/tree/board/qemu/x86_64/readme.txt)衍生出來的，挑幾個重點
+
+* `-append "root=/dev/vda console=ttyS0"`
+    * 指定serial port console，如此一來就可以在terminal 直接顯示Qemu 的執行文字，不過你需要[修改](#qxg-tty)rootfs 的`/etc/inittab`才能在terminal login
+* `-S -s`
+    * 開機的時候就停下來，並開啟port 1234讓gdb從遠端連入除錯
+* `-nographic`
+    * 懶得跳一個視窗，直接terminal當console使用
+
+<a name="qxg-prepare"></a>
+## buildroot 事先準備
+
+1. 下載buildroot
+    * `git clone https://git.buildroot.net/buildroot`
+2. 設定預設config
+    * `make qemu_x86_64_defconfig`
+3. 手動設定buildroot config如gcc版本，客製化rootfs套件等
+    * `make menuconfig`
+4. 設定Linux kernel 選項，主要是打開debug symbol
+    * `make linux-menuconfig`
+5. 編譯rootfs及kernel
+    * `make`
+6. [設定可以從console 登入](#qxg-tty)
+
+<a name="qxg-fix"></a>
+## gdb 錯誤訊息解法
+從[OSDev: QEMU and GDB in long mode](http://wiki.osdev.org/QEMU_and_GDB_in_long_mode)可以看到可以使用下面指令頂著先（workaround）
+
+* `disconnect`
+* `set arch i386:x86-64`
+* `target remote 127.0.0.1:1234`
+
+然而作為組裝工，信奉偷懶就是美德，每次要打這麼多指令實在很麻煩。因此我將這些麻煩的方式使用下面的指令自動化
+
+```
+gdb ./vmlinux  -ex "target remote localhost:1234"       \
+               -ex "break x86_64_start_kernel"          \
+               -ex "continue"                           \
+               -ex "disconnect"                         \
+               -ex "set architecture i386:x86-64:intel" \
+               -ex "target remote localhost:1234"
+```
+
+執行後畫面輸出部份節錄如下
+```
+Reading symbols from ./vmlinux...done.
+Remote debugging using localhost:1234
+0x0000000000000000 in irq_stack_union ()
+Breakpoint 1 at 0xffffffff8188429b: file arch/x86/kernel/head64.c, line 134.
+Continuing.
+Remote 'g' packet reply is too long: 9b428881ffffffff0000000000000000010100c000000000ffffffff00000000804001000000000080400100000000000000000000000000f03f8081ffffffff00a080010000000000000000000000000000000000000000080000000000000000000000000000000000000000000000000000000000000000000000000000009b428881ffffffff4600000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000007f0300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000801f0000
+Ending remote debugging.
+The target architecture is assumed to be i386:x86-64:intel
+Remote debugging using localhost:1234
+x86_64_start_kernel (real_mode_data=0x14080 <cpu_tss+6848> <error: Cannot access memory at address 0x14080>) at arch/x86/kernel/head64.c:134
+134	{
+(gdb) n
+151		cr4_init_shadow();
+```
+
+由於gdb command file 遇到錯誤就會停下來，所以把上面的指令放到一個檔案中，執行gdb時將會停在`continue`這邊，目前懶的找解法了。有興趣的朋友可以自行研究。
+
+
+
+<a name="qxg-pkg"></a>
+## 懶人包
+
+* Buildroot
+```
+git clone https://git.buildroot.net/buildroot
+cd buildroot
+make qemu_x86_64_defconfig
+make menuconfig
+make linux-menuconfig
+make
+```
+
+* 啟動Qemu
+假設在buildroot top directory下
+```
+qemu-system-x86_64 -M pc -kernel output/images/bzImage                          \
+                     -drive file=output/images/rootfs.ext2,if=virtio,format=raw \
+                     -append "root=/dev/vda console=ttyS0"                      \
+                     -net nic,model=virtio -net user -nographic -S -s
+```
+
+* gdb 
+假設在buildroot top directory下
+```
+cd output/build/linux-4.9.6
+gdb ./vmlinux  -ex "target remote localhost:1234"       \
+               -ex "break x86_64_start_kernel"          \
+               -ex "continue"                           \
+               -ex "disconnect"                         \
+               -ex "set architecture i386:x86-64:intel" \
+               -ex "target remote localhost:1234"
+```
+
+
+<a name="qxg-tty"></a>
+### 讓qemu-system-x86_64 在console 可以登入
+
+在`/etc/inittab`加入下面這行`ttyS0::respawn:/sbin/getty -L  ttyS0 0 vt100 # GENERIC_SERIAL`
+
+```text /etc/inittab
+ # Put a getty on the serial port
+ tty1::respawn:/sbin/getty -L  tty1 0 vt100 # GENERIC_SERIAL
++ttyS0::respawn:/sbin/getty -L  ttyS0 0 vt100 # GENERIC_SERIAL
+``` 
+
+<a name="qxg-ref"></a>
+## 參考資料
+* [OSDev: QEMU and GDB in long mode](http://wiki.osdev.org/QEMU_and_GDB_in_long_mode)
+
