@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-05-23T21:18:23+08:00</updated>
+  <updated>2018-05-23T22:00:06+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -979,6 +979,8 @@
 <span class='line-number'>161</span>
 <span class='line-number'>162</span>
 <span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
 </pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
 </span><span class='line'>&quot; Start vundle
 </span><span class='line'>&quot;====================================================================
@@ -1080,6 +1082,8 @@
 </span><span class='line'>let g:syntastic_auto_loc_list = 1
 </span><span class='line'>let g:syntastic_check_on_open = 1
 </span><span class='line'>let g:syntastic_check_on_wq = 0
+</span><span class='line'>autocmd VimEnter * SyntasticToggleMode &quot; disable syntastic by default
+</span><span class='line'>
 </span><span class='line'>
 </span><span class='line'>&quot;====================================================================
 </span><span class='line'>&quot; pymode settings
