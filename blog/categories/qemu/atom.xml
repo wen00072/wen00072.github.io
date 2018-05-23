@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Qemu | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/qemu/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-04-06T02:23:19+08:00</updated>
+  <updated>2018-05-23T21:18:23+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -1271,22 +1271,34 @@ $ cp /mnt/boot/* boot/ -rv
 </code></pre>
 
 <p>驗收看看是不是真的可以連進去，並且裏面真的是ARM的binary？
-&#8220;`
-$ ssh -p 2222 user@localhost
-user@localhost&rsquo;s password:
-Linux debian 3.2.0-4-versatile #1 Debian 3.2.65-1+deb7u1 armv5tejl</p>
-
-<p>The programs included with the Debian GNU/Linux system are free software;
-the exact distribution terms for each program are described in the
-individual files in /usr/share/doc/*/copyright.</p>
-
-<p>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-permitted by applicable law.
-You have mail.
-Last login: Fri Feb  6 09:35:07 2015
-user@debian:~$ file /bin/ls
-/bin/ls: ELF 32-bit LSB executable, ARM, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0x5bc97dbca9ac168932d898a5e2eaf68e8fde5e16, stripped
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ssh -p 2222 user@localhost
+</span><span class='line'>user@localhost&rsquo;s password:
+</span><span class='line'>Linux debian 3.2.0-4-versatile #1 Debian 3.2.65-1+deb7u1 armv5tejl&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;The programs included with the Debian GNU/Linux system are free software;
+</span><span class='line'>the exact distribution terms for each program are described in the
+</span><span class='line'>individual files in /usr/share/doc/*/copyright.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+</span><span class='line'>permitted by applicable law.
+</span><span class='line'>You have mail.
+</span><span class='line'>Last login: Fri Feb  6 09:35:07 2015
+</span><span class='line'>user@debian:~$ file /bin/ls
+</span><span class='line'>/bin/ls: ELF 32-bit LSB executable, ARM, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0x5bc97dbca9ac168932d898a5e2eaf68e8fde5e16, stripped</span></code></pre></td></tr></table></div></figure></p>
 
 <h2>參考資料</h2>
 

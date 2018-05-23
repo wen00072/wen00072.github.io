@@ -12,8 +12,8 @@
 
   
   <meta name="description" content="安裝完作業系統後還需要裝一些平常使用的工具，順手整理一下 目錄 懶人包
-工具分類及簡單說明 系統程式開發套件 程式開發輔助工具 一般工具 資安工具 懶人包 全部來 1
-sudo apt install -y aptitude build-essential bison flex automake &hellip;">
+工具分類及簡單說明 系統程式開發套件 程式開發輔助工具 一般工具 資安工具 懶人包 第一次更新 1
+sudo apt update && sudo apt install aptitude && sudo aptitude &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -117,12 +117,57 @@ sudo apt install -y aptitude build-essential bison flex automake &hellip;">
 <h2>懶人包</h2>
 
 <ul>
+<li>第一次更新</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt update && sudo apt install aptitude && sudo aptitude upgrade -y --full-resolve</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>更新</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt update && sudo aptitude upgrade -y --full-resolve && sudo apt autoremove</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
 <li>全部來</li>
 </ul>
 
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt install -y aptitude build-essential bison flex automake libtool intltool  libncurses5-dev git-svn tig meld cscope vim-gtk fonts-inconsolata geany joe doxygen-gui exuberant-ctags manpages-dev manpages-posix-dev minicom tree terminator ttf-mscorefonts-installer ack-grep pandoc gnome-system-tools ghex mc dict wireshark mtr pdfgrep sshfs fail2ban rkhunter bc libssl-dev cmake</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt install -y aptitude build-essential bison flex automake libtool intltool  libncurses5-dev git-svn tig meld cscope vim-gtk fonts-inconsolata geany joe doxygen-gui exuberant-ctags manpages-dev manpages-posix-dev minicom tree terminator ttf-mscorefonts-installer ack-grep pandoc gnome-system-tools ghex mc dict wireshark mtr pdfgrep sshfs fail2ban rkhunter bc libssl-dev cmake gdb libatk-adaptor libgail-common</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>從Server安裝後再裝Mate，安裝完記得關掉<code>/etc/network/interfaces</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt install -y lightdm mate-desktop-environment language-selector-gnome hime lightdm-gtk-greeter</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>從Server安裝後再裝LxQT，安裝完記得關掉<code>/etc/network/interfaces</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt install -y lightdm lxqt language-selector-gnome hime lightdm-gtk-greeter</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>安裝Hardware Enhance 相關套件</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt install -y linux-image-generic-hwe-16.04 xserver-xorg-hwe-16.04 </span></code></pre></td></tr></table></div></figure>
 
 
 <ul>
@@ -171,6 +216,10 @@ sudo apt install -y aptitude build-essential bison flex automake &hellip;">
 <span class='line-number'>39</span>
 <span class='line-number'>40</span>
 <span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>sudo apt-get install build-essential
 </span><span class='line'>sudo apt-get install bison 
 </span><span class='line'>sudo apt-get install flex
@@ -180,6 +229,7 @@ sudo apt install -y aptitude build-essential bison flex automake &hellip;">
 </span><span class='line'>sudo apt-get install libncurses5-dev
 </span><span class='line'>sudo apt-get install bc
 </span><span class='line'>sudo apt-get install libssl-dev
+</span><span class='line'>sudo apt-get install gdb
 </span><span class='line'>
 </span><span class='line'>sudo apt-get install git-svn
 </span><span class='line'>sudo apt-get install tig
@@ -211,7 +261,10 @@ sudo apt install -y aptitude build-essential bison flex automake &hellip;">
 </span><span class='line'>sduo apt-get install aptitude
 </span><span class='line'>
 </span><span class='line'>sudo apt-get install fail2ban
-</span><span class='line'>sudo apt-get install rkhunter</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>sudo apt-get install rkhunter
+</span><span class='line'>
+</span><span class='line'>sudo apt-get install libatk-adaptor
+</span><span class='line'>sudo apt-get install libgail-common</span></code></pre></td></tr></table></div></figure>
 
 
 <p><a name="工具分類及簡單說明"></a></p>
@@ -233,6 +286,7 @@ sudo apt install -y aptitude build-essential bison flex automake &hellip;">
 <li>libssl-dev</li>
 <li>bc</li>
 <li>cmake</li>
+<li>gdb</li>
 </ul>
 
 
@@ -411,7 +465,19 @@ sudo apt install -y aptitude build-essential bison flex automake &hellip;">
 <li>另外一種套件操作方式<code>aptitude upgrade --full-resolve -y</code>我常用</li>
 </ul>
 </li>
+<li><code>libatk-adaptor</code> <code>libgail-common</code>
+
+<ul>
+<li>跑<code>gvim</code>不會出現下面錯誤訊息</li>
 </ul>
+</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Gtk-Message: Failed to load module "gail"
+</span><span class='line'>Gtk-Message: Failed to load module "atk-bridge"</span></code></pre></td></tr></table></div></figure>
 
 
 <p><a name="資安工具"></a></p>

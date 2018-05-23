@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Stm32 | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/stm32/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-04-06T02:23:19+08:00</updated>
+  <updated>2018-05-23T21:18:23+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -222,33 +222,57 @@ static int host_call(enum HOST_SYSCALL action, void *arg)
 </code></pre>
 
 <p>剩下就簡單了，設定好參數呼叫semihosting的介面收工。
-&#8220;`c
-size_t host_read(int fd, void *buf, size_t count)
-{
-    param semi_param[3] = {
-        { .pdInt = fd },
-        { .pdPtr = buf },
-        { .pdInt = count }
-    };</p>
-
-<pre><code>return host_call(HOSTCALL_READ, semi_param);
-</code></pre>
-
-<p>}</p>
-
-<p>size_t host_write(int fd, const void <em>buf, size_t count)
-{
-    param semi_param[3] = {
-        { .pdInt = fd },
-        { .pdPtr = (void </em>) buf },
-        { .pdInt = count }
-    };</p>
-
-<pre><code>return host_call(HOSTCALL_WRITE, semi_param);
-</code></pre>
-
-<p>}
-&#8220;`</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">size_t</span> <span class="nf">host_read</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">param</span> <span class="n">semi_param</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">fd</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdPtr</span> <span class="o">=</span> <span class="n">buf</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">count</span> <span class="p">}</span>
+</span><span class='line'>    <span class="p">};</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">return</span> <span class="n">host_call</span><span class="p">(</span><span class="n">HOSTCALL_READ</span><span class="p">,</span> <span class="n">semi_param</span><span class="p">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kt">size_t</span> <span class="n">host_write</span><span class="p">(</span><span class="kt">int</span> <span class="n">fd</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">buf</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">count</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">param</span> <span class="n">semi_param</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">fd</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdPtr</span> <span class="o">=</span> <span class="p">(</span><span class="kt">void</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">)</span> <span class="n">buf</span> <span class="p">},</span>
+</span><span class='line'>        <span class="p">{</span> <span class="p">.</span><span class="n">pdInt</span> <span class="o">=</span> <span class="n">count</span> <span class="p">}</span>
+</span><span class='line'>    <span class="p">};</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="k">return</span> <span class="n">host_call</span><span class="p">(</span><span class="n">HOSTCALL_WRITE</span><span class="p">,</span> <span class="n">semi_param</span><span class="p">);</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p><a name="stm-4-test-makefile"></a></p>
 
@@ -1097,12 +1121,15 @@ SRCS += led.c
 
 
 <p>上面的是source檔案，但是我們編譯需要把source檔案轉成object檔案並且存在./build目錄下。
-&#8220;`Makefile
-C_OBJS = $(patsubst %.c, %.o, $(SRCS))   # translate <em>.c to </em>.o
-OBJS   = $(patsubst %.s, %.o, $(C_OBJS)) # also <em>.s to </em>.o files</p>
-
-<p>OUT_OBJS = $(addprefix $(OUT_DIR)/, $(OBJS))
-&#8220;`</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">C_OBJS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>   <span class="c"># translate &lt;em&gt;.c to &lt;/em&gt;.o</span>
+</span><span class='line'><span class="nv">OBJS</span>   <span class="o">=</span> <span class="k">$(</span>patsubst %.s, %.o, <span class="k">$(</span>C_OBJS<span class="k">))</span> <span class="c"># also &lt;em&gt;.s to &lt;/em&gt;.o files&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nv">OUT_OBJS</span> <span class="o">=</span> <span class="k">$(</span>addprefix <span class="k">$(</span>OUT_DIR<span class="k">)</span>/, <span class="k">$(</span>OBJS<span class="k">))</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <ul>
 <li>產生led.bin</li>

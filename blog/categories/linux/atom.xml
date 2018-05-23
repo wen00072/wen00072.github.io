@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-04-06T02:23:19+08:00</updated>
+  <updated>2018-05-23T21:18:23+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -1006,121 +1006,228 @@ int main(void)
 
 
 <p>下面兩個函數，<code>strcmp1</code>沒有任何extended inline assembler而<code>strcmp2</code>硬塞了一個下去：
-&#8220;`c
-int strcmp1(const char <em>a, const char </em>b) <strong>attribute</strong> ((naked));
-int strcmp1(const char <em>a, const char </em>b)
-{
-    asm(
-        &ldquo;strcmp_lop1:                \n&rdquo;
-        &ldquo;   ldrb    r2, [r0],#1     \n&rdquo;
-        &ldquo;   ldrb    r3, [r1],#1     \n&rdquo;
-        &ldquo;   cmp     r2, #1          \n&rdquo;
-        &ldquo;   it      hi              \n&rdquo;
-        &ldquo;   cmphi   r2, r3          \n&rdquo;
-        &ldquo;   beq     strcmp_lop1      \n&rdquo;
-        &ldquo;    sub     r0, r2, r3      \n&rdquo;
-        &ldquo;   bx      lr              \n&rdquo;
-        :::
-    );
-}</p>
-
-<p>int strcmp2(const char <em>a, const char </em>b) <strong>attribute</strong> ((naked));
-int strcmp2(const char <em>a, const char </em>b)
-{
-        int i;
-    asm(
-        &ldquo;strcmp_lop2:                \n&rdquo;
-        &ldquo;   ldrb    r2, [r0],#1     \n&rdquo;
-        &ldquo;   ldrb    r3, [r1],#1     \n&rdquo;
-        &ldquo;   cmp     r2, #1          \n&rdquo;
-        &ldquo;   it      hi              \n&rdquo;
-        &ldquo;   cmphi   r2, r3          \n&rdquo;
-        &ldquo;   mov     %1, $1 \n&rdquo;
-        &ldquo;   beq     strcmp_lop2      \n&rdquo;
-        &ldquo;    sub     r0, r2, r3      \n&rdquo;
-        &ldquo;   bx      lr              \n&rdquo;
-        :&ldquo;=r&rdquo;(i)::
-    );
-}
-&#8220;`</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">b</span><span class="p">)</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">attribute</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">b</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="nl">strcmp_lop1</span><span class="p">:</span>                <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">ldrb</span>    <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r0</span><span class="p">],</span><span class="err">#</span><span class="mi">1</span>     <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">ldrb</span>    <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r1</span><span class="p">],</span><span class="err">#</span><span class="mi">1</span>     <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">cmp</span>     <span class="n">r2</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>          <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">it</span>      <span class="n">hi</span>              <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">cmphi</span>   <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>          <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">beq</span>     <span class="n">strcmp_lop1</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>    <span class="n">sub</span>     <span class="n">r0</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">bx</span>      <span class="n">lr</span>              <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">:::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kt">int</span> <span class="n">strcmp2</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">b</span><span class="p">)</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">attribute</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">strcmp2</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">b</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="nl">strcmp_lop2</span><span class="p">:</span>                <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">ldrb</span>    <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r0</span><span class="p">],</span><span class="err">#</span><span class="mi">1</span>     <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">ldrb</span>    <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r1</span><span class="p">],</span><span class="err">#</span><span class="mi">1</span>     <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">cmp</span>     <span class="n">r2</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>          <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">it</span>      <span class="n">hi</span>              <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">cmphi</span>   <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>          <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">mov</span>     <span class="o">%</span><span class="mi">1</span><span class="p">,</span> <span class="err">$</span><span class="mi">1</span> <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">beq</span>     <span class="n">strcmp_lop2</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>    <span class="n">sub</span>     <span class="n">r0</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">bx</span>      <span class="n">lr</span>              <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">:&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">=</span><span class="n">r</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;(</span><span class="n">i</span><span class="p">)</span><span class="o">::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>我們可以比較一下下面兩個函數最後編譯出來的指令，<code>strcmp2</code>顯然和我們預期的差很多。
-&#8220;`c
-000083f4 <strcmp1>:</p>
-
-<p>int strcmp1(const char <em>a, const char </em>b) <strong>attribute</strong> ((naked));
-int strcmp1(const char <em>a, const char </em>b)
-{
-    asm(
-    83f4:   f810 2b01   ldrb.w  r2, [r0], #1
-    83f8:   f811 3b01   ldrb.w  r3, [r1], #1
-    83fc:   2a01        cmp r2, #1
-    83fe:   bf88        it  hi
-    8400:   429a        cmphi   r2, r3
-    8402:   d0f7        beq.n   83f4 <strcmp1>
-    8404:   eba2 0003   sub.w   r0, r2, r3
-    8408:   4770        bx  lr
-        &ldquo;   beq     strcmp_lop1      \n&rdquo;
-        &ldquo;    sub     r0, r2, r3      \n&rdquo;
-        &ldquo;   bx      lr              \n&rdquo;
-        :::
-    );
-}
-    840a:   4618        mov r0, r3</p>
-
-<p>0000840c <strcmp2>:
-        &ldquo;   beq     strcmp_lop2      \n&rdquo;
-        &ldquo;    sub     r0, r2, r3      \n&rdquo;
-        &ldquo;   bx      lr              \n&rdquo;
-        :&ldquo;=r&rdquo;(i)::
-    );
-}</p>
-
-<pre><code>---
-&lt;a name="ia_ps2"&gt;&lt;/a&gt;
-
-* 範例一的反組譯節錄
-</code></pre>
-
-<p>$ objdump -d -S asm
-&hellip;
-000083f4 <main>:</p>
-
-<h1>include &lt;stdio.h></h1>
-
-<p>int main(void)
-{
-&hellip;
-    int var1 = 12;
-    83fa:   230c        movs    r3, #12
-    83fc:   603b        str r3, [r7, #0]</p>
-
-<pre><code>int var2 = 10;
-83fe:   230a        movs    r3, #10
-8400:   607b        str r3, [r7, #4]
-
-asm("mov %0, %1 \n  \
-     add %1, %0, $1" : "=r"(var1), "=r"(var2) : "r"(var2), "r"(var1):);
-8402:   687b        ldr r3, [r7, #4]
-8404:   683a        ldr r2, [r7, #0]
-8406:   461a        mov r2, r3
-8408:   f102 0301   add.w   r3, r2, #1
-840c:   603a        str r2, [r7, #0]
-840e:   607b        str r3, [r7, #4]
-</code></pre>
-
-<p>&hellip;
-    asm(&ldquo;ldr r5, %0 \n&rdquo;:           : &ldquo;m&rdquo;(var1): &ldquo;r5&rdquo;);
-    8424:   683d        ldr r5, [r7, #0]</p>
-
-<pre><code>asm("str r4, %0"   : "=m"(var2):          : "r4");
-8426:   607c        str r4, [r7, #4]
-</code></pre>
-
-<p>&hellip;
-}
-&hellip;
-&#8220;`</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mf">000083f</span><span class="mi">4</span> <span class="o">&lt;</span><span class="n">strcmp1</span><span class="o">&gt;:&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kt">int</span> <span class="n">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">b</span><span class="p">)</span> <span class="o">&lt;</span><span class="n">strong</span><span class="o">&gt;</span><span class="n">attribute</span><span class="o">&lt;/</span><span class="n">strong</span><span class="o">&gt;</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="n">b</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="mi">4</span><span class="o">:</span>   <span class="n">f810</span> <span class="mi">2</span><span class="n">b01</span>   <span class="n">ldrb</span><span class="p">.</span><span class="n">w</span>  <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r0</span><span class="p">],</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="mi">8</span><span class="o">:</span>   <span class="n">f811</span> <span class="mi">3</span><span class="n">b01</span>   <span class="n">ldrb</span><span class="p">.</span><span class="n">w</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r1</span><span class="p">],</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">c</span><span class="p">:</span>   <span class="mi">2</span><span class="n">a01</span>        <span class="n">cmp</span> <span class="n">r2</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">e</span><span class="p">:</span>   <span class="n">bf88</span>        <span class="n">it</span>  <span class="n">hi</span>
+</span><span class='line'>    <span class="mi">8400</span><span class="o">:</span>   <span class="mi">429</span><span class="n">a</span>        <span class="n">cmphi</span>   <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'>    <span class="mi">8402</span><span class="o">:</span>   <span class="n">d0f7</span>        <span class="n">beq</span><span class="p">.</span><span class="n">n</span>   <span class="mf">83f</span><span class="mi">4</span> <span class="o">&lt;</span><span class="n">strcmp1</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="mi">8404</span><span class="o">:</span>   <span class="n">eba2</span> <span class="mo">0003</span>   <span class="n">sub</span><span class="p">.</span><span class="n">w</span>   <span class="n">r0</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'>    <span class="mi">8408</span><span class="o">:</span>   <span class="mi">4770</span>        <span class="n">bx</span>  <span class="n">lr</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">beq</span>     <span class="n">strcmp_lop1</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>    <span class="n">sub</span>     <span class="n">r0</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">bx</span>      <span class="n">lr</span>              <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">:::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>    <span class="mi">840</span><span class="nl">a</span><span class="p">:</span>   <span class="mi">4618</span>        <span class="n">mov</span> <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="mo">0000</span><span class="mi">840</span><span class="n">c</span> <span class="o">&lt;</span><span class="n">strcmp2</span><span class="o">&gt;:</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">beq</span>     <span class="n">strcmp_lop2</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>    <span class="n">sub</span>     <span class="n">r0</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>      <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span>   <span class="n">bx</span>      <span class="n">lr</span>              <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>        <span class="o">:&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="o">=</span><span class="n">r</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;(</span><span class="n">i</span><span class="p">)</span><span class="o">::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;---</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">a</span> <span class="n">name</span><span class="o">=</span><span class="s">&quot;ia_ps2&quot;</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">/</span><span class="n">a</span><span class="o">&amp;</span><span class="n">gt</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">*</span> <span class="err">範例一的反組譯節錄</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">d</span> <span class="o">-</span><span class="n">S</span> <span class="n">asm</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">hellip</span><span class="p">;</span>
+</span><span class='line'><span class="mf">000083f</span><span class="mi">4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;:&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">h1</span><span class="o">&gt;</span><span class="n">include</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">stdio</span><span class="p">.</span><span class="n">h</span><span class="o">&gt;&lt;/</span><span class="n">h1</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">a</span><span class="p">:</span>   <span class="mi">230</span><span class="n">c</span>        <span class="n">movs</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">12</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">c</span><span class="p">:</span>   <span class="mi">603</span><span class="n">b</span>        <span class="n">str</span> <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="kt">int</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class='line'><span class="mf">83f</span><span class="nl">e</span><span class="p">:</span>   <span class="mi">230</span><span class="n">a</span>        <span class="n">movs</span>    <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">10</span>
+</span><span class='line'><span class="mi">8400</span><span class="o">:</span>   <span class="mi">607</span><span class="n">b</span>        <span class="n">str</span> <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">asm</span><span class="p">(</span><span class="s">&quot;mov %0, %1 </span><span class="se">\n</span><span class="s">  \</span>
+</span><span class='line'><span class="s">     add %1, %0, $1&quot;</span> <span class="o">:</span> <span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">),</span> <span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span> <span class="o">:</span> <span class="s">&quot;r&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">),</span> <span class="s">&quot;r&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span><span class="p">);</span>
+</span><span class='line'><span class="mi">8402</span><span class="o">:</span>   <span class="mi">687</span><span class="n">b</span>        <span class="n">ldr</span> <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="mi">8404</span><span class="o">:</span>   <span class="mi">683</span><span class="n">a</span>        <span class="n">ldr</span> <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'><span class="mi">8406</span><span class="o">:</span>   <span class="mi">461</span><span class="n">a</span>        <span class="n">mov</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'><span class="mi">8408</span><span class="o">:</span>   <span class="n">f102</span> <span class="mo">0301</span>   <span class="n">add</span><span class="p">.</span><span class="n">w</span>   <span class="n">r3</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'><span class="mi">840</span><span class="nl">c</span><span class="p">:</span>   <span class="mi">603</span><span class="n">a</span>        <span class="n">str</span> <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'><span class="mi">840</span><span class="nl">e</span><span class="p">:</span>   <span class="mi">607</span><span class="n">b</span>        <span class="n">str</span> <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&amp;</span><span class="n">hellip</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">ldr</span> <span class="n">r5</span><span class="p">,</span> <span class="o">%</span><span class="mi">0</span> <span class="err">\</span><span class="n">n</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span><span class="o">:</span>           <span class="o">:</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">m</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">r5</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;);</span>
+</span><span class='line'>    <span class="mi">8424</span><span class="o">:</span>   <span class="mi">683</span><span class="n">d</span>        <span class="n">ldr</span> <span class="n">r5</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">pre</span><span class="o">&gt;&lt;</span><span class="n">code</span><span class="o">&gt;</span><span class="n">asm</span><span class="p">(</span><span class="s">&quot;str r4, %0&quot;</span>   <span class="o">:</span> <span class="s">&quot;=m&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span><span class="o">:</span>          <span class="o">:</span> <span class="s">&quot;r4&quot;</span><span class="p">);</span>
+</span><span class='line'><span class="mi">8426</span><span class="o">:</span>   <span class="mi">607</span><span class="n">c</span>        <span class="n">str</span> <span class="n">r4</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;&lt;/</span><span class="n">pre</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;&amp;</span><span class="n">hellip</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">hellip</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <hr />
 
@@ -1181,18 +1288,27 @@ int main(void)
 <p>照例先描述環境</p>
 
 <p>HOST端
-&#8220;`
-$ lsb_release -a
-No LSB modules are available.
-Distributor ID: Ubuntu
-Description:    Ubuntu 14.04.3 LTS
-Release:    14.04
-Codename:   trusty</p>
-
-<p>$ minicom &ndash;version
-minicom version 2.7 (compiled Jan  1 2014)
-&hellip;
-&#8220;`</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">lsb_release</span> <span class="o">-</span><span class="n">a</span>
+</span><span class='line'><span class="n">No</span> <span class="n">LSB</span> <span class="n">modules</span> <span class="n">are</span> <span class="n">available</span><span class="p">.</span>
+</span><span class='line'><span class="n">Distributor</span> <span class="nl">ID</span><span class="p">:</span> <span class="n">Ubuntu</span>
+</span><span class='line'><span class="nl">Description</span><span class="p">:</span>    <span class="n">Ubuntu</span> <span class="mf">14.04.3</span> <span class="n">LTS</span>
+</span><span class='line'><span class="nl">Release</span><span class="p">:</span>    <span class="mf">14.04</span>
+</span><span class='line'><span class="nl">Codename</span><span class="p">:</span>   <span class="n">trusty</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="err">$</span> <span class="n">minicom</span> <span class="o">&amp;</span><span class="n">ndash</span><span class="p">;</span><span class="n">version</span>
+</span><span class='line'><span class="n">minicom</span> <span class="n">version</span> <span class="mf">2.7</span> <span class="p">(</span><span class="n">compiled</span> <span class="n">Jan</span>  <span class="mi">1</span> <span class="mi">2014</span><span class="p">)</span>
+</span><span class='line'><span class="o">&amp;</span><span class="n">hellip</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>設備端，假設你已經將系統燒入到SD卡中</p>
 
@@ -1545,101 +1661,188 @@ clean:
 </code></pre>
 
 <p>自幹shared library執行程式的時候不要忘記加上<code>LD_LIBRARY_PATH</code>環境變數：
-&#8220;`text
-$ make clean
-rm -rf test  main_test.o  test.o</p>
-
-<p>$ make
-cc -g   -c -o main_test.o main_test.c
-cc -g -c -fPIC test.c
-cc -shared -Wl,-soname,libtest.so.0 test.o -o libtest.so
-rm libtest.so.0 &amp;&amp; ln -sf libtest.so libtest.so.0
-cc -g main_test.o -o test -L./ -ltest</p>
-
-<p>$ LD_LIBRARY_PATH=<code>pwd</code> ./test
-Hello Wen Liao
-&#8220;`</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make clean
+</span><span class='line'>rm -rf test  main_test.o  test.o&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ make
+</span><span class='line'>cc -g   -c -o main_test.o main_test.c
+</span><span class='line'>cc -g -c -fPIC test.c
+</span><span class='line'>cc -shared -Wl,-soname,libtest.so.0 test.o -o libtest.so
+</span><span class='line'>rm libtest.so.0 &amp;amp;&amp;amp; ln -sf libtest.so libtest.so.0
+</span><span class='line'>cc -g main_test.o -o test -L./ -ltest&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ LD_LIBRARY_PATH=&lt;code&gt;pwd&lt;/code&gt; ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>現在來比較strip前後的shared library 差異吧。
-&#8220;`
-$ nm -a libtest.so
-0000000000000000 a
-0000000000201048 b .bss
-0000000000201048 B <strong>bss_start
-0000000000000000 n .comment
-0000000000201048 b completed.6973
-0000000000000000 a crtstuff.c
-0000000000000000 a crtstuff.c
-                 w </strong>cxa_finalize@@GLIBC_2.2.5
-0000000000201030 d .data
-0000000000000000 N .debug_abbrev
-0000000000000000 N .debug_aranges
-0000000000000000 N .debug_info
-0000000000000000 N .debug_line
-0000000000000000 N .debug_str
-0000000000000650 t deregister_tm_clones
-00000000000006c0 t <strong>do_global_dtors_aux
-0000000000200df0 t </strong>do_global_dtors_aux_fini_array_entry
-0000000000201030 d <strong>dso_handle
-0000000000200e00 d .dynamic
-0000000000200e00 d <em>DYNAMIC
-0000000000000398 r .dynstr
-0000000000000230 r .dynsym
-0000000000201048 D </em>edata
-00000000000007c0 r .eh_frame
-000000000000079c r .eh_frame_hdr
-0000000000201050 B <em>end
-000000000000077c T </em>fini
-000000000000077c t .fini
-0000000000200df0 t .fini_array
-0000000000000700 t frame_dummy
-0000000000200de8 t </strong>frame_dummy_init_array_entry
-0000000000000840 r <strong>FRAME_END</strong>
-0000000000201000 d <em>GLOBAL_OFFSET_TABLE</em>
-                 w <strong>gmon_start</strong>
-0000000000201038 D g_myStr
-00000000000001f0 r .gnu.hash
-000000000000045c r .gnu.version
-0000000000000480 r .gnu.version_r
-0000000000200fd0 d .got
-0000000000201000 d .got.plt
-0000000000201040 d gp_myStr
-00000000000005f0 T <em>init
-00000000000005f0 t .init
-0000000000200de8 t .init_array
-                 w </em>ITM_deregisterTMCloneTable
-                 w <em>ITM_registerTMCloneTable
-0000000000200df8 d .jcr
-0000000000200df8 d <strong>JCR_END</strong>
-0000000000200df8 d <strong>JCR_LIST</strong>
-                 w </em>Jv_RegisterClasses
-00000000000001c8 r .note.gnu.build-id
-0000000000000610 t .plt
-                 U printf@@GLIBC_2.2.5
-0000000000000680 t register_tm_clones
-00000000000004a0 r .rela.dyn
-00000000000005a8 r .rela.plt
-0000000000000785 r .rodata
-0000000000000735 t s_test
-0000000000000760 T test
-0000000000000000 a test.c
-0000000000000650 t .text
-0000000000201048 d <strong>TMC_END</strong></p>
-
-<p>$ ls -gG libtest.so
--rwxrwxr-x 1 9275 Nov 16 23:47 libtest.so</p>
-
-<p>$ strip libtest.so</p>
-
-<p>$ ls -gG libtest.so
--rwxrwxr-x 1 6104 Nov 16 23:47 libtest.so</p>
-
-<p>$ nm -a libtest.so
-nm: libtest.so: no symbols</p>
-
-<p>$ LD_LIBRARY_PATH=<code>pwd</code> ./test
-Hello Wen Liao
-&#8220;`</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ nm -a libtest.so
+</span><span class='line'>0000000000000000 a
+</span><span class='line'>0000000000201048 b .bss
+</span><span class='line'>0000000000201048 B &lt;strong&gt;bss_start
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000201048 b completed.6973
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>                 w &lt;/strong&gt;cxa_finalize@@GLIBC_2.2.5
+</span><span class='line'>0000000000201030 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000650 t deregister_tm_clones
+</span><span class='line'>00000000000006c0 t &lt;strong&gt;do_global_dtors_aux
+</span><span class='line'>0000000000200df0 t &lt;/strong&gt;do_global_dtors_aux_fini_array_entry
+</span><span class='line'>0000000000201030 d &lt;strong&gt;dso_handle
+</span><span class='line'>0000000000200e00 d .dynamic
+</span><span class='line'>0000000000200e00 d &lt;em&gt;DYNAMIC
+</span><span class='line'>0000000000000398 r .dynstr
+</span><span class='line'>0000000000000230 r .dynsym
+</span><span class='line'>0000000000201048 D &lt;/em&gt;edata
+</span><span class='line'>00000000000007c0 r .eh_frame
+</span><span class='line'>000000000000079c r .eh_frame_hdr
+</span><span class='line'>0000000000201050 B &lt;em&gt;end
+</span><span class='line'>000000000000077c T &lt;/em&gt;fini
+</span><span class='line'>000000000000077c t .fini
+</span><span class='line'>0000000000200df0 t .fini_array
+</span><span class='line'>0000000000000700 t frame_dummy
+</span><span class='line'>0000000000200de8 t &lt;/strong&gt;frame_dummy_init_array_entry
+</span><span class='line'>0000000000000840 r &lt;strong&gt;FRAME_END&lt;/strong&gt;
+</span><span class='line'>0000000000201000 d &lt;em&gt;GLOBAL_OFFSET_TABLE&lt;/em&gt;
+</span><span class='line'>                 w &lt;strong&gt;gmon_start&lt;/strong&gt;
+</span><span class='line'>0000000000201038 D g_myStr
+</span><span class='line'>00000000000001f0 r .gnu.hash
+</span><span class='line'>000000000000045c r .gnu.version
+</span><span class='line'>0000000000000480 r .gnu.version_r
+</span><span class='line'>0000000000200fd0 d .got
+</span><span class='line'>0000000000201000 d .got.plt
+</span><span class='line'>0000000000201040 d gp_myStr
+</span><span class='line'>00000000000005f0 T &lt;em&gt;init
+</span><span class='line'>00000000000005f0 t .init
+</span><span class='line'>0000000000200de8 t .init_array
+</span><span class='line'>                 w &lt;/em&gt;ITM_deregisterTMCloneTable
+</span><span class='line'>                 w &lt;em&gt;ITM_registerTMCloneTable
+</span><span class='line'>0000000000200df8 d .jcr
+</span><span class='line'>0000000000200df8 d &lt;strong&gt;JCR_END&lt;/strong&gt;
+</span><span class='line'>0000000000200df8 d &lt;strong&gt;JCR_LIST&lt;/strong&gt;
+</span><span class='line'>                 w &lt;/em&gt;Jv_RegisterClasses
+</span><span class='line'>00000000000001c8 r .note.gnu.build-id
+</span><span class='line'>0000000000000610 t .plt
+</span><span class='line'>                 U printf@@GLIBC_2.2.5
+</span><span class='line'>0000000000000680 t register_tm_clones
+</span><span class='line'>00000000000004a0 r .rela.dyn
+</span><span class='line'>00000000000005a8 r .rela.plt
+</span><span class='line'>0000000000000785 r .rodata
+</span><span class='line'>0000000000000735 t s_test
+</span><span class='line'>0000000000000760 T test
+</span><span class='line'>0000000000000000 a test.c
+</span><span class='line'>0000000000000650 t .text
+</span><span class='line'>0000000000201048 d &lt;strong&gt;TMC_END&lt;/strong&gt;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 9275 Nov 16 23:47 libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ strip libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ ls -gG libtest.so
+</span><span class='line'>-rwxrwxr-x 1 6104 Nov 16 23:47 libtest.so&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ nm -a libtest.so
+</span><span class='line'>nm: libtest.so: no symbols&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ LD_LIBRARY_PATH=&lt;code&gt;pwd&lt;/code&gt; ./test
+</span><span class='line'>Hello Wen Liao
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>這邊變成有新的作業，dynamic link的時候沒有shared library沒有symbol怎麼拿到function address和全域變數？下次有看到再來解釋吧。</p>
 
