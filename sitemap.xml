@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://wen00072.github.io/blog/2018/07/24/notes-on-how-to-c-2016/</loc>
+<lastmod>2018-07-24T20:43:52+08:00</lastmod>
+</url>
+<url>
 <loc>http://wen00072.github.io/blog/2018/02/15/vim-setup-for-trace-c-code/</loc>
 <lastmod>2018-02-15T04:03:41+08:00</lastmod>
 </url>
@@ -853,14 +857,14 @@
 </url>
 <url>
 <loc>http://wen00072.github.io/files/javadoc-20150830/test_final.pdf</loc>
-<lastmod>2018-05-23T21:57:52+08:00</lastmod>
+<lastmod>2018-05-23T22:11:20+08:00</lastmod>
 </url>
 <url>
 <loc>http://wen00072.github.io/files/javadoc-20150830/test_overview_package_info.pdf</loc>
-<lastmod>2018-05-23T21:57:52+08:00</lastmod>
+<lastmod>2018-05-23T22:11:20+08:00</lastmod>
 </url>
 <url>
 <loc>http://wen00072.github.io/files/javadoc-20150830/test_init.pdf</loc>
-<lastmod>2018-05-23T21:57:52+08:00</lastmod>
+<lastmod>2018-05-23T22:11:20+08:00</lastmod>
 </url>
 </urlset>

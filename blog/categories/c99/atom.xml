@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C99 | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/c99/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-05-23T22:00:06+08:00</updated>
+  <updated>2018-07-24T21:09:48+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,53 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Notes on How to C 2016]]></title>
+    <link href="http://wen00072.github.io/blog/2018/07/24/notes-on-how-to-c-2016/"/>
+    <updated>2018-07-24T20:43:52+08:00</updated>
+    <id>http://wen00072.github.io/blog/2018/07/24/notes-on-how-to-c-2016</id>
+    <content type="html"><![CDATA[<p>最近看了<a href="https://matt.sh/howto-c">How to C 2016</a>，反正很多記不起來乾脆寫起來以後剪貼。</p>
+
+<h2>GNU Flags</h2>
+
+<ul>
+<li><code>-std=c99</code></li>
+</ul>
+
+
+<h3>Warning flags</h3>
+
+<p><code>-Wall -Wextra -Werror -Wshadow -Wno-missing-field-initializers -Wstrict-overflow -fno-strict-aliasing</code></p>
+
+<h3>Links</h3>
+
+<ul>
+<li><a href="http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/stdint.h.html">stdint.h</a>
+<strong> <code>intmax_t</code>，&hellip;
+</strong> <code>intptr_t</code>
+*** 根據platform int size 調整</li>
+<li><a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/stddef.h.html">stdtype.h</a>
+** <code>ptr_diff_t</code></li>
+</ul>
+
+
+<h2>其他</h2>
+
+<ul>
+<li><code>size_t</code>和<code>ssize_t</code>差別：<code>s</code>->signed，當有錯誤時會為<code>-1</code></li>
+<li><code>#pragma once</code> 可用來取代Header guard</li>
+</ul>
+
+
+<h3>名詞</h3>
+
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gccint/LTO-Overview.html">LTO</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[C99的inline Function]]></title>
