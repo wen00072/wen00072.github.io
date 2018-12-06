@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Regex | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/regex/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-07-24T21:19:16+08:00</updated>
+  <updated>2018-12-06T22:47:58+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,130 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Vim POSIX Group Regex 使用方式]]></title>
+    <link href="http://wen00072.github.io/blog/2018/08/26/vim-posix-group-regex/"/>
+    <updated>2018-08-26T16:22:09+08:00</updated>
+    <id>http://wen00072.github.io/blog/2018/08/26/vim-posix-group-regex</id>
+    <content type="html"><![CDATA[<p>由於個人需求，需要在<code>vim</code>下面使用稍微複雜的字串搜尋取代。故整理這篇以後可以參考。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#vreg-grp-env">測試環境</a></li>
+<li><a href="#vreg-grp-intro">問題描述以及POSIX regex grouping 簡介</a></li>
+<li><a href="#vreg-grp-syn">參考語法</a></li>
+<li><a href="#vreg-grp-ex">範例</a></li>
+</ul>
+
+
+<p><a name="vreg-grp-env"></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 18.04.1 LTS
+Release:    18.04
+Codename:   bionic
+
+$ vim --version
+VIM - Vi IMproved 8.0 (2016 Sep 12, compiled Apr 10 2018 21:31:58)
+</code></pre>
+
+<p><a name="vreg-grp-intro"></a></p>
+
+<h2>問題描述以及POSIX regex grouping 簡介</h2>
+
+<p>Regular express 的特色是他可以match不同的pattern，所以用於搜尋和取代是非常的方便，然而當要把<strong>符合條件的字串前面或後面加上字串</strong>就會有一個問題，那就是<strong>符合的字串要怎麼表示？</strong>舉例來說，當我們想要在下面log<code>[mem....]</code> 之後放入<code>test</code>，要怎麼做到? 這時候我們就可以使用<code>reguler expression</code>的<code>group</code> 功能了</p>
+
+<pre><code>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] usable
+[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] usable
+</code></pre>
+
+<p><a name="vreg-grp-syn"></a></p>
+
+<h2>參考語法</h2>
+
+<ul>
+<li>指定<code>group</code>，一組regex可以指定零到多個<code>group</code>
+
+<ul>
+<li><code>\(match_patter\)</code></li>
+</ul>
+</li>
+<li>取值
+
+<ul>
+<li><code>\0</code>
+
+<ul>
+<li>前項所有的<code>group</code></li>
+</ul>
+</li>
+<li><code>\1</code>
+
+<ul>
+<li>第一組<code>group</code></li>
+</ul>
+</li>
+<li><code>\2</code>
+
+<ul>
+<li>第二組<code>group</code></li>
+</ul>
+</li>
+<li><code>\3</code>
+
+<ul>
+<li>第三組<code>group</code></li>
+</ul>
+</li>
+<li>千秋萬世直到永遠</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vreg-grp-ex"></a></p>
+
+<h2>範例</h2>
+
+<p>就用上面的訊息當範例吧</p>
+
+<pre><code>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] usable
+[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] usable
+</code></pre>
+
+<h3>範例一： 在[mem &hellip;]之後插入test</h3>
+
+<ul>
+<li>指令: <code>:%s/\(\[mem.*\]\)/\1 test/g</code></li>
+</ul>
+
+
+<pre><code>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] test usable
+[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] test reserved
+[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] test usable
+</code></pre>
+
+<h3>範例二： 設定三組<code>group</code>，都插入<code>test</code></h3>
+
+<ul>
+<li>指令: <code>:%s/\(^\[.*\]\) \(\BIOS-e820:\) \(\[mem.*\]\)/\1 test1 \2 test2 \3 test3 /g</code></li>
+</ul>
+
+
+<pre><code>[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000000000-0x0000000000057fff] test3  usable
+[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000058000-0x0000000000058fff] test3  reserved
+[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000059000-0x000000000009dfff] test3  usable
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[A Brief Introduction to Regular Expression With Python 2.7.3 Standard Library 投影片上線]]></title>

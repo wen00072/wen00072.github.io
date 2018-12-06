@@ -11,8 +11,9 @@
 
 
   
-  <meta name="description" content="感謝Scott 大大糾正，選錯平台，這篇使用了ARMv4指令集的測試平台。請大家忽略，正確的版本將會之後更新! 前情提要 上一篇提到，設定實習環境的目標有： 可以使用ARM 平台。一方面追求流行，一方面我不想再開x86這個副本
-可以方便地建立ARM平台的Linux Rootfs和kernel版本 &hellip;">
+  <meta name="description" content="感謝Scott 大大糾正，選錯平台，這篇使用了ARMv4指令集的測試平台。請大家忽略，正確的版本將會之後更新! 前言 還是感謝Scott大大和其他網友的幫忙。這次最重要的心得就是不要在睡眠不足的時候做實驗，浪費的時間拿去睡覺反而比較實在。 目錄 測試環境
+Linux kernel環境設定
+測試 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -71,6 +72,903 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/10/11/trace-linux-kernel-via-qemu-and-gdb/">(過期) Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-10-11T09:46:25+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>9:46 am</span></time>
+        
+           | <a href="/blog/2016/10/11/trace-linux-kernel-via-qemu-and-gdb/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2016/10/11/trace-linux-kernel-via-qemu-and-gdb/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h3><font color="red">感謝Scott 大大糾正，選錯平台，這篇使用了ARMv4指令集的測試平台。請大家忽略，正確的版本將會之後更新!</font></h3>
+
+<h2>前言</h2>
+
+<p>還是感謝<a href="http://scottt.tw/">Scott</a>大大和其他網友的幫忙。這次最重要的心得就是不要在睡眠不足的時候做實驗，浪費的時間拿去睡覺反而比較實在。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#de_lk0_5_env">測試環境</a></li>
+<li><a href="#de_lk0_5_kr">Linux kernel環境設定</a></li>
+<li><a href="#de_lk0_5_test">測試</a>
+
+<ul>
+<li><a href="#de_lk0_5_test_qemu">Qemu</a></li>
+<li><a href="#de_lk0_5_test_gdb">gdb</a></li>
+</ul>
+</li>
+<li><a href="#de_lk0_5_ref">參考資料</a></li>
+<li><a href="#de_lk0_5_add">補充</a></li>
+</ul>
+
+
+<p><a name="de_lk0_5_env"></a></p>
+
+<h2>測試環境</h2>
+
+<h3>Host</h3>
+
+<ul>
+<li>Host OS</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.5 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>Qemu</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>qemu-system-arm --version
+</span><span class='line'>QEMU emulator version 2.0.0 <span class="o">(</span>Debian 2.0.0+dfsg-2ubuntu1.27<span class="o">)</span>, Copyright <span class="o">(</span>c<span class="o">)</span> 2003-2008 Fabrice Bellard
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>gdb</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ arm-none-eabi-gdb --version
+</span><span class='line'>GNU gdb (GNU Tools for ARM Embedded Processors) 7.10.1.20160923-cvs
+</span><span class='line'>Copyright (C) 2015 Free Software Foundation, Inc.
+</span><span class='line'>License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>buildroot 版本
+
+<ul>
+<li>commit hash: <code>14b24726a81b719b35fee70c8ba8be2d682a7313</code></li>
+</ul>
+</li>
+</ul>
+
+
+<h3>Target</h3>
+
+<ul>
+<li>Linux kernerl 版本
+
+<ul>
+<li>4.4.2</li>
+</ul>
+</li>
+<li>模擬平台
+
+<ul>
+<li>Versatile</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="de_lk0_5_kr"></a></p>
+
+<h2>Linux kernel環境設定</h2>
+
+<p>我目前只打開加入debug資訊的選項。接下來重編，編譯的方式請參考<a href="/blog/2016/10/01/linux-kernel-pratice-0-buildroot-2-customized-kernel/">這邊</a></p>
+
+<ul>
+<li>Kernel hacking -> Compile-time checks and compiler options ->
+
+<ul>
+<li>Compile the kernel with debug info</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="de_lk0_5_test"></a></p>
+
+<h2>測試</h2>
+
+<p>依照下面兩個步驟執行</p>
+
+<ol>
+<li>執行qemu，並且加入支援gdb以及開始馬上freeze CPU的參數</li>
+<li>執行gdb，載入symbol並聯到qemu除錯</li>
+</ol>
+
+
+<p><a name="de_lk0_5_test_qemu"></a></p>
+
+<h3>Qemu</h3>
+
+<p>基本上就是原本的指令加入兩個選項</p>
+
+<ul>
+<li><code>-S</code>
+
+<ul>
+<li>qemu一開始立即Freeze CPU</li>
+</ul>
+</li>
+<li><code>-s</code>
+
+<ul>
+<li><code>-gdb tcp::1234</code>的縮寫，也就是說gdb可以透過port 1234和連到Qemu除錯</li>
+</ul>
+</li>
+</ul>
+
+
+<p>假設你在buildroot最上層，就可以使用下面指令執行qemu 並使用gdb 除錯</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>qemu-system-arm -M versatilepb \
+</span><span class='line'>                -kernel /tmp/kernel/arch/arm/boot/zImage \
+</span><span class='line'>                -drive file=output/images/rootfs.ext2,if=scsi,format=raw \
+</span><span class='line'>                -append &quot;root=/dev/sda console=ttyAMA0,115200&quot; \
+</span><span class='line'>                -serial stdio -net nic,model=rtl8139 -net user -s -S
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="de_lk0_5_test_gdb"></a></p>
+
+<h3>gdb</h3>
+
+<p>這邊有點瑣碎，先講一下步驟</p>
+
+<ol>
+<li>載入Linux kernel symbol
+
+<ul>
+<li>假設你在kernel最上層目錄有三種方式載入
+
+<ul>
+<li>直接<code>arm-none-eabi-gdb ./vmlinux</code></li>
+<li><code>arm-none-eabi-gdb -ex "file ./vmlinux"</code></li>
+<li>進入gdb後打<code>file ./vmlinux</code>指令</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>連上qemu
+
+<ul>
+<li>一樣兩種方式
+
+<ul>
+<li><code>arm-none-eabi-gdb -ex "target remote :1234"</code></li>
+<li>進入gdb後打<code>target remote :1234</code>指令</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>設定breakpoint等你要觀察的資訊
+
+<ul>
+<li>如<code>b printk</code></li>
+</ul>
+</li>
+<li>告訴qemu開始執行
+
+<ul>
+<li><code>continue</code></li>
+</ul>
+</li>
+</ol>
+
+
+<p>1和2可以一起使用如下</p>
+
+<figure class='code'><figcaption><span>懶人包</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>arm-none-eabi-gdb -ex &quot;file ./vmlinux&quot;  -ex &quot;target remote :1234&quot;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>現在看一下操作範例</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ arm-none-eabi-gdb ./vmlinux  -ex &quot;target remote :1234&quot;
+</span><span class='line'>GNU gdb (GNU Tools for ARM Embedded Processors) 7.10.1.20160923-cvs
+</span><span class='line'>...
+</span><span class='line'>Reading symbols from ./vmlinux...done.
+</span><span class='line'>Remote debugging using :1234
+</span><span class='line'>__vectors_start () at arch/arm/kernel/entry-armv.S:1210
+</span><span class='line'>1210      W(b)    vector_rst
+</span><span class='line'>(gdb) b printk
+</span><span class='line'>Breakpoint 1 at 0xc0069df4: file kernel/printk/printk.c, line 1900.
+</span><span class='line'>(gdb) c
+</span><span class='line'>Continuing.
+</span><span class='line'>
+</span><span class='line'>Breakpoint 1, printk (fmt=0x0 &lt;__vectors_start&gt;) at kernel/printk/printk.c:1900
+</span><span class='line'>1900  {
+</span><span class='line'>(gdb) bt
+</span><span class='line'>#0  printk (fmt=0x0 &lt;__vectors_start&gt;) at kernel/printk/printk.c:1900
+</span><span class='line'>#1  0xc039d8c4 in start_kernel () at init/main.c:508
+</span><span class='line'>#2  0x00008048 in ?? ()
+</span><span class='line'>Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>另外如果有興趣使用Linux kernel提供的指令，可以使用下面的方式在啟動gdb時載入
+，只要把下面的描述加到你的<code>~/.gdbinit</code>即可</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>add-auto-load-safe-path /tmp/kernel/scripts/gdb/vmlinux-gdb.py
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那麼你就可以使用Linux kernel提供的gdb script，詳細的設定和指令說明在<a href="https://www.kernel.org/doc/Documentation/gdb-kernel-debugging.txt">這邊</a>。</p>
+
+<p><a name="de_lk0_5_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://www.linux-magazine.com/Online/Features/Qemu-and-the-Kernel">Linux Magazine: Qemu and the Kernel</a></li>
+<li><a href="https://www.kernel.org/doc/Documentation/gdb-kernel-debugging.txt">Linux kernel document: Debugging kernel and modules via gdb</a></li>
+<li><a href="http://stackoverflow.com/questions/11408041/how-to-debug-the-linux-kernel-with-gdb-and-qemu">stackoverflow: How to debug the Linux kernel with GDB and QEMU?</a></li>
+</ul>
+
+
+<p><a name="de_lk0_5_add"></a></p>
+
+<h2>補充</h2>
+
+<p>當初犯了蠢事載入不正確的kernel image導致一堆不必要的除錯。不過多學到一個gdb Python script除錯指令，當Python script發生exception時可以用下面的指令印出Python錯誤call stack</p>
+
+<ul>
+<li>gdb內：<code>set python print-stack full</code></li>
+<li>啟動gdb時加入參數： <code>-ex "set python print-stack full"</code></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/10/03/locate-function-source-code-via-gdb/">使用gdb 靜態分析C 語言名稱和參數相同函數的原始檔位置</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-10-03T14:36:00+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2016</span></span> <span class='time'>2:36 pm</span></time>
+        
+           | <a href="/blog/2016/10/03/locate-function-source-code-via-gdb/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2016/10/03/locate-function-source-code-via-gdb/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>前言</h2>
+
+<p>感謝<a href="http://scottt.tw/">Scott</a>大大的資訊。</p>
+
+<p>忘記那邊看過的名言：「手上有了新玩具，就會想要馬上拿來用。」</p>
+
+<h2>動機</h2>
+
+<p>組裝軟體的時候，有一件事很讓我困擾。那就是當整包SDK有兩個以上名稱和參數相同的函數的時候。當這種情況發生時，trace code就很麻煩，你必須要花時間釐清到底最後會使用到那一個函數。而這些config可能用下面兩種方式切換這些名稱和參數相同的函數：</p>
+
+<ol>
+<li>巨集
+
+<ul>
+<li><code>#if</code></li>
+<li><code>#ifdef</code></li>
+</ul>
+</li>
+<li>Makefile
+
+<ul>
+<li>在檔案中根據不同變數編譯不同的檔案</li>
+</ul>
+</li>
+</ol>
+
+
+<p>我以前會視情況用下面兩種方法找到該函數編譯實際使用的原始檔位置</p>
+
+<ol>
+<li>下毒藥，只要相同名字的函數都塞入<code>#error 可以辨別的字串</code>。編譯時根據錯誤訊息判斷使用哪個函數</li>
+<li>gdb設斷點，runtime透過中斷函數的方式取得函數的檔案和行號</li>
+</ol>
+
+
+<p>不過<a href="http://scottt.tw/">Scott</a>大大的今天給的資訊讓我可以更省力的處理這個問題了。</p>
+
+<p>如果只想要知道用法，看完下面指令就可以收工回家了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'>gdb -ex <span class="s1">&#39;file 你的執行檔或是shared library檔&#39;</span> -ex <span class="s1">&#39;info line 要查的函數&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>當然用<code>gdb</code>編譯時不要忘記加debug option。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#gds_env">測試環境</a></li>
+<li><a href="#gds_files">測試檔案</a>
+
+<ul>
+<li><a href="#gds_files_1">test_same_func.c</a></li>
+<li><a href="#gds_files_2">same_func1.c</a></li>
+<li><a href="#gds_files_3">same_func2.c</a></li>
+<li><a href="#gds_files_mk">Makefile</a></li>
+</ul>
+</li>
+<li><a href="#gds_test">測試結果</a></li>
+<li><a href="#gds_ref">延伸資料</a></li>
+</ul>
+
+
+<p><a name="gds_env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.5 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gds_files"></a></p>
+
+<h2>測試檔案</h2>
+
+<p>簡單來說，就是實作切換兩種方式同樣名稱和參數的函數：</p>
+
+<ol>
+<li>巨集</li>
+<li>Makefile</li>
+</ol>
+
+
+<p>所以我們會有</p>
+
+<ol>
+<li><a href="#gds_files_1">測試檔案進入點</a></li>
+<li><a href="#gds_files_2">測試檔一</a>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和測試檔二完全一模一樣</li>
+</ul>
+</li>
+<li><a href="#gds_files_3">測試檔二</a>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和測試檔一完全一模一樣</li>
+</ul>
+</li>
+<li><a href="#gds_files_mk">Makefile</a>
+
+<ul>
+<li>除了編譯以外，還提供兩個變數，由command line傳入
+
+<ul>
+<li>USE_FILE=1
+
+<ul>
+<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
+</ul>
+</li>
+<li>EN_OP1=1
+
+<ul>
+<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+
+
+<p><a name="gds_files_1"></a></p>
+
+<h3>test_same_func.c</h3>
+
+<ul>
+<li>測試檔案進入點，呼叫func1()。func1()在compile time才被決定</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>test_same_func.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="k">extern</span> <span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">func1</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gds_files_2"></a></p>
+
+<h3>same_func1.c</h3>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和<a href="#gds_files_2">same_func2</a>完全一模一樣</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>same_func1.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#if OP1</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_NOT_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gds_files_3"></a></p>
+
+<h3>same_func2.c</h3>
+
+<ul>
+<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
+<li>和<a href="#gds_files_1">same_func1</a>完全一模一樣</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>same_func2.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">#if OP1</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="cp">#else</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_NOT_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="cp">#endif</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gds_files_mk"></a></p>
+
+<h3>Makefile</h3>
+
+<p>提供兩個變數，由command line傳入</p>
+
+<ul>
+<li>USE_FILE=1
+
+<ul>
+<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
+</ul>
+</li>
+<li>EN_OP1=1
+
+<ul>
+<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CFLAGS</span><span class="o">+=</span>-Wall -Werror -g3
+</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span>test_same_func
+</span><span class='line'><span class="nv">SRCS</span><span class="o">=</span>test_same_func.c
+</span><span class='line'>
+</span><span class='line'><span class="cp">ifeq ($(USE_FILE), 1)</span>
+</span><span class='line'>    SRCS +<span class="o">=</span> same_func1.c
+</span><span class='line'><span class="cp">else</span>
+</span><span class='line'>    SRCS +<span class="o">=</span> same_func2.c
+</span><span class='line'><span class="cp">endif</span>
+</span><span class='line'>
+</span><span class='line'><span class="cp">ifeq ($(EN_OP1), 1)</span>
+</span><span class='line'>    CFLAGS +<span class="o">=</span> -DOP1<span class="o">=</span>1
+</span><span class='line'><span class="cp">endif</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">OBJS</span><span class="o">=</span><span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OBJS</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="nv">$@</span> <span class="nv">$^</span>
+</span><span class='line'>  gdb -ex <span class="s1">&#39;file $@&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">%.o</span><span class="o">:</span> %.<span class="n">c</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> -c <span class="nv">$^</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm *.o *~ <span class="k">$(</span>TARGET<span class="k">)</span> -f
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gds_test"></a></p>
+
+<h2>測試結果</h2>
+
+<p>前面提過，<code>func1()</code>的實作受兩個變數影響，分別為</p>
+
+<ol>
+<li>巨集<code>OP1</code>是否有設定
+
+<ul>
+<li>只有<code>OP1</code> 被設定<strong>並且</strong>非零時才會進入<code>OP1</code>的<code>func1()</code></li>
+</ul>
+</li>
+<li>Makefile變數<code>USE_FILE</code>是否有設定
+
+<ul>
+<li>只有<code>USE_FILE</code>為1的時候才會使用<code>same_func1.c</code>，其他情形都編譯<code>same_func2.c</code></li>
+</ul>
+</li>
+</ol>
+
+
+<p>所以我們make 指令有下面四種變化</p>
+
+<ol>
+<li><a href="">巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</a></li>
+<li><a href="">設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</a></li>
+<li><a href="">巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></a></li>
+<li><a href="">全部設定巨集<code>OP1</code>和<code>USE_FILE</code></a></li>
+</ol>
+
+
+<p><a name=""></a></p>
+
+<h3>巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func2.c</code></li>
+<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
+</span><span class='line'>default settings: OP1 disable and use same_func1.c
+</span><span class='line'>rm *.o *~ test_same_func -f
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>make
+</span><span class='line'>cc -Wall -Werror -g3 -c test_same_func.c
+</span><span class='line'>cc -Wall -Werror -g3 -c same_func2.c
+</span><span class='line'>cc -o test_same_func test_same_func.o same_func2.o
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
+</span><span class='line'>...
+</span><span class='line'>Line <span class="m">11</span> of <span class="s2">&quot;same_func2.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+</span><span class='line'>Hello World
+</span><span class='line'>same_func2.c: func1_NOT_OP1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name=""></a></p>
+
+<h3>設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func2.c</code></li>
+<li>使用<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
+</span><span class='line'>rm *.o *~ test_same_func -f
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>make <span class="nv">EN_OP1</span><span class="o">=</span>1
+</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c test_same_func.c
+</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c same_func2.c
+</span><span class='line'>cc -o test_same_func test_same_func.o same_func2.o
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
+</span><span class='line'>...
+</span><span class='line'>Line <span class="m">5</span> of <span class="s2">&quot;same_func2.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+</span><span class='line'>Hello World
+</span><span class='line'>same_func2.c: func1_OP1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name=""></a></p>
+
+<h3>巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func1.c</code></li>
+<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
+</span><span class='line'>rm *.o *~ test_same_func -f
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>make <span class="nv">USE_FILE</span><span class="o">=</span>1
+</span><span class='line'>cc -Wall -Werror -g3 -c test_same_func.c
+</span><span class='line'>cc -Wall -Werror -g3 -c same_func1.c
+</span><span class='line'>cc -o test_same_func test_same_func.o same_func1.o
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
+</span><span class='line'>...
+</span><span class='line'>Line <span class="m">11</span> of <span class="s2">&quot;same_func1.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+</span><span class='line'>Hello World
+</span><span class='line'>same_func1.c: func1_NOT_OP1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name=""></a></p>
+
+<h3>全部設定巨集<code>OP1</code>和<code>USE_FILE</code></h3>
+
+<p>gdb驗證結果的確是</p>
+
+<ol>
+<li>編譯<code>same_func1.c</code></li>
+<li>使用<code>OP1</code>版本的<code>func1()</code></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
+</span><span class='line'>rm *.o *~ test_same_func -f
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>make <span class="nv">EN_OP1</span><span class="o">=</span><span class="m">1</span> <span class="nv">USE_FILE</span><span class="o">=</span>1
+</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c test_same_func.c
+</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c same_func1.c
+</span><span class='line'>cc -o test_same_func test_same_func.o same_func1.o
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
+</span><span class='line'>...
+</span><span class='line'>Line <span class="m">5</span> of <span class="s2">&quot;same_func1.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
+</span><span class='line'>Hello World
+</span><span class='line'>same_func1.c: func1_OP1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gds_ref"></a></p>
+
+<h2>延伸資料</h2>
+
+<ul>
+<li><a href="https://docs.google.com/document/d/1w1nPmCLpeRN3kEYglzHwozhWXY0ddT9oe6JCZocsPNE/edit">Using GDB to Help You Read Linux Kernel Code without Running It</a>
+
+<ul>
+<li><a href="http://scottt.tw/">Scott</a>大大的文件，描述使用gdb 靜態分析Linux kernel的技巧</li>
+</ul>
+</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3800,989 +4698,6 @@ Codename:   trusty
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/">ARM CM4 Pratice (0): Environment Setup</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-04-06T22:15:15+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>10:15 pm</span></time>
-        
-           | <a href="/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>很久以前買了<a href="http://www.st.com/web/catalog/tools/FM116/SC959/SS1532/PF259090">STM32F4 Disco的開發版</a>（<a href="http://wiki.csie.ncku.edu.tw/embedded/STM32F429">繁體中文資訊</a>），最近開始想要學習ARM架構和硬體控制等技術。在設定目標，規劃進度前，一定要先把編譯和燒錄環境架設起來，整理如下：</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#cm4-0-env">安裝作業系統環境</a></li>
-<li><a href="#cm4-0-steps">安裝步驟</a>
-
-<ul>
-<li><a href="#cm4-0-steps-tl">安裝Toolchain</a></li>
-<li><a href="#cm4-0-steps-pkg-install">手動安裝燒錄和除錯工具</a>
-
-<ul>
-<li><a href="#cm4-0-steps-pkg-install-prepare">安裝需要套件</a></li>
-<li><a href="#cm4-0-steps-pkg-install-stlink">手動安裝st-link</a></li>
-<li><a href="#cm4-0-steps-pkg-install-openocd">手動安裝OpenOCD</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#cm4-0-test">驗證燒錄</a>
-
-<ul>
-<li><a href="#cm4-0-test-prepare">事前準備</a></li>
-<li><a href="#cm4-0-test-stflash">使用st-flash 開發版燒錄</a></li>
-<li><a href="#cm4-0-test-openocd">使用openocd 開發版燒錄</a></li>
-</ul>
-</li>
-<li><a href="#cm4-0-ref">參考資料</a></li>
-</ul>
-
-
-<p><a name="cm4-0-env"></a></p>
-
-<h2>安裝作業系統環境</h2>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.4 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="cm4-0-steps"></a></p>
-
-<h2>安裝步驟</h2>
-
-<p>要開發非本機的平台，我們會需要安裝</p>
-
-<ul>
-<li>Toolchain：提供編譯，函數，分析binary等功能</li>
-<li>燒錄軟體</li>
-<li>除錯工具</li>
-</ul>
-
-
-<p>st-link和openocd同時有燒錄和開發版軟體除錯的功能，因此我們兩個都安裝。</p>
-
-<p><a name="cm4-0-steps-tl"></a></p>
-
-<h3>安裝Toolchain</h3>
-
-<p>網路上找到<a href="https://launchpad.net/gcc-arm-embedded">GCC ARM Embedded (ARM R和M系列使用 )</a>的PPA。簡單找一下網路，<strong><font color="red">沒有直接證據說這邊的PPA是由ARM官方維護</font></strong>。不過在<a href="http://yottadocs.mbed.com/#installing-on-linux">mbed(ARM 成立的IoT作業系統)網站裏面</a>的確有提到這個PPA，暫時當作間接證據。<strong><font color="red">目前我還沒有驗證這個Toolchain編譯出來的binary是否可以在開發版上正常動作</font></strong>。</p>
-
-<figure class='code'><figcaption><span>安裝Toolchain指令</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo add-apt-repository ppa:team-gcc-arm-embedded/ppa
-</span><span class='line'>sudo apt-get update
-</span><span class='line'>sudo apt-get install gcc-arm-embedded
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="cm4-0-steps-pkg-install"></a></p>
-
-<h3>手動安裝燒錄和除錯工具</h3>
-
-<p><a name="cm4-0-steps-pkg-install-prepare"></a></p>
-
-<h4>安裝需要套件</h4>
-
-<figure class='code'><figcaption><span>系統安裝設定STM32F4環境相關套件 </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt-get install git
-</span><span class='line'>sudo apt-get install libtool
-</span><span class='line'>sudo apt-get install automake
-</span><span class='line'>sudo apt-get install autoconf
-</span><span class='line'>sudo apt-get install pkg-config
-</span><span class='line'>sudo apt-get install libusb-1.0-0-dev
-</span><span class='line'>sudo apt-get install libftdi-dev   # 當openocd要支援MPSSE mode才需要裝，這是啥我不知道。
-</span><span class='line'>sudo apt-get install libhidapi-dev # 當openocd要支援CMSIS-DAP才會用到，這是啥我不知道。
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>我自己的習慣是非必要不會放在系統中，<strong>接下來的指令都是預設<code>st-link</code>和<code>openocd</code>裝到<code>$HOME/bin</code>中</strong>，Ubuntu在登入時會自動將<code>~/bin</code>加入<code>PATH</code>中。</p>
-
-<p>如果您沒有~/bin的話，請使用下面指令建立。</p>
-
-<figure class='code'><figcaption><span>系統安裝設定STM32F4環境相關套件 </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>mkdir ~/bin/
-</span><span class='line'>. ~/.profile # 強迫系統自動將`~/bin`加入`PATH`中
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="cm4-0-steps-pkg-install-stlink"></a></p>
-
-<h4>手動安裝st-link</h4>
-
-<p>簡單講一下，就是下載、編譯、安裝軟體。特別要注意的是，為了要讓你的PC在使用Mini USB連到開發版後能夠讓Ubuntu的<code>udev</code>服務可以順利地偵測到開發版，需要加入相關設定並重新啟動<code>udev</code>服務。</p>
-
-<p>下載Source code</p>
-
-<figure class='code'><figcaption><span>下載Source code  </span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone https://github.com/texane/stlink
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>編譯stlink</p>
-
-<figure class='code'><figcaption><span>編譯</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>cd stlink/
-</span><span class='line'>./autogen.sh
-</span><span class='line'>./configure
-</span><span class='line'>make
-</span><span class='line'>cp st-* ~/bin
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>設定並重新起動udev</p>
-
-<figure class='code'><figcaption><span>設定並重新起動udev</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo cp 49-stlinkv* /etc/udev/rules.d/ -rv
-</span><span class='line'>sudo service udev restart
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>驗證一下是否可以偵測到開發版，請確定測試前開發版已經和您的電腦透過Mini USB連線，以及有設定<code>udev</code>並且重新啟動。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ st-probe
-</span><span class='line'>Found 1 stlink programmers
-</span><span class='line'>30303030303030303030303100
-</span><span class='line'>   flash: 2097152 (pagesize: 16384)
-</span><span class='line'>    sram: 262144
-</span><span class='line'>  chipid: 0x0419
-</span><span class='line'>   descr: F42x and F43x device
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="cm4-0-steps-pkg-install-openocd"></a></p>
-
-<h4>手動安裝OpenOCD</h4>
-
-<p>下載Source code</p>
-
-<figure class='code'><figcaption><span>下載Source code</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone git://git.code.sf.net/p/openocd/code openocd-code
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>編譯</p>
-
-<figure class='code'><figcaption><span>編譯</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>cd openocd-code/
-</span><span class='line'>./bootstrap
-</span><span class='line'>./configure # script會自動偵測系統是否有相依開發套件
-</span><span class='line'>make
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>安裝</p>
-
-<figure class='code'><figcaption><span>安裝</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>cp src/openocd ~/bin
-</span><span class='line'>cp tcl/board/stm32f429discovery.cfg ~/.openocd/openocd.cfg
-</span><span class='line'>cp tcl/* ~/.openocd
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>驗證一下是否可以偵測到開發版，請確定測試前開發版已經和您的電腦透過Mini USB連線。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ openocd
-</span><span class='line'>Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-07-22:20)
-</span><span class='line'>Licensed under GNU GPL v2
-</span><span class='line'>For bug reports, read
-</span><span class='line'>  http://openocd.org/doc/doxygen/bugs.html
-</span><span class='line'>Info : The selected transport took over low-level target control. The results might differ compared to plain JTAG/SWD
-</span><span class='line'>adapter speed: 2000 kHz
-</span><span class='line'>adapter_nsrst_delay: 100
-</span><span class='line'>none separate
-</span><span class='line'>srst_only separate srst_nogate srst_open_drain connect_deassert_srst
-</span><span class='line'>Info : Unable to match requested speed 2000 kHz, using 1800 kHz
-</span><span class='line'>Info : Unable to match requested speed 2000 kHz, using 1800 kHz
-</span><span class='line'>Info : clock speed 1800 kHz
-</span><span class='line'>Info : STLINK v2 JTAG v17 API v2 SWIM v0 VID 0x0483 PID 0x3748
-</span><span class='line'>Info : using stlink api v2
-</span><span class='line'>Info : Target voltage: 2.862887
-</span><span class='line'>Info : stm32f4x.cpu: hardware has 6 breakpoints, 4 watchpoints
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="cm4-0-test"></a></p>
-
-<h2>驗證燒錄</h2>
-
-<p><a name="cm4-0-test-parepare"></a></p>
-
-<h3>事前準備</h3>
-
-<p>下載jserv整理的STM 軔體</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone https://github.com/jserv/stm32f429-demos
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>將source中的hex轉成binary</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>cd stm32f429-demos/
-</span><span class='line'>make
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>使用下載提供的Makefile燒錄，裏面會先用openocd燒錄，失敗的話自動切到st-flash燒錄，非常建議讀一下Makefile。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>make flash-demo檔案
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>目前套件內蒐集的demo檔案</p>
-
-<ul>
-<li>flash-GamesInJava</li>
-<li>flash-STM32F429I-DISCOVERY_Demo_V1.0.1</li>
-<li>flash-Paint</li>
-<li>flash-TouchGFX-demo2014</li>
-<li>flash-STM32CubeDemo_STM32F429I-Discovery</li>
-</ul>
-
-
-<p><a name="cm4-0-test-stflash"></a></p>
-
-<h3>使用st-flash 開發版燒錄</h3>
-
-<ul>
-<li><code>st-flash write 軔體binary檔案名稱 0x8000000</code></li>
-</ul>
-
-
-<p>為什麼是<code>0x800000</code>呢？可以查一下<a href="http://www.st.com/web/en/resource/technical/document/datasheet/DM00071990.pdf">手冊</a>，上面有說這塊記憶體是分配給flash memory。</p>
-
-<p><a name="cm4-0-test-openocd"></a></p>
-
-<h4>使用openocd 開發版燒錄</h4>
-
-<p>從<a href="https://github.com/jserv/stm32f429-demos">GitHub: jserv/stm32f429-demos</a>裏面的Makefile抄來的。指令比較長，不過這是因為openocd可以把一系列的命令連發的關係</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>openocd -f interface/stlink-v2.cfg  -f target/stm32f4x.cfg  -c &quot;init&quot;  -c &quot;reset init&quot;  -c &quot;stm32f2x unlock 0&quot;  -c &quot;flash probe 0&quot;  -c &quot;flash info 0&quot;  -c &quot;flash write_image erase 軔體binary檔案名稱 0x8000000&quot;  -c &quot;reset run&quot; -c shutdown
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>使用比較好看的排版</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>openocd -f interface/stlink-v2.cfg  \
-</span><span class='line'>        -f target/stm32f4x.cfg      \
-</span><span class='line'>        -c &quot;init&quot;                   \
-</span><span class='line'>        -c &quot;reset init&quot;             \
-</span><span class='line'>        -c &quot;stm32f2x unlock 0&quot;      \
-</span><span class='line'>        -c &quot;flash probe 0&quot;          \
-</span><span class='line'>        -c &quot;flash info 0&quot;           \
-</span><span class='line'>        -c &quot;flash write_image erase 軔體binary檔案名稱 0x8000000&quot; \
-</span><span class='line'>        -c &quot;reset run&quot; -c shutdown
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<h4>參數說明</h4>
-
-<ul>
-<li><code>-f</code>
-
-<ul>
-<li>指定config檔案。你可能會想問說interface目錄在那邊，還記得<a href="cm4-0-steps-pkg-install-openocd">前面</a>的動作嘛？</li>
-<li>可以指定
-
-<ul>
-<li>interface: 除錯使用的介面</li>
-<li>target: 執行的平台CPU如STM32F4</li>
-<li>board: 開發版</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><code>-c</code>
-
-<ul>
-<li>執行openocd指令</li>
-</ul>
-</li>
-</ul>
-
-
-<h4>指令說明</h4>
-
-<ul>
-<li><code>-f interface/stlink-v2.cfg</code></li>
-<li><code>-f target/stm32f4x.cfg</code></li>
-<li><code>-c "init"</code>
-
-<ul>
-<li>結束config stage，開始進入run stage (<a href="http://openocd.org/doc/html/Daemon-Configuration.html#Entering-the-Run-Stage">出處</a>)</li>
-</ul>
-</li>
-<li><code>-c "reset init"</code>
-
-<ul>
-<li>reset 開發版，重新開機(<a href="http://openocd.org/doc/html/General-Commands.html#Target-State-handling">出處</a>)後進入init狀態。</li>
-</ul>
-</li>
-<li><code>-c "stm32f2x unlock 0"</code>
-
-<ul>
-<li>將開發版的flash解鎖(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
-</ul>
-</li>
-<li><code>-c "flash probe 0"</code>
-
-<ul>
-<li>偵測開發版的flash(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
-</ul>
-</li>
-<li><code>-c "flash info 0"</code>
-
-<ul>
-<li>顯示開發版的flash資訊(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
-</ul>
-</li>
-<li><code>-c "flash write_image erase 軔體binary檔案名稱 0x8000000"</code>
-
-<ul>
-<li>將檔案寫入flash(<a href="http://openocd.org/doc/html/Flash-Commands.html#Flash-Configuration-Commands">出處</a>)</li>
-</ul>
-</li>
-<li><code>-c "reset run" -c shutdown</code>
-
-<ul>
-<li>正常重新開機(<a href="http://openocd.org/doc/html/General-Commands.html#Target-State-handling">出處</a>)</li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="cm4-0-ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://yottadocs.mbed.com/#installing-on-linux">yotta Documentation: Install on Linux</a></li>
-<li><a href="https://launchpad.net/gcc-arm-embedded">ARM Embedded PPA網站</a></li>
-<li><a href="https://launchpad.net/~team-gcc-arm-embedded/+archive/ubuntu/ppa">GNU ARM Embedded Toolchain</a></li>
-<li><a href="https://github.com/jserv/stm32f429-demos">GitHub: jserv/stm32f429-demos</a></li>
-<li><a href="http://openocd.org/doc/html/">OpenOCD手冊</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/01/24/talk-more-about-git-remote/">再談 Git Remote</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-01-24T20:30:32+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>8:30 pm</span></time>
-        
-           | <a href="/blog/2016/01/24/talk-more-about-git-remote/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><ul>
-<li>更新：
-
-<ul>
-<li>Apr/09/2016：感謝網友柏瑀的告知，修正白字。</li>
-</ul>
-</li>
-</ul>
-
-
-<p>git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。</p>
-
-<p>一樣，先講測試環境，避免無法reproduce的問題。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span><span class='line'>
-</span><span class='line'>$ git --version
-</span><span class='line'>git version 2.7.0
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>本次介紹目錄如下</p>
-
-<ul>
-<li><a href="#gr_gb">背景說明</a></li>
-<li><a href="#gr_cmd">git remote指令介紹</a>
-
-<ul>
-<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
-<li><a href="#gr_cmd_add">新增remote</a></li>
-<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
-<li><a href="#gr_cmd_push">remote的branch操作</a></li>
-<li><a href="#gr_cmd_rm">刪除remote</a></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="gr_gb"></a></p>
-
-<h2>背景說明</h2>
-
-<p>先來問問男人<code>git remote</code>是什麼吧？</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>GIT-REMOTE(1)                                     Git Manual                                    GIT-REMOTE(1)
-</span><span class='line'>
-</span><span class='line'>NAME
-</span><span class='line'>       git-remote - Manage set of tracked repositories
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>白話來說，<code>git remote</code>是用來管理<font color="red">多個</font>tracked repositories。（中文難翻，意思是你要追蹤的git repository）。在大部分的情況，<code>git clone</code>下來後只需要和原本clone的遠端互動的話，你只有一個remote，那麼你機乎不會感受到remote的運作，我天生駑鈍，剛開始只是覺得奇怪怎麼有時候後會有個<code>origin</code>跑出來而已。</p>
-
-<p>如果夠幸運（還是不幸？）你不太會需要遇到需要處理remote的情況。不過在github上面，倒是蠻有機會要用到remote，情境如下。</p>
-
-<ul>
-<li>你在github上面有帳號，要fork別人的project <code>A</code>，fork來的稱為<code>A+</code></li>
-<li>你在<code>A+</code>開發，同時<code>A</code>也在開發</li>
-<li><code>A+</code>有需要和<code>A</code>同步，也許是<code>A</code>有新功能，或是你要回饋程式碼總不能回饋和<code>A</code>差異太大的程式碼</li>
-</ul>
-
-
-<p><code>A+</code>和<code>A</code>同步，是remote常用的情境。常用到github直接給<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>。大概描述如下：</p>
-
-<ul>
-<li><code>A+</code>加一個remote，URL為<code>A</code>的URL。白話來說，就是<code>A+</code>要track repository <code>A</code>。
-
-<ul>
-<li>remote必須給個名字，github的<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>上給的名字叫upstream。</li>
-</ul>
-</li>
-<li>既然加了一個tracked repository，你就可以做
-
-<ul>
-<li>拉remote程式碼下來</li>
-<li>切換到remote下面的branch</li>
-<li><strong>merge remote 的branch</strong></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="gr_cmd"></a></p>
-
-<h2>git remote指令介紹</h2>
-
-<p>在介紹指令之前，先建立示範git repository 以便下面的說明。情境如下</p>
-
-<ol>
-<li>建立新的git repository，稱為<code>repo_1</code></li>
-<li>clone <code>repo_1</code>到<code>repo_2</code></li>
-<li>clone <code>repo_2</code>到<code>repo_3</code></li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git init repo_1
-</span><span class='line'>Initialized empty Git repository in /tmp/test_remote/repo_1/.git/
-</span><span class='line'>
-</span><span class='line'>$ cd repo_1/
-</span><span class='line'>/repo_1$ touch test_file &amp;&amp; git add test_file &amp;&amp; git commit -a -m &quot;init for test&quot;
-</span><span class='line'>[master (root-commit) 6847c3c] init for test
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test_file
-</span><span class='line'>
-</span><span class='line'>$ cd ../
-</span><span class='line'>
-</span><span class='line'>$ git clone --bare repo_1 repo_2
-</span><span class='line'>Cloning into bare repository &#39;repo_2&#39;...
-</span><span class='line'>done.
-</span><span class='line'>
-</span><span class='line'>$ git clone repo_2/ repo_3
-</span><span class='line'>Cloning into &#39;repo_3&#39;...
-</span><span class='line'>done.
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>關於repo_2的&ndash;bare部份，一言難盡。長話短說，不這樣幹repo_3不能push到repo_2，有興趣可以看<a href="http://stackoverflow.com/questions/2816369/git-push-error-remote-rejected-master-master-branch-is-currently-checked">這邊</a>。</p>
-
-<p>如果你的git repository是clone過來的，一定會有一個預設remote。沒意外的會叫<code>origin</code> <del>(什麼？你的remote叫<code>aosp</code>? 呃太複雜不討論)</del>，接下來你可以對於remote 操作，分別說明如下：</p>
-
-<ul>
-<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
-<li><a href="#gr_cmd_add">新增remote</a></li>
-<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
-<li><a href="#gr_cmd_push">remote的branch操作</a></li>
-<li><a href="#gr_cmd_rm">刪除remote</a></li>
-</ul>
-
-
-<p><a name="gr_cmd_status"></a></p>
-
-<h2>查詢remote資訊</h2>
-
-<ul>
-<li><code>git remote</code>
-
-<ul>
-<li>顯示remote名稱</li>
-</ul>
-</li>
-<li><code>git remote -v</code>
-
-<ul>
-<li>顯示remote名稱及remote URL</li>
-</ul>
-</li>
-<li><code>git remote show remote名稱</code>
-
-<ul>
-<li>顯示<code>remote名稱</code>的詳細資訊</li>
-</ul>
-</li>
-</ul>
-
-
-<p>直接看範例</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_3
-</span><span class='line'>
-</span><span class='line'>$ git remote
-</span><span class='line'>origin
-</span><span class='line'>
-</span><span class='line'>$ git remote -v
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
-</span><span class='line'>
-</span><span class='line'>$ git remote show origin
-</span><span class='line'>* remote origin
-</span><span class='line'>  Fetch URL: /tmp/test_remote/repo_2/
-</span><span class='line'>  Push  URL: /tmp/test_remote/repo_2/
-</span><span class='line'>  HEAD branch: master
-</span><span class='line'>  Remote branch:
-</span><span class='line'>    master tracked
-</span><span class='line'>  Local branch configured for &#39;git pull&#39;:
-</span><span class='line'>    master merges with remote master
-</span><span class='line'>  Local ref configured for &#39;git push&#39;:
-</span><span class='line'>    master pushes to master (up to date)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gr_cmd_add"></a></p>
-
-<h2>新增remote</h2>
-
-<ul>
-<li><code>git add remote名稱 remote_repository_URL</code></li>
-</ul>
-
-
-<p>範例如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote add upstream /tmp/test_remote/repo_1/
-</span><span class='line'>
-</span><span class='line'>$ git remote -v
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
-</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (fetch)
-</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (push)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>新增完畢後，請記得<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>是你要操作remote的參數。</p>
-
-<p>另外你還可以加入多個remote來場大亂鬥。例如你從<code>A</code> fork <code>A+</code>，也許有人fork 出來的<code>A++</code>有你想要的功能，就可以再把<code>A++</code>加入你<code>A</code> repository的remote。</p>
-
-<p><a name="gr_cmd_fetch"></a></p>
-
-<h2>拉remote repository</h2>
-
-<ul>
-<li><code>git fetch remote_名稱</code></li>
-<li><code>git pull remote_名稱/remote_branch_名稱</code></li>
-</ul>
-
-
-<p>我們先在<code>repo_1</code>開一個branch稱為<code>br1</code></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_1/
-</span><span class='line'>
-</span><span class='line'>$ git checkout -b br1
-</span><span class='line'>Switched to a new branch &#39;br1&#39;
-</span><span class='line'>
-</span><span class='line'>$ touch test_on_branch &amp;&amp; git add test_on_branch &amp;&amp; git commit test_on_branch -m &quot;test&quot;
-</span><span class='line'>[br1 cc7222f] test
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test_on_branch
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>接下來就是範例時間</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git fetch upstream
-</span><span class='line'>From /tmp/test_remote/repo_1
-</span><span class='line'> * [new branch]      br1        -&gt; upstream/br1
-</span><span class='line'> * [new branch]      master     -&gt; upstream/master
-</span><span class='line'>
-</span><span class='line'>$ ls
-</span><span class='line'>test_file
-</span><span class='line'>
-</span><span class='line'>$ git pull upstream br1
-</span><span class='line'>From /tmp/test_remote/repo_1
-</span><span class='line'> * branch            br1        -&gt; FETCH_HEAD
-</span><span class='line'>Updating 6847c3c..cc7222f
-</span><span class='line'>Fast-forward
-</span><span class='line'> test_on_branch | 0
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test_on_branch
-</span><span class='line'>
-</span><span class='line'>$ ls
-</span><span class='line'>test_file  test_on_branch
-</span><span class='line'>
-</span><span class='line'>$ git status
-</span><span class='line'>On branch master
-</span><span class='line'>Your branch is ahead of &#39;origin/master&#39; by 1 commit.
-</span><span class='line'>  (use &quot;git push&quot; to publish your local commits)
-</span><span class='line'>nothing to commit, working directory clean
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>注意最後的指令，因為我們pull了<code>upstream/br1</code>，所以local多了一個commit。因此訊息中有說你目前repository 比<code>origin/master</code>(你clone的remote/branch)多一個commit。你可以push回<code>origin/master</code>。</p>
-
-<p><a name="gr_cmd_push"></a></p>
-
-<h2>remote的branch操作</h2>
-
-<p>原則就是命令中有參數會是<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>。</p>
-
-<ul>
-<li>切換</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout upstream/br1
-</span><span class='line'>Note: checking out &#39;upstream/br1&#39;.
-</span><span class='line'>
-</span><span class='line'>You are in &#39;detached HEAD&#39; state. You can look around, make experimental
-</span><span class='line'>changes and commit them, and you can discard any commits you make in this
-</span><span class='line'>state without impacting any branches by performing another checkout.
-</span><span class='line'>
-</span><span class='line'>If you want to create a new branch to retain commits you create, you may
-</span><span class='line'>do so (now or later) by using -b with the checkout command again. Example:
-</span><span class='line'>
-</span><span class='line'>  git checkout -b &lt;new-branch-name&gt;
-</span><span class='line'>
-</span><span class='line'>HEAD is now at bd026e3... test
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>中間的一堆英文簡單來說是因為git checkout沒特別參數，git只是把HEAD指到命令中的hash而已。如果你要同時在local開一個branch，可以這樣幹：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout --track  upstream/br1
-</span><span class='line'>Branch br1 set up to track remote branch br1 from upstream.
-</span><span class='line'>Switched to a new branch &#39;br1&#39;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>merge</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'># 先在upstream/br1建立新的commit
-</span><span class='line'>$ cd /tmp/test_remote/repo_1/
-</span><span class='line'>
-</span><span class='line'>$ touch test1_on_branch &amp;&amp; git add test1_on_branch &amp;&amp; git commit test1_on_branch -m &quot;test1&quot;
-</span><span class='line'>[br1 d82612a] test1
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test1_on_branch
-</span><span class='line'>
-</span><span class='line'># 切回repo_3
-</span><span class='line'>cd /tmp/test_remote/repo_3
-</span><span class='line'>
-</span><span class='line'># 先fetch
-</span><span class='line'>$ git fetch upstream
-</span><span class='line'>remote: Counting objects: 2, done.
-</span><span class='line'>remote: Compressing objects: 100% (2/2), done.
-</span><span class='line'>remote: Total 2 (delta 0), reused 0 (delta 0)
-</span><span class='line'>Unpacking objects: 100% (2/2), done.
-</span><span class='line'>From /tmp/test_remote/repo_1
-</span><span class='line'>   bd026e3..d82612a  br1        -&gt; upstream/br1
-</span><span class='line'>
-</span><span class='line'># 再merge，事實上和git pull upstream br1 一樣效果（默）
-</span><span class='line'>$ git merge upstream/br1
-</span><span class='line'>Updating bd026e3..d82612a
-</span><span class='line'>Fast-forward
-</span><span class='line'> test1_on_branch | 0
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test1_on_branch
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gr_cmd_rm"></a></p>
-
-<h2>刪除remote</h2>
-
-<ul>
-<li>git remote remove remote名稱</li>
-</ul>
-
-
-<p>範例如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote remove upstream
-</span><span class='line'>
-</span><span class='line'>$ git remote -v
-</span><span class='line'>origin    /tmp/test_remote/repo_2 (fetch)
-</span><span class='line'>origin    /tmp/test_remote/repo_2 (push)
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/3">&larr; Older</a>
@@ -4800,6 +4715,14 @@ Codename:   trusty
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04/">更新Ubuntu 18.04後Octopress 環境變動</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2018/08/26/vim-posix-group-regex/">Vim POSIX Group Regex 使用方式</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2018/07/24/notes-on-how-to-c-2016/">Notes on How to C 2016</a>
       </li>
     
@@ -4811,28 +4734,20 @@ Codename:   trusty
         <a href="/blog/2017/06/04/qemu-x86-64-with-gdb/">Fix: Qemu X86_64下gdb Debug kernel出現Remote &#39;g&#8217; Packet Reply Is Too Long:</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/12/18/review-gnu-coding-style/">筆記 - GNU Coding Style</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (8)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (1)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (4)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 146.8292682926829%'>c(32)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.92682926829268%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.70731707317073%'>octopress(8)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.85365853658537%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 101.46341463414635%'>regex(1)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 105.85365853658537%'>vim(4)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 146.8292682926829%'>c(32)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.92682926829268%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 113.17073170731707%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.85365853658537%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.92682926829268%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 107.3170731707317%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
 </section>
 
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Octopress | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-07-24T21:19:16+08:00</updated>
+  <updated>2018-12-06T22:47:58+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,56 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[更新Ubuntu 18.04後Octopress 環境變動]]></title>
+    <link href="http://wen00072.github.io/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04/"/>
+    <updated>2018-12-06T22:24:01+08:00</updated>
+    <id>http://wen00072.github.io/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04</id>
+    <content type="html"><![CDATA[<p>本來想要寫一些東西，結果發現<code>rake</code>在Ubuntu 無法執行，只好先處理了。</p>
+
+<p>主要的問題是<code>Ruby</code>版本從16.04使用的<code>2.3</code>升級成<code>2.5</code>了。以下是我紀錄過的測試指令，必須承認這是網路上的東西剪貼，我不想知道後面的原理，後果自行負責。寫這篇文章另一個目的是確定上傳到網路上後可以正常發佈才證明真的修理了。</p>
+
+<h2>預安裝套件</h2>
+
+<pre><code>sudo apt -y gcc libcurl4-openssl-dev libxml2-dev
+</code></pre>
+
+<h2>Ruby 相關更新，完全不知道做啥</h2>
+
+<pre><code>sudo gem install bundler
+bundle install
+sudo gem install rake
+</code></pre>
+
+<h2>更新Octopress Gemfile</h2>
+
+<p>由於更新後<code>rake</code>版本也從<code>10.5.0</code>變成<code>12.3.1</code>，所以一跑<code>rake</code>就會出現版本不合的錯誤，因此我把<code>Gemfile</code> <code>rake</code>的版本檢查改成<code>12</code>，diff 檔案如下</p>
+
+<pre><code class="diff">diff --git a/Gemfile b/Gemfile
+index 153dd3d..9f5048b 100644
+--- a/Gemfile
++++ b/Gemfile
+@@ -1,7 +1,7 @@
+ source "https://rubygems.org"
+
+ group :development do
+-  gem 'rake', '~&gt; 10.0'
++  gem 'rake', '~&gt; 12.0'
+   gem 'jekyll', '~&gt; 2.0'
+   gem 'octopress-hooks', '~&gt; 2.2'
+   gem 'octopress-date-format', '~&gt; 2.0'
+</code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/cliffe/SecGen/issues/113">[Ubuntu 18.04] Error installing on step &lsquo;bundle install&rsquo; (fix in comments)</a></li>
+<li><a href="https://stackoverflow.com/questions/7483515/rake-aborted-no-such-file-to-load-bundler-setup-rails-3-1">Rake aborted! no such file to load &ndash;bundler/setup Rails 3.1</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[加快Octopress 編輯文章的script]]></title>
@@ -155,43 +205,6 @@ rake generate
 
 <ul>
 <li><a href="https://github.com/wen00072/octopress_bash_completion">GitHub URL</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Modify Footer in Octopress]]></title>
-    <link href="http://wen00072.github.io/blog/2015/03/30/modify-footer-in-octopress/"/>
-    <updated>2015-03-30T00:23:43+08:00</updated>
-    <id>http://wen00072.github.io/blog/2015/03/30/modify-footer-in-octopress</id>
-    <content type="html"><![CDATA[<p>步驟如下：</p>
-
-<ul>
-<li>更改<code>source/_includes/custom/footer.html</code></li>
-<li><code>rake generate</code>
-
-<ul>
-<li>不確定這個是否可以省略</li>
-</ul>
-</li>
-<li><code>rake preview</code>
-
-<ul>
-<li>看看有沒有錯誤</li>
-</ul>
-</li>
-<li><code>rake deploy</code></li>
-<li>記得把更改的檔案commit並push到orgin source</li>
-</ul>
-
-
-<p>目前的頁面最後已經加上了CC-BY-NC說明，就是將<code>source/_includes/custom/footer.html</code>內加上相關HTML tag的。</p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://octopress.org/docs/theme/template/">Octopress: Theming &amp; Customization</a></li>
 </ul>
 
 ]]></content>
