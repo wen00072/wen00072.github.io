@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Autotools | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/autotools/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-06T22:47:58+08:00</updated>
+  <updated>2018-12-12T21:44:50+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -308,31 +308,20 @@ index f173ac6..230fa34 100644
 
 <ul>
 <li>指定link *.la
-<figure class='code'><figcaption><span>src/Makefile.am.diff</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>diff &amp;ndash;git a/src/Makefile.am b/src/Makefile.am
-</span><span class='line'>index 75a5199..b8b29bf 100644
-</span><span class='line'>&amp;mdash; a/src/Makefile.am
-</span><span class='line'>+++ b/src/Makefile.am
-</span><span class='line'>@@ -1,4 +1,4 @@
-</span><span class='line'>-LDADD = ../libs/liba.a ../libs/libb.a
-</span><span class='line'>+LDADD = ../libs/liba.la ../libs/libb.la
-</span><span class='line'>AM_CFLAGS = -I../include&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt; bin_PROGRAMS = test
-</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`text src/Makefile.am.diff
+diff &ndash;git a/src/Makefile.am b/src/Makefile.am
+index 75a5199..b8b29bf 100644
+&mdash; a/src/Makefile.am
++++ b/src/Makefile.am
+@@ -1,4 +1,4 @@
+-LDADD = ../libs/liba.a ../libs/libb.a
++LDADD = ../libs/liba.la ../libs/libb.la
+AM_CFLAGS = -I../include</li>
+</ul>
+
+
+<p> bin_PROGRAMS = test
+&#8220;`</p>
 
 <hr />
 
@@ -760,297 +749,153 @@ AC_OUTPUT
 </code></pre>
 
 <p>接下來就是更動<code>configure.ac</code>，更動完和原本的差別如下：
-<figure class='code'><figcaption><span>configure.scan和configure.ac 差別</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-<span class='line-number'>132</span>
-<span class='line-number'>133</span>
-<span class='line-number'>134</span>
-<span class='line-number'>135</span>
-<span class='line-number'>136</span>
-<span class='line-number'>137</span>
-<span class='line-number'>138</span>
-<span class='line-number'>139</span>
-<span class='line-number'>140</span>
-<span class='line-number'>141</span>
-<span class='line-number'>142</span>
-<span class='line-number'>143</span>
-<span class='line-number'>144</span>
-<span class='line-number'>145</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>5,6c5,6
-</span><span class='line'>&amp;lt; AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h2&gt;&amp;lt; AC_CONFIG_SRCDIR([libs/libb.c])&lt;/h2&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;blockquote&gt;&lt;p&gt;AC_INIT([Test_Autotools], [0], [test])
-</span><span class='line'>AM_INIT_AUTOMAKE([foreign -Wall -Werror])
-</span><span class='line'>8a9,14&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h1&gt;Use static libary&lt;/h1&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;AC_PROG_RANLIB&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;```
-</span><span class='line'>簡單說明如下&lt;/p&gt;&lt;/blockquote&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;更改套件版本資訊&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;刪除&lt;code&gt;AC_CONFIG_SRCDIR&lt;/code&gt;&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;設定automake
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;&lt;code&gt;foreign&lt;/code&gt;表示這不是標準的GNU Coding Standard，因此不會檢查額外的檔案如&lt;code&gt;NEWS&lt;/code&gt;, &lt;code&gt;README&lt;/code&gt;, &lt;code&gt;ChangeLog&lt;/code&gt;等。&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;共用編譯參數&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>&lt;/li&gt;
-</span><span class='line'>&lt;li&gt;&lt;code&gt;AC_PROG_RANLIB&lt;/code&gt;表示要使用static library&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;hr /&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;&lt;a name=&quot;auto_ex_maam&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h4&gt;Makefile.am&lt;/h4&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;前面提到，每個目錄都要有一個&lt;code&gt;Makefile.am&lt;/code&gt;。關於&lt;code&gt;Makefile.am&lt;/code&gt;語法，可以參考 &lt;a href=&quot;https://www.lrde.epita.fr/~adl/autotools.html&quot;&gt;Alexandre Duret Lutz: Autotools Tutorial&lt;/a&gt;大略了解。更詳細的部份可以看&lt;a href=&quot;http://www.gnu.org/software/automake/manual/html_node/A-Shared-Library.html#A-Shared-Library&quot;&gt;Automake手冊：8.3 Building a Shared Library&lt;/a&gt;&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;範例中&lt;code&gt;Makefile.am&lt;/code&gt;如下：&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;./Makefile.am：　基本上就是依照列出的順序編譯&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;pre&gt;&lt;code class=&quot;makefile ./Makefile.am&quot;&gt;SUBDIRS = libs src
-</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;libs/Makefile.am&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;pre&gt;&lt;code class=&quot;makefile libs/Makefile.am&quot;&gt;AM_CFLAGS = -I../include
-</span><span class='line'>lib_LIBRARIES = liba.a libb.a
-</span><span class='line'>liba_a_SOURCES = liba.c
-</span><span class='line'>libb_a_SOURCES = libb.c
-</span><span class='line'>
-</span><span class='line'>include_HEADERS = ../include/liba.h ../include/libb.h
-</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;最上面形式就是&lt;code&gt;要裝到目錄&lt;/code&gt;_&lt;code&gt;Keyword&lt;/code&gt;，所以表示我們要產生&lt;code&gt;liba.a&lt;/code&gt;和&lt;code&gt;libb.a&lt;/code&gt;，安裝時放在&lt;code&gt;/usr/local/lib&lt;/code&gt;下面、指定library由哪些原始程式檔案組成、同時要把header files放在&lt;code&gt;/usr/local/include&lt;/code&gt;下。(configure沒指定預設prefix為/usr/local)&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;ul&gt;
-</span><span class='line'>&lt;li&gt;src/Makefile.am&lt;/li&gt;
-</span><span class='line'>&lt;/ul&gt;
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>&lt;pre&gt;&lt;code class=&quot;makefile src/Makefile.am&quot;&gt;LDADD = ../libs/liba.a ../libs/libb.a
-</span><span class='line'>AM_CFLAGS = -I../include
-</span><span class='line'>
-</span><span class='line'>bin_PROGRAMS = test
-</span><span class='line'>test_SOURCES = test.c
-</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;一樣的形式：&lt;code&gt;要裝到目錄&lt;/code&gt;_&lt;code&gt;Keyword&lt;/code&gt;。這邊宣告要安裝到&lt;code&gt;/usr/loca/bin&lt;/code&gt;、要link &lt;code&gt;liba.a&lt;/code&gt;和&lt;code&gt;libb.a&lt;/code&gt;、並且5指定執行檔的原始程式檔案。&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;hr /&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;經過上面的處理，我們多了三個&lt;code&gt;Makefile.am&lt;/code&gt;和&lt;code&gt;configure.ac&lt;/code&gt;以及一些暫存檔案。新的樹狀目錄列表如下：
-</span><span class='line'>&lt;code&gt;text autoscan後測試程式樹狀架構
-</span><span class='line'>.
-</span><span class='line'>├── autom4te.cache
-</span><span class='line'>│   ├── output.0
-</span><span class='line'>│   ├── requests
-</span><span class='line'>│   └── traces.0
-</span><span class='line'>├── autoscan.log
-</span><span class='line'>├── configure.ac
-</span><span class='line'>├── include
-</span><span class='line'>│   ├── liba.h
-</span><span class='line'>│   └── libb.h
-</span><span class='line'>├── libs
-</span><span class='line'>│   ├── liba.c
-</span><span class='line'>│   ├── libb.c
-</span><span class='line'>│   └── Makefile.am
-</span><span class='line'>├── Makefile.am
-</span><span class='line'>└── src
-</span><span class='line'>    ├── Makefile.am
-</span><span class='line'>    └── test.c
-</span><span class='line'>&lt;/code&gt;&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;hr /&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;&lt;a name=&quot;auto_ex_config&quot;&gt;&lt;/a&gt;&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;h4&gt;產生&lt;code&gt;configure&lt;/code&gt;並編譯&lt;/h4&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;如前所述，直接使用&lt;code&gt;autoreconf --install&lt;/code&gt;就可以了
-</span><span class='line'>&lt;code&gt;``text autoreconf --install以及之後的測試程式樹狀架構
-</span><span class='line'>$ autoreconf --install
-</span><span class='line'>configure.ac:6: installing&lt;/code&gt;./install-sh&#39;
-</span><span class='line'>configure.ac:6: installing &lt;code&gt;./missing&#39;
-</span><span class='line'>libs/Makefile.am: installing&lt;/code&gt;./depcomp&#39;&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;.
-</span><span class='line'>├── aclocal.m4
-</span><span class='line'>├── autom4te.cache
-</span><span class='line'>│   ├── output.0
-</span><span class='line'>│   ├── output.1
-</span><span class='line'>│   ├── output.2
-</span><span class='line'>│   ├── requests
-</span><span class='line'>│   ├── traces.0
-</span><span class='line'>│   ├── traces.1
-</span><span class='line'>│   └── traces.2
-</span><span class='line'>├── autoscan.log
-</span><span class='line'>├── config.h.in
-</span><span class='line'>├── configure
-</span><span class='line'>├── configure.ac
-</span><span class='line'>├── depcomp
-</span><span class='line'>├── include
-</span><span class='line'>│   ├── liba.h
-</span><span class='line'>│   └── libb.h
-</span><span class='line'>├── install-sh
-</span><span class='line'>├── libs
-</span><span class='line'>│   ├── liba.c
-</span><span class='line'>│   ├── libb.c
-</span><span class='line'>│   ├── Makefile.am
-</span><span class='line'>│   └── Makefile.in
-</span><span class='line'>├── Makefile.am
-</span><span class='line'>├── Makefile.in
-</span><span class='line'>├── missing
-</span><span class='line'>└── src
-</span><span class='line'>    ├── Makefile.am
-</span><span class='line'>    ├── Makefile.in
-</span><span class='line'>    └── test.c
-</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`text configure.scan和configure.ac 差別
+5,6c5,6
+&lt; AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])</p>
+
+<h2>&lt; AC_CONFIG_SRCDIR([libs/libb.c])</h2>
+
+<blockquote><p>AC_INIT([Test_Autotools], [0], [test])
+AM_INIT_AUTOMAKE([foreign -Wall -Werror])
+8a9,14</p>
+
+<h1>Use static libary</h1>
+
+<p>AC_PROG_RANLIB</p>
+
+<p>&#8220;`
+簡單說明如下</p></blockquote>
+
+<ul>
+<li>更改套件版本資訊</li>
+<li>刪除<code>AC_CONFIG_SRCDIR</code></li>
+<li>設定automake
+
+<ul>
+<li><code>foreign</code>表示這不是標準的GNU Coding Standard，因此不會檢查額外的檔案如<code>NEWS</code>, <code>README</code>, <code>ChangeLog</code>等。</li>
+<li>共用編譯參數</li>
+</ul>
+</li>
+<li><code>AC_PROG_RANLIB</code>表示要使用static library</li>
+</ul>
+
+
+<hr />
+
+<p><a name="auto_ex_maam"></a></p>
+
+<h4>Makefile.am</h4>
+
+<p>前面提到，每個目錄都要有一個<code>Makefile.am</code>。關於<code>Makefile.am</code>語法，可以參考 <a href="https://www.lrde.epita.fr/~adl/autotools.html">Alexandre Duret Lutz: Autotools Tutorial</a>大略了解。更詳細的部份可以看<a href="http://www.gnu.org/software/automake/manual/html_node/A-Shared-Library.html#A-Shared-Library">Automake手冊：8.3 Building a Shared Library</a></p>
+
+<p>範例中<code>Makefile.am</code>如下：</p>
+
+<ul>
+<li>./Makefile.am：　基本上就是依照列出的順序編譯</li>
+</ul>
+
+
+<pre><code class="makefile ./Makefile.am">SUBDIRS = libs src
+</code></pre>
+
+<ul>
+<li>libs/Makefile.am</li>
+</ul>
+
+
+<pre><code class="makefile libs/Makefile.am">AM_CFLAGS = -I../include
+lib_LIBRARIES = liba.a libb.a
+liba_a_SOURCES = liba.c
+libb_a_SOURCES = libb.c
+
+include_HEADERS = ../include/liba.h ../include/libb.h
+</code></pre>
+
+<p>最上面形式就是<code>要裝到目錄</code>_<code>Keyword</code>，所以表示我們要產生<code>liba.a</code>和<code>libb.a</code>，安裝時放在<code>/usr/local/lib</code>下面、指定library由哪些原始程式檔案組成、同時要把header files放在<code>/usr/local/include</code>下。(configure沒指定預設prefix為/usr/local)</p>
+
+<ul>
+<li>src/Makefile.am</li>
+</ul>
+
+
+<pre><code class="makefile src/Makefile.am">LDADD = ../libs/liba.a ../libs/libb.a
+AM_CFLAGS = -I../include
+
+bin_PROGRAMS = test
+test_SOURCES = test.c
+</code></pre>
+
+<p>一樣的形式：<code>要裝到目錄</code>_<code>Keyword</code>。這邊宣告要安裝到<code>/usr/loca/bin</code>、要link <code>liba.a</code>和<code>libb.a</code>、並且5指定執行檔的原始程式檔案。</p>
+
+<hr />
+
+<p>經過上面的處理，我們多了三個<code>Makefile.am</code>和<code>configure.ac</code>以及一些暫存檔案。新的樹狀目錄列表如下：
+<code>text autoscan後測試程式樹狀架構
+.
+├── autom4te.cache
+│   ├── output.0
+│   ├── requests
+│   └── traces.0
+├── autoscan.log
+├── configure.ac
+├── include
+│   ├── liba.h
+│   └── libb.h
+├── libs
+│   ├── liba.c
+│   ├── libb.c
+│   └── Makefile.am
+├── Makefile.am
+└── src
+    ├── Makefile.am
+    └── test.c
+</code></p>
+
+<hr />
+
+<p><a name="auto_ex_config"></a></p>
+
+<h4>產生<code>configure</code>並編譯</h4>
+
+<p>如前所述，直接使用<code>autoreconf --install</code>就可以了
+<code>``text autoreconf --install以及之後的測試程式樹狀架構
+$ autoreconf --install  
+configure.ac:6: installing</code>./install-sh&#8217;
+configure.ac:6: installing <code>./missing'
+libs/Makefile.am: installing</code>./depcomp&#8217;</p>
+
+<p>.
+├── aclocal.m4
+├── autom4te.cache
+│   ├── output.0
+│   ├── output.1
+│   ├── output.2
+│   ├── requests
+│   ├── traces.0
+│   ├── traces.1
+│   └── traces.2
+├── autoscan.log
+├── config.h.in
+├── configure
+├── configure.ac
+├── depcomp
+├── include
+│   ├── liba.h
+│   └── libb.h
+├── install-sh
+├── libs
+│   ├── liba.c
+│   ├── libb.c
+│   ├── Makefile.am
+│   └── Makefile.in
+├── Makefile.am
+├── Makefile.in
+├── missing
+└── src
+    ├── Makefile.am
+    ├── Makefile.in
+    └── test.c
+&#8220;`</p>
 
 <p>./configure結果節錄如下
 <code>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 過期 | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/guo-qi/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-06T22:47:58+08:00</updated>
+  <updated>2018-12-12T21:44:50+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -798,267 +798,138 @@ Date:   Sun Feb 7 18:19:13 2016 -0300
 </code></pre>
 
 <p>以下是開機畫面
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>Uncompressing Linux&amp;hellip; done, booting the kernel.
-</span><span class='line'>Booting Linux on physical CPU 0x0
-</span><span class='line'>Linux version 4.4.2 (user@host) (gcc version 4.8.5 (Buildroot 2016.11-git-00439-g14b2472) ) #1 Fri Sep 30 22:36:58 CST 2016
-</span><span class='line'>CPU: ARM926EJ-S [41069265] revision 5 (ARMv5TEJ), cr=00093177
-</span><span class='line'>CPU: VIVT data cache, VIVT instruction cache
-</span><span class='line'>Machine: ARM-Versatile PB
-</span><span class='line'>Memory policy: Data cache writeback
-</span><span class='line'>sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
-</span><span class='line'>Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 32512
-</span><span class='line'>Kernel command line: root=/dev/sda console=ttyAMA0,115200
-</span><span class='line'>PID hash table entries: 512 (order: -1, 2048 bytes)
-</span><span class='line'>Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
-</span><span class='line'>Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
-</span><span class='line'>Memory: 125264K/131072K available (3246K kernel code, 158K rwdata, 880K rodata, 120K init, 198K bss, 5808K reserved, 0K cma-reserved)
-</span><span class='line'>Virtual kernel memory layout:
-</span><span class='line'>    vector  : 0xffff0000 - 0xffff1000   (   4 kB)
-</span><span class='line'>    fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
-</span><span class='line'>    vmalloc : 0xc8800000 - 0xff800000   ( 880 MB)
-</span><span class='line'>    lowmem  : 0xc0000000 - 0xc8000000   ( 128 MB)
-</span><span class='line'>    modules : 0xbf000000 - 0xc0000000   (  16 MB)
-</span><span class='line'>      .text : 0xc0008000 - 0xc040fdcc   (4128 kB)
-</span><span class='line'>      .init : 0xc0410000 - 0xc042e000   ( 120 kB)
-</span><span class='line'>      .data : 0xc042e000 - 0xc04559e0   ( 159 kB)
-</span><span class='line'>       .bss : 0xc04559e0 - 0xc04873a8   ( 199 kB)
-</span><span class='line'>SLUB: HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
-</span><span class='line'>NR_IRQS:224
-</span><span class='line'>VIC @f1140000: id 0x00041190, vendor 0x41
-</span><span class='line'>FPGA IRQ chip 0 &amp;ldquo;SIC&amp;rdquo; @ f1003000, 13 irqs, parent IRQ: 63
-</span><span class='line'>clocksource: timer3: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275 ns
-</span><span class='line'>Console: colour dummy device 80x30
-</span><span class='line'>Calibrating delay loop&amp;hellip; 637.74 BogoMIPS (lpj=3188736)
-</span><span class='line'>pid_max: default: 32768 minimum: 301
-</span><span class='line'>Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)
-</span><span class='line'>Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)
-</span><span class='line'>CPU: Testing write buffer coherency: ok
-</span><span class='line'>Setting up static identity map for 0x8400 - 0x8458
-</span><span class='line'>devtmpfs: initialized
-</span><span class='line'>clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
-</span><span class='line'>NET: Registered protocol family 16
-</span><span class='line'>DMA: preallocated 256 KiB pool for atomic coherent allocations
-</span><span class='line'>Serial: AMBA PL011 UART driver
-</span><span class='line'>dev:f1: ttyAMA0 at MMIO 0x101f1000 (irq = 44, base_baud = 0) is a PL011 rev1
-</span><span class='line'>console [ttyAMA0] enabled
-</span><span class='line'>dev:f2: ttyAMA1 at MMIO 0x101f2000 (irq = 45, base_baud = 0) is a PL011 rev1
-</span><span class='line'>dev:f3: ttyAMA2 at MMIO 0x101f3000 (irq = 46, base_baud = 0) is a PL011 rev1
-</span><span class='line'>fpga:09: ttyAMA3 at MMIO 0x10009000 (irq = 70, base_baud = 0) is a PL011 rev1
-</span><span class='line'>PCI core found (slot 11)
-</span><span class='line'>PCI host bridge to bus 0000:00
-</span><span class='line'>pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
-</span><span class='line'>pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff pref]
-</span><span class='line'>pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
-</span><span class='line'>pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
-</span><span class='line'>PCI: bus0: Fast back to back transfers disabled
-</span><span class='line'>pci 0000:00:0c.0: BAR 6: assigned [mem 0x60000000-0x6003ffff pref]
-</span><span class='line'>pci 0000:00:0d.0: BAR 2: assigned [mem 0x50000000-0x50001fff]
-</span><span class='line'>pci 0000:00:0d.0: BAR 1: assigned [mem 0x50002000-0x500023ff]
-</span><span class='line'>pci 0000:00:0c.0: BAR 0: assigned [io  0x1000-0x10ff]
-</span><span class='line'>pci 0000:00:0c.0: BAR 1: assigned [mem 0x50002400-0x500024ff]
-</span><span class='line'>pci 0000:00:0d.0: BAR 0: assigned [io  0x1400-0x14ff]
-</span><span class='line'>vgaarb: loaded
-</span><span class='line'>SCSI subsystem initialized
-</span><span class='line'>clocksource: Switched to clocksource timer3
-</span><span class='line'>NET: Registered protocol family 2
-</span><span class='line'>TCP established hash table entries: 1024 (order: 0, 4096 bytes)
-</span><span class='line'>TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
-</span><span class='line'>TCP: Hash tables configured (established 1024 bind 1024)
-</span><span class='line'>UDP hash table entries: 256 (order: 0, 4096 bytes)
-</span><span class='line'>UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)
-</span><span class='line'>NET: Registered protocol family 1
-</span><span class='line'>futex hash table entries: 256 (order: -1, 3072 bytes)
-</span><span class='line'>Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
-</span><span class='line'>io scheduler noop registered
-</span><span class='line'>io scheduler deadline registered
-</span><span class='line'>io scheduler cfq registered (default)
-</span><span class='line'>clcd-pl11x dev:20: PL110 rev0 at 0x10120000
-</span><span class='line'>clcd-pl11x dev:20: Versatile hardware, VGA display
-</span><span class='line'>Console: switching to colour frame buffer device 80x30
-</span><span class='line'>sym53c8xx 0000:00:0d.0: enabling device (0100 -&gt; 0103)
-</span><span class='line'>sym0: &lt;895a&gt; rev 0x0 at pci 0000:00:0d.0 irq 94
-</span><span class='line'>sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
-</span><span class='line'>sym0: SCSI BUS has been reset.
-</span><span class='line'>scsi host0: sym-2.2.3
-</span><span class='line'>sym0: unknown interrupt(s) ignored, ISTAT=0x5 DSTAT=0x80 SIST=0x0
-</span><span class='line'>scsi 0:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.0. PQ: 0 ANSI: 5
-</span><span class='line'>scsi target0:0:0: tagged command queuing enabled, command queue depth 16.
-</span><span class='line'>scsi target0:0:0: Beginning Domain Validation
-</span><span class='line'>scsi target0:0:0: Domain Validation skipping write tests
-</span><span class='line'>scsi target0:0:0: Ending Domain Validation
-</span><span class='line'>scsi 0:0:2:0: CD-ROM            QEMU     QEMU CD-ROM      2.0. PQ: 0 ANSI: 5
-</span><span class='line'>scsi target0:0:2: tagged command queuing enabled, command queue depth 16.
-</span><span class='line'>scsi target0:0:2: Beginning Domain Validation
-</span><span class='line'>scsi target0:0:2: Domain Validation skipping write tests
-</span><span class='line'>scsi target0:0:2: Ending Domain Validation
-</span><span class='line'>8139cp: 8139cp: 10/100 PCI Ethernet driver v1.3 (Mar 22, 2004)
-</span><span class='line'>8139cp 0000:00:0c.0: enabling device (0100 -&gt; 0103)
-</span><span class='line'>8139cp 0000:00:0c.0 eth0: RTL-8139C+ at 0xc8978400, 52:54:00:12:34:56, IRQ 93
-</span><span class='line'>sd 0:0:0:0: [sda] 12666 512-byte logical blocks: (6.48 MB/6.18 MiB)
-</span><span class='line'>sd 0:0:0:0: [sda] Write Protect is off
-</span><span class='line'>sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn&amp;rsquo;t support DPO or FUA
-</span><span class='line'>mousedev: PS/2 mouse device common for all mice
-</span><span class='line'>sd 0:0:0:0: [sda] Attached SCSI disk
-</span><span class='line'>NET: Registered protocol family 10
-</span><span class='line'>sit: IPv6 over IPv4 tunneling driver
-</span><span class='line'>NET: Registered protocol family 17
-</span><span class='line'>input: AT Raw Set 2 keyboard as /devices/fpga:06/serio0/input/input0
-</span><span class='line'>input: ImExPS/2 Generic Explorer Mouse as /devices/fpga:07/serio1/input/input2
-</span><span class='line'>EXT4-fs (sda): couldn&amp;rsquo;t mount as ext3 due to feature incompatibilities
-</span><span class='line'>EXT4-fs (sda): mounting ext2 file system using the ext4 subsystem
-</span><span class='line'>EXT4-fs (sda): mounted filesystem without journal. Opts: (null)
-</span><span class='line'>VFS: Mounted root (ext2 filesystem) readonly on device 8:0.
-</span><span class='line'>devtmpfs: mounted
-</span><span class='line'>Freeing unused kernel memory: 120K (c0410000 - c042e000)
-</span><span class='line'>EXT4-fs (sda): warning: mounting unchecked fs, running e2fsck is recommended
-</span><span class='line'>EXT4-fs warning (device sda): ext4_update_dynamic_rev:717: updating to rev 1 because of new feature flag, running e2fsck is recommended
-</span><span class='line'>EXT4-fs (sda): re-mounted. Opts: block_validity,barrier,user_xattr,errors=remount-ro
-</span><span class='line'>Starting logging: OK
-</span><span class='line'>Initializing random number generator&amp;hellip; random: dd urandom read with 43 bits of entropy available
-</span><span class='line'>done.
-</span><span class='line'>Starting network: 8139cp 0000:00:0c.0 eth0: link up, 100Mbps, full-duplex, lpa 0x05E1
-</span><span class='line'>udhcpc: started, v1.25.0
-</span><span class='line'>udhcpc: sending discover
-</span><span class='line'>udhcpc: sending select for 10.0.2.15
-</span><span class='line'>udhcpc: lease of 10.0.2.15 obtained, lease time 86400
-</span><span class='line'>deleting routers
-</span><span class='line'>adding dns 10.0.2.3
-</span><span class='line'>OK&lt;/p&gt;
-</span><span class='line'>
-</span><span class='line'>&lt;p&gt;Welcome to Buildroot
-</span><span class='line'>buildroot login: root
-</span><span class='line'>#
-</span></code></pre></td></tr></table></div></figure></p>
+&#8220;`text
+Uncompressing Linux&hellip; done, booting the kernel.
+Booting Linux on physical CPU 0x0
+Linux version 4.4.2 (user@host) (gcc version 4.8.5 (Buildroot 2016.11-git-00439-g14b2472) ) #1 Fri Sep 30 22:36:58 CST 2016
+CPU: ARM926EJ-S [41069265] revision 5 (ARMv5TEJ), cr=00093177
+CPU: VIVT data cache, VIVT instruction cache
+Machine: ARM-Versatile PB
+Memory policy: Data cache writeback
+sched_clock: 32 bits at 24MHz, resolution 41ns, wraps every 89478484971ns
+Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 32512
+Kernel command line: root=/dev/sda console=ttyAMA0,115200
+PID hash table entries: 512 (order: -1, 2048 bytes)
+Dentry cache hash table entries: 16384 (order: 4, 65536 bytes)
+Inode-cache hash table entries: 8192 (order: 3, 32768 bytes)
+Memory: 125264K/131072K available (3246K kernel code, 158K rwdata, 880K rodata, 120K init, 198K bss, 5808K reserved, 0K cma-reserved)
+Virtual kernel memory layout:
+    vector  : 0xffff0000 - 0xffff1000   (   4 kB)
+    fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
+    vmalloc : 0xc8800000 - 0xff800000   ( 880 MB)
+    lowmem  : 0xc0000000 - 0xc8000000   ( 128 MB)
+    modules : 0xbf000000 - 0xc0000000   (  16 MB)
+      .text : 0xc0008000 - 0xc040fdcc   (4128 kB)
+      .init : 0xc0410000 - 0xc042e000   ( 120 kB)
+      .data : 0xc042e000 - 0xc04559e0   ( 159 kB)
+       .bss : 0xc04559e0 - 0xc04873a8   ( 199 kB)
+SLUB: HWalign=32, Order=0-3, MinObjects=0, CPUs=1, Nodes=1
+NR_IRQS:224
+VIC @f1140000: id 0x00041190, vendor 0x41
+FPGA IRQ chip 0 &ldquo;SIC&rdquo; @ f1003000, 13 irqs, parent IRQ: 63
+clocksource: timer3: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275 ns
+Console: colour dummy device 80x30
+Calibrating delay loop&hellip; 637.74 BogoMIPS (lpj=3188736)
+pid_max: default: 32768 minimum: 301
+Mount-cache hash table entries: 1024 (order: 0, 4096 bytes)
+Mountpoint-cache hash table entries: 1024 (order: 0, 4096 bytes)
+CPU: Testing write buffer coherency: ok
+Setting up static identity map for 0x8400 - 0x8458
+devtmpfs: initialized
+clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 19112604462750000 ns
+NET: Registered protocol family 16
+DMA: preallocated 256 KiB pool for atomic coherent allocations
+Serial: AMBA PL011 UART driver
+dev:f1: ttyAMA0 at MMIO 0x101f1000 (irq = 44, base_baud = 0) is a PL011 rev1
+console [ttyAMA0] enabled
+dev:f2: ttyAMA1 at MMIO 0x101f2000 (irq = 45, base_baud = 0) is a PL011 rev1
+dev:f3: ttyAMA2 at MMIO 0x101f3000 (irq = 46, base_baud = 0) is a PL011 rev1
+fpga:09: ttyAMA3 at MMIO 0x10009000 (irq = 70, base_baud = 0) is a PL011 rev1
+PCI core found (slot 11)
+PCI host bridge to bus 0000:00
+pci_bus 0000:00: root bus resource [mem 0x50000000-0x5fffffff]
+pci_bus 0000:00: root bus resource [mem 0x60000000-0x6fffffff pref]
+pci_bus 0000:00: root bus resource [io  0x1000-0xffff]
+pci_bus 0000:00: No busn resource found for root bus, will use [bus 00-ff]
+PCI: bus0: Fast back to back transfers disabled
+pci 0000:00:0c.0: BAR 6: assigned [mem 0x60000000-0x6003ffff pref]
+pci 0000:00:0d.0: BAR 2: assigned [mem 0x50000000-0x50001fff]
+pci 0000:00:0d.0: BAR 1: assigned [mem 0x50002000-0x500023ff]
+pci 0000:00:0c.0: BAR 0: assigned [io  0x1000-0x10ff]
+pci 0000:00:0c.0: BAR 1: assigned [mem 0x50002400-0x500024ff]
+pci 0000:00:0d.0: BAR 0: assigned [io  0x1400-0x14ff]
+vgaarb: loaded
+SCSI subsystem initialized
+clocksource: Switched to clocksource timer3
+NET: Registered protocol family 2
+TCP established hash table entries: 1024 (order: 0, 4096 bytes)
+TCP bind hash table entries: 1024 (order: 0, 4096 bytes)
+TCP: Hash tables configured (established 1024 bind 1024)
+UDP hash table entries: 256 (order: 0, 4096 bytes)
+UDP-Lite hash table entries: 256 (order: 0, 4096 bytes)
+NET: Registered protocol family 1
+futex hash table entries: 256 (order: -1, 3072 bytes)
+Block layer SCSI generic (bsg) driver version 0.4 loaded (major 254)
+io scheduler noop registered
+io scheduler deadline registered
+io scheduler cfq registered (default)
+clcd-pl11x dev:20: PL110 rev0 at 0x10120000
+clcd-pl11x dev:20: Versatile hardware, VGA display
+Console: switching to colour frame buffer device 80x30
+sym53c8xx 0000:00:0d.0: enabling device (0100 -> 0103)
+sym0: <895a> rev 0x0 at pci 0000:00:0d.0 irq 94
+sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+sym0: SCSI BUS has been reset.
+scsi host0: sym-2.2.3
+sym0: unknown interrupt(s) ignored, ISTAT=0x5 DSTAT=0x80 SIST=0x0
+scsi 0:0:0:0: Direct-Access     QEMU     QEMU HARDDISK    2.0. PQ: 0 ANSI: 5
+scsi target0:0:0: tagged command queuing enabled, command queue depth 16.
+scsi target0:0:0: Beginning Domain Validation
+scsi target0:0:0: Domain Validation skipping write tests
+scsi target0:0:0: Ending Domain Validation
+scsi 0:0:2:0: CD-ROM            QEMU     QEMU CD-ROM      2.0. PQ: 0 ANSI: 5
+scsi target0:0:2: tagged command queuing enabled, command queue depth 16.
+scsi target0:0:2: Beginning Domain Validation
+scsi target0:0:2: Domain Validation skipping write tests
+scsi target0:0:2: Ending Domain Validation
+8139cp: 8139cp: 10/100 PCI Ethernet driver v1.3 (Mar 22, 2004)
+8139cp 0000:00:0c.0: enabling device (0100 -> 0103)
+8139cp 0000:00:0c.0 eth0: RTL-8139C+ at 0xc8978400, 52:54:00:12:34:56, IRQ 93
+sd 0:0:0:0: [sda] 12666 512-byte logical blocks: (6.48 MB/6.18 MiB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn&rsquo;t support DPO or FUA
+mousedev: PS/2 mouse device common for all mice
+sd 0:0:0:0: [sda] Attached SCSI disk
+NET: Registered protocol family 10
+sit: IPv6 over IPv4 tunneling driver
+NET: Registered protocol family 17
+input: AT Raw Set 2 keyboard as /devices/fpga:06/serio0/input/input0
+input: ImExPS/2 Generic Explorer Mouse as /devices/fpga:07/serio1/input/input2
+EXT4-fs (sda): couldn&rsquo;t mount as ext3 due to feature incompatibilities
+EXT4-fs (sda): mounting ext2 file system using the ext4 subsystem
+EXT4-fs (sda): mounted filesystem without journal. Opts: (null)
+VFS: Mounted root (ext2 filesystem) readonly on device 8:0.
+devtmpfs: mounted
+Freeing unused kernel memory: 120K (c0410000 - c042e000)
+EXT4-fs (sda): warning: mounting unchecked fs, running e2fsck is recommended
+EXT4-fs warning (device sda): ext4_update_dynamic_rev:717: updating to rev 1 because of new feature flag, running e2fsck is recommended
+EXT4-fs (sda): re-mounted. Opts: block_validity,barrier,user_xattr,errors=remount-ro
+Starting logging: OK
+Initializing random number generator&hellip; random: dd urandom read with 43 bits of entropy available
+done.
+Starting network: 8139cp 0000:00:0c.0 eth0: link up, 100Mbps, full-duplex, lpa 0x05E1
+udhcpc: started, v1.25.0
+udhcpc: sending discover
+udhcpc: sending select for 10.0.2.15
+udhcpc: lease of 10.0.2.15 obtained, lease time 86400
+deleting routers
+adding dns 10.0.2.3
+OK</p>
+
+<p>Welcome to Buildroot
+buildroot login: root
+#
+&#8220;`</p>
 ]]></content>
   </entry>
   

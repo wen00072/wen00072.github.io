@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-06T22:47:58+08:00</updated>
+  <updated>2018-12-12T21:42:33+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -14,13 +14,13 @@
 
   
   <entry>
-    <title type="html"><![CDATA[更新Ubuntu 18.04後Octopress 環境變動]]></title>
+    <title type="html"><![CDATA[Ubuntu 16.04更新到Ubuntu 18.04後Octopress 環境變動]]></title>
     <link href="http://wen00072.github.io/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04/"/>
     <updated>2018-12-06T22:24:01+08:00</updated>
     <id>http://wen00072.github.io/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04</id>
     <content type="html"><![CDATA[<p>本來想要寫一些東西，結果發現<code>rake</code>在Ubuntu 無法執行，只好先處理了。</p>
 
-<p>主要的問題是<code>Ruby</code>版本從16.04使用的<code>2.3</code>升級成<code>2.5</code>了。以下是我紀錄過的測試指令，必須承認這是網路上的東西剪貼，我不想知道後面的原理，後果自行負責。寫這篇文章另一個目的是確定上傳到網路上後可以正常發佈才證明真的修理了。</p>
+<p>主要的問題是更新後<code>Ruby</code>版本從16.04使用的<code>2.3</code>升級成<code>2.5</code>了。以下是我紀錄過的測試指令，必須承認這是網路上的東西剪貼，我不想知道後面的原理，後果自行負責。寫這篇文章另一個目的是確定上傳到網路上後可以正常發佈才證明真的解決問題了。</p>
 
 <h2>預安裝套件</h2>
 
