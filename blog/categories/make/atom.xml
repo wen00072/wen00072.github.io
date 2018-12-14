@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Make | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/make/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-12T21:44:50+08:00</updated>
+  <updated>2018-12-15T00:01:36+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -44,17 +44,25 @@
     <updated>2014-05-18T07:18:00+08:00</updated>
     <id>http://wen00072.github.io/blog/2014/05/18/access-to-shell-variable-in-the-makefile</id>
     <content type="html"><![CDATA[<p>想說寫一個loop自動make變數內的目錄
-&#8220;`makefile 錯誤的Makefile
-DIRS = libs src</p>
-
-<p>all:
-    for i in ${DIRS}; do make -C $i; done
-<code>
-結果跑出來和想像不同
-</code>text make結果
-for i in lib src; do make -C ; done
-make: option requires an argument &ndash; &lsquo;C&rsquo;
-&#8220;`</p>
+<figure class='code'><figcaption><span>錯誤的Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">DIRS</span> <span class="o">=</span> libs src&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'><span class="nf">&lt;p&gt;all</span><span class="o">:</span>
+</span><span class='line'>    <span class="k">for</span> i in <span class="k">${</span><span class="nv">DIRS</span><span class="k">}</span><span class="p">;</span> <span class="k">do</span> make -C <span class="nv">$i</span><span class="p">;</span> <span class="k">done</span>
+</span><span class='line'><span class="err">&lt;code&gt;</span>
+</span><span class='line'><span class="err">結果跑出來和想像不同</span>
+</span><span class='line'><span class="err">&lt;/code&gt;text</span> <span class="err">make結果</span>
+</span><span class='line'><span class="err">for</span> <span class="err">i</span> <span class="err">in</span> <span class="err">lib</span> <span class="err">src;</span> <span class="err">do</span> <span class="err">make</span> <span class="err">-C</span> <span class="err">;</span> <span class="err">done</span>
+</span><span class='line'><span class="nf">make</span><span class="o">:</span> <span class="n">option</span> <span class="n">requires</span> <span class="n">an</span> <span class="n">argument</span> &amp;<span class="n">ndash</span>; &amp;<span class="n">lsquo</span>;<span class="n">C</span>&amp;<span class="n">rsquo</span>;
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>原因是$本身在Makefile有特殊意義。要使用$$才能在command敘述中顯示$，因此改進如下</p>
 

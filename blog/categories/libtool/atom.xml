@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Libtool | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/libtool/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-12T21:44:50+08:00</updated>
+  <updated>2018-12-15T00:01:36+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -173,20 +173,31 @@ index f173ac6..230fa34 100644
 
 <ul>
 <li>指定link *.la
-&#8220;`text src/Makefile.am.diff
-diff &ndash;git a/src/Makefile.am b/src/Makefile.am
-index 75a5199..b8b29bf 100644
-&mdash; a/src/Makefile.am
-+++ b/src/Makefile.am
-@@ -1,4 +1,4 @@
--LDADD = ../libs/liba.a ../libs/libb.a
-+LDADD = ../libs/liba.la ../libs/libb.la
-AM_CFLAGS = -I../include</li>
-</ul>
-
-
-<p> bin_PROGRAMS = test
-&#8220;`</p>
+<figure class='code'><figcaption><span>src/Makefile.am.diff</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>diff &amp;ndash;git a/src/Makefile.am b/src/Makefile.am
+</span><span class='line'>index 75a5199..b8b29bf 100644
+</span><span class='line'>&amp;mdash; a/src/Makefile.am
+</span><span class='line'>+++ b/src/Makefile.am
+</span><span class='line'>@@ -1,4 +1,4 @@
+</span><span class='line'>-LDADD = ../libs/liba.a ../libs/libb.a
+</span><span class='line'>+LDADD = ../libs/liba.la ../libs/libb.la
+</span><span class='line'>AM_CFLAGS = -I../include&lt;/li&gt;
+</span><span class='line'>&lt;/ul&gt;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt; bin_PROGRAMS = test
+</span></code></pre></td></tr></table></div></figure></p>
 
 <hr />
 

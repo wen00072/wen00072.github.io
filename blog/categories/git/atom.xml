@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Git | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/git/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-12T21:44:50+08:00</updated>
+  <updated>2018-12-15T00:01:36+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -273,38 +273,60 @@ f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
 </code></p>
 
 <p>看看<code>packed-refs</code>裏面是三小？有沒有發現和上面很像啊？
-&#8220;`
-$ cat .git/packed-refs</p>
-
-<h2>pack-refs with: peeled fully-peeled</h2>
-
-<p>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
-fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
-22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
-98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
-9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
-7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
-f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
-522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
-8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
-7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
-3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
-098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/packed-refs&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;pack-refs with: peeled fully-peeled&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
+</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
+</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
+</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
+</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
+</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
+</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
+</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
+</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
+</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
+</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure></p>
 
 <p>看一下ref目錄，上面的那些reference並不存在在<code>.git/ref</code>裏面
-&#8220;`
-$ tree .git/refs/
-.git/refs/
-├── heads
-│   └── master
-├── remotes
-│   └── origin
-│       └── HEAD
-└── tags</p>
-
-<p>4 directories, 2 files
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
+</span><span class='line'>.git/refs/
+</span><span class='line'>├── heads
+</span><span class='line'>│   └── master
+</span><span class='line'>├── remotes
+</span><span class='line'>│   └── origin
+</span><span class='line'>│       └── HEAD
+</span><span class='line'>└── tags&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;4 directories, 2 files</span></code></pre></td></tr></table></div></figure></p>
 
 <p>好，生一個branch看看。
 <code>
@@ -313,19 +335,28 @@ Switched to a new branch 'I_got_a_new_ref'
 </code></p>
 
 <p>喔喔！<code>.git/refs</code>出現了剛才產生的ref
-&#8220;`
-$ tree .git/refs/
-.git/refs/
-├── heads
-│   ├── I_got_a_new_ref
-│   └── master
-├── remotes
-│   └── origin
-│       └── HEAD
-└── tags</p>
-
-<p>4 directories, 3 files
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
+</span><span class='line'>.git/refs/
+</span><span class='line'>├── heads
+</span><span class='line'>│   ├── I_got_a_new_ref
+</span><span class='line'>│   └── master
+</span><span class='line'>├── remotes
+</span><span class='line'>│   └── origin
+</span><span class='line'>│       └── HEAD
+</span><span class='line'>└── tags&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;4 directories, 3 files</span></code></pre></td></tr></table></div></figure></p>
 
 <p>跑一下<code>git gc</code>整理一下
 <code>
@@ -338,39 +369,62 @@ Total 5002 (delta 3913), reused 5002 (delta 3913)
 </code></p>
 
 <p>疑？剛才的branch不見了。
-&#8220;`
-$ tree .git/refs/
-.git/refs/
-├── heads
-├── remotes
-│   └── origin
-│       └── HEAD
-└── tags</p>
-
-<p>4 directories, 1 file
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
+</span><span class='line'>.git/refs/
+</span><span class='line'>├── heads
+</span><span class='line'>├── remotes
+</span><span class='line'>│   └── origin
+</span><span class='line'>│       └── HEAD
+</span><span class='line'>└── tags&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;4 directories, 1 file</span></code></pre></td></tr></table></div></figure></p>
 
 <p>跑去pack-ref了
-&#8220;`
-$ cat .git/packed-refs</p>
-
-<h2>pack-refs with: peeled fully-peeled</h2>
-
-<p>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/I_got_a_new_ref
-fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/master
-c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
-fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
-22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
-98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
-9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
-7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
-f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
-522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
-8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
-7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
-3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
-098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/packed-refs&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;pack-refs with: peeled fully-peeled&lt;/h2&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/I_got_a_new_ref
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/master
+</span><span class='line'>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
+</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
+</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
+</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
+</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
+</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
+</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
+</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
+</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
+</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
+</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure></p>
 
 <p><a name="gconf"></a></p>
 
@@ -402,16 +456,22 @@ f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
 一樣，來看例子。</p>
 
 <p>目前clone下來，裏面放的是一個檔案，檔案裏面是什麼呢？一樣是個commit HASH
-&#8220;`
-$ cat .git/HEAD
-ref: refs/heads/master</p>
-
-<p>$ cat .git/refs/heads/master
-fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304</p>
-
-<p>$ git cat-file -t fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-commit
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/HEAD
+</span><span class='line'>ref: refs/heads/master&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ cat .git/refs/heads/master
+</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ git cat-file -t fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>commit</span></code></pre></td></tr></table></div></figure></p>
 
 <p>那我直接checkout一個不是branch的可以嘛？當然沒問題。
 可以看到git會把你checkout的commit HASH寫入.git/HEAD</p>
@@ -531,14 +591,18 @@ $ git commit file2 -m "file 2"
 </code></p>
 
 <p>切回master並且宰掉剛才的branch
-&#8220;`
-$ git checkout master
-Switched to branch &lsquo;master&rsquo;
-Your branch is up-to-date with &lsquo;origin/master&rsquo;.</p>
-
-<p>$ git branch -D demo_reflog<br/>
-Deleted branch demo_reflog (was b85f4d4).
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout master
+</span><span class='line'>Switched to branch &lsquo;master&rsquo;
+</span><span class='line'>Your branch is up-to-date with &lsquo;origin/master&rsquo;.&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;$ git branch -D demo_reflog&lt;br/&gt;
+</span><span class='line'>Deleted branch demo_reflog (was b85f4d4).</span></code></pre></td></tr></table></div></figure></p>
 
 <p>假設上一個動作是手滑誤刪，能不能反悔。
 YES YOU CAN!</p>
@@ -620,49 +684,82 @@ $ git commit tree/file -m "test tree and file"
 </code></p>
 
 <p>然後看看這個目錄變化吧
-&#8220;`
-$ tree .git/objects/
-.git/objects/
-├── 2b
-│   └── a01ef5583f35dd57b5fb5bde732f73bc315b6d
-├── 9d
-│   └── aeafb9864cf43055ae93beb0afd6c7d144bfa4
-├── de
-│   └── f69c2c316574aaf328e546486fa750eb9c53a0
-├── e1
-│   └── b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
-├── info
-└── pack
-    ├── pack-6042320de285747900cc3263a47f7bab429cabf8.idx
-    └── pack-6042320de285747900cc3263a47f7bab429cabf8.pack</p>
-
-<p>6 directories, 6 files
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
+</span><span class='line'>.git/objects/
+</span><span class='line'>├── 2b
+</span><span class='line'>│   └── a01ef5583f35dd57b5fb5bde732f73bc315b6d
+</span><span class='line'>├── 9d
+</span><span class='line'>│   └── aeafb9864cf43055ae93beb0afd6c7d144bfa4
+</span><span class='line'>├── de
+</span><span class='line'>│   └── f69c2c316574aaf328e546486fa750eb9c53a0
+</span><span class='line'>├── e1
+</span><span class='line'>│   └── b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
+</span><span class='line'>├── info
+</span><span class='line'>└── pack
+</span><span class='line'>    ├── pack-6042320de285747900cc3263a47f7bab429cabf8.idx
+</span><span class='line'>    └── pack-6042320de285747900cc3263a47f7bab429cabf8.pack&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;6 directories, 6 files</span></code></pre></td></tr></table></div></figure></p>
 
 <p>接下來把目錄和檔案混起來，用<code>git cat-file -p</code>看看裏面是啥
-&#8220;`
-$ git cat-file -p 2ba01ef5583f35dd57b5fb5bde732f73bc315b6d
-tree def69c2c316574aaf328e546486fa750eb9c53a0
-parent fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-author Wen.Liao <censored> 1425999641 +0800
-committer Wen.Liao <censored> 1425999641 +0800</p>
-
-<p>test tree and file
-<code>
-</code>
-$ git cat-file -p 9daeafb9864cf43055ae93beb0afd6c7d144bfa4
-test
-<code>
-</code>
-$ git cat-file -p def69c2c316574aaf328e546486fa750eb9c53a0
-100644 blob 5bc4b3f69d730535eb3a8aee28d7ef9273225d50    .gitignore
-&hellip;
-040000 tree e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19    tree
-<code>
-</code>
-$ git cat-file -p e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
-100644 blob 9daeafb9864cf43055ae93beb0afd6c7d144bfa4    file
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 2ba01ef5583f35dd57b5fb5bde732f73bc315b6d
+</span><span class='line'>tree def69c2c316574aaf328e546486fa750eb9c53a0
+</span><span class='line'>parent fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
+</span><span class='line'>author Wen.Liao &lt;censored&gt; 1425999641 +0800
+</span><span class='line'>committer Wen.Liao &lt;censored&gt; 1425999641 +0800&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;test tree and file
+</span><span class='line'>&lt;code&gt;
+</span><span class='line'>&lt;/code&gt;
+</span><span class='line'>$ git cat-file -p 9daeafb9864cf43055ae93beb0afd6c7d144bfa4
+</span><span class='line'>test
+</span><span class='line'>&lt;code&gt;
+</span><span class='line'>&lt;/code&gt;
+</span><span class='line'>$ git cat-file -p def69c2c316574aaf328e546486fa750eb9c53a0
+</span><span class='line'>100644 blob 5bc4b3f69d730535eb3a8aee28d7ef9273225d50    .gitignore
+</span><span class='line'>&hellip;
+</span><span class='line'>040000 tree e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19    tree
+</span><span class='line'>&lt;code&gt;
+</span><span class='line'>&lt;/code&gt;
+</span><span class='line'>$ git cat-file -p e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
+</span><span class='line'>100644 blob 9daeafb9864cf43055ae93beb0afd6c7d144bfa4    file</span></code></pre></td></tr></table></div></figure></p>
 
 <p>其實不難猜，你local commit的東西會被處理後變成object，並且依照hash分門別類地存放。</p>
 
@@ -677,17 +774,24 @@ Total 5006 (delta 3914), reused 5001 (delta 3913)
 </code></p>
 
 <p>可以看到，剛才的目錄全部消失，而pack目錄的檔案名稱也和前面的不同了。對照上面<code>git gc</code>的訊息，可以知道<code>git gc</code>做了壓縮，並且將這些object一起壓到pack目錄的檔案中了。
-&#8220;`
-$ tree .git/objects/
-.git/objects/
-├── info
-│   └── packs
-└── pack
-    ├── pack-57d163604c430e1919a18e97c5b1312291b62721.idx
-    └── pack-57d163604c430e1919a18e97c5b1312291b62721.pack</p>
-
-<p>2 directories, 3 files
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
+</span><span class='line'>.git/objects/
+</span><span class='line'>├── info
+</span><span class='line'>│   └── packs
+</span><span class='line'>└── pack
+</span><span class='line'>    ├── pack-57d163604c430e1919a18e97c5b1312291b62721.idx
+</span><span class='line'>    └── pack-57d163604c430e1919a18e97c5b1312291b62721.pack&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;2 directories, 3 files</span></code></pre></td></tr></table></div></figure></p>
 
 <p>所以我們可以從觀察中做出結論。Git object的存放有兩種型式</p>
 
@@ -955,14 +1059,18 @@ src/core/caret.cpp /tmp/6nZQoO_caret.cpp 99fdca2d1d2b90e6452555572d3b0c3cf3ae75b
 7 被更動後檔案權限</p>
 
 <p>對我們來說，有興趣的是2和5，所以我們可以將命令更動為
-&#8220;`
-$ cat ~/bin/git_diff.sh</p>
-
-<h1>!/bin/sh -x</h1>
-
-<p>echo $@
-meld $2 $5
-&#8220;`</p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat ~/bin/git_diff.sh&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h1&gt;!/bin/sh -x&lt;/h1&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;echo $@
+</span><span class='line'>meld $2 $5</span></code></pre></td></tr></table></div></figure></p>
 
 <p>meld是一個GUI程式的比對工具。接下來就來測試吧</p>
 

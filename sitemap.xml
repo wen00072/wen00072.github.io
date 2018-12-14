@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://wen00072.github.io/blog/2018/12/12/linux-binary-resources/</loc>
+<lastmod>2018-12-12T21:48:22+08:00</lastmod>
+</url>
+<url>
 <loc>http://wen00072.github.io/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04/</loc>
 <lastmod>2018-12-06T22:24:01+08:00</lastmod>
 </url>
@@ -862,6 +866,12 @@
 </url>
 <url>
 <loc>http://wen00072.github.io/blog/categories/vim-plugin/</loc>
+</url>
+<url>
+<loc>http://wen00072.github.io/blog/categories/binutil/</loc>
+</url>
+<url>
+<loc>http://wen00072.github.io/blog/categories/elf/</loc>
 </url>
 <url>
 <loc>http://wen00072.github.io/files/javadoc-20150830/test_final.pdf</loc>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Cmake | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/cmake/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-12T21:44:50+08:00</updated>
+  <updated>2018-12-15T00:01:36+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -403,40 +403,71 @@ check var in function:
 
 
 <p>top 目錄的CMakeLists.txt如下：
-&#8220;`CMake top 目錄的CMakeLists.txt
-cmake_minimum_required(VERSION 2.8)</p>
-
-<h1>Project data</h1>
-
-<p>project(testcmake)</p>
-
-<h1>Directories</h1>
-
-<p>set(SRC_DIR src)
-set(LIB_DIR libs)
-set(INC_DIR include)</p>
-
-<h1>Release mode</h1>
-
-<p>set(CMAKE_BUILD_TYPE Debug)</p>
-
-<h1>Compile flags</h1>
-
-<p>set(CMAKE_C_FLAGS &ldquo;-Wall -Werror&rdquo;)</p>
-
-<h1>I like verbose, must after project, do not know why</h1>
-
-<p>set(CMAKE_VERBOSE_MAKEFILE true)</p>
-
-<h1>Where to include?</h1>
-
-<p>include_directories(${INC_DIR})</p>
-
-<h1>Files to compile</h1>
-
-<p>set(test_SRCS ${SRC_DIR}/test.c ${LIB_DIR}/liba.c ${LIB_DIR}/libb.c)
-add_executable(${PROJECT_NAME} ${test_SRCS})
-&#8220;`</p>
+<figure class='code'><figcaption><span>top 目錄的CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Project</span> <span class="err">data&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">project</span><span class="p">(</span><span class="s">testcmake</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Directories&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">SRC_DIR</span> <span class="s">src</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">LIB_DIR</span> <span class="s">libs</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">INC_DIR</span> <span class="s">include</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Release</span> <span class="err">mode&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_BUILD_TYPE</span> <span class="s">Debug</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Compile</span> <span class="err">flags&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_C_FLAGS</span> <span class="s">&amp;ldquo;-Wall</span> <span class="s">-Werror&amp;rdquo;</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;I</span> <span class="err">like</span> <span class="err">verbose,</span> <span class="err">must</span> <span class="err">after</span> <span class="err">project,</span> <span class="err">do</span> <span class="err">not</span> <span class="err">know</span> <span class="err">why&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_VERBOSE_MAKEFILE</span> <span class="s">true</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Where</span> <span class="err">to</span> <span class="err">include?&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">INC_DIR</span><span class="o">}</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Files</span> <span class="err">to</span> <span class="err">compile&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">test_SRCS</span> <span class="o">${</span><span class="nv">SRC_DIR</span><span class="o">}</span><span class="s">/test.c</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/liba.c</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/libb.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_executable</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="o">${</span><span class="nv">test_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <p>這邊可以看到和原本的差別只有多了CMakeLists.txt檔而已。</p>
 
@@ -476,49 +507,89 @@ add_executable(${PROJECT_NAME} ${test_SRCS})
 
 
 <p>top 目錄的CMakeLists.txt如下：
-&#8220;`CMake top 目錄的CMakeLists.txt
-cmake_minimum_required(VERSION 2.8)</p>
-
-<h1>Project data</h1>
-
-<p>project(testcmake)</p>
-
-<h1>Directories</h1>
-
-<p>set(SRC_DIR src)
-set(LIB_DIR libs)
-set(INC_DIR include)</p>
-
-<h1>Release mode</h1>
-
-<p>set(CMAKE_BUILD_TYPE Debug)</p>
-
-<h1>Compile flags</h1>
-
-<p>set(CMAKE_C_FLAGS &ldquo;-Wall -Werror&rdquo;)</p>
-
-<h1>I like verbose, must after project, do not know why</h1>
-
-<p>set(CMAKE_VERBOSE_MAKEFILE true)</p>
-
-<h1>Where to include?</h1>
-
-<p>include_directories(${INC_DIR})</p>
-
-<h1>Build libraries</h1>
-
-<p>set(liba_SRCS ${LIB_DIR}/liba.c)
-set(libb_SRCS ${LIB_DIR}/libb.c)</p>
-
-<p>add_library(a SHARED ${liba_SRCS})
-add_library(b SHARED ${libb_SRCS})</p>
-
-<h1>Build binary</h1>
-
-<p>set(test_SRCS ${SRC_DIR}/test.c)
-add_executable(${PROJECT_NAME} ${test_SRCS})
-target_link_libraries(${PROJECT_NAME} a b)
-&#8220;`</p>
+<figure class='code'><figcaption><span>top 目錄的CMakeLists.txt</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+</pre></td><td class='code'><pre><code class='CMake'><span class='line'><span class="nb">cmake_minimum_required</span><span class="p">(</span><span class="s">VERSION</span> <span class="s">2.8</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Project</span> <span class="err">data&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">project</span><span class="p">(</span><span class="s">testcmake</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Directories&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">SRC_DIR</span> <span class="s">src</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">LIB_DIR</span> <span class="s">libs</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">INC_DIR</span> <span class="s">include</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Release</span> <span class="err">mode&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_BUILD_TYPE</span> <span class="s">Debug</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Compile</span> <span class="err">flags&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_C_FLAGS</span> <span class="s">&amp;ldquo;-Wall</span> <span class="s">-Werror&amp;rdquo;</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;I</span> <span class="err">like</span> <span class="err">verbose,</span> <span class="err">must</span> <span class="err">after</span> <span class="err">project,</span> <span class="err">do</span> <span class="err">not</span> <span class="err">know</span> <span class="err">why&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">CMAKE_VERBOSE_MAKEFILE</span> <span class="s">true</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Where</span> <span class="err">to</span> <span class="err">include?&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">include_directories</span><span class="p">(</span><span class="o">${</span><span class="nv">INC_DIR</span><span class="o">}</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Build</span> <span class="err">libraries&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">liba_SRCS</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/liba.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">set</span><span class="p">(</span><span class="s">libb_SRCS</span> <span class="o">${</span><span class="nv">LIB_DIR</span><span class="o">}</span><span class="s">/libb.c</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">add_library</span><span class="p">(</span><span class="s">a</span> <span class="s">SHARED</span> <span class="o">${</span><span class="nv">liba_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_library</span><span class="p">(</span><span class="s">b</span> <span class="s">SHARED</span> <span class="o">${</span><span class="nv">libb_SRCS</span><span class="o">}</span><span class="p">)</span><span class="err">&lt;/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;h1&gt;Build</span> <span class="err">binary&lt;/h1&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="err">&lt;p&gt;</span><span class="nb">set</span><span class="p">(</span><span class="s">test_SRCS</span> <span class="o">${</span><span class="nv">SRC_DIR</span><span class="o">}</span><span class="s">/test.c</span><span class="p">)</span>
+</span><span class='line'><span class="nb">add_executable</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="o">${</span><span class="nv">test_SRCS</span><span class="o">}</span><span class="p">)</span>
+</span><span class='line'><span class="nb">target_link_libraries</span><span class="p">(</span><span class="o">${</span><span class="nv">PROJECT_NAME</span><span class="o">}</span> <span class="s">a</span> <span class="s">b</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <hr />
 

@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-12T21:42:33+08:00</updated>
+  <updated>2018-12-15T00:01:36+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,87 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Linux Binary 縮寫和連結]]></title>
+    <link href="http://wen00072.github.io/blog/2018/12/12/linux-binary-resources/"/>
+    <updated>2018-12-12T21:48:22+08:00</updated>
+    <id>http://wen00072.github.io/blog/2018/12/12/linux-binary-resources</id>
+    <content type="html"><![CDATA[<p>整理目前看過的資料縮寫以及網路連結，可能會更新。</p>
+
+<h2>ELF header</h2>
+
+<ul>
+<li><code>hdr</code>: header</li>
+<li><code>Ehdr</code>: ELF header</li>
+<li><code>EI</code>: ELF ident</li>
+<li><code>ET</code>: ELF type</li>
+<li><code>EM</code>: ELF machine</li>
+</ul>
+
+
+<h2>Program header</h2>
+
+<ul>
+<li><code>Phdr</code>: Program header</li>
+<li><code>PT</code>: Program header type</li>
+<li><code>PF</code>: Prgram header flag</li>
+</ul>
+
+
+<h2>Section header</h2>
+
+<ul>
+<li><code>Shdr</code>: Section header</li>
+<li><code>SHN</code>: Section header index</li>
+<li><code>sh_</code>: Section header</li>
+<li><code>SHT</code>: Section header type</li>
+<li><code>SHF</code>: Section header flag</li>
+</ul>
+
+
+<h2>Symbol table</h2>
+
+<ul>
+<li><code>st</code>: Symbol table</li>
+<li><code>STT</code>: Symbol table type</li>
+<li><code>STV</code>: Symbol table visibility</li>
+</ul>
+
+
+<h2>Dynamic section</h2>
+
+<ul>
+<li><code>DT</code>: Dynamic section type</li>
+</ul>
+
+
+<h2>Note section</h2>
+
+<ul>
+<li><code>NT</code>: Note type</li>
+</ul>
+
+
+<h2>Auxiliary vector</h2>
+
+<ul>
+<li><code>AT</code>: auxiliary vector type</li>
+</ul>
+
+
+<h2>資源</h2>
+
+<ul>
+<li><a href="http://man7.org/linux/man-pages/man5/elf.5.html">man 5 elf</a></li>
+<li><a href="http://man7.org/linux/man-pages/man1/ld.1.html">man ld</a></li>
+<li><a href="http://man7.org/linux/man-pages/man1/readelf.1.html">man readelf</a></li>
+<li><a href="http://man7.org/linux/man-pages/man1/objdump.1.html">man objdump</a></li>
+<li><a href="http://man7.org/linux/man-pages/man8/ld.so.8.html">man ld.so</a></li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Ubuntu 16.04更新到Ubuntu 18.04後Octopress 環境變動]]></title>
@@ -7507,73 +7588,6 @@ Codename:   trusty
 </li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[使用strace找出程式缺少的檔案路徑]]></title>
-    <link href="http://wen00072.github.io/blog/2016/04/10/use-strace-to-trace-missing-files/"/>
-    <updated>2016-04-10T01:14:38+08:00</updated>
-    <id>http://wen00072.github.io/blog/2016/04/10/use-strace-to-trace-missing-files</id>
-    <content type="html"><![CDATA[<p>這算極短篇。在組裝別人軟體的時候，常常出現缺少檔案的錯誤，運氣不好的不會跟你說缺少的檔案的期待路徑；運氣更差的就會連錯誤都不印，直接程式crash。我後來知道strace之後，才發覺它可以結省很多印log和trace程式碼的時間。</p>
-
-<p>這次就以前一篇執行openocd遇到的問題為例：第一次編譯openocd後，直接執行會出現找不到openocd.cfg檔案。經過一些試誤後才有上一篇整理出來的指令。</p>
-
-<p>錯誤訊息如下</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ openocd 
-</span><span class='line'>Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-07-22:20)
-</span><span class='line'>Licensed under GNU GPL v2
-</span><span class='line'>For bug reports, read
-</span><span class='line'>  http://openocd.org/doc/doxygen/bugs.html
-</span><span class='line'>embedded:startup.tcl:60: Error: Can't find openocd.cfg
-</span><span class='line'>in procedure 'script' 
-</span><span class='line'>at file "embedded:startup.tcl", line 60
-</span><span class='line'>Error: Debug Adapter has to be specified, see "interface" command
-</span><span class='line'>embedded:startup.tcl:60: Error: 
-</span><span class='line'>in procedure 'script' 
-</span><span class='line'>at file "embedded:startup.tcl", line 60</span></code></pre></td></tr></table></div></figure>
-
-
-<p>用strace 觀察輸出訊息如下：</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ strace -f openocd 2&gt;&1  | grep cfg
-</span><span class='line'>open("openocd.cfg", O_RDONLY)           = -1 ENOENT (No such file or directory)
-</span><span class='line'>open("/home/asdf/.openocd/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
-</span><span class='line'>open("/usr/local/share/openocd/site/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
-</span><span class='line'>open("/usr/local/share/openocd/scripts/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
-</span><span class='line'>write(2, "embedded:startup.tcl:60: Error: "..., 118embedded:startup.tcl:60: Error: Can't find openocd.cfg</span></code></pre></td></tr></table></div></figure>
-
-
-<p>從輸出訊息可以知道，openocd會依下面的順序讀取openocd.cfg</p>
-
-<ul>
-<li>目前目錄的openocd.cfg</li>
-<li>~/.openocd/openocd.cfg</li>
-<li>/usr/local/share/openocd/site/openocd.cfg</li>
-<li>/usr/local/share/openocd/scripts/openocd.cfg</li>
-</ul>
-
-
-<p>所以接下來就是在openocd的原始碼中挑和你開發target可以使用config 檔案，放入~/.openocd、改成openocd.cfg。當然事情沒那麼簡單，解掉這個問題接下來還會有一些缺少檔案的問題，一樣靠strace就可以搞定。</p>
 ]]></content>
   </entry>
   

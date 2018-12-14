@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Octopress | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-12T21:44:50+08:00</updated>
+  <updated>2018-12-15T00:01:36+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -165,7 +165,7 @@ rake generate
 <li>更改<code>source/_includes/custom/navigation.html</code>
 
 <ul>
-<li>加入<code>&lt;li&gt;&lt;a href="{{ root_url }}/categories"&gt;Categories&lt;/a&gt;&lt;/li&gt;</code></li>
+<li>加入<code>&lt;li&gt;&lt;a href="/categories"&gt;Categories&lt;/a&gt;&lt;/li&gt;</code></li>
 </ul>
 </li>
 <li><code>rake generate</code>

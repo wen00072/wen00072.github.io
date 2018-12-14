@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Elf | My code works, I don't know why.]]></title>
+  <link href="http://wen00072.github.io/blog/categories/elf/atom.xml" rel="self"/>
+  <link href="http://wen00072.github.io/"/>
+  <updated>2018-12-15T00:01:36+08:00</updated>
+  <id>http://wen00072.github.io/</id>
+  <author>
+    <name><![CDATA[Wen Liao]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Linux Binary 縮寫和連結]]></title>
+    <link href="http://wen00072.github.io/blog/2018/12/12/linux-binary-resources/"/>
+    <updated>2018-12-12T21:48:22+08:00</updated>
+    <id>http://wen00072.github.io/blog/2018/12/12/linux-binary-resources</id>
+    <content type="html"><![CDATA[<p>整理目前看過的資料縮寫以及網路連結，可能會更新。</p>
+
+<h2>ELF header</h2>
+
+<ul>
+<li><code>hdr</code>: header</li>
+<li><code>Ehdr</code>: ELF header</li>
+<li><code>EI</code>: ELF ident</li>
+<li><code>ET</code>: ELF type</li>
+<li><code>EM</code>: ELF machine</li>
+</ul>
+
+
+<h2>Program header</h2>
+
+<ul>
+<li><code>Phdr</code>: Program header</li>
+<li><code>PT</code>: Program header type</li>
+<li><code>PF</code>: Prgram header flag</li>
+</ul>
+
+
+<h2>Section header</h2>
+
+<ul>
+<li><code>Shdr</code>: Section header</li>
+<li><code>SHN</code>: Section header index</li>
+<li><code>sh_</code>: Section header</li>
+<li><code>SHT</code>: Section header type</li>
+<li><code>SHF</code>: Section header flag</li>
+</ul>
+
+
+<h2>Symbol table</h2>
+
+<ul>
+<li><code>st</code>: Symbol table</li>
+<li><code>STT</code>: Symbol table type</li>
+<li><code>STV</code>: Symbol table visibility</li>
+</ul>
+
+
+<h2>Dynamic section</h2>
+
+<ul>
+<li><code>DT</code>: Dynamic section type</li>
+</ul>
+
+
+<h2>Note section</h2>
+
+<ul>
+<li><code>NT</code>: Note type</li>
+</ul>
+
+
+<h2>Auxiliary vector</h2>
+
+<ul>
+<li><code>AT</code>: auxiliary vector type</li>
+</ul>
+
+
+<h2>資源</h2>
+
+<ul>
+<li><a href="http://man7.org/linux/man-pages/man5/elf.5.html">man 5 elf</a></li>
+<li><a href="http://man7.org/linux/man-pages/man1/ld.1.html">man ld</a></li>
+<li><a href="http://man7.org/linux/man-pages/man1/readelf.1.html">man readelf</a></li>
+<li><a href="http://man7.org/linux/man-pages/man1/objdump.1.html">man objdump</a></li>
+<li><a href="http://man7.org/linux/man-pages/man8/ld.so.8.html">man ld.so</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
