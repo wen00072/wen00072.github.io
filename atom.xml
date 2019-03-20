@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2018-12-15T00:01:36+08:00</updated>
+  <updated>2019-03-20T22:52:39+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,219 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[從gdb Dump Process 記憶體資料]]></title>
+    <link href="http://wen00072.github.io/blog/2019/03/20/dump-process-memory-block-via-gdb/"/>
+    <updated>2019-03-20T22:29:54+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/03/20/dump-process-memory-block-via-gdb</id>
+    <content type="html"><![CDATA[<p>無聊在trace <a href="http://man7.org/linux/man-pages/man7/vdso.7.html">vdso</a> 找到的技巧。整理如下</p>
+
+<h2>方法說明</h2>
+
+<ul>
+<li><code>gdb 你要的程式</code></li>
+<li><code>gdb</code> 設常用的 <code>system call</code> 如 <code>open</code></li>
+<li>執行程式</li>
+<li>中斷後
+
+<ul>
+<li><code>info proc mappings</code></li>
+<li><code>dump memory 檔名 開始位址 結束位址</code></li>
+<li>離開</li>
+</ul>
+</li>
+<li>剩下看你拿要dump 的檔案做啥了</li>
+</ul>
+
+
+<h2>範例： dump process中的vdso記憶體區塊，觀察vdso symbol</h2>
+
+<ul>
+<li><code>gdb 你要的程式</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ gdb /bin/ls
+</span><span class='line'>GNU gdb (Ubuntu 8.1-0ubuntu3) 8.1.0.20180409-git
+</span><span class='line'>...
+</span><span class='line'>Reading symbols from /bin/ls...(no debugging symbols found)...done.
+</span><span class='line'>(gdb) </span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>gdb</code> 設常用的 <code>system call</code> 如 <code>open</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) b open
+</span><span class='line'>Breakpoint 1 at 0x3d30</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>執行程式</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) r
+</span><span class='line'>Starting program: /bin/ls 
+</span><span class='line'>
+</span><span class='line'>Breakpoint 1, __libc_open64 (file=file@entry=0x7ffff7df6428 "/etc/ld.so.cache", oflag=oflag@entry=524288)
+</span><span class='line'>    at ../sysdeps/unix/sysv/linux/open64.c:39
+</span><span class='line'>39    ../sysdeps/unix/sysv/linux/open64.c: No such file or directory.</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>info proc mapings</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) info proc mappings 
+</span><span class='line'>process 30094
+</span><span class='line'>Mapped address spaces:
+</span><span class='line'>
+</span><span class='line'>          Start Addr           End Addr       Size     Offset objfile
+</span><span class='line'>      0x555555554000     0x555555573000    0x1f000        0x0 /bin/ls
+</span><span class='line'>      0x555555772000     0x555555775000     0x3000    0x1e000 /bin/ls
+</span><span class='line'>      0x555555775000     0x555555776000     0x1000        0x0 [heap]
+</span><span class='line'>      0x7ffff7dd5000     0x7ffff7dfc000    0x27000        0x0 /lib/x86_64-linux-gnu/ld-2.27.so
+</span><span class='line'>      0x7ffff7ff7000     0x7ffff7ffa000     0x3000        0x0 [vvar]
+</span><span class='line'>      0x7ffff7ffa000     0x7ffff7ffc000     0x2000        0x0 [vdso]
+</span><span class='line'>      0x7ffff7ffc000     0x7ffff7ffe000     0x2000    0x27000 /lib/x86_64-linux-gnu/ld-2.27.so
+</span><span class='line'>      0x7ffff7ffe000     0x7ffff7fff000     0x1000        0x0 
+</span><span class='line'>      0x7ffffffde000     0x7ffffffff000    0x21000        0x0 [stack]
+</span><span class='line'>  0xffffffffff600000 0xffffffffff601000     0x1000        0x0 [vsyscall]</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>dump memory 檔名 開始位址 結束位址</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) dump memory vdso 0x7ffff7ffa000  0x7ffff7ffc000
+</span><span class='line'>(gdb) quit
+</span><span class='line'>A debugging session is active.
+</span><span class='line'>
+</span><span class='line'>  Inferior 1 [process 30094] will be killed.
+</span><span class='line'>
+</span><span class='line'>Quit anyway? (y or n) y</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>看dump 檔案 symbol</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ file vdso 
+</span><span class='line'>vdso: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[sha1]=cef5ed3c3dc2b39082ae093560c168a8b427ebb6, stripped
+</span><span class='line'>$ nm -D vdso 
+</span><span class='line'>0000000000000a30 W clock_gettime
+</span><span class='line'>0000000000000f30 W getcpu
+</span><span class='line'>0000000000000d40 W gettimeofday
+</span><span class='line'>0000000000000000 A LINUX_2.6
+</span><span class='line'>0000000000000f10 W time
+</span><span class='line'>0000000000000a30 T __vdso_clock_gettime
+</span><span class='line'>0000000000000f30 T __vdso_getcpu
+</span><span class='line'>0000000000000d40 T __vdso_gettimeofday
+</span><span class='line'>0000000000000f10 T __vdso_time</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>加碼，觀察ASLR</h2>
+
+<p>懶的說明ASLR，請自行參考<a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization">連結</a>。
+另外請自行比較下面兩個 <code>cat</code> 的記憶體區塊位址。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat /proc/self/maps
+</span><span class='line'>5601e5311000-5601e5319000 r-xp 00000000 103:02 13631603                  /bin/cat
+</span><span class='line'>...
+</span><span class='line'>5601e6814000-5601e6835000 rw-p 00000000 00:00 0                          [heap]
+</span><span class='line'>...
+</span><span class='line'>7ffe6edcf000-7ffe6edf0000 rw-p 00000000 00:00 0                          [stack]
+</span><span class='line'>7ffe6edfb000-7ffe6edfe000 r--p 00000000 00:00 0                          [vvar]
+</span><span class='line'>7ffe6edfe000-7ffe6ee00000 r-xp 00000000 00:00 0                          [vdso]
+</span><span class='line'>ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>$ cat /proc/self/maps
+</span><span class='line'>556ef8185000-556ef818d000 r-xp 00000000 103:02 13631603                  /bin/cat
+</span><span class='line'>...
+</span><span class='line'>556ef91df000-556ef9200000 rw-p 00000000 00:00 0                          [heap]
+</span><span class='line'>...
+</span><span class='line'>7ffc83c55000-7ffc83c76000 rw-p 00000000 00:00 0                          [stack]
+</span><span class='line'>7ffc83d4a000-7ffc83d4d000 r--p 00000000 00:00 0                          [vvar]
+</span><span class='line'>7ffc83d4d000-7ffc83d4f000 r-xp 00000000 00:00 0                          [vdso]
+</span><span class='line'>ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+</span></code></pre></td></tr></table></div></figure>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Linux Binary 縮寫和連結]]></title>
@@ -7418,174 +7631,6 @@ Codename:   trusty
 <li><a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F4 Discovry Disco 開發版手冊</a></li>
 <li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html">STM32F4 DSP and standard peripherals library</a></li>
 <li><a href="http://regalis.com.pl/en/arm-cortex-stm32-gnulinux/">Programming ARM Cortex (STM32) under GNU/Linux</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[ARM CM4 Pratice (1): STM32 F4xx Standard Peripherals Library手冊整理]]></title>
-    <link href="http://wen00072.github.io/blog/2016/06/25/stm32-f4xx-standard-peripherals-libraryshou-ce-zheng-li/"/>
-    <updated>2016-06-25T14:03:46+08:00</updated>
-    <id>http://wen00072.github.io/blog/2016/06/25/stm32-f4xx-standard-peripherals-libraryshou-ce-zheng-li</id>
-    <content type="html"><![CDATA[<h2>前言</h2>
-
-<p>以前在寫作業的時候，從來沒有想過那些週邊到底怎麼使用，只大概印象和<a href="http://www.arm.com/products/processors/cortex-m/cortex-microcontroller-software-interface-standard.php">CMSIS</a>有關。後來想應該是要去了解到底這些廠商提供的函式庫在軟體開發中扮演了什麼樣的角色？因此花了時間整理如下。</p>
-
-<p>在使用之前，請自行到<a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html">官方網站</a>下載STM32F4 DSP and standard peripherals library。</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#AST-%E7%B0%A1%E4%BB%8B">簡介</a>
-
-<ul>
-<li><a href="#AST-CMSIS">CMSIS和Standard Peripherals Library說明</a></li>
-</ul>
-</li>
-<li><a href="#AST-Rules">Coding rules and conventions</a>
-
-<ul>
-<li><a href="#AST-Rules-general">一般命名規則</a></li>
-<li><a href="#AST-Rules-reg">週邊 Register 命名規則</a></li>
-</ul>
-</li>
-<li><a href="#AST-Ref">參考資料</a></li>
-</ul>
-
-
-<p><a name="AST-簡介"></a></p>
-
-<h2>簡介</h2>
-
-<p>手冊上提到Standard Peripherals Library (以下簡稱SPL)的特點</p>
-
-<ul>
-<li>提供STM32F4 XX的週邊驅動程式和常用的資料結構</li>
-<li>基於CMSIS開發</li>
-<li>ANSI C開發</li>
-<li>使用SPL表示週邊設備存取效能和佔用的記憶體空間是由SPL決定，因此有特別限制的話必須要自行最佳化或是實作</li>
-</ul>
-
-
-<p>SPL包含:</p>
-
-<ul>
-<li>週邊設備暫存器的位址mapping，包含這些暫存器的bit</li>
-<li>所有週邊的控制function以及對應的資料結構</li>
-<li>範例程式</li>
-</ul>
-
-
-<p><a name="AST-CMSIS"></a></p>
-
-<h3>CMSIS和Standard Peripherals Library說明</h3>
-
-<p>整體的架構圖如下(參考手冊資料）</p>
-
-<center><img src="http://wen00072.github.io/files/stm32/SPL_Diag.jpg"></img></center>
-
-
-<p>簡單說明如下</p>
-
-<ul>
-<li>CMSIS 提供了
-
-<ul>
-<li>統一的暫存器定義、位址定義</li>
-<li>協助開發的函數</li>
-<li>RTOS 介面</li>
-<li>DSP 相關函數</li>
-</ul>
-</li>
-<li>開發版上實體的週邊驅動程式是透過SPL和CMSIS來控制硬體</li>
-</ul>
-
-
-<p><a name="AST-Rules"></a></p>
-
-<h2>Coding rules and conventions</h2>
-
-<p><a name="AST-Rules-general"></a></p>
-
-<h3>一般命名規則</h3>
-
-<ul>
-<li>函數名稱以<strong>大寫週邊簡寫</strong>為prefix如<code>USART_SendData</code></li>
-<li>文件舉例的API，請自行望文生義
-
-<ul>
-<li><code>週邊名稱_Init</code></li>
-<li><code>週邊名稱_DeInit</code></li>
-<li><code>週邊名稱_StructInit</code></li>
-<li><code>週邊名稱_Cmd</code></li>
-<li><code>週邊名稱_ITConfig</code>
-
-<ul>
-<li>IT: interrupt</li>
-</ul>
-</li>
-<li><code>週邊名稱_DMAConfig</code></li>
-<li><code>週邊名稱_XXXConfig</code>
-
-<ul>
-<li>週邊設備的XXX設定</li>
-</ul>
-</li>
-<li><code>週邊名稱_GetFlagStatus</code></li>
-<li><code>週邊名稱_ClearFlag</code></li>
-<li><code>週邊名稱_ClearITPendingBit</code></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="AST-Rules-reg"></a></p>
-
-<h3>週邊 Register 命名規則</h3>
-
-<ul>
-<li>週邊 Register 一律包裝在<code>struct</code>中，名稱一律為大寫。在 stm32f4xx.h 另外已經宣告了週邊設備位址的結構如：</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#define SPI1                  ((SPI_TypeDef *) SPI1_BASE)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><code>SPI_TypeDef</code>為一個struct，因此你可以使用下面方式直接存取週邊設備暫存器。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">SPI1</span><span class="o">-&gt;</span><span class="n">CR1</span> <span class="o">=</span> <span class="mh">0x0001</span><span class="p">;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>有了大概概念後，接下來就是開幹時間，敬請期待。</p>
-
-<p><a name="AST-Ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html">STM32F4 DSP and standard peripherals library</a>
-
-<ul>
-<li>本篇絕大部分參考解開套件後的stm32f4xx_dsp_stdperiph_lib_um.chm　這個文件檔案</li>
-</ul>
-</li>
-<li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32cube-embedded-software/stm32cubef4.html">STM32CubeF4網頁</a>
-
-<ul>
-<li>有SPL的相關資料</li>
-</ul>
-</li>
-<li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32062.html">STM32F2 standard peripherals library手冊</a>
-
-<ul>
-<li>交叉比對用</li>
-</ul>
-</li>
 </ul>
 
 ]]></content>

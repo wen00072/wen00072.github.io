@@ -11,12 +11,12 @@
 
 
   
-  <meta name="description" content="整理目前看過的資料縮寫以及網路連結，可能會更新。 ELF header hdr: header
-Ehdr: ELF header
-EI: ELF ident
-ET: ELF type
-EM: ELF machine Program header Phdr: Program header
-PT: &hellip;">
+  <meta name="description" content="無聊在trace vdso 找到的技巧。整理如下 方法說明 gdb 你要的程式
+gdb 設常用的 system call 如 open
+執行程式
+中斷後 info proc mappings
+dump memory 檔名 開始位址 結束位址
+離開 剩下看你拿要dump 的檔案做啥了 範例： &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -75,6 +75,242 @@ PT: &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-03-20T22:29:54+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>20</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>10:29 pm</span></time>
+        
+           | <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2019/03/20/dump-process-memory-block-via-gdb/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>無聊在trace <a href="http://man7.org/linux/man-pages/man7/vdso.7.html">vdso</a> 找到的技巧。整理如下</p>
+
+<h2>方法說明</h2>
+
+<ul>
+<li><code>gdb 你要的程式</code></li>
+<li><code>gdb</code> 設常用的 <code>system call</code> 如 <code>open</code></li>
+<li>執行程式</li>
+<li>中斷後
+
+<ul>
+<li><code>info proc mappings</code></li>
+<li><code>dump memory 檔名 開始位址 結束位址</code></li>
+<li>離開</li>
+</ul>
+</li>
+<li>剩下看你拿要dump 的檔案做啥了</li>
+</ul>
+
+
+<h2>範例： dump process中的vdso記憶體區塊，觀察vdso symbol</h2>
+
+<ul>
+<li><code>gdb 你要的程式</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ gdb /bin/ls
+</span><span class='line'>GNU gdb (Ubuntu 8.1-0ubuntu3) 8.1.0.20180409-git
+</span><span class='line'>...
+</span><span class='line'>Reading symbols from /bin/ls...(no debugging symbols found)...done.
+</span><span class='line'>(gdb) </span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>gdb</code> 設常用的 <code>system call</code> 如 <code>open</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) b open
+</span><span class='line'>Breakpoint 1 at 0x3d30</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>執行程式</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) r
+</span><span class='line'>Starting program: /bin/ls 
+</span><span class='line'>
+</span><span class='line'>Breakpoint 1, __libc_open64 (file=file@entry=0x7ffff7df6428 "/etc/ld.so.cache", oflag=oflag@entry=524288)
+</span><span class='line'>    at ../sysdeps/unix/sysv/linux/open64.c:39
+</span><span class='line'>39    ../sysdeps/unix/sysv/linux/open64.c: No such file or directory.</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>info proc mapings</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) info proc mappings 
+</span><span class='line'>process 30094
+</span><span class='line'>Mapped address spaces:
+</span><span class='line'>
+</span><span class='line'>          Start Addr           End Addr       Size     Offset objfile
+</span><span class='line'>      0x555555554000     0x555555573000    0x1f000        0x0 /bin/ls
+</span><span class='line'>      0x555555772000     0x555555775000     0x3000    0x1e000 /bin/ls
+</span><span class='line'>      0x555555775000     0x555555776000     0x1000        0x0 [heap]
+</span><span class='line'>      0x7ffff7dd5000     0x7ffff7dfc000    0x27000        0x0 /lib/x86_64-linux-gnu/ld-2.27.so
+</span><span class='line'>      0x7ffff7ff7000     0x7ffff7ffa000     0x3000        0x0 [vvar]
+</span><span class='line'>      0x7ffff7ffa000     0x7ffff7ffc000     0x2000        0x0 [vdso]
+</span><span class='line'>      0x7ffff7ffc000     0x7ffff7ffe000     0x2000    0x27000 /lib/x86_64-linux-gnu/ld-2.27.so
+</span><span class='line'>      0x7ffff7ffe000     0x7ffff7fff000     0x1000        0x0 
+</span><span class='line'>      0x7ffffffde000     0x7ffffffff000    0x21000        0x0 [stack]
+</span><span class='line'>  0xffffffffff600000 0xffffffffff601000     0x1000        0x0 [vsyscall]</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>dump memory 檔名 開始位址 結束位址</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) dump memory vdso 0x7ffff7ffa000  0x7ffff7ffc000
+</span><span class='line'>(gdb) quit
+</span><span class='line'>A debugging session is active.
+</span><span class='line'>
+</span><span class='line'>  Inferior 1 [process 30094] will be killed.
+</span><span class='line'>
+</span><span class='line'>Quit anyway? (y or n) y</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>看dump 檔案 symbol</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ file vdso 
+</span><span class='line'>vdso: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[sha1]=cef5ed3c3dc2b39082ae093560c168a8b427ebb6, stripped
+</span><span class='line'>$ nm -D vdso 
+</span><span class='line'>0000000000000a30 W clock_gettime
+</span><span class='line'>0000000000000f30 W getcpu
+</span><span class='line'>0000000000000d40 W gettimeofday
+</span><span class='line'>0000000000000000 A LINUX_2.6
+</span><span class='line'>0000000000000f10 W time
+</span><span class='line'>0000000000000a30 T __vdso_clock_gettime
+</span><span class='line'>0000000000000f30 T __vdso_getcpu
+</span><span class='line'>0000000000000d40 T __vdso_gettimeofday
+</span><span class='line'>0000000000000f10 T __vdso_time</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>加碼，觀察ASLR</h2>
+
+<p>懶的說明ASLR，請自行參考<a href="https://en.wikipedia.org/wiki/Address_space_layout_randomization">連結</a>。
+另外請自行比較下面兩個 <code>cat</code> 的記憶體區塊位址。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat /proc/self/maps
+</span><span class='line'>5601e5311000-5601e5319000 r-xp 00000000 103:02 13631603                  /bin/cat
+</span><span class='line'>...
+</span><span class='line'>5601e6814000-5601e6835000 rw-p 00000000 00:00 0                          [heap]
+</span><span class='line'>...
+</span><span class='line'>7ffe6edcf000-7ffe6edf0000 rw-p 00000000 00:00 0                          [stack]
+</span><span class='line'>7ffe6edfb000-7ffe6edfe000 r--p 00000000 00:00 0                          [vvar]
+</span><span class='line'>7ffe6edfe000-7ffe6ee00000 r-xp 00000000 00:00 0                          [vdso]
+</span><span class='line'>ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>$ cat /proc/self/maps
+</span><span class='line'>556ef8185000-556ef818d000 r-xp 00000000 103:02 13631603                  /bin/cat
+</span><span class='line'>...
+</span><span class='line'>556ef91df000-556ef9200000 rw-p 00000000 00:00 0                          [heap]
+</span><span class='line'>...
+</span><span class='line'>7ffc83c55000-7ffc83c76000 rw-p 00000000 00:00 0                          [stack]
+</span><span class='line'>7ffc83d4a000-7ffc83d4d000 r--p 00000000 00:00 0                          [vvar]
+</span><span class='line'>7ffc83d4d000-7ffc83d4f000 r-xp 00000000 00:00 0                          [vdso]
+</span><span class='line'>ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2801,452 +3037,6 @@ PT: &hellip;">
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/10/31/linux-kernel-pratice-0-buildroot-2-customized-kernel/">Linux Kernel Pratice 0: Buildroot (2/2) - 自行編譯kernel</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-10-31T09:40:54+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>9:40 am</span></time>
-        
-           | <a href="/blog/2016/10/31/linux-kernel-pratice-0-buildroot-2-customized-kernel/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2016/10/31/linux-kernel-pratice-0-buildroot-2-customized-kernel/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>前情提要</h2>
-
-<p><a href="/blog/2016/10/29/linux-kernel-pratice-0-buildroot-setup-with-qemu/">上一篇</a>提到，設定實習環境的目標有：</p>
-
-<ol>
-<li>可以使用ARM 平台。一方面追求流行，一方面我不想再開x86這個副本</li>
-<li>可以方便地建立ARM平台的Linux Rootfs和kernel版本</li>
-<li>可以方便地更改指定要編譯的Kernel版本</li>
-<li>透過Qemu ，使用2的Rootfs和kernel開機</li>
-<li>透過Qemu和搭配的工具可以分析Linux kernel的run time 行為</li>
-</ol>
-
-
-<p>今天就是來解決3 的項目。更細分的話，這次目標是</p>
-
-<ol>
-<li>使用官方Linux kernel 編譯Vexpress 平台kernel及產生Buildroot支援的開發版device tree</li>
-<li>編譯出來的kernel binary可以在Qemu上順利載入</li>
-<li>編譯出來的kernel binary可以順利的載入buildroot產生的rootfs，以及網路介面和相關設備</li>
-</ol>
-
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#lk0_1_env">測試環境</a></li>
-<li><a href="#lk0_1_dl">下載Linux Kernel Source</a></li>
-<li><a href="#lk0_1_conf">設定和編譯</a>
-
-<ul>
-<li><a href="#lk0_1_conf_sw">切換版本</a></li>
-<li><a href="#lk0_1_conf_arm_def">設定ARM Vexpress預設config</a></li>
-<li><a href="#lk0_1_conf_qemu">更改Kernel Config讓Qemu使用</a></li>
-<li><a href="#lk0_1_conf_build">編譯</a>
-
-<ul>
-<li><a href="#lk0_1_conf_build_broot">Buildroot</a></li>
-<li><a href="#lk0_1_conf_build_lk">Linux kernel</a></li>
-</ul>
-</li>
-<li><a href="#lk0_1_conf_dtb">產生Device tree binary</a></li>
-</ul>
-</li>
-<li><a href="#lk0_1_test">測試</a></li>
-<li><a href="#lk0_1_ref">參考資料</a></li>
-<li><a href="#lk0_1_app">附錄</a>
-
-<ul>
-<li><a href="#lk0_1_app_brot">使用Buildroot 內建套件指定編譯Linux kernel 4.2.2</a></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="lk0_1_env"></a></p>
-
-<h2>測試環境</h2>
-
-<p>做組裝的最重要的原則之一就是要能夠reproduce，所以交代測試環境是一定要的</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.5 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span><span class='line'>
-</span><span class='line'>$ git --version
-</span><span class='line'>git version 2.10.0
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>buildroot 版本
-
-<ul>
-<li>commit hash: <code>14b24726a81b719b35fee70c8ba8be2d682a7313</code></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="lk0_1_dl"></a></p>
-
-<h2>下載Linux Kernel Source</h2>
-
-<p>沒啥好講的，就剪貼指令吧</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>git clone git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="lk0_1_conf"></a></p>
-
-<h2>設定和編譯</h2>
-
-<p>東西下載完不是就閉著眼睛開幹，因為我們在開始編譯前需要</p>
-
-<ol>
-<li>切換到你想要研究的版本</li>
-<li>如果不是x86，你需要指定平台</li>
-<li>細項Kernel config設定</li>
-</ol>
-
-
-<p>那麼就來見招拆招吧</p>
-
-<p><a name="lk0_1_conf_sw"></a></p>
-
-<h3>切換版本</h3>
-
-<p>非常簡單，先<code>git tag</code>，切過去就好。我要切到4.4.2就是</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>git tag                 <span class="c"># 找你要的版本</span>
-</span><span class='line'>git checkout v4.4.2     <span class="c"># 切到tag</span>
-</span><span class='line'>git checkout -b v4.4.2  <span class="c"># 理論上會這邊改東改西，就先開branch吧</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="lk0_1_conf_arm_def"></a></p>
-
-<h3>設定ARM Vexpress預設config</h3>
-
-<p>先講結論</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>make <span class="nv">ARCH</span><span class="o">=</span>arm vexpress_defconfig
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>開始<del>沒人要看</del>的解釋吧。基本上也亂看找出來的，簡單講一下當初的「脈絡」</p>
-
-<ol>
-<li>我知道我們平台是vexpress，所以就<code>find | grep vexpress</code>。從一堆檔案中我看到有趣的檔案<code>./arch/arm/configs/vexpress_defconfig</code>。</li>
-<li>接下來就是要找make 的時候怎麼和這個檔案勾起來。網路上找一下會發現一個變數<code>ARCH</code>，剩下就試看看<code>make ARCH=arm vexpress_defconfig</code>，能不能動，可以動所以打完收工。</li>
-</ol>
-
-
-<p>然後你就知道</p>
-
-<ol>
-<li>Linux kernel source中有些平台會提供default config</li>
-<li>透過<code>ARCH</code>可以讓make時自動參考這些檔案產生config</li>
-</ol>
-
-
-<p><a name="lk0_1_conf_qemu"></a></p>
-
-<h3>更改Kernel Config讓Qemu使用</h3>
-
-<p><font color="red"><strong>建議不要把buildroot compile cache打開。我花了很多時間在kernel 編譯後Qemu還是沒有使用編譯後的kernel的問題，最後發現關閉buildroot compile cache問題就消失了。</strong></font></p>
-
-<p>如果閉著眼睛開始<a href="#lk0_1_conf_build">編譯</a>，你會很高興地發現可以開機了，但是接下來就會很失望的發現出現mount完rootfs找不到<code>/dev/ttyAMA0</code>，以至於沒辦法進入login畫面。這是因為雖然serial driver偵測到設備，但是/dev下面沒有相對的device node。解法就是確認下面kernel option有開啟。想要知道真正的原因<a href="https://buildroot.org/downloads/manual/manual.html#_dev_management">手冊這邊</a>有提到，請參考<code>Dynamic using devtmpfs only</code>段落。</p>
-
-<ul>
-<li>Device Drivers -> Generic Driver Options ->
-
-<ul>
-<li>Maintain a devtmpfs filesystem to mount at /dev</li>
-<li>Automount devtmpfs at /dev, after the kernel mounted the rootfs</li>
-</ul>
-</li>
-</ul>
-
-
-<p>建議順便巡一下其他kernel選項，用不到的可以關一下。比如說一堆有的沒的網卡，音效支援之類的。</p>
-
-<p><a name="lk0_1_conf_build"></a></p>
-
-<h3>編譯</h3>
-
-<p><a name="lk0_1_conf_build_broot"></a></p>
-
-<h4>Buildroot</h4>
-
-<ol>
-<li><code>make menuconfig</code>
-
-<ul>
-<li>Toolchain -> Custom kernel headers series
-
-<ul>
-<li>改成你現在Linux 版本</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><code>make</code></li>
-</ol>
-
-
-<p><a name="lk0_1_conf_build_lk"></a></p>
-
-<h4>Linux kernel</h4>
-
-<p>指令如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>make <span class="nv">CROSS_COMPILE</span><span class="o">=</span>/tmp/buildroot/output/host/usr/bin/arm-buildroot-linux-gnueabihf- <span class="nv">ARCH</span><span class="o">=</span>arm <span class="nv">V</span><span class="o">=</span><span class="m">1</span> bzImage
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>這其實就是<code>make bzImage</code>的囉唆版，多了</p>
-
-<ul>
-<li><code>ARCH=arm</code>
-
-<ul>
-<li>指定ARM平台</li>
-</ul>
-</li>
-<li><code>CROSS_COMPILE=..</code>
-
-<ul>
-<li>Cross compile prefix，既然我們使用buildroot內建toolchain，就用他們來編譯kernel</li>
-</ul>
-</li>
-<li><code>V=1</code>
-
-<ul>
-<li>身為組裝工，沒看到編譯指令訊息跳出來就會沒安全感</li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="lk0_1_conf_dtb"></a></p>
-
-<h3>產生Device tree binary</h3>
-
-<p>由於Kernel的演進，可以存放平台硬體相關設定讓kernel啟動時存取。此方式稱為device tree，詳細資訊可以參考這份<a href="https://events.linuxfoundation.org/sites/events/files/slides/petazzoni-device-tree-dummies.pdf">簡介(pdf投影片)</a>。</p>
-
-<p>以論述文來說，儘量先說結論再解釋。因此懶人包如下，假設在kernel top 目錄中：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt-get install device-tree-compiler
-</span><span class='line'>dtc -O dtb -o vexpress-v2p-ca9.dtb arch/arm/boot/dts/vexpress-v2p-ca9.dts
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><del>沒人要看的</del>說明如下，懶得看推論的就剪貼上面就好
-對於組裝工來說，我關心的是</p>
-
-<ol>
-<li>Kernel 軟體包中是否有存在已經有的device tree?</li>
-<li>有的話，我要選那一個？</li>
-<li>怎麼產生出最後成果？</li>
-<li>Qemu怎麼使用device tree？</li>
-</ol>
-
-
-<p>要回上面的問題，最簡單的方式就是回顧buildroot中啟動qemu Vepress的命令參數，你就會發現有個東西似乎和我們關心的device tree有關聯</p>
-
-<ul>
-<li><code>-dtb output/images/vexpress-v2p-ca9.dtb</code></li>
-</ul>
-
-
-<p>這邊顯示了幾個資訊</p>
-
-<ul>
-<li>有一個檔案叫dtb</li>
-<li>檔名的v2p-ca9有可能和平台有關係</li>
-</ul>
-
-
-<p>那麼我們在Kernel中找一下檔名中有vexpress-v2p-ca9的檔案</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>user@host:/tmp/kernel/linux-stable$ find | grep vexpress-v2p-ca9
-</span><span class='line'>./arch/arm/boot/dts/vexpress-v2p-ca9.dts
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>這邊一樣透露了這是一個和<code>dtb</code>很類似的檔案，那麼我們進一步做一些確認</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ # dtb 是binary檔案
-</span><span class='line'>$ file output/images/vexpress-v2p-ca9.dtb
-</span><span class='line'>output/images/vexpress-v2p-ca9.dtb: data
-</span><span class='line'>
-</span><span class='line'>$ # dts是文字檔
-</span><span class='line'>$ file ./arch/arm/boot/dts/vexpress-v2p-ca9.dts
-</span><span class='line'>./arch/arm/boot/dts/vexpress-v2p-ca9.dts: ASCII text
-</span><span class='line'>
-</span><span class='line'>$ # cat 後會發現是一種描述檔
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>剩下就是估狗大法，發現需要編譯器才能把dts轉換成dtb檔案。
-所以就用上面的方式產稱dtb檔囉。</p>
-
-<h2>測試</h2>
-
-<p>剩下就剪貼了</p>
-
-<p><strong>我在buildroot top目錄執行的</strong>，你要嘛就切到buildroot目錄下，要嘛就指定<code>-drive file</code>到你自己rootfs的路徑</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>qemu-system-arm -M vexpress-a9 -smp <span class="m">1</span> -m <span class="m">256</span> -kernel /tmp/kernel/linux-stable/arch/arm/boot/zImage -dtb /tmp/kernel/linux-stable/vexpress-v2p-ca9.dtb  -drive <span class="nv">file</span><span class="o">=</span>output/images/rootfs.ext2,if<span class="o">=</span>sd,format<span class="o">=</span>raw -append <span class="s2">&quot;console=ttyAMA0,115200 root=/dev/mmcblk0&quot;</span> -serial stdio -net nic,model<span class="o">=</span>lan9118 -net user
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>提出來兩個參數表示這是我編譯出來的kernel而不是buildroot的</p>
-
-<ul>
-<li><code>-kernel /tmp/kernel/linux-stable/arch/arm/boot/zImage</code></li>
-<li><code>-dtb /tmp/kernel/linux-stable/vexpress-v2p-ca9.dtb</code></li>
-</ul>
-
-
-<p>開機畫面節錄如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>Booting Linux on physical CPU 0x0
-</span><span class='line'>Initializing cgroup subsys cpuset
-</span><span class='line'>Linux version 4.4.2 (user@host) (gcc version 4.8.5 (Buildroot 2016.11-git-00439-g14b2472) ) #10 SMP Sat Oct 29 15:25:36 CST 2016
-</span><span class='line'>CPU: ARMv7 Processor [410fc090] revision 0 (ARMv7), cr=10c5387d
-</span><span class='line'>CPU: PIPT / VIPT nonaliasing data cache, VIPT aliasing instruction cache
-</span><span class='line'>Machine model: V2P-CA9
-</span><span class='line'>Memory policy: Data cache writeback
-</span><span class='line'>CPU: All CPU(s) started in SVC mode.
-</span><span class='line'>PERCPU: Embedded 12 pages/cpu @8fdbd000 s18188 r8192 d22772 u49152
-</span><span class='line'>Built 1 zonelists in Zone order, mobility grouping on.  Total pages: 65024
-</span><span class='line'>Kernel command line: console=ttyAMA0,115200 root=/dev/mmcblk0
-</span><span class='line'>log_buf_len individual max cpu contribution: 4096 bytes
-</span><span class='line'>log_buf_len total cpu_extra contributions: 12288 bytes
-</span><span class='line'>log_buf_len min size: 16384 bytes
-</span><span class='line'>log_buf_len: 32768 bytes
-</span><span class='line'>early log buf free: 14956(91%)
-</span><span class='line'>PID hash table entries: 1024 (order: 0, 4096 bytes)
-</span><span class='line'>Dentry cache hash table entries: 32768 (order: 5, 131072 bytes)
-</span><span class='line'>Inode-cache hash table entries: 16384 (order: 4, 65536 bytes)
-</span><span class='line'>Memory: 252732K/262144K available (4816K kernel code, 155K rwdata, 1384K rodata, 284K init, 152K bss, 9412K reserved, 0K cma-reserved)
-</span><span class='line'>Virtual kernel memory layout:
-</span><span class='line'>    vector  : 0xffff0000 - 0xffff1000   (   4 kB)
-</span><span class='line'>    fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)
-</span><span class='line'>    vmalloc : 0x90800000 - 0xff800000   (1776 MB)
-</span><span class='line'>    lowmem  : 0x80000000 - 0x90000000   ( 256 MB)
-</span><span class='line'>    modules : 0x7f000000 - 0x80000000   (  16 MB)
-</span><span class='line'>....
-</span><span class='line'>buildroot login:
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="lk0_1_ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="https://buildroot.org/downloads/manual/manual.html">Buildroot 官方手冊</a></li>
-<li><a href="https://events.linuxfoundation.org/sites/events/files/slides/petazzoni-device-tree-dummies.pdf">Device Tree for Dummies! (pdf投影片)</a></li>
-<li><a href="http://stackoverflow.com/questions/21670967/compiling-source-device-tree-file">Stackoverflow: COMPILING source device tree file</a></li>
-</ul>
-
-
-<p><a name="lk0_1_app"></a></p>
-
-<h2>附錄</h2>
-
-<p><a name="lk0_1_app_brot"></a></p>
-
-<h3>使用Buildroot 內建套件指定編譯Linux kernel 4.2.2</h3>
-
-<p>當初會去做這個主要是因為開始編譯獨立的Linux kernel前要先驗證buildroot自己編的Linux 4.4.2是否可以用qemu開機。另外的好處的就是buildroot編譯出來的kernel config (在output/build/linux-4.4.2/.config) 可以和你自己的kernel config比對。這邊只要在buildroot中make menuconfig中和kernel有關設定指定4.4.2即可，比Versatile簡單太多了故省略，如果有人遇到問題我再補上這邊說明。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -3260,6 +3050,10 @@ PT: &hellip;">
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2018/12/12/linux-binary-resources/">Linux Binary 縮寫和連結</a>
@@ -3277,10 +3071,6 @@ PT: &hellip;">
         <a href="/blog/2018/07/24/notes-on-how-to-c-2016/">Notes on How to C 2016</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2018/02/15/vim-setup-for-trace-c-code/">給自己剪貼用的vim設定</a>
-      </li>
-    
   </ul>
 </section>
 
@@ -3290,11 +3080,11 @@ PT: &hellip;">
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (3)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.46341463414635%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 146.8292682926829%'>c(32)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.92682926829268%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.46341463414635%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 104.39024390243902%'>gdb(3)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 113.17073170731707%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.85365853658537%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.92682926829268%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 107.3170731707317%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.46341463414635%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 146.8292682926829%'>c(32)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.92682926829268%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.46341463414635%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.46341463414635%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.85365853658537%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 113.17073170731707%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.85365853658537%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.92682926829268%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.46341463414635%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 107.3170731707317%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
 </section>
 
 
@@ -3307,7 +3097,7 @@ PT: &hellip;">
   </div>
   <footer role="contentinfo"><p>
 <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
-  Copyright &copy; 2018 - Wen Liao -
+  Copyright &copy; 2019 - Wen Liao -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
