@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-06-08T17:17:34+08:00</updated>
+  <updated>2019-06-08T17:20:56+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -43,7 +43,7 @@ done
 
 <h2>使用方式</h2>
 
-<pre><code>gdb my prog -x ~/tmp/lib_debug/ld_dir.ex
+<pre><code>gdb 你的執行檔 -x ~/tmp/lib_debug/ld_dir.ex
 </code></pre>
 
 <h2>範例</h2>
@@ -82,7 +82,7 @@ _IO_puts (str=0x5555555546e4 "Hello world") at ioputs.c:33
 <h2>參考資料</h2>
 
 <ul>
-<li>(fcamel 技術隨手記: 追踪 glibc 裡的程式)[<a href="http://fcamel-life.blogspot.com/2012/01/glibc.html">http://fcamel-life.blogspot.com/2012/01/glibc.html</a>]</li>
+<li><a href="http://fcamel-life.blogspot.com/2012/01/glibc.html">fcamel 技術隨手記: 追踪 glibc 裡的程式</a></li>
 </ul>
 
 ]]></content>
