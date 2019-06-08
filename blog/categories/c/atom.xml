@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/c/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-06-08T17:08:45+08:00</updated>
+  <updated>2019-06-08T17:17:34+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -23,7 +23,7 @@
 <h2>環境設定</h2>
 
 <pre><code>#!/bin/bash
-# 其實直接在終端機剪下貼上就可以了
+# 其實直接在剪下指令貼在終端機就就可以了
 # 安裝套件並下載libcsource code
 DBG_PATH=~/tmp/lib_debug
 sudo apt install -y libc6-dbg
@@ -78,6 +78,13 @@ _IO_puts (str=0x5555555546e4 "Hello world") at ioputs.c:33
 33  {
 (gdb) 
 </code></pre>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>(fcamel 技術隨手記: 追踪 glibc 裡的程式)[<a href="http://fcamel-life.blogspot.com/2012/01/glibc.html">http://fcamel-life.blogspot.com/2012/01/glibc.html</a>]</li>
+</ul>
+
 ]]></content>
   </entry>
   
