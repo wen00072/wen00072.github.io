@@ -11,9 +11,7 @@
 
 
   
-  <meta name="description" content="format string也是看過C Programming: A Modern Approach才注意的。寫文的當下沒帶這本書，問男人好了。 1
-$ man 3 printf 簡單來說，format string是由 普通文字，不包含單獨的%字元
-conversion &hellip;">
+  <meta name="description" content="同樣是看過C Programming: A Modern Approach的筆記整理。一樣，寫的時候手上沒書，請自行斟酌，盡信書不如無書，更何況是組裝工亂寫的東西呢。 一般來說，變數型態可以強制轉換，這學過C 語言應該都知道。不過看了書上才發現不只強制轉換，compiler也會幫你的程式碼加料、 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,6 +70,253 @@ conversion &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/05/08/conversion-in-c/">C 語言的潛規則型態轉換</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-05-08T23:37:45+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:37 pm</span></time>
+        
+           | <a href="/blog/2015/05/08/conversion-in-c/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/05/08/conversion-in-c/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>同樣是看過<a href="http://knking.com/books/c2/index.html">C Programming: A Modern Approach</a>的筆記整理。一樣，寫的時候手上沒書，請自行斟酌，盡信書不如無書，更何況是組裝工亂寫的東西呢。</p>
+
+<p>一般來說，變數型態可以強制轉換，這學過C 語言應該都知道。不過看了書上才發現不只強制轉換，compiler也會幫你的程式碼加料、做型態轉換。更恐怖的是，沒注意到的話，會發生慘劇。</p>
+
+<p>本文開始之前，先定義專有名詞：</p>
+
+<ul>
+<li>promotion
+
+<ul>
+<li>當然不是升官還是促銷。而是把變數的型態升級，如short int -> int。為什麼要這樣幹呢？因為expression裏面變數不只一個，做運算的時候需要把某些變數升級，以免計算結果超過預期。諷刺的是，因為這樣的方式，也可能讓你的程式行為和你預期的不同。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>書中提到潛規則型態轉換發生的時機如下</p>
+
+<ul>
+<li>expression中變數型態不同</li>
+<li>assign的left value和right value型態不同</li>
+<li>函數中的參數變數型態和函數內部使用該變數時的型態不同</li>
+<li>函數的回傳值和宣告的不同</li>
+</ul>
+
+
+<p>後面兩種大概就是下面這樣的情況吧</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">long</span> <span class="nf">test</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">i</span> <span class="o">=</span> <span class="mf">0.5f</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>書中用下面的方式分類C 語言的潛規則型態轉換規則，分別整理如下，偷懶不講C99了。</p>
+
+<h2>assignment</h2>
+
+<p>這個最簡單，等號左邊用啥型態右邊就得轉成這樣的型態。這也是為何</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mf">11.039</span><span class="p">;</span>
+</span><span class='line'><span class="n">printf</span><span class="p">(</span><span class="s">&quot;%d&quot;</span><span class="p">,</span> <span class="n">i</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>結果會是11的原因。</p>
+
+<h2>expression</h2>
+
+<p>一樣這是compiler的術語。此這邊就是一堆的歡樂的型態排列組合，C99還有<code>_Complex</code>和<code>_Bool</code>參戰。</p>
+
+<p>一樣先分類</p>
+
+<ul>
+<li>expression中的變數只有小數點那種型態，依下面順序promote: <code>float</code> -> <code>double</code> -> <code>long double</code></li>
+<li>expression中的變數只有整數，就變成
+
+<ul>
+<li>promote時要判斷使用<code>unsigned</code> 還是<code>signed</code>整數依照下面的順序promote:
+
+<ul>
+<li>&hellip; <code>int</code> -> <code>unsigned int</code> -> <code>long int</code> -> <code>unsigned long int</code> &hellip;</li>
+</ul>
+</li>
+<li>這種情況沒注意的話，可能就會出現下面的悲劇</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>implicit.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="kt">void</span> <span class="nf">implicit_conv</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">unsigned</span> <span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">j</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;expected</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">printf</span><span class="p">(</span><span class="s">&quot;GG</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">implicit_conv</span><span class="p">();</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>執行結果如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make implicit
+</span><span class='line'>cc     implicit.c   -o implicit
+</span><span class='line'>
+</span><span class='line'>$ ./implicit
+</span><span class='line'>GG
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>為何會GG呢，因為 <code>i &lt; j</code>是一個<strong>expression</strong>，照上面的規矩，expression同時有<code>int</code>和<code>unsigned int</code>的話，<code>int</code>會被promote的<code>unsigned int</code>，<code>-1</code>的二進位不知道的人，可能要先搞懂再來學C吧？</p>
+
+<p>如果你擔心程式有類似的問題，可以把<code>gcc</code>最囉唆的檢查打開，就會噴出錯誤如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ make implicit CFLAGS=&quot;-Wall -Wextra -Werror&quot;
+</span><span class='line'>cc -Wall -Wextra -Werror   -c -o implicit.o implicit.c
+</span><span class='line'>implicit.c: In function ‘implicit_conv’:
+</span><span class='line'>implicit.c:7:11: error: comparison between signed and unsigned integer expressions [-Werror=sign-compare]
+</span><span class='line'>     if (i &lt; j) {
+</span><span class='line'>           ^
+</span><span class='line'>implicit.c: In function ‘main’:
+</span><span class='line'>implicit.c:15:14: error: unused parameter ‘argc’ [-Werror=unused-parameter]
+</span><span class='line'> int main(int argc, char **argv)
+</span><span class='line'>              ^
+</span><span class='line'>implicit.c:15:27: error: unused parameter ‘argv’ [-Werror=unused-parameter]
+</span><span class='line'> int main(int argc, char **argv)
+</span><span class='line'>                           ^
+</span><span class='line'>cc1: all warnings being treated as errors
+</span><span class='line'>make: *** [implicit.o] Error 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>你可能會問，那有小數點的型態和整數型態亂戰會怎樣呢？自己估狗或看書吧。</p>
+
+<h2>題外話</h2>
+
+<h3>題外話一</h3>
+
+<p>由於這些潛規則，在轉換型態的時候，可以看到這樣的statement。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">double</span> <span class="n">whatsoever</span><span class="p">;</span>
+</span><span class='line'><span class="n">whatsoever</span> <span class="o">=</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="mi">10</span> <span class="o">/</span> <span class="mi">3</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>為什麼<code>3</code>不用型態轉換呢？你必須要比對C語言的<a href="http://en.wikipedia.org/wiki/Operators_in_C_and_C%2B%2B#Operator_precedence">Operator precedence</a>，也就是運算元處理順序。可以知道C 語法會處理順序如下</p>
+
+<ul>
+<li><code>10</code> cast成<code>double</code>型態</li>
+<li>因為潛規則，<code>3</code>也會被promote成<code>double</code></li>
+<li>計算<code>10 / 3</code></li>
+<li>將結果assign給 <code>=</code> 左邊的變數</li>
+</ul>
+
+
+<h3>題外話二</h3>
+
+<p>在C語言中有小數點的常數預設型態可是<code>double</code>唷。所以你如果有<code>float</code>最好使用下面的方式轉換型態。至於為什麼會規定是<code>double</code>呢？書中有講八卦，就不破梗了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">float</span> <span class="n">whatsoever</span> <span class="o">=</span> <span class="mf">3.14f</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>致謝</h3>
+
+<ul>
+<li>2016/Oct/28: 感謝網友<code>Jeffery Chang</code>糾正typo</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1559,79 +1804,6 @@ ABI r2.09手冊</a>，上面提到回傳資料會放到<code>r0</code>，剛好�
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/03/29/generate-about-page-in-octopress/">Octopress 產生 About頁面</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-03-29T23:13:07+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:13 pm</span></time>
-        
-           | <a href="/blog/2015/03/29/generate-about-page-in-octopress/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/29/generate-about-page-in-octopress/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>順序如下</p>
-
-<ul>
-<li>切到Octopress根目錄</li>
-<li><code>rake newpage['about']</code></li>
-<li>Octopress會幫你產生<code>source/about/index.md</code></li>
-<li>開始修改<code>source/about/index.md</code></li>
-<li>修改<code>source/_includes/custom/navigation.html</code>
-
-<ul>
-<li><a href="https://github.com/wen00072/wen00072.github.io/commit/9a0edf3ceadbeecfd26059523943d52d840654d4">範例</a></li>
-</ul>
-</li>
-<li><code>rake generate</code>
-
-<ul>
-<li>不確定這個是否可以省略</li>
-</ul>
-</li>
-<li><code>rake preview</code>
-
-<ul>
-<li>看看有沒有錯誤</li>
-</ul>
-</li>
-<li><code>rake deploy</code></li>
-<li>記得把更改和新增的檔案commit並push到origin source</li>
-</ul>
-
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://gangmax.me/blog/2012/05/04/add-about-page-in-octopress/">Add &lsquo;About&rsquo; Page in Octopress</a>
-
-<ul>
-<li>這邊資料無法直接套用，不過當初估狗到這個至少讓我知道大概的方向，該給的Credit還是要給。</li>
-<li>2015/Mar/31更新，後來發現直接<code>rake newpage['頁面名稱']</code>，Octopress就會幫你產生<code>source/頁面名稱/index.md</code>以及相關的metadata。</li>
-</ul>
-</li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/6">&larr; Older</a>
@@ -1649,6 +1821,10 @@ ABI r2.09手冊</a>，上面提到回傳資料會放到<code>r0</code>，剛好�
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
       </li>
     
@@ -1664,24 +1840,20 @@ ABI r2.09手冊</a>，上面提到回傳資料會放到<code>r0</code>，剛好�
         <a href="/blog/2018/08/26/vim-posix-group-regex/">Vim POSIX Group Regex 使用方式</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2018/07/24/notes-on-how-to-c-2016/">Notes on How to C 2016</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (42)</a></li><li><a href='/blog/categories/c'>c (33)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (33)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (42)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.46341463414635%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 146.8292682926829%'>c(32)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.92682926829268%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.46341463414635%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.46341463414635%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.85365853658537%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 113.17073170731707%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.85365853658537%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.92682926829268%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.46341463414635%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 107.3170731707317%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.14285714285714%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.42857142857143%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.85714285714286%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.28571428571429%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.71428571428571%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.42857142857143%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.42857142857143%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.42857142857143%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.0%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.85714285714286%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.14285714285714%'>c(33)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.42857142857143%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.85714285714286%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.85714285714286%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.42857142857143%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.42857142857143%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.42857142857143%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 122.85714285714286%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.42857142857143%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.42857142857143%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.42857142857143%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.42857142857143%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.42857142857143%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.42857142857143%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.42857142857143%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.42857142857143%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.85714285714286%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.71428571428571%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.42857142857143%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.85714285714286%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.71428571428571%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.85714285714286%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.42857142857143%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.42857142857143%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 101.42857142857143%'>glibc(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.85714285714286%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.42857142857143%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.42857142857143%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.42857142857143%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.42857142857143%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.42857142857143%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.85714285714286%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.42857142857143%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.42857142857143%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.85714285714286%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.42857142857143%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.14285714285714%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(42)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.28571428571429%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.85714285714286%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.42857142857143%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.42857142857143%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.42857142857143%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.57142857142857%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.85714285714286%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.85714285714286%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.42857142857143%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.42857142857143%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.85714285714286%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.42857142857143%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.0%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.71428571428571%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.14285714285714%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.42857142857143%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.85714285714286%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.42857142857143%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.42857142857143%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.42857142857143%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.71428571428571%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.42857142857143%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.14285714285714%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.42857142857143%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.42857142857143%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.42857142857143%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.42857142857143%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.42857142857143%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.85714285714286%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 107.14285714285714%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.42857142857143%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.85714285714286%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.42857142857143%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.42857142857143%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.42857142857143%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.42857142857143%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.42857142857143%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.42857142857143%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.85714285714286%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.28571428571429%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.28571428571429%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.28571428571429%'>過期(3)</a> </span>
 </section>
 
 

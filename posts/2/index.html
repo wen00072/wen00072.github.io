@@ -11,10 +11,19 @@
 
 
   
-  <meta name="description" content="前情提要 上一篇提到，設定實習環境的目標有： 可以使用ARM 平台。一方面追求流行，一方面我不想再開x86這個副本
-可以方便地建立ARM平台的Linux Rootfs和kernel版本
-可以方便地更改指定要編譯的Kernel版本
-透過Qemu ，使用2的Rootfs和kernel開機 &hellip;">
+  <meta name="description" content="目錄 測試環境
+Linux kernel環境設定
+測試 Qemu
+gdb 參考資料
+補充 測試環境 Host Host OS 1
+2
+3
+4
+5
+6
+$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -73,6 +82,336 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Linux Kernel Pratice 0.5: 使用gdb 加 Qemu Trace Linux Kernel Runtime 行為</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-10-31T19:46:25+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>7:46 pm</span></time>
+        
+           | <a href="/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2016/10/31/trace-linux-kernel-via-qemu-and-gdb/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>目錄</h2>
+
+<ul>
+<li><a href="#lk0_5_env">測試環境</a></li>
+<li><a href="#lk0_5_kr">Linux kernel環境設定</a></li>
+<li><a href="#lk0_5_test">測試</a>
+
+<ul>
+<li><a href="#lk0_5_test_qemu">Qemu</a></li>
+<li><a href="#lk0_5_test_gdb">gdb</a></li>
+</ul>
+</li>
+<li><a href="#lk0_5_ref">參考資料</a></li>
+<li><a href="#lk0_5_add">補充</a></li>
+</ul>
+
+
+<p><a name="lk0_5_env"></a></p>
+
+<h2>測試環境</h2>
+
+<h3>Host</h3>
+
+<ul>
+<li>Host OS</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.5 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>Qemu</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>qemu-system-arm --version
+</span><span class='line'>QEMU emulator version 2.0.0 <span class="o">(</span>Debian 2.0.0+dfsg-2ubuntu1.27<span class="o">)</span>, Copyright <span class="o">(</span>c<span class="o">)</span> 2003-2008 Fabrice Bellard
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>gdb</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ arm-none-eabi-gdb --version
+</span><span class='line'>GNU gdb (GNU Tools for ARM Embedded Processors) 7.10.1.20160923-cvs
+</span><span class='line'>Copyright (C) 2015 Free Software Foundation, Inc.
+</span><span class='line'>License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl
+</span><span class='line'>...
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>buildroot 版本
+
+<ul>
+<li>commit hash: <code>14b24726a81b719b35fee70c8ba8be2d682a7313</code></li>
+</ul>
+</li>
+</ul>
+
+
+<h3>Target</h3>
+
+<ul>
+<li>Linux kernerl 版本
+
+<ul>
+<li>4.4.2</li>
+</ul>
+</li>
+<li>模擬平台
+
+<ul>
+<li>Vexpress</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="lk0_5_kr"></a></p>
+
+<h2>Linux kernel環境設定</h2>
+
+<p>我目前只打開加入debug資訊的選項。接下來重編，編譯的方式請參考<a href="/blog/2016/10/01/linux-kernel-pratice-0-buildroot-2-customized-kernel/">這邊</a></p>
+
+<ul>
+<li>Kernel hacking -> Compile-time checks and compiler options ->
+
+<ul>
+<li>Compile the kernel with debug info</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="lk0_5_test"></a></p>
+
+<h2>測試</h2>
+
+<p>依照下面兩個步驟執行</p>
+
+<ol>
+<li>執行qemu，並且加入支援gdb以及開始馬上freeze CPU的參數</li>
+<li>執行gdb，載入symbol並聯到qemu除錯</li>
+</ol>
+
+
+<p><a name="lk0_5_test_qemu"></a></p>
+
+<h3>Qemu</h3>
+
+<p>基本上就是原本的指令加入兩個選項</p>
+
+<ul>
+<li><code>-S</code>
+
+<ul>
+<li>qemu一開始立即Freeze CPU</li>
+</ul>
+</li>
+<li><code>-s</code>
+
+<ul>
+<li><code>-gdb tcp::1234</code>的縮寫，也就是說gdb可以透過port 1234和連到Qemu除錯</li>
+</ul>
+</li>
+</ul>
+
+
+<p>假設你在buildroot最上層，就可以使用下面指令執行qemu 並使用gdb 除錯</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>qemu-system-arm -M vexpress-a9 -smp 1 -m 256 \
+</span><span class='line'>                -kernel /tmp/kernel/linux-stable/arch/arm/boot/zImage  \
+</span><span class='line'>                -dtb /tmp/kernel/linux-stable/vexpress-v2p-ca9.dtb     \
+</span><span class='line'>                -drive file=output/images/rootfs.ext2,if=sd,format=raw \
+</span><span class='line'>                -append &quot;console=ttyAMA0,115200 root=/dev/mmcblk0&quot;     \
+</span><span class='line'>                -serial stdio -net nic,model=lan9118 -net user -s -S
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="lk0_5_test_gdb"></a></p>
+
+<h3>gdb</h3>
+
+<p>這邊有點瑣碎，先講一下步驟</p>
+
+<ol>
+<li>載入Linux kernel symbol
+
+<ul>
+<li>假設你在kernel最上層目錄有三種方式載入
+
+<ul>
+<li>直接<code>arm-none-eabi-gdb ./vmlinux</code></li>
+<li><code>arm-none-eabi-gdb -ex "file ./vmlinux"</code></li>
+<li>進入gdb後打<code>file ./vmlinux</code>指令</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>連上qemu
+
+<ul>
+<li>一樣兩種方式
+
+<ul>
+<li><code>arm-none-eabi-gdb -ex "target remote :1234"</code></li>
+<li>進入gdb後打<code>target remote :1234</code>指令</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>設定breakpoint等你要觀察的資訊
+
+<ul>
+<li>如<code>b printk</code></li>
+</ul>
+</li>
+<li>告訴qemu開始執行
+
+<ul>
+<li><code>continue</code></li>
+</ul>
+</li>
+</ol>
+
+
+<p>1和2可以一起使用如下</p>
+
+<figure class='code'><figcaption><span>懶人包</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>arm-none-eabi-gdb -ex &quot;file ./vmlinux&quot;  -ex &quot;target remote :1234&quot;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>現在看一下操作範例</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ arm-none-eabi-gdb -ex &quot;file ./vmlinux&quot;  -ex &quot;target remote :1234&quot;
+</span><span class='line'>GNU gdb (GNU Tools for ARM Embedded Processors) 7.10.1.20160923-cvs
+</span><span class='line'>...
+</span><span class='line'>Reading symbols from ./vmlinux...done.
+</span><span class='line'>Remote debugging using :1234
+</span><span class='line'>0x60000000 in ?? ()
+</span><span class='line'>(gdb) b printk
+</span><span class='line'>Breakpoint 1 at 0x800a2260: file kernel/printk/printk.c, line 1900.
+</span><span class='line'>(gdb) c
+</span><span class='line'>Continuing.
+</span><span class='line'>
+</span><span class='line'>Breakpoint 1, printk (fmt=0x0 &lt;__vectors_start&gt;) at kernel/printk/printk.c:1900
+</span><span class='line'>1900  {
+</span><span class='line'>(gdb) bt
+</span><span class='line'>#0  printk (fmt=0x0 &lt;__vectors_start&gt;) at kernel/printk/printk.c:1900
+</span><span class='line'>#1  0x806178e0 in start_kernel () at init/main.c:508
+</span><span class='line'>#2  0x6000807c in ?? ()
+</span><span class='line'>Backtrace stopped: previous frame identical to this frame (corrupt stack?)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>另外如果有興趣使用Linux kernel提供的指令，在kernel config設定打開gdb script後，可以使用下面的方式在啟動gdb時載入，只要把下面的描述加到你的<code>~/.gdbinit</code>即可</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>add-auto-load-safe-path /tmp/kernel/scripts/gdb/vmlinux-gdb.py
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那麼你就可以使用Linux kernel提供的gdb script，詳細的設定和指令說明在<a href="http://lxr.free-electrons.com/source/Documentation/gdb-kernel-debugging.txt?v=4.4">這邊</a>。</p>
+
+<p><a name="lk0_5_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://www.linux-magazine.com/Online/Features/Qemu-and-the-Kernel">Linux Magazine: Qemu and the Kernel</a></li>
+<li><a href="http://lxr.free-electrons.com/source/Documentation/gdb-kernel-debugging.txt?v=4.4">Linux kernel document (4.4): Debugging kernel and modules via gdb</a>
+
+<ul>
+<li>感謝學弟ajmachine 回報，原本<a href="https://www.kernel.org/doc/Documentation/gdb-kernel-debugging.txt">官方網站連結</a>失效，找一個代替。</li>
+</ul>
+</li>
+<li><a href="http://stackoverflow.com/questions/11408041/how-to-debug-the-linux-kernel-with-gdb-and-qemu">stackoverflow: How to debug the Linux kernel with GDB and QEMU?</a></li>
+</ul>
+
+
+<p><a name="lk0_5_add"></a></p>
+
+<h2>補充</h2>
+
+<p>當初犯了蠢事載入不正確的kernel image導致一堆不必要的除錯。不過多學到一個gdb Python script除錯指令，當Python script發生exception時可以用下面的指令印出Python錯誤call stack</p>
+
+<ul>
+<li>gdb內：<code>set python print-stack full</code></li>
+<li>啟動gdb時加入參數： <code>-ex "set python print-stack full"</code></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -4308,894 +4647,6 @@ Codename:   trusty
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/06/27/arm-cm4-pratice-2-lab-led/">ARM CM4 Pratice (2): 實驗軟體專案規劃和LED閃滅實驗</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-06-27T19:14:27+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>27</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>7:14 pm</span></time>
-        
-           | <a href="/blog/2016/06/27/arm-cm4-pratice-2-lab-led/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2016/06/27/arm-cm4-pratice-2-lab-led/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>前言</h2>
-
-<p>閉著眼睛學東西最困擾的是資料很多，但是完全不知道怎麼從那邊下手。這次運氣很好終於找到大大推荐的<a href="http://homes.soic.indiana.edu/geobrown/index.cgi/teaching">入門教材: Discovering the STM32 Microcontroller</a>作為一個突破點。雖然他上面講的是STM32F1，不過改一下還是可以在開發版上面動，短期內的自學大概會以這本書為主。</p>
-
-<p>本篇文章主要是介紹在GNU/Linux下的STM32F429　開發軟體，這次以LED閃滅為實習題目，以後的實習會基於這次的專案為主。有興趣的朋友請自行到我的<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice">Github repository</a>取用。注意是這個專案單純自爽，常常會<code>git push -f</code>變動commit，如果有人fork我再調整。</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#STM-ENV">測試環境</a></li>
-<li><a href="#STM_PRJ">專案規劃</a></li>
-<li><a href="#STM_MK">Makefile撰寫</a>
-
-<ul>
-<li><a href="#STM_MK_COMM">共用變數</a></li>
-<li><a href="#STM_MK_TEMP">專案Makefile template</a></li>
-</ul>
-</li>
-<li><a href="#STM_LED">第一支程式: LED閃滅</a>
-
-<ul>
-<li><a href="#STM_LED_LK_STRP">Linker script 和 start up檔案</a></li>
-<li><a href="#STM_LED_GPIO">GPIO API</a></li>
-<li><a href="#STM_LED_TIMER_ISR">Timer ISR</a></li>
-<li><a href="#STM_LED_CODE">程式碼</a></li>
-<li><a href="#STM_LED_VERIFY">燒錄和測試</a></li>
-</ul>
-</li>
-<li><a href="#STM-SPL-REF">參考資料</a></li>
-</ul>
-
-
-<p><a name="STM-ENV"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.4 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span><span class='line'>
-</span><span class='line'>$ arm-none-eabi-gcc --version
-</span><span class='line'>arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-branch revision 237715]
-</span><span class='line'>...
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<ul>
-<li>SPL版本： STM32F4xx_DSP_StdPeriph_Lib_V1.6.1</li>
-<li>開發板： STM32F4 Dicovery, <a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F429-Disco</a></li>
-<li>SPL 目錄架構</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ tree -d -L 4
-</span><span class='line'>.
-</span><span class='line'>└── STM32F4xx_DSP_StdPeriph_Lib_V1.6.1
-</span><span class='line'>    ├── _htmresc
-</span><span class='line'>    ├── Libraries
-</span><span class='line'>    │   ├── CMSIS
-</span><span class='line'>    │   │   ├── Device
-</span><span class='line'>    │   │   ├── Documentation
-</span><span class='line'>    │   │   ├── DSP_Lib
-</span><span class='line'>    │   │   ├── Include
-</span><span class='line'>    │   │   ├── Lib
-</span><span class='line'>    │   │   └── RTOS
-</span><span class='line'>    │   └── STM32F4xx_StdPeriph_Driver
-</span><span class='line'>    │       ├── inc
-</span><span class='line'>    │       └── src
-</span><span class='line'>    ├── Project
-</span><span class='line'>    │   ├── STM32F4xx_StdPeriph_Examples
-</span><span class='line'>    │   └── STM32F4xx_StdPeriph_Templates
-</span><span class='line'>    └── Utilities
-</span><span class='line'>        ├── Media
-</span><span class='line'>        ├── ST
-</span><span class='line'>        ├── STM32_EVAL
-</span><span class='line'>        └── Third_Party
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="STM_PRJ"></a></p>
-
-<h2>專案規劃</h2>
-
-<p>看<a href="http://www.cs.indiana.edu/~geobrown/book.pdf">Discovering the STM32 Microcontroller</a>這本書後啟發的。想法整理如下：</p>
-
-<ul>
-<li>目的：建立一個練習STM32F4開發版的專案</li>
-<li>專案需要的資料
-
-<ul>
-<li>STM 函式庫 source code
-
-<ul>
-<li>這部份要去官方網站下載，不會放到github上面</li>
-</ul>
-</li>
-<li>Build code 共用的設定如toolchain、路徑、compile flag等</li>
-<li>一些template 檔案加入開發如Makefile、linker script、config header file</li>
-</ul>
-</li>
-</ul>
-
-
-<p>最後的目錄就是這樣。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ tree -L 3
-</span><span class='line'>.
-</span><span class='line'>├── conf
-</span><span class='line'>│   ├── build.def
-</span><span class='line'>│   ├── Makefile.template
-</span><span class='line'>│   ├── stm32f4xx_conf.h
-</span><span class='line'>│   └── template-bared.ld
-</span><span class='line'>├── labs
-</span><span class='line'>│   └── 0_led
-</span><span class='line'>│       ├── led.c
-</span><span class='line'>│       ├── led.ld
-</span><span class='line'>│       ├── Makefile
-</span><span class='line'>│       └── stm32f4xx_conf.h
-</span><span class='line'>├── libraries
-</span><span class='line'>│   ├── readme.txt
-</span><span class='line'>│   └── STM32F4xx_DSP_StdPeriph_Lib_V1.6.1
-</span><span class='line'>├── LICENSE
-</span><span class='line'>└── README.md
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>請注意SPL可能會因為下載版本不同，變數宣告、常數宣告、和檔案名稱路徑可能不同造成編譯失敗，這時候就當組裝作業自己解決吧。</p>
-
-<p><a name="STM_MK"></a></p>
-
-<h2>Makefile撰寫</h2>
-
-<p><a name="STM_MK_COMM"></a></p>
-
-<h3>共用變數</h3>
-
-<p>這邊我們需要一個共用的設定，在實習的時候直接include。詳細說明如下，懶得看的可以直接看<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice/blob/master/conf/build.def">檔案內容</a>。</p>
-
-<ul>
-<li>Toolchain設定
-
-<ul>
-<li>安裝請參考<a href="http://wen00072.github.io/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/">這邊</a></li>
-</ul>
-</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">TOOL_CHAIN_PREFIX</span><span class="o">=</span>arm-none-eabi
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>路徑設定
-
-<ul>
-<li>我們需要<strong>定位</strong>專案的最頂端位址才能設定其他路徑的相對位址</li>
-<li>除了您自己的檔案，ST 提供的函式庫和ARM的CMSIS在開發都會用到</li>
-</ul>
-</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">PRJ_ROOT</span><span class="o">?=</span>..
-</span><span class='line'><span class="nv">LIB_DIR</span><span class="o">=</span><span class="k">$(</span>PRJ_ROOT<span class="k">)</span>/libraries/STM32F4xx_DSP_StdPeriph_Lib_V1.6.1/Libraries
-</span><span class='line'><span class="nv">STM_DIR</span><span class="o">=</span><span class="k">$(</span>LIB_DIR<span class="k">)</span>/STM32F4xx_StdPeriph_Driver
-</span><span class='line'><span class="nv">CMSIS_DIR</span><span class="o">=</span><span class="k">$(</span>LIB_DIR<span class="k">)</span>/CMSIS
-</span><span class='line'><span class="nv">LDSCRIPT</span><span class="o">?=</span><span class="k">$(</span>PRJ_ROOT<span class="k">)</span>/conf/bared.ld
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>指定開發平台</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">PLATFORM</span> <span class="o">=</span> STM32F429_439xx
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>設定header file路徑</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">SPL_INC</span><span class="o">=</span><span class="k">$(</span>STM_DIR<span class="k">)</span>/inc
-</span><span class='line'><span class="nv">CMSIS_COMMON_INC</span> <span class="o">=</span> <span class="k">$(</span>CMSIS_DIR<span class="k">)</span>/Include
-</span><span class='line'><span class="nv">CMSIS_STM32_INC</span>  <span class="o">=</span> <span class="k">$(</span>CMSIS_DIR<span class="k">)</span>/Device/ST/STM32F4xx/Include
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>指令所有產生的檔案都放到build目錄</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">OUT_DIR</span><span class="o">=</span><span class="k">$(</span>PRJ_ROOT<span class="k">)</span>/build
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>設定start up檔案和system檔案路徑</li>
-</ul>
-
-
-<p>除非你要自己從flash搬資料到RAM、設定ISR vector、RCC等，不然一定會用到start up 檔案和system檔案。start up 檔案在SPL中有很多範本，我們使用了<code>gcc_ride7</code>這個版本，原因是其他的都沒有<code>gcc</code>這個字眼。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">CMSIS_STARTUP_SRC</span> <span class="o">=</span> <span class="k">$(</span>CMSIS_DIR<span class="k">)</span>/Device/ST/STM32F4xx/Source/Templates/gcc_ride7/startup_stm32f429_439xx.s
-</span><span class='line'><span class="nv">CMSIS_SYSTEM_SRC</span>  <span class="o">=</span> <span class="k">$(</span>CMSIS_DIR<span class="k">)</span>/Device/ST/STM32F4xx/Source/Templates/system_stm32f4xx.c
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>設定debug mode</li>
-</ul>
-
-
-<p>SPL提供assertion，使用USE_FULL_ASSERT打開。打開以後需要自行實作函數<code>void assert_failed(uint8_t* file, uint32_t line)</code>。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">BUILD_MODE</span> <span class="o">=</span> DEBUG
-</span><span class='line'>
-</span><span class='line'><span class="cp">ifeq ($(BUILD_MODE), DEBUG)</span>
-</span><span class='line'>        CFLAGS +<span class="o">=</span> -DUSE_FULL_ASSERT -g3
-</span><span class='line'><span class="cp">endif</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>CPU相關compile flags</li>
-</ul>
-
-
-<p>STM32F4使用Cotex M4。題外話，對於toolchain有興趣的可以用<code>arm-none-eabi-gcc -Q --help=target</code>查詢有支援哪些平台。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">ARCH_FLAGS</span> <span class="o">=</span> -mthumb -mcpu<span class="o">=</span>cortex-m4
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>Compile flag分為
-
-<ul>
-<li>增加嚴格的錯誤檢查</li>
-<li>設定include 路徑</li>
-<li>叫toolchain不要用使用內建的函式庫如libc</li>
-</ul>
-</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">LDFLAGS</span> <span class="o">+=</span> -T<span class="k">$(</span>LDSCRIPT<span class="k">)</span> <span class="k">$(</span>ARCH_FLAGS<span class="k">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="nv">CFLAGS</span> <span class="o">+=</span> <span class="k">$(</span>ARCH_FLAGS<span class="k">)</span>
-</span><span class='line'><span class="nv">CFLAGS</span> <span class="o">+=</span> -I. -I<span class="k">$(</span>SPL_INC<span class="k">)</span> -I<span class="k">$(</span>CMSIS_COMMON_INC<span class="k">)</span> -I<span class="k">$(</span>CMSIS_STM32_INC<span class="k">)</span>
-</span><span class='line'><span class="nv">CFLAGS</span> <span class="o">+=</span> -D<span class="k">$(</span>PLATFORM<span class="k">)</span> -DUSE_STDPERIPH_DRIVER <span class="k">$(</span>FULLASSERT<span class="k">)</span>
-</span><span class='line'><span class="nv">CFLAGS</span> <span class="o">+=</span> -Wall -Werror -MMD -std<span class="o">=</span>c99
-</span><span class='line'><span class="nv">CFLAGS</span> <span class="o">+=</span> -fno-common -ffreestanding -O0
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="STM_MK_TEMP"></a></p>
-
-<h3>專案Makefile template</h3>
-
-<p>這邊直接把LED閃滅的Makefile拿來當template，詳細說明如下，一樣懶得看的可以去<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice/blob/master/conf/Makefile.template">這邊</a>看檔案內容。</p>
-
-<ul>
-<li>產生的binary 檔名、定位專案的最頂端位址、並且載入<a href="#STM_MK_COMM">前面</a>的設定檔。</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">TARGET</span><span class="o">=</span>led
-</span><span class='line'><span class="nv">PRJ_ROOT</span><span class="o">=</span><span class="k">$(</span>shell <span class="nb">cd</span> ../../ <span class="p">;</span> <span class="nb">pwd</span><span class="k">)</span>
-</span><span class='line'><span class="cp">include $(PRJ_ROOT)/conf/build.def</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>指定要編譯的SPL 檔案</li>
-</ul>
-
-
-<p>除了前面<a href="#STM_MK_COMM">前面</a>提到的start up檔案、system檔、還有你自己的程式碼外，根據你的需求，還會需要SPL的驅動程式。這個專案我們需要<code>GPIO</code>和<code>RCC</code> (reset clock control)這兩個部份。一個是用來控制LED、另外一個用來計算時間產生以控制閃滅。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">SRCS</span>  <span class="o">=</span> <span class="k">$(</span>CMSIS_STARTUP_SRC<span class="k">)</span> <span class="k">$(</span>CMSIS_SYSTEM_SRC<span class="k">)</span>
-</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_gpio.c
-</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_rcc.c
-</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> led.c
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>檔名轉換</li>
-</ul>
-
-
-<p>上面的是source檔案，但是我們編譯需要把source檔案轉成object檔案並且存在./build目錄下。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nv">C_OBJS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>   <span class="c"># translate *.c to *.o</span>
-</span><span class='line'><span class="nv">OBJS</span>   <span class="o">=</span> <span class="k">$(</span>patsubst %.s, %.o, <span class="k">$(</span>C_OBJS<span class="k">))</span> <span class="c"># also *.s to *.o files</span>
-</span><span class='line'>
-</span><span class='line'><span class="nv">OUT_OBJS</span> <span class="o">=</span> <span class="k">$(</span>addprefix <span class="k">$(</span>OUT_DIR<span class="k">)</span>/, <span class="k">$(</span>OBJS<span class="k">))</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>產生led.bin</li>
-</ul>
-
-
-<p>不要被符號嚇到，說明如下</p>
-
-<pre><code>* 產生build/led.bin檔，前提是上面的object 檔案都編譯完成
-* 產生方式
-    * 叫gcc 從前面的object檔案中，透過led.ld linker script產生出build/led.elf、build/led.map (debug用)
-    * 從build/led.elf產生build/led.bin
-    * 從build/led.elf產生build/led.list (debug用)
-</code></pre>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET).bin</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -Wl,-Map<span class="o">=</span><span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.map,-T<span class="k">$(</span>TARGET<span class="k">)</span>.ld -nostartfiles <span class="se">\</span>
-</span><span class='line'>      <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="k">$(</span>OUT_OBJS<span class="k">)</span> -o <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-objcopy -Obinary <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf <span class="nv">$@</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-objdump -S <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf &gt; <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.list
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>編譯並產生object 檔案</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span> %.<span class="n">s</span>
-</span><span class='line'>  @mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -c <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span> %.<span class="n">c</span>
-</span><span class='line'>  @mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -c <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>燒錄</li>
-</ul>
-
-
-<p>可以下<code>make flash</code>燒錄。使用<code>openocd</code>的原因是因為<code>st-flash</code>偶爾會有寫燒錄完成但是實際上沒有燒進去的情況</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nf">flash</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_DIR</span><span class="k">)</span>/<span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">bin</span>
-</span><span class='line'>  openocd -f interface/stlink-v2.cfg  <span class="se">\</span>
-</span><span class='line'>            -f target/stm32f4x.cfg      <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;init&quot;</span>                   <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;reset init&quot;</span>             <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;stm32f2x unlock 0&quot;</span>      <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;flash probe 0&quot;</span>          <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;flash info 0&quot;</span>           <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;flash write_image erase $&lt; 0x8000000&quot;</span> <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;reset run&quot;</span> -c shutdown
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>以下不解釋</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="nf">clean</span><span class="o">:</span>
-</span><span class='line'>  rm -fr <span class="k">$(</span>OUT_DIR<span class="k">)</span> gdb.txt
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="STM_LED"></a></p>
-
-<h2>第一支程式: LED閃滅</h2>
-
-<p><a name="STM_LED_LK_STRP"></a></p>
-
-<h3>Linker script 和 start up檔案</h3>
-
-<h4>Linker script</h4>
-
-<p>linker script (<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice/blob/master/labs/0_led/led.ld">全文</a>)，這個script是從<a href="http://wiki.csie.ncku.edu.tw/embedded/rtenv">成大課程作業</a>修改的，簡單解釋如下</p>
-
-<ul>
-<li>有兩塊記憶體，一個是FLASH一個是RAM，FLASH 不可寫入。</li>
-<li>那些<code>.text</code>、<code>.data</code>、<code>.bss</code>就不解釋了。我們這次關注下列的symbols
-
-<ul>
-<li><code>_sidata</code></li>
-<li><code>_sdata</code></li>
-<li><code>_edata</code></li>
-<li><code>_sbss</code></li>
-<li><code>_ebss</code></li>
-<li><code>_estack</code></li>
-</ul>
-</li>
-</ul>
-
-
-<h4>Start up檔案</h4>
-
-<p>上面的這些symbol，可以<a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S">對照</a>這邊的start up 程式碼中的<code>reset_handler</code>，可以發現：</p>
-
-<ul>
-<li><a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L49">第49行</a> 到 <a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L57">第57行</a>就宣告了這些symbol</li>
-<li><a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L76">第76行</a> 到 <a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L89">第89行</a>使用了這些symbol將FLASH中的<code>.data</code>資料搬到<code>RAM</code>中</li>
-<li><a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L89">第90行</a> 到 <a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L100">第100行</a>使用了這些symbol將<code>.bss</code>區段的值全部設成0</li>
-</ul>
-
-
-<p>搞定<code>.bss</code>和<code>.data</code>後，接下來start up會去<a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L103">呼叫systemInit</a>，而<code>systemInit</code>就在<code>system_stm32f4xx.c</code>裏面。設定完系統後就是你寫的程式碼<a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L105">main</a>上場了。</p>
-
-<p>start up 檔案剩下的部份就是<a href="https://github.com/jserv/stm32f429-r3d/blob/master/startup_stm32f429_439xx.S#L128">.isr_vector</a>，可以想像成一個function pointer陣列(除了最開始的stack pointer，注意stack pointer初始值也是在linker script中設定的)。</p>
-
-<p>另外一個要注意的是start up source code的順序和放在記憶體的順序不一致，真正在記憶體的順序請參考<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice/blob/master/labs/0_led/led.ld">linker script</a>。
-<a name="STM_LED_GPIO"></a></p>
-
-<h3>GPIO API</h3>
-
-<p>設定順序如下</p>
-
-<ul>
-<li>看<a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">開發版手冊</a>找出要控制燈號的GPIO
-
-<ul>
-<li>我程式就是輪流點亮點滅LED 3和LED 4，手冊上說是GPIO G的第13和14腳位</li>
-</ul>
-</li>
-<li>打開GPIO的clock（猜測嵌入式系統的電耗考慮，沒再用的設備都不開clock省電）</li>
-<li>設定GPIO腳位的為輸出頻率為2MHz</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>GPIO設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">void</span> <span class="nf">setupLED</span><span class="p">(</span><span class="n">GPIO_InitTypeDef</span> <span class="o">*</span><span class="n">LED_InitStruct</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Setup LED GPIO */</span>
-</span><span class='line'>    <span class="n">RCC_AHB1PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_AHB1Periph_GPIOG</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">GPIO_StructInit</span><span class="p">(</span><span class="n">LED_InitStruct</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">LED_InitStruct</span><span class="o">-&gt;</span><span class="n">GPIO_Pin</span>   <span class="o">=</span> <span class="n">GPIO_Pin_13</span> <span class="o">|</span> <span class="n">GPIO_Pin_14</span> <span class="p">;</span>
-</span><span class='line'>    <span class="n">LED_InitStruct</span><span class="o">-&gt;</span><span class="n">GPIO_Mode</span>  <span class="o">=</span> <span class="n">GPIO_Mode_OUT</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">LED_InitStruct</span><span class="o">-&gt;</span><span class="n">GPIO_Speed</span> <span class="o">=</span> <span class="n">GPIO_Speed_2MHz</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">GPIO_Init</span><span class="p">(</span><span class="n">GPIOG</span><span class="p">,</span> <span class="n">LED_InitStruct</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>輸出資料到GPIO範例如下</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>輸出資料到GPIO範例</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">GPIO_WriteBit</span><span class="p">(</span><span class="n">GPIOG</span><span class="p">,</span> <span class="n">GPIO_Pin_13</span> <span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="STM_LED_TIMER_ISR"></a></p>
-
-<h3>Timer ISR</h3>
-
-<p>要做的是</p>
-
-<ul>
-<li>設定timer interrupt 出現的週期，設定成nano second的程式碼如下</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/* Setup timer interrupt interval to nano second */</span>
-</span><span class='line'><span class="k">if</span><span class="p">(</span><span class="n">SysTick_Config</span><span class="p">(</span><span class="n">SystemCoreClock</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="cm">/* Trap here if failed */</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>time out的ISR，基本上就是計數counter加上busy waiting而已</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="n">__IO</span> <span class="kt">uint32_t</span> <span class="n">g_timeToWakeUp</span><span class="p">;</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">sleep</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">nSec</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">g_timeToWakeUp</span> <span class="o">=</span> <span class="n">nSec</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Busy waiting */</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">g_timeToWakeUp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="STM_LED_CODE"></a></p>
-
-<h3>程式碼</h3>
-
-<p>這邊的assertion 實作單純是一個無限迴圈，當assertion失敗就會陷入這個迴圈。這時候用除錯器就可以找到出現assertion的行號了。</p>
-
-<p>寫了以後開始修改程式碼或<code>Makefile</code>直到編譯過以後才針對程式行為除錯。</p>
-
-<figure class='code'><figcaption><span>led.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;stm32f4xx_conf.h&quot;</span>
-</span><span class='line'><span class="cp">#include &lt;stm32f4xx.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stm32f4xx_gpio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* A Led blink lab for STM32 Discovry Disco                   *</span>
-</span><span class='line'><span class="cm"> * Based on:                                                  *</span>
-</span><span class='line'><span class="cm"> *   Discovering the STM32 Microcontroller by Geoffrey Brown. */</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">setupLED</span><span class="p">(</span><span class="n">GPIO_InitTypeDef</span> <span class="o">*</span><span class="n">LED_InitStruct</span><span class="p">);</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">sleep</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">nSec</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">static</span> <span class="kt">int</span> <span class="n">LEDVal</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">GPIO_InitTypeDef</span> <span class="n">LED_InitStruct</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Setup LED */</span>
-</span><span class='line'>    <span class="n">setupLED</span><span class="p">(</span><span class="o">&amp;</span><span class="n">LED_InitStruct</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Setup timer interrupt interval to nano second */</span>
-</span><span class='line'>    <span class="k">if</span><span class="p">(</span><span class="n">SysTick_Config</span><span class="p">(</span><span class="n">SystemCoreClock</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">))</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span> <span class="cm">/* Trap here if failed */</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Blinking LED3 and LED4 */</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">GPIO_WriteBit</span><span class="p">(</span><span class="n">GPIOG</span><span class="p">,</span> <span class="n">GPIO_Pin_13</span> <span class="p">,</span> <span class="n">LEDVal</span><span class="p">);</span>
-</span><span class='line'>        <span class="n">GPIO_WriteBit</span><span class="p">(</span><span class="n">GPIOG</span><span class="p">,</span> <span class="n">GPIO_Pin_14</span> <span class="p">,</span> <span class="o">!</span><span class="n">LEDVal</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="n">sleep</span><span class="p">(</span><span class="mi">250</span><span class="p">);</span>
-</span><span class='line'>        <span class="n">LEDVal</span> <span class="o">=</span> <span class="o">!</span><span class="n">LEDVal</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">setupLED</span><span class="p">(</span><span class="n">GPIO_InitTypeDef</span> <span class="o">*</span><span class="n">LED_InitStruct</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Setup LED GPIO */</span>
-</span><span class='line'>    <span class="n">RCC_AHB1PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_AHB1Periph_GPIOG</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">GPIO_StructInit</span><span class="p">(</span><span class="n">LED_InitStruct</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">LED_InitStruct</span><span class="o">-&gt;</span><span class="n">GPIO_Pin</span>   <span class="o">=</span> <span class="n">GPIO_Pin_13</span> <span class="o">|</span> <span class="n">GPIO_Pin_14</span> <span class="p">;</span>
-</span><span class='line'>    <span class="n">LED_InitStruct</span><span class="o">-&gt;</span><span class="n">GPIO_Mode</span>  <span class="o">=</span> <span class="n">GPIO_Mode_OUT</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">LED_InitStruct</span><span class="o">-&gt;</span><span class="n">GPIO_Speed</span> <span class="o">=</span> <span class="n">GPIO_Speed_2MHz</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">GPIO_Init</span><span class="p">(</span><span class="n">GPIOG</span><span class="p">,</span> <span class="n">LED_InitStruct</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="k">static</span> <span class="n">__IO</span> <span class="kt">uint32_t</span> <span class="n">g_timeToWakeUp</span><span class="p">;</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">sleep</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">nSec</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">g_timeToWakeUp</span> <span class="o">=</span> <span class="n">nSec</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Busy waiting */</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">g_timeToWakeUp</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* ISR for system tick */</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">SysTick_Handler</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">g_timeToWakeUp</span> <span class="o">!=</span> <span class="mh">0x00</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">g_timeToWakeUp</span><span class="o">--</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Trap here for gdb if asserted */</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">assert_failed</span><span class="p">(</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">file</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">line</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>比較有趣的是<code>int LEDVal = 0;</code>一定要宣告成<code>static</code>，否則LED完全沒反應。在網路上請教似乎和進出ISR的時候context備份有關係，這部份有空再找時間了解一下，這次先跳過。</p>
-
-<ul>
-<li>更新，後來測試不管是沒有<code>static</code>，把<code>static</code>改成<code>volatile</code>，都出現第一次燒錄行為不正常，多燒幾次又正常的情況。需要再重新釐清。</li>
-</ul>
-
-
-<p><a name="STM_LED_VERIFY"></a></p>
-
-<h3>燒錄和測試</h3>
-
-<ul>
-<li>直接在工作目錄下執行make</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>STM32F429-Discovery-Disco-Pratice/labs/0_led$ make
-</span><span class='line'>arm-none-eabi-gcc -c -DUSE_FULL_ASSERT -g3 -mthumb -mcpu=cortex-m4 -I. -I../../libraries/STM32F4xx_DSP_StdPeriph_Lib_V1.6.1/Libraries/STM32F4xx_StdPeriph_Driver/inc -I../../libraries/
-</span><span class='line'>...
-</span><span class='line'>arm-none-eabi-objcopy -Obinary ../../build/led.elf ../../build/led.bin
-</span><span class='line'>arm-none-eabi-objdump -S ../../build/led.elf &gt; ../../build/led.list
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>燒錄指令如下</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>STM32F429-Discovery-Disco-Pratice/labs/0_led$ st-flash write ../../build/led.bin  0x8000000
-</span><span class='line'>2016-07-25T11:31:28 INFO src/stlink-common.c: Loading device parameters....
-</span><span class='line'>2016-07-25T11:31:28 INFO src/stlink-common.c: Device connected is: F42x and F43x device, id 0x10036419
-</span><span class='line'>...
-</span><span class='line'>enabling 32-bit flash writes
-</span><span class='line'>size: 11596
-</span><span class='line'>2016-07-25T11:31:28 INFO src/stlink-common.c: Starting verification of write complete
-</span><span class='line'>2016-07-25T11:31:29 INFO src/stlink-common.c: Flash written and verified! jolly good!
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>以下是LED點亮結果</p>
-
-<center><img src="/files/stm32/STM_LED.jpg"></img></center>
-
-
-<p><a name="STM-SPL-REF"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://homes.soic.indiana.edu/geobrown/index.cgi/teaching">Geoffrey Brown: Teaching </a>
-
-<ul>
-<li>請找 Lab Manual 裏面的link, 書名是<code>Discovering the STM32 Microcontroller</code></li>
-</ul>
-</li>
-<li><a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F4 Discovry Disco 開發版手冊</a></li>
-<li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html">STM32F4 DSP and standard peripherals library</a></li>
-<li><a href="http://regalis.com.pl/en/arm-cortex-stm32-gnulinux/">Programming ARM Cortex (STM32) under GNU/Linux</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/3">&larr; Older</a>
@@ -5213,6 +4664,10 @@ Codename:   trusty
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
       </li>
     
@@ -5228,24 +4683,20 @@ Codename:   trusty
         <a href="/blog/2018/08/26/vim-posix-group-regex/">Vim POSIX Group Regex 使用方式</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2018/07/24/notes-on-how-to-c-2016/">Notes on How to C 2016</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (42)</a></li><li><a href='/blog/categories/c'>c (33)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (32)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (41)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (33)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (1)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (42)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.5609756097561%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.46341463414635%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.92682926829268%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.39024390243902%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.85365853658537%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.46341463414635%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.46341463414635%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.46341463414635%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.48780487804878%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.92682926829268%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 146.8292682926829%'>c(32)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.46341463414635%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.92682926829268%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.92682926829268%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.46341463414635%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.46341463414635%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.46341463414635%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 123.41463414634146%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.46341463414635%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.46341463414635%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.46341463414635%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.46341463414635%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.46341463414635%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.46341463414635%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.46341463414635%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.46341463414635%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.92682926829268%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.85365853658537%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.46341463414635%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.92682926829268%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.85365853658537%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.92682926829268%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.46341463414635%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.46341463414635%'>github pages(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.92682926829268%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.46341463414635%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.46341463414635%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.46341463414635%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.46341463414635%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.46341463414635%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.92682926829268%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.46341463414635%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.46341463414635%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.92682926829268%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.46341463414635%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.3170731707317%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(41)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.39024390243902%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.92682926829268%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.46341463414635%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.46341463414635%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.46341463414635%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.78048780487805%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.92682926829268%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 113.17073170731707%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.46341463414635%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.46341463414635%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.92682926829268%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.46341463414635%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.48780487804878%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.85365853658537%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.3170731707317%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.46341463414635%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.92682926829268%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.46341463414635%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.46341463414635%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.46341463414635%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.85365853658537%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.46341463414635%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.3170731707317%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.46341463414635%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.46341463414635%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.46341463414635%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.46341463414635%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.46341463414635%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.92682926829268%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 107.3170731707317%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.46341463414635%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.92682926829268%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.46341463414635%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.46341463414635%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.46341463414635%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.46341463414635%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.70731707317073%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.46341463414635%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.92682926829268%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.39024390243902%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.39024390243902%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.39024390243902%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 117.14285714285714%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.42857142857143%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.85714285714286%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.28571428571429%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.71428571428571%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.42857142857143%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.42857142857143%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.42857142857143%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 120.0%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.85714285714286%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.14285714285714%'>c(33)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.42857142857143%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.85714285714286%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.85714285714286%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.42857142857143%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.42857142857143%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.42857142857143%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 122.85714285714286%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.42857142857143%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.42857142857143%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.42857142857143%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.42857142857143%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.42857142857143%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.42857142857143%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.42857142857143%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.42857142857143%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.85714285714286%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.71428571428571%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.42857142857143%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.85714285714286%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.71428571428571%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.85714285714286%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.42857142857143%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.42857142857143%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 101.42857142857143%'>glibc(1)</a> <a href='/blog/categories/gnu' style='font-size: 102.85714285714286%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.42857142857143%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.42857142857143%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.42857142857143%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.42857142857143%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.42857142857143%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.85714285714286%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.42857142857143%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.42857142857143%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.85714285714286%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.42857142857143%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 107.14285714285714%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(42)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.28571428571429%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.85714285714286%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.42857142857143%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.42857142857143%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.42857142857143%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.57142857142857%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.85714285714286%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.85714285714286%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.42857142857143%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.42857142857143%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.85714285714286%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.42857142857143%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 120.0%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.71428571428571%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 107.14285714285714%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.42857142857143%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.85714285714286%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.42857142857143%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.42857142857143%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.42857142857143%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.71428571428571%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.42857142857143%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 107.14285714285714%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.42857142857143%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.42857142857143%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.42857142857143%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.42857142857143%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.42857142857143%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.85714285714286%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 107.14285714285714%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.42857142857143%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.85714285714286%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.42857142857143%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.42857142857143%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.42857142857143%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.42857142857143%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.42857142857143%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.42857142857143%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.85714285714286%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.28571428571429%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.28571428571429%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.28571428571429%'>過期(3)</a> </span>
 </section>
 
 
