@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-06-08T17:20:56+08:00</updated>
+  <updated>2019-06-09T14:16:22+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,548 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[觀察編譯glibc的產出]]></title>
+    <link href="http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/"/>
+    <updated>2019-06-08T18:48:03+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/06/08/glibc-build-observing</id>
+    <content type="html"><![CDATA[<p>這次介紹編譯glibc 並安裝後的一些發現</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#glibc_env">測試環境</a></li>
+<li><a href="#glibc_install">安裝步驟</a></li>
+<li><a href="#glibc_conl">觀察與結論</a>
+
+<ul>
+<li><a href="#glibc_conl_lib">/lib</a></li>
+<li><a href="#glibc_conl_bin">/bin</a></li>
+<li><a href="#glibc_conl_sbin">/sbin</a></li>
+<li><a href="#glibc_conl_etc">/etc</a></li>
+<li><a href="#glibc_conl_share">/share</a></li>
+<li><a href="#glibc_conl_var">/var</a></li>
+<li><a href="#glibc_conl_libexec">/libexec</a></li>
+<li><a href="#glibc_conl_inc">/include</a></li>
+</ul>
+</li>
+<li><a href="#glibc_conl_ref">參考資料</a></li>
+<li><a href="#glibc_conl_ex">附錄</a></li>
+</ul>
+
+
+<p><a name="glibc_env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 18.04.2 LTS
+</span><span class='line'>Release:  18.04
+</span><span class='line'>Codename: bionic</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_install"></a></p>
+
+<h2>安裝步驟</h2>
+
+<ul>
+<li>下載套件</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>git clone http://sourceware.org/git/glibc.git
+</span><span class='line'>cd glibc
+</span><span class='line'>git checkout --track origin/release/2.27</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>在新的目錄編譯 glibc，你可以自行指定安裝路徑，<font color=red><strong>一定要指定安裝路徑，以免發生嚴重悲劇。</strong> </font></li>
+</ul>
+
+
+<p>本次設定主要是針對除錯最佳化，以及避免覆蓋系統原本的 <code>glibc</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>cd ../
+</span><span class='line'>mkdir out
+</span><span class='line'>mkdir rootfs
+</span><span class='line'>cd out
+</span><span class='line'>
+</span><span class='line'># 設定
+</span><span class='line'>CFLAGS=-Og CPPFLAGS=-Og CXXFLAGS=-Og ../glibc/configure  --disable-werror --prefix=/tmp/rootfs/
+</span><span class='line'>
+</span><span class='line'># 編譯
+</span><span class='line'>make
+</span><span class='line'>
+</span><span class='line'># 安裝
+</span><span class='line'>make install</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl"></a></p>
+
+<h2>觀察與結論</h2>
+
+<p>本來想說 <code>libc</code> 用來提供 C 標準函式庫的 binary，那麼了不起就是 <code>libc.so</code>和 <code>libc.a</code> 以及對應的 header files。安裝完畢後先看一下目錄，事情果然沒有像本組裝工想的那麼簡單。列出第一層目錄如下，除了預期中的<code>lib</code>和<code>include</code>以外，竟然還有不少預期以外的目錄。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree -L 1 -d /tmp/rootfs
+</span><span class='line'>.
+</span><span class='line'>├── bin
+</span><span class='line'>├── etc
+</span><span class='line'>├── include
+</span><span class='line'>├── lib
+</span><span class='line'>├── libexec
+</span><span class='line'>├── sbin
+</span><span class='line'>├── share
+</span><span class='line'>└── var</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那麼我們來看一下這些目錄下面有什麼東西吧。</p>
+
+<p><a name="glibc_conl_lib"></a></p>
+
+<h3>/lib</h3>
+
+<p>先來看目錄結構，多了和多國語言相關的函式庫目錄還有 trace shared object PLT (Procedure linkage table) 工具會用到的audio目錄</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree lib -d
+</span><span class='line'>lib
+</span><span class='line'>├── audit
+</span><span class='line'>└── gconv</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來看<code>/lib</code>的檔案</p>
+
+<p>列出幾個我有興趣的檔案</p>
+
+<ul>
+<li><p><code>*.o</code></p>
+
+<ul>
+<li>在<code>/lib</code>裏面會發現幾個object file，它們檔名都有<code>crt</code>，crt全名是 <code>C runtime</code>，顯然和執行的時候有關。我有空會再找時間了解。先列出來介紹幾個如下</li>
+</ul>
+</li>
+<li><p><code>Scrt1.o</code>: 這邊我們可以看到<code>T _start</code>以及<code>U main</code>，望文生義按圖說故事我們可以猜測執行程式的起始點其實是<code>_start</code>，做了一些事情後才會去呼叫你寫的<code>main()</code>，我做了一個實驗，想知道一個應用程式會連結哪些系統上的object檔案請參考<a href="#glibc_conl_ex">這邊</a></p></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ nm Scrt1.o 
+</span><span class='line'>0000000000000000 D __data_start
+</span><span class='line'>0000000000000000 W data_start
+</span><span class='line'>                 U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000000 R _IO_stdin_used
+</span><span class='line'>                 U __libc_csu_fini
+</span><span class='line'>                 U __libc_csu_init
+</span><span class='line'>                 U __libc_start_main
+</span><span class='line'>                 U main
+</span><span class='line'>0000000000000000 T _start</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>crtn.o</code>: 用<code>nm</code>去看會發現沒有<code>symbol</code>，不過反組譯後會發現有兩個<code>section</code>，看起來和main啟動前和使用者程式結束後會有關係。有空會再探討。</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ objdump -d crtn.o 
+</span><span class='line'>
+</span><span class='line'>crtn.o:     file format elf64-x86-64
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .init:
+</span><span class='line'>
+</span><span class='line'>0000000000000000 &lt;.init&gt;:
+</span><span class='line'>   0: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'>   4: c3                      retq   
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .fini:
+</span><span class='line'>
+</span><span class='line'>0000000000000000 &lt;.fini&gt;:
+</span><span class='line'>   0: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'>   4: c3                      retq   
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>ld-linux-x86_64.so.2</code>
+
+<ul>
+<li>就是<code>ld.so</code>，這個檔案有趣的點是他是一個shared object，但是同時又是可以執行。如果我的懶病沒有發作以後會常常看到這個東西。</li>
+</ul>
+</li>
+<li><code>libc.*</code>:
+
+<ul>
+<li>直接看symbol就知道，<code>T</code>, <code>U</code>的定義請翻前面文章，我懶得找。</li>
+</ul>
+</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ nm libc.a | grep "^printf.o:" -A 10
+</span><span class='line'>printf.o:
+</span><span class='line'>0000000000000000 T _IO_printf
+</span><span class='line'>0000000000000000 T printf
+</span><span class='line'>0000000000000000 T __printf
+</span><span class='line'>                 U stdout
+</span><span class='line'>                 U __vfprintf_internal
+</span><span class='line'>
+</span><span class='line'>snprintf.o:
+</span><span class='line'>0000000000000000 W snprintf
+</span><span class='line'>0000000000000000 T __snprintf
+</span><span class='line'>                 U __vsnprintf_internal    </span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>libm.*</code>: 一樣看symbol節錄</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ nm libm.so.6 |grep " sin"
+</span><span class='line'>000000000002eb24 i sin
+</span><span class='line'>0000000000034532 W sincos
+</span><span class='line'>00000000000419cc i sincosf
+</span><span class='line'>0000000000054f26 W sincosf128
+</span><span class='line'>00000000000419cc i sincosf32
+</span><span class='line'>0000000000034532 W sincosf32x
+</span><span class='line'>0000000000034532 W sincosf64
+</span><span class='line'>00000000000175c8 W sincosf64x
+</span><span class='line'>00000000000175c8 W sincosl
+</span><span class='line'>000000000004131e i sinf
+</span><span class='line'>0000000000054148 W sinf128
+</span><span class='line'>000000000004131e i sinf32
+</span><span class='line'>000000000002eb24 i sinf32x
+</span><span class='line'>000000000002eb24 i sinf64
+</span><span class='line'>0000000000016ead W sinf64x
+</span><span class='line'>000000000000ed11 W sinh
+</span><span class='line'>000000000001205d W sinhf
+</span><span class='line'>0000000000060407 W sinhf128
+</span><span class='line'>000000000001205d W sinhf32
+</span><span class='line'>000000000000ed11 W sinhf32x
+</span><span class='line'>000000000000ed11 W sinhf64
+</span><span class='line'>000000000000d9a4 W sinhf64x
+</span><span class='line'>000000000000d9a4 W sinhl
+</span><span class='line'>0000000000016ead W sinl
+</span><span class='line'>00000000000144b5 t sin_pi
+</span><span class='line'>0000000000027776 t sin_pi</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>libdl</code>
+
+<ul>
+<li>動態載入函式庫相關函數如<code>dlvsym</code>, <code>dlsym</code>,</li>
+</ul>
+</li>
+</ul>
+
+
+<h4>完整檔案如下</h4>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ls lib
+</span><span class='line'>audit                         libc.a                 libmemusage.so              libnss_dns.so               librt-2.28.9000.so
+</span><span class='line'>crt1.o                        libc_nonshared.a       libm.so                     libnss_dns.so.2             librt.a
+</span><span class='line'>crti.o                        libcrypt-2.28.9000.so  libm.so.6                   libnss_files-2.28.9000.so   librt.so
+</span><span class='line'>crtn.o                        libcrypt.a             libmvec-2.28.9000.so        libnss_files.so             librt.so.1
+</span><span class='line'>gconv                         libcrypt.so            libmvec.a                   libnss_files.so.2           libSegFault.so
+</span><span class='line'>gcrt1.o                       libcrypt.so.1          libmvec_nonshared.a         libnss_hesiod-2.28.9000.so  libthread_db-1.0.so
+</span><span class='line'>ld-2.28.9000.so               libc.so                libmvec.so                  libnss_hesiod.so            libthread_db.so
+</span><span class='line'>ld-linux-x86-64.so.2          libc.so.6              libmvec.so.1                libnss_hesiod.so.2          libthread_db.so.1
+</span><span class='line'>libanl-2.28.9000.so           libdl-2.28.9000.so     libnsl-2.28.9000.so         libpcprofile.so             libutil-2.28.9000.so
+</span><span class='line'>libanl.a                      libdl.a                libnsl.so.1                 libpthread-2.28.9000.so     libutil.a
+</span><span class='line'>libanl.so                     libdl.so               libnss_compat-2.28.9000.so  libpthread.a                libutil.so
+</span><span class='line'>libanl.so.1                   libdl.so.2             libnss_compat.so            libpthread.so               libutil.so.1
+</span><span class='line'>libBrokenLocale-2.28.9000.so  libg.a                 libnss_compat.so.2          libpthread.so.0             Mcrt1.o
+</span><span class='line'>libBrokenLocale.a             libm-2.28.9000.a       libnss_db-2.28.9000.so      libresolv-2.28.9000.so      Scrt1.o
+</span><span class='line'>libBrokenLocale.so            libm-2.28.9000.so      libnss_db.so                libresolv.a
+</span><span class='line'>libBrokenLocale.so.1          libm.a                 libnss_db.so.2              libresolv.so
+</span><span class='line'>libc-2.28.9000.so             libmcheck.a            libnss_dns-2.28.9000.so     libresolv.so.2</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl_bin"></a></p>
+
+<h3>/bin</h3>
+
+<p>是除了 <code>ldd</code>以外，我全部沒印象。有些甚至不在Ubuntu的預設安裝中。使用者需要另外安裝，如<code>xtrace</code>等。</p>
+
+<p>列出幾個我有興趣的工具</p>
+
+<ul>
+<li><a href="http://man7.org/linux/man-pages/man1/pldd.1.html">pldd</a>: 列出process使用的shared library。奇怪的是我自己用卻只有列出process的執行檔名稱而已。</li>
+<li><a href="http://manpages.org/sotruss">sotruss</a>: 經由PLT (Procedure Linkage Table) trace shared library calls</li>
+<li><a href="http://manpages.org/sprof">sprof</a>: share object 的profile 工具</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin
+</span><span class='line'>├── catchsegv
+</span><span class='line'>├── gencat
+</span><span class='line'>├── getconf
+</span><span class='line'>├── getent
+</span><span class='line'>├── iconv
+</span><span class='line'>├── ldd
+</span><span class='line'>├── locale
+</span><span class='line'>├── localedef
+</span><span class='line'>├── makedb
+</span><span class='line'>├── mtrace
+</span><span class='line'>├── pcprofiledump
+</span><span class='line'>├── pldd
+</span><span class='line'>├── sotruss
+</span><span class='line'>├── sprof
+</span><span class='line'>├── tzselect
+</span><span class='line'>└── xtrace</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl_sbin"></a></p>
+
+<h3>/sbin</h3>
+
+<ul>
+<li>除了<code>ldconfig</code>外其他的不認識</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree sbin/
+</span><span class='line'>sbin/
+</span><span class='line'>├── iconvconfig
+</span><span class='line'>├── ldconfig
+</span><span class='line'>├── nscd
+</span><span class='line'>├── sln
+</span><span class='line'>├── zdump
+</span><span class='line'>etc
+</span><span class='line'>├── ld.so.conf
+</span><span class='line'>└── rpc
+</span><span class='line'>└── zic</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl_etc"></a></p>
+
+<h3>/etc</h3>
+
+<p>很有趣，竟然有<code>rpc</code> (remote procedure call)的檔案，紀錄rpc通訊協定的資訊。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>etc
+</span><span class='line'>├── ld.so.conf
+</span><span class='line'>└── rpc</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl_share"></a></p>
+
+<h3>/share</h3>
+
+<ul>
+<li>存放時區以及多國語言相關檔案</li>
+</ul>
+
+
+<p><a name="glibc_conl_var"></a></p>
+
+<h3>/var</h3>
+
+<p>跳過</p>
+
+<p><a name="glibc_conl_libexec"></a></p>
+
+<h3>/libexec</h3>
+
+<p>跳過</p>
+
+<p><a name="glibc_conl_inc"></a></p>
+
+<h3>/include</h3>
+
+<p>跳過</p>
+
+<p><a name="glibc_conl_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html">Linux x86 Program Start Up</a></li>
+<li><a href="http://l4u-00.jinr.ru/usoft/WWW/www_debian.org/Documentation/elf/elf.html">ELF: From The Programmer&rsquo;s Perspective: The .init and .fini Sections (1995)</a></li>
+<li><a href="https://stackoverflow.com/questions/29694564/what-is-the-use-of-start-in-c">Stackoverflow: What is the use of _start() in C?</a></li>
+<li><a href="https://stackoverflow.com/questions/32700494/executing-init-and-fini">Stackoverflow: Executing init and fini</a></li>
+</ul>
+
+
+<p><a name="glibc_conl_ex"></a></p>
+
+<h2>附錄</h2>
+
+<ul>
+<li>編譯hello.c 囉唆資訊節錄</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccnUW8Qj.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o hello /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. /tmp/ccTxSMPW.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>會連結系統提供的object檔案列出如下
+
+<ul>
+<li>crtn.o</li>
+<li>Scrt1.o</li>
+<li>crti.o</li>
+<li>crtendS.o</li>
+<li>crtbeginS.o</li>
+</ul>
+</li>
+</ul>
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數]]></title>
@@ -6814,74 +7356,6 @@ Codename:   trusty
 </li>
 <li><a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F4 Discovry Disco 開發版手冊</a></li>
 <li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html">STM32F4 DSP and standard peripherals library</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Auto Photo Watermarking Script]]></title>
-    <link href="http://wen00072.github.io/blog/2016/08/02/auto-photo-watermarking-script/"/>
-    <updated>2016-08-02T16:53:13+08:00</updated>
-    <id>http://wen00072.github.io/blog/2016/08/02/auto-photo-watermarking-script</id>
-    <content type="html"><![CDATA[<p>因故需要對大量圖片調整解析度並加入浮水印，查了網路找到非常好的<a href="http://www.linuxjournal.com/content/easy-watermarking-imagemagick">範例文章</a>。這篇<a href="http://www.linuxjournal.com/content/easy-watermarking-imagemagick">文章</a>裏面也有script，和我的不太一樣，有興趣的人可以去參考。</p>
-
-<p>更改後寫成script如下，它做了：</p>
-
-<ol>
-<li>開了<code>processed_pictures</code>目錄，把改過的檔案存到該目錄</li>
-<li>將新的圖案解析度寬度轉成1024</li>
-<li>將產生的圖片quality設成80%</li>
-<li>加入浮水印字串</li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/sh</span>
-</span><span class='line'><span class="nv">TARGET_DIR</span><span class="o">=</span>processed_pictures
-</span><span class='line'><span class="nv">NEW_WIDTH</span><span class="o">=</span>1024
-</span><span class='line'><span class="nv">CAP</span><span class="o">=</span><span class="s2">&quot;Wen Liao&quot;</span>
-</span><span class='line'>
-</span><span class='line'>mkdir -p <span class="nv">$TARGET_DIR</span>
-</span><span class='line'><span class="k">for</span> i in <span class="k">$(</span>ls<span class="k">)</span> <span class="p">;</span> <span class="k">do</span>
-</span><span class='line'>    <span class="nb">echo </span>convert <span class="nv">$i</span> to <span class="nv">$TARGET_DIR</span>
-</span><span class='line'>    convert -background <span class="s1">&#39;#0008&#39;</span> -quality <span class="m">80</span> -resize <span class="nv">$NEW_WIDTH</span> -fill white -gravity center -size <span class="k">$(</span>identify -format %w <span class="nv">$i</span><span class="k">)</span>x120 caption:<span class="s2">&quot;$CAP&quot;</span> <span class="nv">$i</span> +swap -gravity south -composite <span class="nv">$TARGET_DIR</span>/<span class="nv">$i</span>
-</span><span class='line'><span class="k">done</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>要注意</p>
-
-<ol>
-<li>本script假設目前目錄都是圖檔，所以不判斷檔名是否為<code>.jpg</code>或是<code>.png</code></li>
-<li>無法處理檔名有空白的檔案</li>
-<li>你需要自行安裝imagemagick</li>
-<li>由於相片landscape 和 portrait的關係，浮水印的位址不一定會和你想的一樣，目前為止我不在意這個問題就是了。附上範例轉出的landscape 和 portrait照片各一張</li>
-</ol>
-
-
-<h4>Landscape</h4>
-
-<p><img src="http://wen00072.github.io/files/dog.jpg" title="landscape"></p>
-
-<h4>Portrait</h4>
-
-<p><img src="http://wen00072.github.io/files/cat.jpg" title="portrait"></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://www.linuxjournal.com/content/easy-watermarking-imagemagick">Linux Journal Easy Watermarking with ImageMagick</a></li>
-<li><a href="http://www.xoogu.com/2013/how-to-automatically-watermark-or-batch-watermark-photos-using-imagemagick/">How to automatically watermark or batch watermark photos using ImageMagick</a></li>
 </ul>
 
 ]]></content>

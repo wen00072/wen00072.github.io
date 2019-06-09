@@ -5,23 +5,30 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>再談 Git Remote - My code works, I don&#8217;t know why.</title>
+  <title>觀察編譯glibc的產出 - My code works, I don&#8217;t know why.</title>
   <meta name="author" content="Wen Liao">
   <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
 
 
   
-  <meta name="description" content="更新： Apr/09/2016：感謝網友柏瑀的告知，修正白字。 git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。 一樣，先講測試環境，避免無法reproduce的問題。 1
+  <meta name="description" content="這次介紹編譯glibc 並安裝後的一些發現 目錄 測試環境
+安裝步驟
+觀察與結論 /lib
+/bin
+/sbin
+/etc
+/share
+/var
+/libexec
+/include 參考資料
+附錄 測試環境 1
 2
 3
 4
 5
 6
-7
-8
-9
 $ lsb_release -a
-No LSB &hellip;">
+No LSB modules &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -30,7 +37,7 @@ No LSB &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/">
+  <link rel="canonical" href="http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
@@ -83,7 +90,7 @@ No LSB &hellip;">
   
   <header>
     
-      <h1 class="entry-title">再談 Git Remote</h1>
+      <h1 class="entry-title">觀察編譯glibc的產出</h1>
     
     
       <p class="meta">
@@ -92,7 +99,7 @@ No LSB &hellip;">
 
 
 
-<time class='entry-date' datetime='2016-01-24T20:30:32+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>8:30 pm</span></time>
+<time class='entry-date' datetime='2019-06-08T18:48:03+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>6:48 pm</span></time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://wen00072.github.io">Comments</a>
@@ -102,120 +109,190 @@ No LSB &hellip;">
   </header>
 
 
-<div class="entry-content"><ul>
-<li>更新：
+<div class="entry-content"><p>這次介紹編譯glibc 並安裝後的一些發現</p>
+
+<h2>目錄</h2>
 
 <ul>
-<li>Apr/09/2016：感謝網友柏瑀的告知，修正白字。</li>
+<li><a href="#glibc_env">測試環境</a></li>
+<li><a href="#glibc_install">安裝步驟</a></li>
+<li><a href="#glibc_conl">觀察與結論</a>
+
+<ul>
+<li><a href="#glibc_conl_lib">/lib</a></li>
+<li><a href="#glibc_conl_bin">/bin</a></li>
+<li><a href="#glibc_conl_sbin">/sbin</a></li>
+<li><a href="#glibc_conl_etc">/etc</a></li>
+<li><a href="#glibc_conl_share">/share</a></li>
+<li><a href="#glibc_conl_var">/var</a></li>
+<li><a href="#glibc_conl_libexec">/libexec</a></li>
+<li><a href="#glibc_conl_inc">/include</a></li>
 </ul>
 </li>
+<li><a href="#glibc_conl_ref">參考資料</a></li>
+<li><a href="#glibc_conl_ex">附錄</a></li>
 </ul>
 
 
-<p>git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。</p>
+<p><a name="glibc_env"></a></p>
 
-<p>一樣，先講測試環境，避免無法reproduce的問題。</p>
+<h2>測試環境</h2>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
 <span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
 </span><span class='line'>No LSB modules are available.
 </span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span><span class='line'>
-</span><span class='line'>$ git --version
-</span><span class='line'>git version 2.7.0
-</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>Description:  Ubuntu 18.04.2 LTS
+</span><span class='line'>Release:  18.04
+</span><span class='line'>Codename: bionic</span></code></pre></td></tr></table></div></figure>
 
 
-<p>本次介紹目錄如下</p>
+<p><a name="glibc_install"></a></p>
+
+<h2>安裝步驟</h2>
 
 <ul>
-<li><a href="#gr_gb">背景說明</a></li>
-<li><a href="#gr_cmd">git remote指令介紹</a>
-
-<ul>
-<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
-<li><a href="#gr_cmd_add">新增remote</a></li>
-<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
-<li><a href="#gr_cmd_push">remote的branch操作</a></li>
-<li><a href="#gr_cmd_rm">刪除remote</a></li>
-</ul>
-</li>
+<li>下載套件</li>
 </ul>
 
 
-<p><a name="gr_gb"></a></p>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>git clone http://sourceware.org/git/glibc.git
+</span><span class='line'>cd glibc
+</span><span class='line'>git checkout --track origin/release/2.27</span></code></pre></td></tr></table></div></figure>
 
-<h2>背景說明</h2>
 
-<p>先來問問男人<code>git remote</code>是什麼吧？</p>
+<ul>
+<li>在新的目錄編譯 glibc，你可以自行指定安裝路徑，<font color=red><strong>一定要指定安裝路徑，以免發生嚴重悲劇。</strong> </font></li>
+</ul>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+
+<p>本次設定主要是針對除錯最佳化，以及避免覆蓋系統原本的 <code>glibc</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>GIT-REMOTE(1)                                     Git Manual                                    GIT-REMOTE(1)
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>cd ../
+</span><span class='line'>mkdir out
+</span><span class='line'>mkdir rootfs
+</span><span class='line'>cd out
 </span><span class='line'>
-</span><span class='line'>NAME
-</span><span class='line'>       git-remote - Manage set of tracked repositories
-</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'># 設定
+</span><span class='line'>CFLAGS=-Og CPPFLAGS=-Og CXXFLAGS=-Og ../glibc/configure  --disable-werror --prefix=/tmp/rootfs/
+</span><span class='line'>
+</span><span class='line'># 編譯
+</span><span class='line'>make
+</span><span class='line'>
+</span><span class='line'># 安裝
+</span><span class='line'>make install</span></code></pre></td></tr></table></div></figure>
 
 
-<p>白話來說，<code>git remote</code>是用來管理<font color="red">多個</font>tracked repositories。（中文難翻，意思是你要追蹤的git repository）。在大部分的情況，<code>git clone</code>下來後只需要和原本clone的遠端互動的話，你只有一個remote，那麼你機乎不會感受到remote的運作，我天生駑鈍，剛開始只是覺得奇怪怎麼有時候後會有個<code>origin</code>跑出來而已。</p>
+<p><a name="glibc_conl"></a></p>
 
-<p>如果夠幸運（還是不幸？）你不太會需要遇到需要處理remote的情況。不過在github上面，倒是蠻有機會要用到remote，情境如下。</p>
+<h2>觀察與結論</h2>
+
+<p>本來想說 <code>libc</code> 用來提供 C 標準函式庫的 binary，那麼了不起就是 <code>libc.so</code>和 <code>libc.a</code> 以及對應的 header files。安裝完畢後先看一下目錄，事情果然沒有像本組裝工想的那麼簡單。列出第一層目錄如下，除了預期中的<code>lib</code>和<code>include</code>以外，竟然還有不少預期以外的目錄。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree -L 1 -d /tmp/rootfs
+</span><span class='line'>.
+</span><span class='line'>├── bin
+</span><span class='line'>├── etc
+</span><span class='line'>├── include
+</span><span class='line'>├── lib
+</span><span class='line'>├── libexec
+</span><span class='line'>├── sbin
+</span><span class='line'>├── share
+</span><span class='line'>└── var</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那麼我們來看一下這些目錄下面有什麼東西吧。</p>
+
+<p><a name="glibc_conl_lib"></a></p>
+
+<h3>/lib</h3>
+
+<p>先來看目錄結構，多了和多國語言相關的函式庫目錄還有 trace shared object PLT (Procedure linkage table) 工具會用到的audio目錄</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree lib -d
+</span><span class='line'>lib
+</span><span class='line'>├── audit
+</span><span class='line'>└── gconv</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來看<code>/lib</code>的檔案</p>
+
+<p>列出幾個我有興趣的檔案</p>
 
 <ul>
-<li>你在github上面有帳號，要fork別人的project <code>A</code>，fork來的稱為<code>A+</code></li>
-<li>你在<code>A+</code>開發，同時<code>A</code>也在開發</li>
-<li><code>A+</code>有需要和<code>A</code>同步，也許是<code>A</code>有新功能，或是你要回饋程式碼總不能回饋和<code>A</code>差異太大的程式碼</li>
-</ul>
-
-
-<p><code>A+</code>和<code>A</code>同步，是remote常用的情境。常用到github直接給<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>。大概描述如下：</p>
+<li><p><code>*.o</code></p>
 
 <ul>
-<li><code>A+</code>加一個remote，URL為<code>A</code>的URL。白話來說，就是<code>A+</code>要track repository <code>A</code>。
-
-<ul>
-<li>remote必須給個名字，github的<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>上給的名字叫upstream。</li>
+<li>在<code>/lib</code>裏面會發現幾個object file，它們檔名都有<code>crt</code>，crt全名是 <code>C runtime</code>，顯然和執行的時候有關。我有空會再找時間了解。先列出來介紹幾個如下</li>
 </ul>
 </li>
-<li>既然加了一個tracked repository，你就可以做
+<li><p><code>Scrt1.o</code>: 這邊我們可以看到<code>T _start</code>以及<code>U main</code>，望文生義按圖說故事我們可以猜測執行程式的起始點其實是<code>_start</code>，做了一些事情後才會去呼叫你寫的<code>main()</code>，我做了一個實驗，想知道一個應用程式會連結哪些系統上的object檔案請參考<a href="#glibc_conl_ex">這邊</a></p></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ nm Scrt1.o 
+</span><span class='line'>0000000000000000 D __data_start
+</span><span class='line'>0000000000000000 W data_start
+</span><span class='line'>                 U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000000 R _IO_stdin_used
+</span><span class='line'>                 U __libc_csu_fini
+</span><span class='line'>                 U __libc_csu_init
+</span><span class='line'>                 U __libc_start_main
+</span><span class='line'>                 U main
+</span><span class='line'>0000000000000000 T _start</span></code></pre></td></tr></table></div></figure>
+
 
 <ul>
-<li>拉remote程式碼下來</li>
-<li>切換到remote下面的branch</li>
-<li><strong>merge remote 的branch</strong></li>
-</ul>
-</li>
+<li><code>crtn.o</code>: 用<code>nm</code>去看會發現沒有<code>symbol</code>，不過反組譯後會發現有兩個<code>section</code>，看起來和main啟動前和使用者程式結束後會有關係。有空會再探討。</li>
 </ul>
 
 
-<p><a name="gr_cmd"></a></p>
-
-<h2>git remote指令介紹</h2>
-
-<p>在介紹指令之前，先建立示範git repository 以便下面的說明。情境如下</p>
-
-<ol>
-<li>建立新的git repository，稱為<code>repo_1</code></li>
-<li>clone <code>repo_1</code>到<code>repo_2</code></li>
-<li>clone <code>repo_2</code>到<code>repo_3</code></li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -231,71 +308,42 @@ No LSB &hellip;">
 <span class='line-number'>14</span>
 <span class='line-number'>15</span>
 <span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git init repo_1
-</span><span class='line'>Initialized empty Git repository in /tmp/test_remote/repo_1/.git/
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ objdump -d crtn.o 
 </span><span class='line'>
-</span><span class='line'>$ cd repo_1/
-</span><span class='line'>/repo_1$ touch test_file &amp;&amp; git add test_file &amp;&amp; git commit -a -m &quot;init for test&quot;
-</span><span class='line'>[master (root-commit) 6847c3c] init for test
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test_file
+</span><span class='line'>crtn.o:     file format elf64-x86-64
 </span><span class='line'>
-</span><span class='line'>$ cd ../
 </span><span class='line'>
-</span><span class='line'>$ git clone --bare repo_1 repo_2
-</span><span class='line'>Cloning into bare repository &#39;repo_2&#39;...
-</span><span class='line'>done.
+</span><span class='line'>Disassembly of section .init:
 </span><span class='line'>
-</span><span class='line'>$ git clone repo_2/ repo_3
-</span><span class='line'>Cloning into &#39;repo_3&#39;...
-</span><span class='line'>done.
+</span><span class='line'>0000000000000000 &lt;.init&gt;:
+</span><span class='line'>   0: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'>   4: c3                      retq   
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .fini:
+</span><span class='line'>
+</span><span class='line'>0000000000000000 &lt;.fini&gt;:
+</span><span class='line'>   0: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'>   4: c3                      retq   
 </span></code></pre></td></tr></table></div></figure>
 
 
-<p>關於repo_2的&ndash;bare部份，一言難盡。長話短說，不這樣幹repo_3不能push到repo_2，有興趣可以看<a href="http://stackoverflow.com/questions/2816369/git-push-error-remote-rejected-master-master-branch-is-currently-checked">這邊</a>。</p>
-
-<p>如果你的git repository是clone過來的，一定會有一個預設remote。沒意外的會叫<code>origin</code> <del>(什麼？你的remote叫<code>aosp</code>? 呃太複雜不討論)</del>，接下來你可以對於remote 操作，分別說明如下：</p>
+<ul>
+<li><code>ld-linux-x86_64.so.2</code>
 
 <ul>
-<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
-<li><a href="#gr_cmd_add">新增remote</a></li>
-<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
-<li><a href="#gr_cmd_push">remote的branch操作</a></li>
-<li><a href="#gr_cmd_rm">刪除remote</a></li>
-</ul>
-
-
-<p><a name="gr_cmd_status"></a></p>
-
-<h2>查詢remote資訊</h2>
-
-<ul>
-<li><code>git remote</code>
-
-<ul>
-<li>顯示remote名稱</li>
+<li>就是<code>ld.so</code>，這個檔案有趣的點是他是一個shared object，但是同時又是可以執行。如果我的懶病沒有發作以後會常常看到這個東西。</li>
 </ul>
 </li>
-<li><code>git remote -v</code>
+<li><code>libc.*</code>:
 
 <ul>
-<li>顯示remote名稱及remote URL</li>
-</ul>
-</li>
-<li><code>git remote show remote名稱</code>
-
-<ul>
-<li>顯示<code>remote名稱</code>的詳細資訊</li>
+<li>直接看symbol就知道，<code>T</code>, <code>U</code>的定義請翻前面文章，我懶得找。</li>
 </ul>
 </li>
 </ul>
 
 
-<p>直接看範例</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -307,216 +355,26 @@ No LSB &hellip;">
 <span class='line-number'>10</span>
 <span class='line-number'>11</span>
 <span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_3
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ nm libc.a | grep "^printf.o:" -A 10
+</span><span class='line'>printf.o:
+</span><span class='line'>0000000000000000 T _IO_printf
+</span><span class='line'>0000000000000000 T printf
+</span><span class='line'>0000000000000000 T __printf
+</span><span class='line'>                 U stdout
+</span><span class='line'>                 U __vfprintf_internal
 </span><span class='line'>
-</span><span class='line'>$ git remote
-</span><span class='line'>origin
-</span><span class='line'>
-</span><span class='line'>$ git remote -v
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
-</span><span class='line'>
-</span><span class='line'>$ git remote show origin
-</span><span class='line'>* remote origin
-</span><span class='line'>  Fetch URL: /tmp/test_remote/repo_2/
-</span><span class='line'>  Push  URL: /tmp/test_remote/repo_2/
-</span><span class='line'>  HEAD branch: master
-</span><span class='line'>  Remote branch:
-</span><span class='line'>    master tracked
-</span><span class='line'>  Local branch configured for &#39;git pull&#39;:
-</span><span class='line'>    master merges with remote master
-</span><span class='line'>  Local ref configured for &#39;git push&#39;:
-</span><span class='line'>    master pushes to master (up to date)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gr_cmd_add"></a></p>
-
-<h2>新增remote</h2>
-
-<ul>
-<li><code>git add remote名稱 remote_repository_URL</code></li>
-</ul>
-
-
-<p>範例如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote add upstream /tmp/test_remote/repo_1/
-</span><span class='line'>
-</span><span class='line'>$ git remote -v
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
-</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
-</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (fetch)
-</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (push)
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>新增完畢後，請記得<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>是你要操作remote的參數。</p>
-
-<p>另外你還可以加入多個remote來場大亂鬥。例如你從<code>A</code> fork <code>A+</code>，也許有人fork 出來的<code>A++</code>有你想要的功能，就可以再把<code>A++</code>加入你<code>A</code> repository的remote。</p>
-
-<p><a name="gr_cmd_fetch"></a></p>
-
-<h2>拉remote repository</h2>
-
-<ul>
-<li><code>git fetch remote_名稱</code></li>
-<li><code>git pull remote_名稱/remote_branch_名稱</code></li>
-</ul>
-
-
-<p>我們先在<code>repo_1</code>開一個branch稱為<code>br1</code></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_1/
-</span><span class='line'>
-</span><span class='line'>$ git checkout -b br1
-</span><span class='line'>Switched to a new branch &#39;br1&#39;
-</span><span class='line'>
-</span><span class='line'>$ touch test_on_branch &amp;&amp; git add test_on_branch &amp;&amp; git commit test_on_branch -m &quot;test&quot;
-</span><span class='line'>[br1 cc7222f] test
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test_on_branch
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>接下來就是範例時間</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git fetch upstream
-</span><span class='line'>From /tmp/test_remote/repo_1
-</span><span class='line'> * [new branch]      br1        -&gt; upstream/br1
-</span><span class='line'> * [new branch]      master     -&gt; upstream/master
-</span><span class='line'>
-</span><span class='line'>$ ls
-</span><span class='line'>test_file
-</span><span class='line'>
-</span><span class='line'>$ git pull upstream br1
-</span><span class='line'>From /tmp/test_remote/repo_1
-</span><span class='line'> * branch            br1        -&gt; FETCH_HEAD
-</span><span class='line'>Updating 6847c3c..cc7222f
-</span><span class='line'>Fast-forward
-</span><span class='line'> test_on_branch | 0
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test_on_branch
-</span><span class='line'>
-</span><span class='line'>$ ls
-</span><span class='line'>test_file  test_on_branch
-</span><span class='line'>
-</span><span class='line'>$ git status
-</span><span class='line'>On branch master
-</span><span class='line'>Your branch is ahead of &#39;origin/master&#39; by 1 commit.
-</span><span class='line'>  (use &quot;git push&quot; to publish your local commits)
-</span><span class='line'>nothing to commit, working directory clean
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>注意最後的指令，因為我們pull了<code>upstream/br1</code>，所以local多了一個commit。因此訊息中有說你目前repository 比<code>origin/master</code>(你clone的remote/branch)多一個commit。你可以push回<code>origin/master</code>。</p>
-
-<p><a name="gr_cmd_push"></a></p>
-
-<h2>remote的branch操作</h2>
-
-<p>原則就是命令中有參數會是<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>。</p>
-
-<ul>
-<li>切換</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout upstream/br1
-</span><span class='line'>Note: checking out &#39;upstream/br1&#39;.
-</span><span class='line'>
-</span><span class='line'>You are in &#39;detached HEAD&#39; state. You can look around, make experimental
-</span><span class='line'>changes and commit them, and you can discard any commits you make in this
-</span><span class='line'>state without impacting any branches by performing another checkout.
-</span><span class='line'>
-</span><span class='line'>If you want to create a new branch to retain commits you create, you may
-</span><span class='line'>do so (now or later) by using -b with the checkout command again. Example:
-</span><span class='line'>
-</span><span class='line'>  git checkout -b &lt;new-branch-name&gt;
-</span><span class='line'>
-</span><span class='line'>HEAD is now at bd026e3... test
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>中間的一堆英文簡單來說是因為git checkout沒特別參數，git只是把HEAD指到命令中的hash而已。如果你要同時在local開一個branch，可以這樣幹：</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout --track  upstream/br1
-</span><span class='line'>Branch br1 set up to track remote branch br1 from upstream.
-</span><span class='line'>Switched to a new branch &#39;br1&#39;
-</span></code></pre></td></tr></table></div></figure>
+</span><span class='line'>snprintf.o:
+</span><span class='line'>0000000000000000 W snprintf
+</span><span class='line'>0000000000000000 T __snprintf
+</span><span class='line'>                 U __vsnprintf_internal    </span></code></pre></td></tr></table></div></figure>
 
 
 <ul>
-<li>merge</li>
+<li><code>libm.*</code>: 一樣看symbol節錄</li>
 </ul>
 
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
@@ -543,60 +401,247 @@ No LSB &hellip;">
 <span class='line-number'>25</span>
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'># 先在upstream/br1建立新的commit
-</span><span class='line'>$ cd /tmp/test_remote/repo_1/
-</span><span class='line'>
-</span><span class='line'>$ touch test1_on_branch &amp;&amp; git add test1_on_branch &amp;&amp; git commit test1_on_branch -m &quot;test1&quot;
-</span><span class='line'>[br1 d82612a] test1
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test1_on_branch
-</span><span class='line'>
-</span><span class='line'># 切回repo_3
-</span><span class='line'>cd /tmp/test_remote/repo_3
-</span><span class='line'>
-</span><span class='line'># 先fetch
-</span><span class='line'>$ git fetch upstream
-</span><span class='line'>remote: Counting objects: 2, done.
-</span><span class='line'>remote: Compressing objects: 100% (2/2), done.
-</span><span class='line'>remote: Total 2 (delta 0), reused 0 (delta 0)
-</span><span class='line'>Unpacking objects: 100% (2/2), done.
-</span><span class='line'>From /tmp/test_remote/repo_1
-</span><span class='line'>   bd026e3..d82612a  br1        -&gt; upstream/br1
-</span><span class='line'>
-</span><span class='line'># 再merge，事實上和git pull upstream br1 一樣效果（默）
-</span><span class='line'>$ git merge upstream/br1
-</span><span class='line'>Updating bd026e3..d82612a
-</span><span class='line'>Fast-forward
-</span><span class='line'> test1_on_branch | 0
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test1_on_branch
-</span></code></pre></td></tr></table></div></figure>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ nm libm.so.6 |grep " sin"
+</span><span class='line'>000000000002eb24 i sin
+</span><span class='line'>0000000000034532 W sincos
+</span><span class='line'>00000000000419cc i sincosf
+</span><span class='line'>0000000000054f26 W sincosf128
+</span><span class='line'>00000000000419cc i sincosf32
+</span><span class='line'>0000000000034532 W sincosf32x
+</span><span class='line'>0000000000034532 W sincosf64
+</span><span class='line'>00000000000175c8 W sincosf64x
+</span><span class='line'>00000000000175c8 W sincosl
+</span><span class='line'>000000000004131e i sinf
+</span><span class='line'>0000000000054148 W sinf128
+</span><span class='line'>000000000004131e i sinf32
+</span><span class='line'>000000000002eb24 i sinf32x
+</span><span class='line'>000000000002eb24 i sinf64
+</span><span class='line'>0000000000016ead W sinf64x
+</span><span class='line'>000000000000ed11 W sinh
+</span><span class='line'>000000000001205d W sinhf
+</span><span class='line'>0000000000060407 W sinhf128
+</span><span class='line'>000000000001205d W sinhf32
+</span><span class='line'>000000000000ed11 W sinhf32x
+</span><span class='line'>000000000000ed11 W sinhf64
+</span><span class='line'>000000000000d9a4 W sinhf64x
+</span><span class='line'>000000000000d9a4 W sinhl
+</span><span class='line'>0000000000016ead W sinl
+</span><span class='line'>00000000000144b5 t sin_pi
+</span><span class='line'>0000000000027776 t sin_pi</span></code></pre></td></tr></table></div></figure>
 
-
-<p><a name="gr_cmd_rm"></a></p>
-
-<h2>刪除remote</h2>
 
 <ul>
-<li>git remote remove remote名稱</li>
+<li><code>libdl</code>
+
+<ul>
+<li>動態載入函式庫相關函數如<code>dlvsym</code>, <code>dlsym</code>,</li>
+</ul>
+</li>
 </ul>
 
 
-<p>範例如下</p>
+<h4>完整檔案如下</h4>
 
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
 <span class='line-number'>4</span>
 <span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote remove upstream
-</span><span class='line'>
-</span><span class='line'>$ git remote -v
-</span><span class='line'>origin    /tmp/test_remote/repo_2 (fetch)
-</span><span class='line'>origin    /tmp/test_remote/repo_2 (push)
-</span></code></pre></td></tr></table></div></figure>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ ls lib
+</span><span class='line'>audit                         libc.a                 libmemusage.so              libnss_dns.so               librt-2.28.9000.so
+</span><span class='line'>crt1.o                        libc_nonshared.a       libm.so                     libnss_dns.so.2             librt.a
+</span><span class='line'>crti.o                        libcrypt-2.28.9000.so  libm.so.6                   libnss_files-2.28.9000.so   librt.so
+</span><span class='line'>crtn.o                        libcrypt.a             libmvec-2.28.9000.so        libnss_files.so             librt.so.1
+</span><span class='line'>gconv                         libcrypt.so            libmvec.a                   libnss_files.so.2           libSegFault.so
+</span><span class='line'>gcrt1.o                       libcrypt.so.1          libmvec_nonshared.a         libnss_hesiod-2.28.9000.so  libthread_db-1.0.so
+</span><span class='line'>ld-2.28.9000.so               libc.so                libmvec.so                  libnss_hesiod.so            libthread_db.so
+</span><span class='line'>ld-linux-x86-64.so.2          libc.so.6              libmvec.so.1                libnss_hesiod.so.2          libthread_db.so.1
+</span><span class='line'>libanl-2.28.9000.so           libdl-2.28.9000.so     libnsl-2.28.9000.so         libpcprofile.so             libutil-2.28.9000.so
+</span><span class='line'>libanl.a                      libdl.a                libnsl.so.1                 libpthread-2.28.9000.so     libutil.a
+</span><span class='line'>libanl.so                     libdl.so               libnss_compat-2.28.9000.so  libpthread.a                libutil.so
+</span><span class='line'>libanl.so.1                   libdl.so.2             libnss_compat.so            libpthread.so               libutil.so.1
+</span><span class='line'>libBrokenLocale-2.28.9000.so  libg.a                 libnss_compat.so.2          libpthread.so.0             Mcrt1.o
+</span><span class='line'>libBrokenLocale.a             libm-2.28.9000.a       libnss_db-2.28.9000.so      libresolv-2.28.9000.so      Scrt1.o
+</span><span class='line'>libBrokenLocale.so            libm-2.28.9000.so      libnss_db.so                libresolv.a
+</span><span class='line'>libBrokenLocale.so.1          libm.a                 libnss_db.so.2              libresolv.so
+</span><span class='line'>libc-2.28.9000.so             libmcheck.a            libnss_dns-2.28.9000.so     libresolv.so.2</span></code></pre></td></tr></table></div></figure>
 
 
+<p><a name="glibc_conl_bin"></a></p>
+
+<h3>/bin</h3>
+
+<p>是除了 <code>ldd</code>以外，我全部沒印象。有些甚至不在Ubuntu的預設安裝中。使用者需要另外安裝，如<code>xtrace</code>等。</p>
+
+<p>列出幾個我有興趣的工具</p>
+
+<ul>
+<li><a href="http://man7.org/linux/man-pages/man1/pldd.1.html">pldd</a>: 列出process使用的shared library。奇怪的是我自己用卻只有列出process的執行檔名稱而已。</li>
+<li><a href="http://manpages.org/sotruss">sotruss</a>: 經由PLT (Procedure Linkage Table) trace shared library calls</li>
+<li><a href="http://manpages.org/sprof">sprof</a>: share object 的profile 工具</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>bin
+</span><span class='line'>├── catchsegv
+</span><span class='line'>├── gencat
+</span><span class='line'>├── getconf
+</span><span class='line'>├── getent
+</span><span class='line'>├── iconv
+</span><span class='line'>├── ldd
+</span><span class='line'>├── locale
+</span><span class='line'>├── localedef
+</span><span class='line'>├── makedb
+</span><span class='line'>├── mtrace
+</span><span class='line'>├── pcprofiledump
+</span><span class='line'>├── pldd
+</span><span class='line'>├── sotruss
+</span><span class='line'>├── sprof
+</span><span class='line'>├── tzselect
+</span><span class='line'>└── xtrace</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl_sbin"></a></p>
+
+<h3>/sbin</h3>
+
+<ul>
+<li>除了<code>ldconfig</code>外其他的不認識</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree sbin/
+</span><span class='line'>sbin/
+</span><span class='line'>├── iconvconfig
+</span><span class='line'>├── ldconfig
+</span><span class='line'>├── nscd
+</span><span class='line'>├── sln
+</span><span class='line'>├── zdump
+</span><span class='line'>etc
+</span><span class='line'>├── ld.so.conf
+</span><span class='line'>└── rpc
+</span><span class='line'>└── zic</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl_etc"></a></p>
+
+<h3>/etc</h3>
+
+<p>很有趣，竟然有<code>rpc</code> (remote procedure call)的檔案，紀錄rpc通訊協定的資訊。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>etc
+</span><span class='line'>├── ld.so.conf
+</span><span class='line'>└── rpc</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="glibc_conl_share"></a></p>
+
+<h3>/share</h3>
+
+<ul>
+<li>存放時區以及多國語言相關檔案</li>
+</ul>
+
+
+<p><a name="glibc_conl_var"></a></p>
+
+<h3>/var</h3>
+
+<p>跳過</p>
+
+<p><a name="glibc_conl_libexec"></a></p>
+
+<h3>/libexec</h3>
+
+<p>跳過</p>
+
+<p><a name="glibc_conl_inc"></a></p>
+
+<h3>/include</h3>
+
+<p>跳過</p>
+
+<p><a name="glibc_conl_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html">Linux x86 Program Start Up</a></li>
+<li><a href="http://l4u-00.jinr.ru/usoft/WWW/www_debian.org/Documentation/elf/elf.html">ELF: From The Programmer&rsquo;s Perspective: The .init and .fini Sections (1995)</a></li>
+<li><a href="https://stackoverflow.com/questions/29694564/what-is-the-use-of-start-in-c">Stackoverflow: What is the use of _start() in C?</a></li>
+<li><a href="https://stackoverflow.com/questions/32700494/executing-init-and-fini">Stackoverflow: Executing init and fini</a></li>
+</ul>
+
+
+<p><a name="glibc_conl_ex"></a></p>
+
+<h2>附錄</h2>
+
+<ul>
+<li>編譯hello.c 囉唆資訊節錄</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccnUW8Qj.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o hello /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. /tmp/ccTxSMPW.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>會連結系統提供的object檔案列出如下
+
+<ul>
+<li>crtn.o</li>
+<li>Scrt1.o</li>
+<li>crti.o</li>
+<li>crtendS.o</li>
+<li>crtbeginS.o</li>
+</ul>
+</li>
+</ul>
 
 </div>
 
@@ -613,12 +658,12 @@ No LSB &hellip;">
 
 
 
-<time class='entry-date' datetime='2016-01-24T20:30:32+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>8:30 pm</span></time>
+<time class='entry-date' datetime='2019-06-08T18:48:03+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>6:48 pm</span></time>
       
 
 <span class="categories">
   
-    <a class='category' href='/blog/categories/git-remote/'>git remote</a>
+    <a class='category' href='/blog/categories/c/'>c</a>, <a class='category' href='/blog/categories/glibc/'>glibc</a>, <a class='category' href='/blog/categories/linux/'>linux</a>
   
 </span>
 
@@ -627,7 +672,7 @@ No LSB &hellip;">
     
       <div class="sharing">
   
-  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/" data-via="" data-counturl="http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/" >Tweet</a>
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/" data-via="" data-counturl="http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/" >Tweet</a>
   
   
   
@@ -636,10 +681,8 @@ No LSB &hellip;">
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2015/12/10/about-inline-asm/" title="Previous Post: 關於GNU Inline Assembly">&laquo; 關於GNU Inline Assembly</a>
+        <a class="basic-alignment left" href="/blog/2019/06/08/glibc-surface-observing/" title="Previous Post: 在Ubuntu 18.04.2 trace 程式呼叫 glibc 函數">&laquo; 在Ubuntu 18.04.2 trace 程式呼叫 glibc 函數</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2016/04/06/arm-cm4-pratice-0-environment-setup/" title="Next Post: ARM CM4 Pratice (0): Environment Setup">ARM CM4 Pratice (0): Environment Setup &raquo;</a>
       
     </p>
   </footer>
@@ -718,8 +761,8 @@ No LSB &hellip;">
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/';
-        var disqus_url = 'http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/';
+        var disqus_identifier = 'http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/';
+        var disqus_url = 'http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/';
         var disqus_script = 'embed.js';
       
     (function () {
