@@ -110,7 +110,12 @@
 <ul>
 <li><a href="#fl0707-app-cc"><code>cc</code> 指令拆解</a></li>
 <li><a href="#fl0707-app-as"><code>as</code> 指令拆解</a></li>
-<li><a href="#fl0707-app-cc2"><code>collect2</code> 指令拆解</a></li>
+<li><a href="#fl0707-app-cc2"><code>collect2</code> 指令拆解</a>
+
+<ul>
+<li><a href="#fl0707-app-ld"><code>ld</code> 指令拆解</a></li>
+</ul>
+</li>
 <li><a href="#fl0707-app-strace">用 <code>strace</code> 觀察 <code>gcc hello.c -o hello</code> 會呼叫哪些執行檔</a></li>
 <li><a href="#fl0707-app-gcc">完整的 <code>gcc -v -o hello hello.c</code> 輸出</a></li>
 <li><a href="#fl0707-app-cc2-help">collect2 說明</a></li>
@@ -332,6 +337,116 @@
 </span><span class='line'>-L/usr/lib/../lib
 </span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..
 </span><span class='line'>/tmp/cct36Qgi.o
+</span><span class='line'>-lgcc
+</span><span class='line'>--push-state
+</span><span class='line'>--as-needed
+</span><span class='line'>-lgcc_s
+</span><span class='line'>--pop-state
+</span><span class='line'>-lc
+</span><span class='line'>-lgcc
+</span><span class='line'>--push-state
+</span><span class='line'>--as-needed
+</span><span class='line'>-lgcc_s
+</span><span class='line'>--pop-state
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="fl0707-app-ld"></a></p>
+
+<h3><code>ld</code> 指令拆解</h3>
+
+<p>要注意的是<code>ld</code>是由<code>collect2</code>呼叫的</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/bin/ld
+</span><span class='line'>-plugin
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so
+</span><span class='line'>-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
+</span><span class='line'>-plugin-opt=-fresolution=/tmp/ccCwkJOE.res
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc_s
+</span><span class='line'>-plugin-opt=-pass-through=-lc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc_s
+</span><span class='line'>--sysroot=/
+</span><span class='line'>--build-id
+</span><span class='line'>--eh-frame-hdr
+</span><span class='line'>-m
+</span><span class='line'>elf_x86_64
+</span><span class='line'>--hash-style=gnu
+</span><span class='line'>--as-needed
+</span><span class='line'>-dynamic-linker
+</span><span class='line'>/lib64/ld-linux-x86-64.so.2
+</span><span class='line'>-pie
+</span><span class='line'>-z
+</span><span class='line'>now
+</span><span class='line'>-z
+</span><span class='line'>relro
+</span><span class='line'>-o
+</span><span class='line'>hello
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib
+</span><span class='line'>-L/lib/x86_64-linux-gnu
+</span><span class='line'>-L/lib/../lib
+</span><span class='line'>-L/usr/lib/x86_64-linux-gnu
+</span><span class='line'>-L/usr/lib/../lib
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..
+</span><span class='line'>/tmp/ccinSYzz.o
 </span><span class='line'>-lgcc
 </span><span class='line'>--push-state
 </span><span class='line'>--as-needed
