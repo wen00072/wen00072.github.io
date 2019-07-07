@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-07-07T16:55:34+08:00</updated>
+  <updated>2019-07-07T19:06:12+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -18,7 +18,7 @@
     <link href="http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs/"/>
     <updated>2019-06-15T12:09:34+08:00</updated>
     <id>http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs</id>
-    <content type="html"><![CDATA[<p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間<code>gcc</code> 幫你執行了哪些檔案，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。</p>
+    <content type="html"><![CDATA[<p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間<code>gcc</code> 幫你執行了哪些指令，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。</p>
 
 <h2>目錄</h2>
 
@@ -91,7 +91,7 @@
 
 <h3>除了hello.o以外偷塞的object files以及liked libraries</h3>
 
-<p>這部份是在<a href="#fl0707-app-cc2">連結</a>的時候 <code>gcc</code> 做的事。記得 <code>gcc</code> 全名是 <code>GNU Compiler Collection</code>，也就是說他不是編譯器，是一個通包的程式。直接列出多連結的檔案，要注意的是在連結時似乎有個順序，所以會多次出現<code>--push-state</code> -> <code>--as-needed</code> -> 指定連結函式庫 -> <code>--push-state</code> 的參數，以後有空再來看這部份。</p>
+<p>這部份是在<a href="#fl0707-app-cc2">連結</a>的時候 <code>gcc</code> 做的事。記得 <code>gcc</code> 全名是 <code>GNU Compiler Collection</code>，也就是說他不是編譯器，是一個通包的程式。直接列出多連結的檔案，要注意的是在連結時似乎有個順序，所以會多次出現<code>--push-state</code> -> <code>--as-needed</code> -> 指定連結函式庫 -> <code>--pop-state</code> 的參數，以後有空再來看這部份。</p>
 
 <ul>
 <li>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o</li>

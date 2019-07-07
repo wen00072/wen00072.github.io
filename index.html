@@ -11,7 +11,7 @@
 
 
   
-  <meta name="description" content="本篇旨在從command line角度拆解 gcc hello.c -o hello 中間gcc 幫你執行了哪些檔案，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。 目錄 測試環境
+  <meta name="description" content="本篇旨在從command line角度拆解 gcc hello.c -o hello 中間gcc 幫你執行了哪些指令，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。 目錄 測試環境
 （不）完整的gcc 編譯步驟 除了hello.o以外偷塞的object &hellip;">
   
 
@@ -96,7 +96,7 @@
   </header>
 
 
-  <div class="entry-content"><p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間<code>gcc</code> 幫你執行了哪些檔案，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。</p>
+  <div class="entry-content"><p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間<code>gcc</code> 幫你執行了哪些指令，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。</p>
 
 <h2>目錄</h2>
 
@@ -169,7 +169,7 @@
 
 <h3>除了hello.o以外偷塞的object files以及liked libraries</h3>
 
-<p>這部份是在<a href="#fl0707-app-cc2">連結</a>的時候 <code>gcc</code> 做的事。記得 <code>gcc</code> 全名是 <code>GNU Compiler Collection</code>，也就是說他不是編譯器，是一個通包的程式。直接列出多連結的檔案，要注意的是在連結時似乎有個順序，所以會多次出現<code>--push-state</code> -> <code>--as-needed</code> -> 指定連結函式庫 -> <code>--push-state</code> 的參數，以後有空再來看這部份。</p>
+<p>這部份是在<a href="#fl0707-app-cc2">連結</a>的時候 <code>gcc</code> 做的事。記得 <code>gcc</code> 全名是 <code>GNU Compiler Collection</code>，也就是說他不是編譯器，是一個通包的程式。直接列出多連結的檔案，要注意的是在連結時似乎有個順序，所以會多次出現<code>--push-state</code> -> <code>--as-needed</code> -> 指定連結函式庫 -> <code>--pop-state</code> 的參數，以後有空再來看這部份。</p>
 
 <ul>
 <li>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o</li>
