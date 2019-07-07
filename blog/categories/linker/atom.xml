@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linker | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/linker/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-07-07T16:50:47+08:00</updated>
+  <updated>2019-07-07T16:55:34+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -18,16 +18,90 @@
     <link href="http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs/"/>
     <updated>2019-06-15T12:09:34+08:00</updated>
     <id>http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs</id>
-    <content type="html"><![CDATA[<p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間發生的事情。</p>
+    <content type="html"><![CDATA[<p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間<code>gcc</code> 幫你執行了哪些檔案，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。</p>
 
-<h2></h2>
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#fl0707-env">測試環境</a></li>
+<li><a href="#fl0707-step">（不）完整的gcc 編譯步驟</a>
+
+<ul>
+<li><a href="#fl0707-step-list">除了hello.o以外偷塞的object files以及liked libraries</a></li>
+</ul>
+</li>
+<li><a href="#fl0707-app">附錄</a>
+
+<ul>
+<li><a href="#fl0707-app-cc"><code>cc</code> 指令拆解</a></li>
+<li><a href="#fl0707-app-as"><code>as</code> 指令拆解</a></li>
+<li><a href="#fl0707-app-cc2"><code>collect2</code> 指令拆解</a></li>
+<li><a href="#fl0707-app-strace">用 <code>strace</code> 觀察 <code>gcc hello.c -o hello</code> 會呼叫哪些執行檔</a></li>
+<li><a href="#fl0707-app-gcc">完整的 <code>gcc -v -o hello hello.c</code> 輸出</a></li>
+<li><a href="#fl0707-app-cc2-help">collect2 說明</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="fl0707-env"></a></p>
+
+<h2>測試環境</h2>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 18.04.2 LTS
+Release:    18.04
+Codename:   bionic
+</code></pre>
+
+<pre><code>$ gcc --version
+gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
+Copyright (C) 2017 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+</code></pre>
+
+<p><a name="fl0707-step"></a></p>
+
+<h2>（不）完整的gcc 編譯步驟</h2>
+
+<ul>
+<li><a href="#fl0707-app-cc">將hello.c 轉譯成組合語言</a></li>
+<li><a href="#fl0707-app-as">將產生的組合語言檔案編譯成ELF object file</a></li>
+<li><a href="#fl0707-app-cc2">連結object 檔案和系統runtime object files以及函式庫連結後產生執行檔</a></li>
+</ul>
+
+
+<p><a name="fl0707-step-list"></a></p>
+
+<h3>除了hello.o以外偷塞的object files以及liked libraries</h3>
+
+<p>這部份是在<a href="#fl0707-app-cc2">連結</a>的時候 <code>gcc</code> 做的事。記得 <code>gcc</code> 全名是 <code>GNU Compiler Collection</code>，也就是說他不是編譯器，是一個通包的程式。直接列出多連結的檔案，要注意的是在連結時似乎有個順序，所以會多次出現<code>--push-state</code> -> <code>--as-needed</code> -> 指定連結函式庫 -> <code>--push-state</code> 的參數，以後有空再來看這部份。</p>
+
+<ul>
+<li>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o</li>
+<li>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o</li>
+<li>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o</li>
+<li>/lib64/ld-linux-x86-64.so.2</li>
+<li>/usr/lib/gcc/x86_64-linux-gnu/7/32/libgcc.a</li>
+<li>/lib/x86_64-linux-gnu/libc.so.6</li>
+<li>/usr/lib/x86_64-linux-gnu/libc.a</li>
+<li>/usr/lib/gcc/x86_64-linux-gnu/7/libgcc_s.so.1</li>
+<li>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o</li>
+<li>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o</li>
+<li>/lib/x86_64-linux-gnu/libc.so.6</li>
+</ul>
+
+
+<p><a name="fl0707-app"></a></p>
 
 <h2>附錄</h2>
 
-<ul>
-<li><code>cc</code> 指令拆解</li>
-</ul>
+<p><a name="fl0707-app-cc"></a></p>
 
+<h3><code>cc</code> 指令拆解</h3>
 
 <pre><code>/usr/lib/gcc/x86_64-linux-gnu/7/cc1
 -quiet
@@ -50,18 +124,16 @@ hello
 /tmp/ccUCGQCr.s
 </code></pre>
 
-<ul>
-<li><code>as</code> 指令拆解</li>
-</ul>
+<p><a name="fl0707-app-as"></a></p>
 
+<h3><code>as</code> 指令拆解</h3>
 
 <pre><code>as -v --64 -o /tmp/cct36Qgi.o /tmp/ccUCGQCr.s
 </code></pre>
 
-<ul>
-<li><code>collect2</code> 指令拆解</li>
-</ul>
+<p><a name="fl0707-app-cc2"></a></p>
 
+<h3><code>collect2</code> 指令拆解</h3>
 
 <pre><code>/usr/lib/gcc/x86_64-linux-gnu/7/collect2
 -plugin
@@ -116,10 +188,9 @@ hello
 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
 </code></pre>
 
-<ul>
-<li>用 <code>strace</code> 觀察 <code>gcc hello.c -o hello</code> 會呼叫哪些執行檔</li>
-</ul>
+<p><a name="fl0707-app-strace"></a></p>
 
+<h3>用 <code>strace</code> 觀察 <code>gcc hello.c -o hello</code> 會呼叫哪些執行檔</h3>
 
 <pre><code>$ strace -s 8192 -f gcc  -o hello hello.c 2&gt;&amp;1 | grep execve
 execve("/usr/bin/gcc", ["gcc", "-o", "hello", "hello.c"], 0x7fff89e3d720 /* 71 vars */) = 0
@@ -133,10 +204,9 @@ execve("/usr/bin/gcc", ["gcc", "-o", "hello", "hello.c"], 0x7fff89e3d720 /* 71 v
 [pid 23889] &lt;... execve resumed&gt; )      = 0
 </code></pre>
 
-<ul>
-<li>完整的 <code>gcc -v -o hello hello.c</code> 輸出</li>
-</ul>
+<p><a name="fl0707-app-gcc"></a></p>
 
+<h3>完整的 <code>gcc -v -o hello hello.c</code> 輸出</h3>
 
 <pre><code>$ gcc -v -o hello hello.c
 Using built-in specs.
@@ -179,10 +249,9 @@ COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
 COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
 </code></pre>
 
-<ul>
-<li>collect2 說明</li>
-</ul>
+<p><a name="fl0707-app-cc2-help"></a></p>
 
+<h3>collect2 說明</h3>
 
 <pre><code>$ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 --help
 Usage: collect2 [options]
