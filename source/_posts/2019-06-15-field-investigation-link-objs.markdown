@@ -6,7 +6,7 @@ comments: true
 categories: [C, Linux, linker, glibc]
 ---
 
-本篇旨在從command line角度拆解 `gcc hello.c -o hello` 中間`gcc` 幫你執行了哪些檔案，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。
+本篇旨在從command line角度拆解 `gcc hello.c -o hello` 中間`gcc` 幫你執行了哪些指令，以及這些執行指令大概在做什麼。每個指令光要分析都要花不少時間，當作以後的作業吧。
 
 ## 目錄
 
@@ -51,7 +51,7 @@ warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 <a name="fl0707-step-list"></a>
 ### 除了hello.o以外偷塞的object files以及liked libraries
-這部份是在[連結](#fl0707-app-cc2)的時候 `gcc` 做的事。記得 `gcc` 全名是 `GNU Compiler Collection`，也就是說他不是編譯器，是一個通包的程式。直接列出多連結的檔案，要注意的是在連結時似乎有個順序，所以會多次出現`--push-state` -> `--as-needed` -> 指定連結函式庫 -> `--push-state` 的參數，以後有空再來看這部份。
+這部份是在[連結](#fl0707-app-cc2)的時候 `gcc` 做的事。記得 `gcc` 全名是 `GNU Compiler Collection`，也就是說他不是編譯器，是一個通包的程式。直接列出多連結的檔案，要注意的是在連結時似乎有個順序，所以會多次出現`--push-state` -> `--as-needed` -> 指定連結函式庫 -> `--pop-state` 的參數，以後有空再來看這部份。
 
 
 * /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o
