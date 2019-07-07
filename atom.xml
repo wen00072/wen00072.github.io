@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-06-09T14:16:22+08:00</updated>
+  <updated>2019-07-07T16:50:47+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,1161 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[田野調查：Ubuntu 18.04.2 產生執行檔細節]]></title>
+    <link href="http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs/"/>
+    <updated>2019-06-15T12:09:34+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs</id>
+    <content type="html"><![CDATA[<p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間發生的事情。</p>
+
+<h2></h2>
+
+<h2>附錄</h2>
+
+<ul>
+<li><code>cc</code> 指令拆解</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/cc1
+</span><span class='line'>-quiet
+</span><span class='line'>-v
+</span><span class='line'>-imultiarch
+</span><span class='line'>x86_64-linux-gnu
+</span><span class='line'>hello.c
+</span><span class='line'>-quiet
+</span><span class='line'>-dumpbase
+</span><span class='line'>hello.c
+</span><span class='line'>-mtune=generic
+</span><span class='line'>-march=x86-64
+</span><span class='line'>-auxbase
+</span><span class='line'>hello
+</span><span class='line'>-version
+</span><span class='line'>-fstack-protector-strong
+</span><span class='line'>-Wformat
+</span><span class='line'>-Wformat-security
+</span><span class='line'>-o
+</span><span class='line'>/tmp/ccUCGQCr.s</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>as</code> 指令拆解</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>as -v --64 -o /tmp/cct36Qgi.o /tmp/ccUCGQCr.s</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>collect2</code> 指令拆解</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/collect2
+</span><span class='line'>-plugin
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so
+</span><span class='line'>-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
+</span><span class='line'>-plugin-opt=-fresolution=/tmp/ccizEA38.res
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc_s
+</span><span class='line'>-plugin-opt=-pass-through=-lc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc_s
+</span><span class='line'>--sysroot=/
+</span><span class='line'>--build-id
+</span><span class='line'>--eh-frame-hdr
+</span><span class='line'>-m
+</span><span class='line'>elf_x86_64
+</span><span class='line'>--hash-style=gnu
+</span><span class='line'>--as-needed
+</span><span class='line'>-dynamic-linker
+</span><span class='line'>/lib64/ld-linux-x86-64.so.2
+</span><span class='line'>-pie
+</span><span class='line'>-z
+</span><span class='line'>now
+</span><span class='line'>-z
+</span><span class='line'>relro
+</span><span class='line'>-o
+</span><span class='line'>hello
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib
+</span><span class='line'>-L/lib/x86_64-linux-gnu
+</span><span class='line'>-L/lib/../lib
+</span><span class='line'>-L/usr/lib/x86_64-linux-gnu
+</span><span class='line'>-L/usr/lib/../lib
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..
+</span><span class='line'>/tmp/cct36Qgi.o
+</span><span class='line'>-lgcc
+</span><span class='line'>--push-state
+</span><span class='line'>--as-needed
+</span><span class='line'>-lgcc_s
+</span><span class='line'>--pop-state
+</span><span class='line'>-lc
+</span><span class='line'>-lgcc
+</span><span class='line'>--push-state
+</span><span class='line'>--as-needed
+</span><span class='line'>-lgcc_s
+</span><span class='line'>--pop-state
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>用 <code>strace</code> 觀察 <code>gcc hello.c -o hello</code> 會呼叫哪些執行檔</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ strace -s 8192 -f gcc  -o hello hello.c 2&gt;&1 | grep execve
+</span><span class='line'>execve("/usr/bin/gcc", ["gcc", "-o", "hello", "hello.c"], 0x7fff89e3d720 /* 71 vars */) = 0
+</span><span class='line'>[pid 23886] execve("/usr/lib/gcc/x86_64-linux-gnu/7/cc1", ["/usr/lib/gcc/x86_64-linux-gnu/7/cc1", "-quiet", "-imultiarch", "x86_64-linux-gnu", "hello.c", "-quiet", "-dumpbase", "hello.c", "-mtune=generic", "-march=x86-64", "-auxbase", "hello", "-fstack-protector-strong", "-Wformat", "-Wformat-security", "-o", "/tmp/ccLpZPzY.s"], 0x211e8c0 /* 76 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23886] &lt;... execve resumed&gt; )      = 0
+</span><span class='line'>[pid 23887] execve("/usr/bin/as", ["as", "--64", "-o", "/tmp/cceDpnfo.o", "/tmp/ccLpZPzY.s"], 0x211e8c0 /* 76 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23887] &lt;... execve resumed&gt; )      = 0
+</span><span class='line'>[pid 23888] execve("/usr/lib/gcc/x86_64-linux-gnu/7/collect2", ["/usr/lib/gcc/x86_64-linux-gnu/7/collect2", "-plugin", "/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so", "-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper", "-plugin-opt=-fresolution=/tmp/ccN3BxWN.res", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "-plugin-opt=-pass-through=-lc", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "--sysroot=/", "--build-id", "--eh-frame-hdr", "-m", "elf_x86_64", "--hash-style=gnu", "--as-needed", "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2", "-pie", "-z", "now", "-z", "relro", "-o", "hello", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o", "/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o", "-L/usr/lib/gcc/x86_64-linux-gnu/7", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib", "-L/lib/x86_64-linux-gnu", "-L/lib/../lib", "-L/usr/lib/x86_64-linux-gnu", "-L/usr/lib/../lib", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..", "/tmp/cceDpnfo.o", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "-lc", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o"], 0x211f750 /* 78 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23888] &lt;... execve resumed&gt; )      = 0
+</span><span class='line'>[pid 23889] execve("/usr/bin/ld", ["/usr/bin/ld", "-plugin", "/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so", "-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper", "-plugin-opt=-fresolution=/tmp/ccN3BxWN.res", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "-plugin-opt=-pass-through=-lc", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "--sysroot=/", "--build-id", "--eh-frame-hdr", "-m", "elf_x86_64", "--hash-style=gnu", "--as-needed", "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2", "-pie", "-z", "now", "-z", "relro", "-o", "hello", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o", "/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o", "-L/usr/lib/gcc/x86_64-linux-gnu/7", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib", "-L/lib/x86_64-linux-gnu", "-L/lib/../lib", "-L/usr/lib/x86_64-linux-gnu", "-L/usr/lib/../lib", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..", "/tmp/cceDpnfo.o", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "-lc", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o"], 0x7ffc38ceec88 /* 78 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23889] &lt;... execve resumed&gt; )      = 0</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>完整的 <code>gcc -v -o hello hello.c</code> 輸出</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ gcc -v -o hello hello.c
+</span><span class='line'>Using built-in specs.
+</span><span class='line'>COLLECT_GCC=gcc
+</span><span class='line'>COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
+</span><span class='line'>OFFLOAD_TARGET_NAMES=nvptx-none
+</span><span class='line'>OFFLOAD_TARGET_DEFAULT=1
+</span><span class='line'>Target: x86_64-linux-gnu
+</span><span class='line'>Configured with: ../src/configure -v --with-pkgversion='Ubuntu 7.4.0-1ubuntu1~18.04.1' --with-bugurl=file:///usr/share/doc/gcc-7/README.Bugs --enable-languages=c,ada,c++,go,brig,d,fortran,objc,obj-c++ --prefix=/usr --with-gcc-major-version-only --program-suffix=-7 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-libmpx --enable-plugin --enable-default-pie --with-system-zlib --with-target-system-zlib --enable-objc-gc=auto --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+</span><span class='line'>Thread model: posix
+</span><span class='line'>gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1) 
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/cc1 -quiet -v -imultiarch x86_64-linux-gnu hello.c -quiet -dumpbase hello.c -mtune=generic -march=x86-64 -auxbase hello -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccUCGQCr.s
+</span><span class='line'>GNU C11 (Ubuntu 7.4.0-1ubuntu1~18.04.1) version 7.4.0 (x86_64-linux-gnu)
+</span><span class='line'>  compiled by GNU C version 7.4.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP
+</span><span class='line'>
+</span><span class='line'>GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+</span><span class='line'>ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"
+</span><span class='line'>ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/7/../../../../x86_64-linux-gnu/include"
+</span><span class='line'>#include "..." search starts here:
+</span><span class='line'>#include &lt;...&gt; search starts here:
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/include
+</span><span class='line'> /usr/local/include
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/include-fixed
+</span><span class='line'> /usr/include/x86_64-linux-gnu
+</span><span class='line'> /usr/include
+</span><span class='line'>End of search list.
+</span><span class='line'>GNU C11 (Ubuntu 7.4.0-1ubuntu1~18.04.1) version 7.4.0 (x86_64-linux-gnu)
+</span><span class='line'>  compiled by GNU C version 7.4.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP
+</span><span class='line'>
+</span><span class='line'>GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+</span><span class='line'>Compiler executable checksum: fa57db1fe2d756b22d454aa8428fd3bd
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
+</span><span class='line'> as -v --64 -o /tmp/cct36Qgi.o /tmp/ccUCGQCr.s
+</span><span class='line'>GNU assembler version 2.30 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.30
+</span><span class='line'>COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/
+</span><span class='line'>LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccizEA38.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o hello /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. /tmp/cct36Qgi.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>collect2 說明</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+<span class='line-number'>189</span>
+<span class='line-number'>190</span>
+<span class='line-number'>191</span>
+<span class='line-number'>192</span>
+<span class='line-number'>193</span>
+<span class='line-number'>194</span>
+<span class='line-number'>195</span>
+<span class='line-number'>196</span>
+<span class='line-number'>197</span>
+<span class='line-number'>198</span>
+<span class='line-number'>199</span>
+<span class='line-number'>200</span>
+<span class='line-number'>201</span>
+<span class='line-number'>202</span>
+<span class='line-number'>203</span>
+<span class='line-number'>204</span>
+<span class='line-number'>205</span>
+<span class='line-number'>206</span>
+<span class='line-number'>207</span>
+<span class='line-number'>208</span>
+<span class='line-number'>209</span>
+<span class='line-number'>210</span>
+<span class='line-number'>211</span>
+<span class='line-number'>212</span>
+<span class='line-number'>213</span>
+<span class='line-number'>214</span>
+<span class='line-number'>215</span>
+<span class='line-number'>216</span>
+<span class='line-number'>217</span>
+<span class='line-number'>218</span>
+<span class='line-number'>219</span>
+<span class='line-number'>220</span>
+<span class='line-number'>221</span>
+<span class='line-number'>222</span>
+<span class='line-number'>223</span>
+<span class='line-number'>224</span>
+<span class='line-number'>225</span>
+<span class='line-number'>226</span>
+<span class='line-number'>227</span>
+<span class='line-number'>228</span>
+<span class='line-number'>229</span>
+<span class='line-number'>230</span>
+<span class='line-number'>231</span>
+<span class='line-number'>232</span>
+<span class='line-number'>233</span>
+<span class='line-number'>234</span>
+<span class='line-number'>235</span>
+<span class='line-number'>236</span>
+<span class='line-number'>237</span>
+<span class='line-number'>238</span>
+<span class='line-number'>239</span>
+<span class='line-number'>240</span>
+<span class='line-number'>241</span>
+<span class='line-number'>242</span>
+<span class='line-number'>243</span>
+<span class='line-number'>244</span>
+<span class='line-number'>245</span>
+<span class='line-number'>246</span>
+<span class='line-number'>247</span>
+<span class='line-number'>248</span>
+<span class='line-number'>249</span>
+<span class='line-number'>250</span>
+<span class='line-number'>251</span>
+<span class='line-number'>252</span>
+<span class='line-number'>253</span>
+<span class='line-number'>254</span>
+<span class='line-number'>255</span>
+<span class='line-number'>256</span>
+<span class='line-number'>257</span>
+<span class='line-number'>258</span>
+<span class='line-number'>259</span>
+<span class='line-number'>260</span>
+<span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+<span class='line-number'>278</span>
+<span class='line-number'>279</span>
+<span class='line-number'>280</span>
+<span class='line-number'>281</span>
+<span class='line-number'>282</span>
+<span class='line-number'>283</span>
+<span class='line-number'>284</span>
+<span class='line-number'>285</span>
+<span class='line-number'>286</span>
+<span class='line-number'>287</span>
+<span class='line-number'>288</span>
+<span class='line-number'>289</span>
+<span class='line-number'>290</span>
+<span class='line-number'>291</span>
+<span class='line-number'>292</span>
+<span class='line-number'>293</span>
+<span class='line-number'>294</span>
+<span class='line-number'>295</span>
+<span class='line-number'>296</span>
+<span class='line-number'>297</span>
+<span class='line-number'>298</span>
+<span class='line-number'>299</span>
+<span class='line-number'>300</span>
+<span class='line-number'>301</span>
+<span class='line-number'>302</span>
+<span class='line-number'>303</span>
+<span class='line-number'>304</span>
+<span class='line-number'>305</span>
+<span class='line-number'>306</span>
+<span class='line-number'>307</span>
+<span class='line-number'>308</span>
+<span class='line-number'>309</span>
+<span class='line-number'>310</span>
+<span class='line-number'>311</span>
+<span class='line-number'>312</span>
+<span class='line-number'>313</span>
+<span class='line-number'>314</span>
+<span class='line-number'>315</span>
+<span class='line-number'>316</span>
+<span class='line-number'>317</span>
+<span class='line-number'>318</span>
+<span class='line-number'>319</span>
+<span class='line-number'>320</span>
+<span class='line-number'>321</span>
+<span class='line-number'>322</span>
+<span class='line-number'>323</span>
+<span class='line-number'>324</span>
+<span class='line-number'>325</span>
+<span class='line-number'>326</span>
+<span class='line-number'>327</span>
+<span class='line-number'>328</span>
+<span class='line-number'>329</span>
+<span class='line-number'>330</span>
+<span class='line-number'>331</span>
+<span class='line-number'>332</span>
+<span class='line-number'>333</span>
+<span class='line-number'>334</span>
+<span class='line-number'>335</span>
+<span class='line-number'>336</span>
+<span class='line-number'>337</span>
+<span class='line-number'>338</span>
+<span class='line-number'>339</span>
+<span class='line-number'>340</span>
+<span class='line-number'>341</span>
+<span class='line-number'>342</span>
+<span class='line-number'>343</span>
+<span class='line-number'>344</span>
+<span class='line-number'>345</span>
+<span class='line-number'>346</span>
+<span class='line-number'>347</span>
+<span class='line-number'>348</span>
+<span class='line-number'>349</span>
+<span class='line-number'>350</span>
+<span class='line-number'>351</span>
+<span class='line-number'>352</span>
+<span class='line-number'>353</span>
+<span class='line-number'>354</span>
+<span class='line-number'>355</span>
+<span class='line-number'>356</span>
+<span class='line-number'>357</span>
+<span class='line-number'>358</span>
+<span class='line-number'>359</span>
+<span class='line-number'>360</span>
+<span class='line-number'>361</span>
+<span class='line-number'>362</span>
+<span class='line-number'>363</span>
+<span class='line-number'>364</span>
+<span class='line-number'>365</span>
+<span class='line-number'>366</span>
+<span class='line-number'>367</span>
+<span class='line-number'>368</span>
+<span class='line-number'>369</span>
+<span class='line-number'>370</span>
+<span class='line-number'>371</span>
+<span class='line-number'>372</span>
+<span class='line-number'>373</span>
+<span class='line-number'>374</span>
+<span class='line-number'>375</span>
+<span class='line-number'>376</span>
+<span class='line-number'>377</span>
+<span class='line-number'>378</span>
+<span class='line-number'>379</span>
+<span class='line-number'>380</span>
+<span class='line-number'>381</span>
+<span class='line-number'>382</span>
+<span class='line-number'>383</span>
+<span class='line-number'>384</span>
+<span class='line-number'>385</span>
+<span class='line-number'>386</span>
+<span class='line-number'>387</span>
+<span class='line-number'>388</span>
+<span class='line-number'>389</span>
+<span class='line-number'>390</span>
+<span class='line-number'>391</span>
+<span class='line-number'>392</span>
+<span class='line-number'>393</span>
+<span class='line-number'>394</span>
+<span class='line-number'>395</span>
+<span class='line-number'>396</span>
+<span class='line-number'>397</span>
+<span class='line-number'>398</span>
+<span class='line-number'>399</span>
+<span class='line-number'>400</span>
+<span class='line-number'>401</span>
+<span class='line-number'>402</span>
+<span class='line-number'>403</span>
+<span class='line-number'>404</span>
+<span class='line-number'>405</span>
+<span class='line-number'>406</span>
+<span class='line-number'>407</span>
+<span class='line-number'>408</span>
+<span class='line-number'>409</span>
+<span class='line-number'>410</span>
+<span class='line-number'>411</span>
+<span class='line-number'>412</span>
+<span class='line-number'>413</span>
+<span class='line-number'>414</span>
+<span class='line-number'>415</span>
+<span class='line-number'>416</span>
+<span class='line-number'>417</span>
+<span class='line-number'>418</span>
+<span class='line-number'>419</span>
+<span class='line-number'>420</span>
+<span class='line-number'>421</span>
+<span class='line-number'>422</span>
+<span class='line-number'>423</span>
+<span class='line-number'>424</span>
+<span class='line-number'>425</span>
+<span class='line-number'>426</span>
+<span class='line-number'>427</span>
+<span class='line-number'>428</span>
+<span class='line-number'>429</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 --help
+</span><span class='line'>Usage: collect2 [options]
+</span><span class='line'> Wrap linker and generate constructor code if needed.
+</span><span class='line'> Options:
+</span><span class='line'>  -debug          Enable debug output
+</span><span class='line'>  --help          Display this information
+</span><span class='line'>  -v, --version   Display this program's version number
+</span><span class='line'>
+</span><span class='line'>Overview: http://gcc.gnu.org/onlinedocs/gccint/Collect2.html
+</span><span class='line'>Report bugs: &lt;file:///usr/share/doc/gcc-7/README.Bugs&gt;
+</span><span class='line'>
+</span><span class='line'>Usage: /usr/bin/ld [options] file...
+</span><span class='line'>Options:
+</span><span class='line'>  -a KEYWORD                  Shared library control for HP/UX compatibility
+</span><span class='line'>  -A ARCH, --architecture ARCH
+</span><span class='line'>                              Set architecture
+</span><span class='line'>  -b TARGET, --format TARGET  Specify target for following input files
+</span><span class='line'>  -c FILE, --mri-script FILE  Read MRI format linker script
+</span><span class='line'>  -d, -dc, -dp                Force common symbols to be defined
+</span><span class='line'>  --force-group-allocation    Force group members out of groups
+</span><span class='line'>  -e ADDRESS, --entry ADDRESS Set start address
+</span><span class='line'>  -E, --export-dynamic        Export all dynamic symbols
+</span><span class='line'>  --no-export-dynamic         Undo the effect of --export-dynamic
+</span><span class='line'>  -EB                         Link big-endian objects
+</span><span class='line'>  -EL                         Link little-endian objects
+</span><span class='line'>  -f SHLIB, --auxiliary SHLIB Auxiliary filter for shared object symbol table
+</span><span class='line'>  -F SHLIB, --filter SHLIB    Filter for shared object symbol table
+</span><span class='line'>  -g                          Ignored
+</span><span class='line'>  -G SIZE, --gpsize SIZE      Small data size (if no size, same as --shared)
+</span><span class='line'>  -h FILENAME, -soname FILENAME
+</span><span class='line'>                              Set internal name of shared library
+</span><span class='line'>  -I PROGRAM, --dynamic-linker PROGRAM
+</span><span class='line'>                              Set PROGRAM as the dynamic linker to use
+</span><span class='line'>  --no-dynamic-linker         Produce an executable with no program interpreter header
+</span><span class='line'>  -l LIBNAME, --library LIBNAME
+</span><span class='line'>                              Search for library LIBNAME
+</span><span class='line'>  -L DIRECTORY, --library-path DIRECTORY
+</span><span class='line'>                              Add DIRECTORY to library search path
+</span><span class='line'>  --sysroot=&lt;DIRECTORY&gt;       Override the default sysroot location
+</span><span class='line'>  -m EMULATION                Set emulation
+</span><span class='line'>  -M, --print-map             Print map file on standard output
+</span><span class='line'>  -n, --nmagic                Do not page align data
+</span><span class='line'>  -N, --omagic                Do not page align data, do not make text readonly
+</span><span class='line'>  --no-omagic                 Page align data, make text readonly
+</span><span class='line'>  -o FILE, --output FILE      Set output file name
+</span><span class='line'>  -O                          Optimize output file
+</span><span class='line'>  --out-implib FILE           Generate import library
+</span><span class='line'>  -plugin PLUGIN              Load named plugin
+</span><span class='line'>  -plugin-opt ARG             Send arg to last-loaded plugin
+</span><span class='line'>  -flto                       Ignored for GCC LTO option compatibility
+</span><span class='line'>  -flto-partition=            Ignored for GCC LTO option compatibility
+</span><span class='line'>  -fuse-ld=                   Ignored for GCC linker option compatibility
+</span><span class='line'>  --map-whole-files           Ignored for gold option compatibility
+</span><span class='line'>  --no-map-whole-files        Ignored for gold option compatibility
+</span><span class='line'>  -Qy                         Ignored for SVR4 compatibility
+</span><span class='line'>  -q, --emit-relocs           Generate relocations in final output
+</span><span class='line'>  -r, -i, --relocatable       Generate relocatable output
+</span><span class='line'>  -R FILE, --just-symbols FILE
+</span><span class='line'>                              Just link symbols (if directory, same as --rpath)
+</span><span class='line'>  -s, --strip-all             Strip all symbols
+</span><span class='line'>  -S, --strip-debug           Strip debugging symbols
+</span><span class='line'>  --strip-discarded           Strip symbols in discarded sections
+</span><span class='line'>  --no-strip-discarded        Do not strip symbols in discarded sections
+</span><span class='line'>  -t, --trace                 Trace file opens
+</span><span class='line'>  -T FILE, --script FILE      Read linker script
+</span><span class='line'>  --default-script FILE, -dT  Read default linker script
+</span><span class='line'>  -u SYMBOL, --undefined SYMBOL
+</span><span class='line'>                              Start with undefined reference to SYMBOL
+</span><span class='line'>  --require-defined SYMBOL    Require SYMBOL be defined in the final output
+</span><span class='line'>  --unique [=SECTION]         Don't merge input [SECTION | orphan] sections
+</span><span class='line'>  -Ur                         Build global constructor/destructor tables
+</span><span class='line'>  -v, --version               Print version information
+</span><span class='line'>  -V                          Print version and emulation information
+</span><span class='line'>  -x, --discard-all           Discard all local symbols
+</span><span class='line'>  -X, --discard-locals        Discard temporary local symbols (default)
+</span><span class='line'>  --discard-none              Don't discard any local symbols
+</span><span class='line'>  -y SYMBOL, --trace-symbol SYMBOL
+</span><span class='line'>                              Trace mentions of SYMBOL
+</span><span class='line'>  -Y PATH                     Default search path for Solaris compatibility
+</span><span class='line'>  -(, --start-group           Start a group
+</span><span class='line'>  -), --end-group             End a group
+</span><span class='line'>  --accept-unknown-input-arch Accept input files whose architecture cannot be determined
+</span><span class='line'>  --no-accept-unknown-input-arch
+</span><span class='line'>                              Reject input files whose architecture is unknown
+</span><span class='line'>  --as-needed                 Only set DT_NEEDED for following dynamic libs if used
+</span><span class='line'>  --no-as-needed              Always set DT_NEEDED for dynamic libraries mentioned on
+</span><span class='line'>                                the command line
+</span><span class='line'>  -assert KEYWORD             Ignored for SunOS compatibility
+</span><span class='line'>  -Bdynamic, -dy, -call_shared
+</span><span class='line'>                              Link against shared libraries
+</span><span class='line'>  -Bstatic, -dn, -non_shared, -static
+</span><span class='line'>                              Do not link against shared libraries
+</span><span class='line'>  -Bsymbolic                  Bind global references locally
+</span><span class='line'>  -Bsymbolic-functions        Bind global function references locally
+</span><span class='line'>  --check-sections            Check section addresses for overlaps (default)
+</span><span class='line'>  --no-check-sections         Do not check section addresses for overlaps
+</span><span class='line'>  --copy-dt-needed-entries    Copy DT_NEEDED links mentioned inside DSOs that follow
+</span><span class='line'>  --no-copy-dt-needed-entries Do not copy DT_NEEDED links mentioned inside DSOs that follow
+</span><span class='line'>  --cref                      Output cross reference table
+</span><span class='line'>  --defsym SYMBOL=EXPRESSION  Define a symbol
+</span><span class='line'>  --demangle [=STYLE]         Demangle symbol names [using STYLE]
+</span><span class='line'>  --embedded-relocs           Generate embedded relocs
+</span><span class='line'>  --fatal-warnings            Treat warnings as errors
+</span><span class='line'>  --no-fatal-warnings         Do not treat warnings as errors (default)
+</span><span class='line'>  -fini SYMBOL                Call SYMBOL at unload-time
+</span><span class='line'>  --force-exe-suffix          Force generation of file with .exe suffix
+</span><span class='line'>  --gc-sections               Remove unused sections (on some targets)
+</span><span class='line'>  --no-gc-sections            Don't remove unused sections (default)
+</span><span class='line'>  --print-gc-sections         List removed unused sections on stderr
+</span><span class='line'>  --no-print-gc-sections      Do not list removed unused sections
+</span><span class='line'>  --gc-keep-exported          Keep exported symbols when removing unused sections
+</span><span class='line'>  --hash-size=&lt;NUMBER&gt;        Set default hash table size close to &lt;NUMBER&gt;
+</span><span class='line'>  --help                      Print option help
+</span><span class='line'>  -init SYMBOL                Call SYMBOL at load-time
+</span><span class='line'>  -Map FILE                   Write a map file
+</span><span class='line'>  --no-define-common          Do not define Common storage
+</span><span class='line'>  --no-demangle               Do not demangle symbol names
+</span><span class='line'>  --no-keep-memory            Use less memory and more disk I/O
+</span><span class='line'>  --no-undefined              Do not allow unresolved references in object files
+</span><span class='line'>  --allow-shlib-undefined     Allow unresolved references in shared libraries
+</span><span class='line'>  --no-allow-shlib-undefined  Do not allow unresolved references in shared libs
+</span><span class='line'>  --allow-multiple-definition Allow multiple definitions
+</span><span class='line'>  --no-undefined-version      Disallow undefined version
+</span><span class='line'>  --default-symver            Create default symbol version
+</span><span class='line'>  --default-imported-symver   Create default symbol version for imported symbols
+</span><span class='line'>  --no-warn-mismatch          Don't warn about mismatched input files
+</span><span class='line'>  --no-warn-search-mismatch   Don't warn on finding an incompatible library
+</span><span class='line'>  --no-whole-archive          Turn off --whole-archive
+</span><span class='line'>  --noinhibit-exec            Create an output file even if errors occur
+</span><span class='line'>  -nostdlib                   Only use library directories specified on
+</span><span class='line'>                                the command line
+</span><span class='line'>  --oformat TARGET            Specify target of output file
+</span><span class='line'>  --print-output-format       Print default output format
+</span><span class='line'>  --print-sysroot             Print current sysroot
+</span><span class='line'>  -qmagic                     Ignored for Linux compatibility
+</span><span class='line'>  --reduce-memory-overheads   Reduce memory overheads, possibly taking much longer
+</span><span class='line'>  --relax                     Reduce code size by using target specific optimizations
+</span><span class='line'>  --no-relax                  Do not use relaxation techniques to reduce code size
+</span><span class='line'>  --retain-symbols-file FILE  Keep only symbols listed in FILE
+</span><span class='line'>  -rpath PATH                 Set runtime shared library search path
+</span><span class='line'>  -rpath-link PATH            Set link time shared library search path
+</span><span class='line'>  -shared, -Bshareable        Create a shared library
+</span><span class='line'>  -pie, --pic-executable      Create a position independent executable
+</span><span class='line'>  --sort-common [=ascending|descending]
+</span><span class='line'>                              Sort common symbols by alignment [in specified order]
+</span><span class='line'>  --sort-section name|alignment
+</span><span class='line'>                              Sort sections by name or maximum alignment
+</span><span class='line'>  --spare-dynamic-tags COUNT  How many tags to reserve in .dynamic section
+</span><span class='line'>  --split-by-file [=SIZE]     Split output sections every SIZE octets
+</span><span class='line'>  --split-by-reloc [=COUNT]   Split output sections every COUNT relocs
+</span><span class='line'>  --stats                     Print memory usage statistics
+</span><span class='line'>  --target-help               Display target specific options
+</span><span class='line'>  --task-link SYMBOL          Do task level linking
+</span><span class='line'>  --traditional-format        Use same format as native linker
+</span><span class='line'>  --section-start SECTION=ADDRESS
+</span><span class='line'>                              Set address of named section
+</span><span class='line'>  -Tbss ADDRESS               Set address of .bss section
+</span><span class='line'>  -Tdata ADDRESS              Set address of .data section
+</span><span class='line'>  -Ttext ADDRESS              Set address of .text section
+</span><span class='line'>  -Ttext-segment ADDRESS      Set address of text segment
+</span><span class='line'>  -Trodata-segment ADDRESS    Set address of rodata segment
+</span><span class='line'>  -Tldata-segment ADDRESS     Set address of ldata segment
+</span><span class='line'>  --unresolved-symbols=&lt;method&gt;
+</span><span class='line'>                              How to handle unresolved symbols.  &lt;method&gt; is:
+</span><span class='line'>                                ignore-all, report-all, ignore-in-object-files,
+</span><span class='line'>                                ignore-in-shared-libs
+</span><span class='line'>  --verbose [=NUMBER]         Output lots of information during link
+</span><span class='line'>  --version-script FILE       Read version information script
+</span><span class='line'>  --version-exports-section SYMBOL
+</span><span class='line'>                              Take export symbols list from .exports, using
+</span><span class='line'>                                SYMBOL as the version.
+</span><span class='line'>  --dynamic-list-data         Add data symbols to dynamic list
+</span><span class='line'>  --dynamic-list-cpp-new      Use C++ operator new/delete dynamic list
+</span><span class='line'>  --dynamic-list-cpp-typeinfo Use C++ typeinfo dynamic list
+</span><span class='line'>  --dynamic-list FILE         Read dynamic list
+</span><span class='line'>  --warn-common               Warn about duplicate common symbols
+</span><span class='line'>  --warn-constructors         Warn if global constructors/destructors are seen
+</span><span class='line'>  --warn-multiple-gp          Warn if the multiple GP values are used
+</span><span class='line'>  --warn-once                 Warn only once per undefined symbol
+</span><span class='line'>  --warn-section-align        Warn if start of section changes due to alignment
+</span><span class='line'>  --warn-shared-textrel       Warn if shared object has DT_TEXTREL
+</span><span class='line'>  --warn-alternate-em         Warn if an object has alternate ELF machine code
+</span><span class='line'>  --warn-unresolved-symbols   Report unresolved symbols as warnings
+</span><span class='line'>  --error-unresolved-symbols  Report unresolved symbols as errors
+</span><span class='line'>  --whole-archive             Include all objects from following archives
+</span><span class='line'>  --wrap SYMBOL               Use wrapper functions for SYMBOL
+</span><span class='line'>  --ignore-unresolved-symbol SYMBOL
+</span><span class='line'>                              Unresolved SYMBOL will not cause an error or warning
+</span><span class='line'>  --push-state                Push state of flags governing input file handling
+</span><span class='line'>  --pop-state                 Pop state of flags governing input file handling
+</span><span class='line'>  --print-memory-usage        Report target memory usage
+</span><span class='line'>  --orphan-handling =MODE     Control how orphan sections are handled.
+</span><span class='line'>  @FILE                       Read options from FILE
+</span><span class='line'>/usr/bin/ld: supported targets: elf64-x86-64 elf32-i386 elf32-iamcu elf32-x86-64 a.out-i386-linux pei-i386 pei-x86-64 elf64-l1om elf64-k1om elf64-little elf64-big elf32-little elf32-big pe-x86-64 pe-bigobj-x86-64 pe-i386 plugin srec symbolsrec verilog tekhex binary ihex
+</span><span class='line'>/usr/bin/ld: supported emulations: elf_x86_64 elf32_x86_64 elf_i386 elf_iamcu i386linux elf_l1om elf_k1om i386pep i386pe
+</span><span class='line'>/usr/bin/ld: emulation specific options:
+</span><span class='line'>ELF emulations:
+</span><span class='line'>  --ld-generated-unwind-info  Generate exception handling info for PLT
+</span><span class='line'>  --no-ld-generated-unwind-info
+</span><span class='line'>                              Don't generate exception handling info for PLT
+</span><span class='line'>  --build-id[=STYLE]          Generate build ID note
+</span><span class='line'>  --compress-debug-sections=[none|zlib|zlib-gnu|zlib-gabi]
+</span><span class='line'>                              Compress DWARF debug sections using zlib
+</span><span class='line'>                               Default: none
+</span><span class='line'>  -z common-page-size=SIZE    Set common page size to SIZE
+</span><span class='line'>  -z max-page-size=SIZE       Set maximum page size to SIZE
+</span><span class='line'>  -z defs                     Report unresolved symbols in object files.
+</span><span class='line'>  -z muldefs                  Allow multiple definitions
+</span><span class='line'>  -z execstack                Mark executable as requiring executable stack
+</span><span class='line'>  -z noexecstack              Mark executable as not requiring executable stack
+</span><span class='line'>  -z globalaudit              Mark executable requiring global auditing
+</span><span class='line'>  --audit=AUDITLIB            Specify a library to use for auditing
+</span><span class='line'>  -Bgroup                     Selects group name lookup rules for DSO
+</span><span class='line'>  --disable-new-dtags         Disable new dynamic tags
+</span><span class='line'>  --enable-new-dtags          Enable new dynamic tags
+</span><span class='line'>  --eh-frame-hdr              Create .eh_frame_hdr section
+</span><span class='line'>  --no-eh-frame-hdr           Do not create .eh_frame_hdr section
+</span><span class='line'>  --exclude-libs=LIBS         Make all symbols in LIBS hidden
+</span><span class='line'>  --hash-style=STYLE          Set hash style to sysv, gnu or both
+</span><span class='line'>  -P AUDITLIB, --depaudit=AUDITLIB
+</span><span class='line'>                Specify a library to use for auditing dependencies
+</span><span class='line'>  -z combreloc                Merge dynamic relocs into one section and sort
+</span><span class='line'>  -z nocombreloc              Don't merge dynamic relocs into one section
+</span><span class='line'>  -z global                   Make symbols in DSO available for subsequently
+</span><span class='line'>                 loaded objects
+</span><span class='line'>  -z initfirst                Mark DSO to be initialized first at runtime
+</span><span class='line'>  -z interpose                Mark object to interpose all DSOs but executable
+</span><span class='line'>  -z lazy                     Mark object lazy runtime binding (default)
+</span><span class='line'>  -z loadfltr                 Mark object requiring immediate process
+</span><span class='line'>  -z nocopyreloc              Don't create copy relocs
+</span><span class='line'>  -z nodefaultlib             Mark object not to use default search paths
+</span><span class='line'>  -z nodelete                 Mark DSO non-deletable at runtime
+</span><span class='line'>  -z nodlopen                 Mark DSO not available to dlopen
+</span><span class='line'>  -z nodump                   Mark DSO not available to dldump
+</span><span class='line'>  -z now                      Mark object non-lazy runtime binding
+</span><span class='line'>  -z origin                   Mark object requiring immediate $ORIGIN
+</span><span class='line'>              processing at runtime
+</span><span class='line'>  -z relro                    Create RELRO program header (default)
+</span><span class='line'>  -z norelro                  Don't create RELRO program header
+</span><span class='line'>  -z separate-code            Create separate code program header
+</span><span class='line'>  -z noseparate-code          Don't create separate code program header (default)
+</span><span class='line'>  -z common                   Generate common symbols with STT_COMMON type
+</span><span class='line'>  -z nocommon                 Generate common symbols with STT_OBJECT type
+</span><span class='line'>  -z stack-size=SIZE          Set size of stack segment
+</span><span class='line'>  -z text                     Treat DT_TEXTREL in shared object as error
+</span><span class='line'>  -z notext                   Don't treat DT_TEXTREL in shared object as error
+</span><span class='line'>  -z textoff                  Don't treat DT_TEXTREL in shared object as error
+</span><span class='line'>elf_x86_64: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z noreloc-overflow         Disable relocation overflow check
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>  -z ibtplt                   Generate IBT-enabled PLT entries
+</span><span class='line'>  -z ibt                      Generate GNU_PROPERTY_X86_FEATURE_1_IBT
+</span><span class='line'>  -z shstk                    Generate GNU_PROPERTY_X86_FEATURE_1_SHSTK
+</span><span class='line'>  -z bndplt                   Always generate BND prefix in PLT entries
+</span><span class='line'>elf32_x86_64: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z noreloc-overflow         Disable relocation overflow check
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>  -z ibtplt                   Generate IBT-enabled PLT entries
+</span><span class='line'>  -z ibt                      Generate GNU_PROPERTY_X86_FEATURE_1_IBT
+</span><span class='line'>  -z shstk                    Generate GNU_PROPERTY_X86_FEATURE_1_SHSTK
+</span><span class='line'>elf_i386: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>  -z ibtplt                   Generate IBT-enabled PLT entries
+</span><span class='line'>  -z ibt                      Generate GNU_PROPERTY_X86_FEATURE_1_IBT
+</span><span class='line'>  -z shstk                    Generate GNU_PROPERTY_X86_FEATURE_1_SHSTK
+</span><span class='line'>elf_iamcu: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>elf_l1om: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>elf_k1om: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>i386pep: 
+</span><span class='line'>  --base_file &lt;basefile&gt;             Generate a base file for relocatable DLLs
+</span><span class='line'>  --dll                              Set image base to the default for DLLs
+</span><span class='line'>  --file-alignment &lt;size&gt;            Set file alignment
+</span><span class='line'>  --heap &lt;size&gt;                      Set initial size of the heap
+</span><span class='line'>  --image-base &lt;address&gt;             Set start address of the executable
+</span><span class='line'>  --major-image-version &lt;number&gt;     Set version number of the executable
+</span><span class='line'>  --major-os-version &lt;number&gt;        Set minimum required OS version
+</span><span class='line'>  --major-subsystem-version &lt;number&gt; Set minimum required OS subsystem version
+</span><span class='line'>  --minor-image-version &lt;number&gt;     Set revision number of the executable
+</span><span class='line'>  --minor-os-version &lt;number&gt;        Set minimum required OS revision
+</span><span class='line'>  --minor-subsystem-version &lt;number&gt; Set minimum required OS subsystem revision
+</span><span class='line'>  --section-alignment &lt;size&gt;         Set section alignment
+</span><span class='line'>  --stack &lt;size&gt;                     Set size of the initial stack
+</span><span class='line'>  --subsystem &lt;name&gt;[:&lt;version&gt;]     Set required OS subsystem [& version]
+</span><span class='line'>  --support-old-code                 Support interworking with old code
+</span><span class='line'>  --[no-]leading-underscore          Set explicit symbol underscore prefix mode
+</span><span class='line'>  --[no-]insert-timestamp            Use a real timestamp rather than zero. (default)
+</span><span class='line'>                                     This makes binaries non-deterministic
+</span><span class='line'>  --add-stdcall-alias                Export symbols with and without @nn
+</span><span class='line'>  --disable-stdcall-fixup            Don't link _sym to _sym@nn
+</span><span class='line'>  --enable-stdcall-fixup             Link _sym to _sym@nn without warnings
+</span><span class='line'>  --exclude-symbols sym,sym,...      Exclude symbols from automatic export
+</span><span class='line'>  --exclude-all-symbols              Exclude all symbols from automatic export
+</span><span class='line'>  --exclude-libs lib,lib,...         Exclude libraries from automatic export
+</span><span class='line'>  --exclude-modules-for-implib mod,mod,...
+</span><span class='line'>                                     Exclude objects, archive members from auto
+</span><span class='line'>                                     export, place into import library instead.
+</span><span class='line'>  --export-all-symbols               Automatically export all globals to DLL
+</span><span class='line'>  --kill-at                          Remove @nn from exported symbols
+</span><span class='line'>  --output-def &lt;file&gt;                Generate a .DEF file for the built DLL
+</span><span class='line'>  --warn-duplicate-exports           Warn about duplicate exports.
+</span><span class='line'>  --compat-implib                    Create backward compatible import libs;
+</span><span class='line'>                                       create __imp_&lt;SYMBOL&gt; as well.
+</span><span class='line'>  --enable-auto-image-base           Automatically choose image base for DLLs
+</span><span class='line'>                                       unless user specifies one
+</span><span class='line'>  --disable-auto-image-base          Do not auto-choose image base. (default)
+</span><span class='line'>  --dll-search-prefix=&lt;string&gt;       When linking dynamically to a dll without
+</span><span class='line'>                                       an importlib, use &lt;string&gt;&lt;basename&gt;.dll
+</span><span class='line'>                                       in preference to lib&lt;basename&gt;.dll 
+</span><span class='line'>  --enable-auto-import               Do sophisticated linking of _sym to
+</span><span class='line'>                                       __imp_sym for DATA references
+</span><span class='line'>  --disable-auto-import              Do not auto-import DATA items from DLLs
+</span><span class='line'>  --enable-runtime-pseudo-reloc      Work around auto-import limitations by
+</span><span class='line'>                                       adding pseudo-relocations resolved at
+</span><span class='line'>                                       runtime.
+</span><span class='line'>  --disable-runtime-pseudo-reloc     Do not add runtime pseudo-relocations for
+</span><span class='line'>                                       auto-imported DATA.
+</span><span class='line'>  --enable-extra-pep-debug            Enable verbose debug output when building
+</span><span class='line'>                                       or linking to DLLs (esp. auto-import)
+</span><span class='line'>  --enable-long-section-names        Use long COFF section names even in
+</span><span class='line'>                                       executable image files
+</span><span class='line'>  --disable-long-section-names       Never use long COFF section names, even
+</span><span class='line'>                                       in object files
+</span><span class='line'>  --high-entropy-va                  Image is compatible with 64-bit address space
+</span><span class='line'>                                       layout randomization (ASLR)
+</span><span class='line'>  --dynamicbase            Image base address may be relocated using
+</span><span class='line'>                     address space layout randomization (ASLR)
+</span><span class='line'>  --forceinteg         Code integrity checks are enforced
+</span><span class='line'>  --nxcompat       Image is compatible with data execution prevention
+</span><span class='line'>  --no-isolation       Image understands isolation but do not isolate the image
+</span><span class='line'>  --no-seh             Image does not use SEH. No SE handler may
+</span><span class='line'>                     be called in this image
+</span><span class='line'>  --no-bind            Do not bind this image
+</span><span class='line'>  --wdmdriver      Driver uses the WDM model
+</span><span class='line'>  --tsaware                  Image is Terminal Server aware
+</span><span class='line'>  --build-id[=STYLE]         Generate build ID
+</span><span class='line'>i386pe: 
+</span><span class='line'>  --base_file &lt;basefile&gt;             Generate a base file for relocatable DLLs
+</span><span class='line'>  --dll                              Set image base to the default for DLLs
+</span><span class='line'>  --file-alignment &lt;size&gt;            Set file alignment
+</span><span class='line'>  --heap &lt;size&gt;                      Set initial size of the heap
+</span><span class='line'>  --image-base &lt;address&gt;             Set start address of the executable
+</span><span class='line'>  --major-image-version &lt;number&gt;     Set version number of the executable
+</span><span class='line'>  --major-os-version &lt;number&gt;        Set minimum required OS version
+</span><span class='line'>  --major-subsystem-version &lt;number&gt; Set minimum required OS subsystem version
+</span><span class='line'>  --minor-image-version &lt;number&gt;     Set revision number of the executable
+</span><span class='line'>  --minor-os-version &lt;number&gt;        Set minimum required OS revision
+</span><span class='line'>  --minor-subsystem-version &lt;number&gt; Set minimum required OS subsystem revision
+</span><span class='line'>  --section-alignment &lt;size&gt;         Set section alignment
+</span><span class='line'>  --stack &lt;size&gt;                     Set size of the initial stack
+</span><span class='line'>  --subsystem &lt;name&gt;[:&lt;version&gt;]     Set required OS subsystem [& version]
+</span><span class='line'>  --support-old-code                 Support interworking with old code
+</span><span class='line'>  --[no-]leading-underscore          Set explicit symbol underscore prefix mode
+</span><span class='line'>  --thumb-entry=&lt;symbol&gt;             Set the entry point to be Thumb &lt;symbol&gt;
+</span><span class='line'>  --[no-]insert-timestamp            Use a real timestamp rather than zero (default).
+</span><span class='line'>                                     This makes binaries non-deterministic
+</span><span class='line'>  --add-stdcall-alias                Export symbols with and without @nn
+</span><span class='line'>  --disable-stdcall-fixup            Don't link _sym to _sym@nn
+</span><span class='line'>  --enable-stdcall-fixup             Link _sym to _sym@nn without warnings
+</span><span class='line'>  --exclude-symbols sym,sym,...      Exclude symbols from automatic export
+</span><span class='line'>  --exclude-all-symbols              Exclude all symbols from automatic export
+</span><span class='line'>  --exclude-libs lib,lib,...         Exclude libraries from automatic export
+</span><span class='line'>  --exclude-modules-for-implib mod,mod,...
+</span><span class='line'>                                     Exclude objects, archive members from auto
+</span><span class='line'>                                     export, place into import library instead.
+</span><span class='line'>  --export-all-symbols               Automatically export all globals to DLL
+</span><span class='line'>  --kill-at                          Remove @nn from exported symbols
+</span><span class='line'>  --output-def &lt;file&gt;                Generate a .DEF file for the built DLL
+</span><span class='line'>  --warn-duplicate-exports           Warn about duplicate exports
+</span><span class='line'>  --compat-implib                    Create backward compatible import libs;
+</span><span class='line'>                                       create __imp_&lt;SYMBOL&gt; as well.
+</span><span class='line'>  --enable-auto-image-base[=&lt;address&gt;] Automatically choose image base for DLLs
+</span><span class='line'>                                       (optionally starting with address) unless
+</span><span class='line'>                                       specifically set with --image-base
+</span><span class='line'>  --disable-auto-image-base          Do not auto-choose image base. (default)
+</span><span class='line'>  --dll-search-prefix=&lt;string&gt;       When linking dynamically to a dll without
+</span><span class='line'>                                       an importlib, use &lt;string&gt;&lt;basename&gt;.dll
+</span><span class='line'>                                       in preference to lib&lt;basename&gt;.dll 
+</span><span class='line'>  --enable-auto-import               Do sophisticated linking of _sym to
+</span><span class='line'>                                       __imp_sym for DATA references
+</span><span class='line'>  --disable-auto-import              Do not auto-import DATA items from DLLs
+</span><span class='line'>  --enable-runtime-pseudo-reloc      Work around auto-import limitations by
+</span><span class='line'>                                       adding pseudo-relocations resolved at
+</span><span class='line'>                                       runtime.
+</span><span class='line'>  --disable-runtime-pseudo-reloc     Do not add runtime pseudo-relocations for
+</span><span class='line'>                                       auto-imported DATA.
+</span><span class='line'>  --enable-extra-pe-debug            Enable verbose debug output when building
+</span><span class='line'>                                       or linking to DLLs (esp. auto-import)
+</span><span class='line'>  --large-address-aware              Executable supports virtual addresses
+</span><span class='line'>                                       greater than 2 gigabytes
+</span><span class='line'>  --disable-large-address-aware      Executable does not support virtual
+</span><span class='line'>                                       addresses greater than 2 gigabytes
+</span><span class='line'>  --enable-long-section-names        Use long COFF section names even in
+</span><span class='line'>                                       executable image files
+</span><span class='line'>  --disable-long-section-names       Never use long COFF section names, even
+</span><span class='line'>                                       in object files
+</span><span class='line'>  --dynamicbase            Image base address may be relocated using
+</span><span class='line'>                     address space layout randomization (ASLR)
+</span><span class='line'>  --forceinteg         Code integrity checks are enforced
+</span><span class='line'>  --nxcompat       Image is compatible with data execution prevention
+</span><span class='line'>  --no-isolation       Image understands isolation but do not isolate the image
+</span><span class='line'>  --no-seh             Image does not use SEH. No SE handler may
+</span><span class='line'>                     be called in this image
+</span><span class='line'>  --no-bind            Do not bind this image
+</span><span class='line'>  --wdmdriver      Driver uses the WDM model
+</span><span class='line'>  --tsaware                  Image is Terminal Server aware
+</span><span class='line'>  --build-id[=STYLE]         Generate build ID
+</span><span class='line'>
+</span><span class='line'>Report bugs to &lt;http://www.sourceware.org/bugzilla/&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[觀察編譯glibc的產出]]></title>
@@ -6629,733 +7784,6 @@ Codename:   trusty
 <li>這個很有趣，可以用Semihosting直接使用glibc的stdio，不過做實驗就是要吃原味，要又痛又爽才是最高境界，所以這個我就沒去嘗試了</li>
 </ul>
 </li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[ARM CM4 Pratice (3): USART 初探]]></title>
-    <link href="http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart/"/>
-    <updated>2016-08-05T15:53:47+08:00</updated>
-    <id>http://wen00072.github.io/blog/2016/08/05/arm-cm4-pratice-3-lab-usart</id>
-    <content type="html"><![CDATA[<h2>致謝</h2>
-
-<p>感謝網友<a href="https://github.com/starnight">Zack</a>，<a href="http://vh21.github.io/">Villar</a>，學弟Joe Ho，還有其他大大的幫忙，不然這次應該是撞牆撞到死吧。</p>
-
-<h2>前言</h2>
-
-<p>這次實驗有卡關，不然其實不算難。卡關的點如下：</p>
-
-<ul>
-<li>一開始使用USART1，可是USART1接到STLink 接腳，最後用USART6代替。(<a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F4 Discovry Disco 開發版手冊</a>，p19, SB11那段)</li>
-<li>SPL的HSE 設定和版子不合，造成Baud rate計算錯誤。</li>
-</ul>
-
-
-<p>這次的實驗是一個ECHO程式，透過版子上的USART6和電腦連線，電腦送出什麼字元，版子就傳回什麼字元。</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#stm-3-prepare">事前準備</a></li>
-<li><a href="#stm-3-env">測試環境</a></li>
-<li><a href="#stm-3-usart">USART 控制</a></li>
-<li><a href="#stm-3-code">程式碼</a>
-
-<ul>
-<li><a href="#stm-3-code-code">完整程式碼</a></li>
-<li><a href="#stm-3-code-make">Makefile</a></li>
-</ul>
-</li>
-<li><a href="#stm-3-test">功能驗證</a></li>
-<li><a href="#stm-3-ref">參考資料</a></li>
-</ul>
-
-
-<p><a name="stm-3-prepare"></a></p>
-
-<h2>事前準備</h2>
-
-<ul>
-<li><p>Saleae 邏輯分析儀 (一千新台幣有找）</p>
-
-<ul>
-<li>需要自行到Saleae官方網站下載安裝Linux版軟體
-<img src="http://wen00072.github.io/files/stm32/STM_LG.jpg"/></li>
-</ul>
-</li>
-<li><p>USB 轉 RS232 TTL 轉接線
-<img src="http://wen00072.github.io/files/banana_pi/DSC_0026.jpg"/></p></li>
-</ul>
-
-
-<p><a name="stm-3-env"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.4 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span><span class='line'>
-</span><span class='line'>$ arm-none-eabi-gcc --version
-</span><span class='line'>arm-none-eabi-gcc (GNU Tools for ARM Embedded Processors) 5.4.1 20160609 (release) [ARM/embedded-5-branch revision 237715]
-</span><span class='line'>...
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<ul>
-<li>SPL版本： STM32F4xx_DSP_StdPeriph_Lib_V1.6.1</li>
-<li>開發板： STM32F4 Dicovery, <a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F429-Disco</a></li>
-</ul>
-
-
-<p><a name="stm-3-usart"></a></p>
-
-<h2>USART 控制</h2>
-
-<p>對於組裝工來說，我想要理解的不是電位差之這些電器信號。甚至在組裝時我也不在意暫存器設定等東西和背後的原理（好孩子不要學）。我關心的是</p>
-
-<ol>
-<li>我們要用哪些資源？</li>
-<li>這些資源對應的實體腳位是？</li>
-<li>軟體中怎麼樣設定和啟動設備？</li>
-<li>軟體中怎麼樣傳輸資料？</li>
-</ol>
-
-
-<p>我們針對這四個問題一一處理</p>
-
-<h3>我們要用哪些資源？</h3>
-
-<p>從手冊可以看到有八個USART可以用。我原本是挑USART1來用，不過後來卡關經過網友提醒發現要避開USART1。後來發現APB2上面除了USART1外另外一個USART是USART6。懶得太多程式碼的情況下就挑了USART6。</p>
-
-<h3>這些資源對應的實體腳位是？</h3>
-
-<p>一樣要翻手冊。</p>
-
-<ul>
-<li>PC6: UASRT6 TX</li>
-<li>PC7: USART6 RX</li>
-</ul>
-
-
-<h3>軟體中怎麼樣設定和啟動設備？</h3>
-
-<p>要分兩個部份討論</p>
-
-<h4>a. GPIOC 設定</h4>
-
-<p>要設定</p>
-
-<ul>
-<li>開啟GPIOC的clock</li>
-<li>設定Pin腳，設定PC6和PC7這兩個腳位。為什麼是這兩個腳位請查手冊
-
-<ul>
-<li>PC6: 設成Alternate function，也就是USART6 TX</li>
-<li>PC7: 設成Alternate function，也就是USART6 RX</li>
-<li>其他
-
-<ul>
-<li>設定為Pull UP，這和USART通訊協定有關，在IDLE時維持高電位</li>
-<li>設定Push-Pull輸出模式，這個我完全不懂只是閉著眼睛抄的</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<p>來看大家最討厭看的程式碼片斷吧</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">GPIO_InitTypeDef</span> <span class="n">GPIO_InitStructure</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Enable GPIOC clock */</span>
-</span><span class='line'><span class="n">RCC_AHB1PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_AHB1Periph_GPIOC</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Connect USART6_Tx instead of PC6 */</span>
-</span><span class='line'><span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource6</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Connect USART6_Rx instead of PC7 */</span>
-</span><span class='line'><span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource7</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Configure USART Tx (PC6) and Rx (PC7) as alternate function  */</span>
-</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span>  <span class="o">=</span> <span class="n">GPIO_Mode_AF</span><span class="p">;</span>
-</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Pin</span>   <span class="o">=</span> <span class="n">GPIO_Pin_6</span> <span class="o">|</span> <span class="n">GPIO_Pin_7</span><span class="p">;</span>
-</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Speed</span> <span class="o">=</span> <span class="n">GPIO_Speed_100MHz</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_OType</span> <span class="o">=</span> <span class="n">GPIO_OType_PP</span><span class="p">;</span>
-</span><span class='line'><span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_PuPd</span>  <span class="o">=</span> <span class="n">GPIO_PuPd_UP</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">GPIO_Init</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">GPIO_InitStructure</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<h4>b. USART6 設定</h4>
-
-<p>依下列步驟</p>
-
-<ol>
-<li>開啟USART6的clock</li>
-<li>設定USART6
-
-<ul>
-<li>115200 BPS</li>
-<li>No parity bit</li>
-<li>8-bit 資料</li>
-<li>1 Stop bit</li>
-<li>關閉硬體流量控制</li>
-<li>TX/RX模式都打開</li>
-</ul>
-</li>
-<li>啟動UASRT6</li>
-</ol>
-
-
-<p>一樣來看大家最討厭看的程式碼片斷吧</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">USART_InitTypeDef</span> <span class="n">USART_InitStruct</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Enable USART6 clock */</span>
-</span><span class='line'><span class="n">RCC_APB2PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB2Periph_USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* 115200, N81  */</span>
-</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_BaudRate</span> <span class="o">=</span> <span class="mi">115200</span><span class="p">;</span>
-</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_WordLength</span> <span class="o">=</span> <span class="n">USART_WordLength_8b</span><span class="p">;</span>
-</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_StopBits</span> <span class="o">=</span> <span class="n">USART_StopBits_1</span><span class="p">;</span>
-</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Parity</span> <span class="o">=</span> <span class="n">USART_Parity_No</span><span class="p">;</span>
-</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_HardwareFlowControl</span> <span class="o">=</span> <span class="n">USART_HardwareFlowControl_None</span><span class="p">;</span>
-</span><span class='line'><span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Mode</span> <span class="o">=</span> <span class="n">USART_Mode_Rx</span> <span class="o">|</span> <span class="n">USART_Mode_Tx</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Apply USART settings */</span>
-</span><span class='line'><span class="n">USART_Init</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">USART_InitStruct</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Enable USART */</span>
-</span><span class='line'><span class="n">USART_Cmd</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>軟體中怎麼樣傳輸資料？</h3>
-
-<p>這部份還蠻直覺的，就是檢查狀態。可以送的時候就寫資料到暫存器去；有資料時從暫存器讀出資料。程式碼夠短應該不會那麼討厭吧？另外SPL也有提供USART傳輸接收的函數，請自行查詢。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">char</span> <span class="nf">getchar</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_RXNE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">putchar</span><span class="p">(</span><span class="kt">char</span> <span class="n">c</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Wait until data was tranferred */</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_TXE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="stm-3-code"></a></p>
-
-<h2>程式碼</h2>
-
-<p>最完整可編譯程式碼放在<a href="https://github.com/zzz0072/STM32F429-Discovery-Disco-Pratice/tree/master/labs/1_usart">這邊</a>。</p>
-
-<p>前面有提到HSE設定需要更動為8MHz。我是在<code>stm32f4xx_conf.h</code>加入以下片斷。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#if defined  (HSE_VALUE)</span>
-</span><span class='line'><span class="cm">/* Redefine the HSE value; it&#39;s equal to 8 MHz on the STM32F4-DISCOVERY Kit */</span>
-</span><span class='line'> <span class="cp">#undef HSE_VALUE</span>
-</span><span class='line'> <span class="cp">#define HSE_VALUE    ((uint32_t)8000000) </span>
-</span><span class='line'><span class="cp">#endif </span><span class="cm">/* HSE_VALUE */</span><span class="cp"></span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="stm-3-code-code"></a></p>
-
-<h3>完整程式碼</h3>
-
-<p>就是把前面的設定合體再加上一些helper就是了。這個程式也不難，就是印出你打的字。當你按enter後會自動塞入<code>\r</code>並且印出提示符號。</p>
-
-<figure class='code'><figcaption><span>usart.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &quot;stm32f4xx_conf.h&quot;</span>
-</span><span class='line'><span class="cp">#include &lt;stm32f4xx.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stm32f4xx_gpio.h&gt;</span>
-</span><span class='line'><span class="cp">#include &lt;stm32f4xx_usart.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">setupUSART</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* helper functions */</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">);</span>
-</span><span class='line'><span class="kt">char</span> <span class="nf">getchar</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">putchar</span><span class="p">(</span><span class="kt">char</span> <span class="n">c</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Setup USART */</span>
-</span><span class='line'>    <span class="n">setupUSART</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Greeting */</span>
-</span><span class='line'>    <span class="n">print</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r</span><span class="s">&gt; &quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="cm">/* Echo a character */</span>
-</span><span class='line'>        <span class="kt">char</span> <span class="n">c</span> <span class="o">=</span> <span class="n">getchar</span><span class="p">();</span>
-</span><span class='line'>        <span class="n">putchar</span><span class="p">(</span><span class="n">c</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>        <span class="cm">/* Show prompt with enter */</span>
-</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="o">==</span> <span class="sc">&#39;\n&#39;</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>            <span class="n">print</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\r</span><span class="s">&gt; &quot;</span><span class="p">);</span>
-</span><span class='line'>        <span class="p">}</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">setupUSART</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">GPIO_InitTypeDef</span> <span class="n">GPIO_InitStructure</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Enable GPIOC clock */</span>
-</span><span class='line'>    <span class="n">RCC_AHB1PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_AHB1Periph_GPIOC</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Connect USART6_Tx instead of PC6 */</span>
-</span><span class='line'>    <span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource6</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Connect USART6_Rx instead of PC7 */</span>
-</span><span class='line'>    <span class="n">GPIO_PinAFConfig</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="n">GPIO_PinSource7</span><span class="p">,</span> <span class="n">GPIO_AF_USART6</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Configure USART Tx (PC6) and Rx (PC7) as alternate function  */</span>
-</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Mode</span>  <span class="o">=</span> <span class="n">GPIO_Mode_AF</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Pin</span>   <span class="o">=</span> <span class="n">GPIO_Pin_6</span> <span class="o">|</span> <span class="n">GPIO_Pin_7</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_Speed</span> <span class="o">=</span> <span class="n">GPIO_Speed_100MHz</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_OType</span> <span class="o">=</span> <span class="n">GPIO_OType_PP</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">GPIO_InitStructure</span><span class="p">.</span><span class="n">GPIO_PuPd</span>  <span class="o">=</span> <span class="n">GPIO_PuPd_UP</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">GPIO_Init</span><span class="p">(</span><span class="n">GPIOC</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">GPIO_InitStructure</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/********************************************</span>
-</span><span class='line'><span class="cm">     * USART set started here</span>
-</span><span class='line'><span class="cm">     ********************************************/</span>
-</span><span class='line'>    <span class="n">USART_InitTypeDef</span> <span class="n">USART_InitStruct</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Enable USART6 clock */</span>
-</span><span class='line'>    <span class="n">RCC_APB2PeriphClockCmd</span><span class="p">(</span><span class="n">RCC_APB2Periph_USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* 115200, N81  */</span>
-</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_BaudRate</span> <span class="o">=</span> <span class="mi">115200</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_WordLength</span> <span class="o">=</span> <span class="n">USART_WordLength_8b</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_StopBits</span> <span class="o">=</span> <span class="n">USART_StopBits_1</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Parity</span> <span class="o">=</span> <span class="n">USART_Parity_No</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_HardwareFlowControl</span> <span class="o">=</span> <span class="n">USART_HardwareFlowControl_None</span><span class="p">;</span>
-</span><span class='line'>    <span class="n">USART_InitStruct</span><span class="p">.</span><span class="n">USART_Mode</span> <span class="o">=</span> <span class="n">USART_Mode_Rx</span> <span class="o">|</span> <span class="n">USART_Mode_Tx</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Apply USART settings */</span>
-</span><span class='line'>    <span class="n">USART_Init</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">USART_InitStruct</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Enable USART */</span>
-</span><span class='line'>    <span class="n">USART_Cmd</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">ENABLE</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">char</span> <span class="nf">getchar</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_RXNE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">putchar</span><span class="p">(</span><span class="kt">char</span> <span class="n">c</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="cm">/* Wait until data was tranferred */</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="n">USART_GetFlagStatus</span><span class="p">(</span><span class="n">USART6</span><span class="p">,</span> <span class="n">USART_FLAG_TXE</span><span class="p">)</span> <span class="o">==</span> <span class="n">RESET</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">USART6</span><span class="o">-&gt;</span><span class="n">DR</span> <span class="o">=</span> <span class="p">(</span><span class="n">c</span> <span class="o">&amp;</span> <span class="mh">0xff</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">assert_param</span><span class="p">(</span><span class="n">str</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">putchar</span><span class="p">(</span><span class="o">*</span><span class="n">str</span><span class="p">);</span>
-</span><span class='line'>        <span class="n">str</span><span class="o">++</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="cm">/* Trap here for gdb if asserted */</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">assert_failed</span><span class="p">(</span><span class="kt">uint8_t</span><span class="o">*</span> <span class="n">file</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">line</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="stm-3-code-make"></a></p>
-
-<h3>Makefile</h3>
-
-<p>有兩點要說明</p>
-
-<ol>
-<li>加入<code>stm32f4xx_usart.c</code></li>
-<li>加入make flash自動燒錄
-
-<ul>
-<li>目前發現使用st-flash燒錄有時候顯示燒錄完成，但是實際上測試還是燒錄前的行為，換成openocd測試中</li>
-</ul>
-</li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-</pre></td><td class='code'><pre><code class='Makefile'><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
-</span><span class='line'><span class="c"># Commom settings</span>
-</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
-</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span>usart
-</span><span class='line'><span class="nv">PRJ_ROOT</span><span class="o">=</span><span class="k">$(</span>shell <span class="nb">cd</span> ../../ <span class="p">;</span> <span class="nb">pwd</span><span class="k">)</span>
-</span><span class='line'><span class="cp">include $(PRJ_ROOT)/conf/build.def</span>
-</span><span class='line'>
-</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
-</span><span class='line'><span class="c"># Files to build</span>
-</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
-</span><span class='line'><span class="nv">SRCS</span>  <span class="o">=</span> <span class="k">$(</span>CMSIS_STARTUP_SRC<span class="k">)</span> <span class="k">$(</span>CMSIS_SYSTEM_SRC<span class="k">)</span>
-</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_gpio.c
-</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_rcc.c
-</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> <span class="k">$(</span>STM_DIR<span class="k">)</span>/src/stm32f4xx_usart.c
-</span><span class='line'><span class="nv">SRCS</span> <span class="o">+=</span> usart.c
-</span><span class='line'>
-</span><span class='line'><span class="nv">C_OBJS</span> <span class="o">=</span> <span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>   <span class="c"># translate *.c to *.o</span>
-</span><span class='line'><span class="nv">OBJS</span>   <span class="o">=</span> <span class="k">$(</span>patsubst %.s, %.o, <span class="k">$(</span>C_OBJS<span class="k">))</span> <span class="c"># also *.s to *.o files</span>
-</span><span class='line'>
-</span><span class='line'><span class="nv">OUT_OBJS</span> <span class="o">=</span> <span class="k">$(</span>addprefix <span class="k">$(</span>OUT_DIR<span class="k">)</span>/, <span class="k">$(</span>OBJS<span class="k">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
-</span><span class='line'><span class="c"># Build here</span>
-</span><span class='line'><span class="c">#----------------------------------------------------------------------------------</span>
-</span><span class='line'><span class="nf">$(OUT_DIR)/$(TARGET).bin</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_OBJS</span><span class="k">)</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -Wl,-Map<span class="o">=</span><span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.map,-T<span class="k">$(</span>TARGET<span class="k">)</span>.ld -nostartfiles <span class="se">\</span>
-</span><span class='line'>      <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="k">$(</span>OUT_OBJS<span class="k">)</span> -o <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-objcopy -Obinary <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf <span class="nv">$@</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-objdump -S <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.elf &gt; <span class="k">$(</span>OUT_DIR<span class="k">)</span>/<span class="k">$(</span>TARGET<span class="k">)</span>.list
-</span><span class='line'>
-</span><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span> %.<span class="n">s</span>
-</span><span class='line'>  mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -c <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">$(OUT_DIR)/%.o</span><span class="o">:</span> %.<span class="n">c</span>
-</span><span class='line'>  mkdir -p <span class="k">$(</span>dir <span class="nv">$@</span><span class="k">)</span>
-</span><span class='line'>  <span class="k">$(</span>TOOL_CHAIN_PREFIX<span class="k">)</span>-gcc -c <span class="k">$(</span>CFLAGS<span class="k">)</span> <span class="nv">$&lt;</span> -o <span class="nv">$@</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">flash</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OUT_DIR</span><span class="k">)</span>/<span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>.<span class="n">bin</span>
-</span><span class='line'>  openocd -f interface/stlink-v2.cfg  <span class="se">\</span>
-</span><span class='line'>            -f target/stm32f4x.cfg      <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;init&quot;</span>                   <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;reset init&quot;</span>             <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;stm32f2x unlock 0&quot;</span>      <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;flash probe 0&quot;</span>          <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;flash info 0&quot;</span>           <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;flash write_image erase $&lt; 0x8000000&quot;</span> <span class="se">\</span>
-</span><span class='line'>            -c <span class="s2">&quot;reset run&quot;</span> -c shutdown
-</span><span class='line'>
-</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
-</span><span class='line'>  rm -fr <span class="k">$(</span>OUT_DIR<span class="k">)</span> gdb.txt
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="stm-3-test"></a></p>
-
-<h2>功能驗證</h2>
-
-<h3>邏輯分析儀驗證</h3>
-
-<p>現在邏輯分析儀已經可以自動幫你抓波形分析了。當你下載並解壓縮檔案後，記得更新udev的Rule讓電腦可以認得邏輯分析儀。</p>
-
-<p>接下來你要設定邏輯分析儀的分析通訊協定為Async Serial 如下圖
-<img src="http://wen00072.github.io/files/stm32/LG_SP1.jpg"/></p>
-
-<p>選了Async Serial會有選單出現，你需要設定用第幾個Channel以及USART通訊參數如下圖
-<img src="http://wen00072.github.io/files/stm32/LG_SP2.jpg"/></p>
-
-<p>如果需要的話，你可以進一步設定取樣速度、取樣時間如下圖
-<img src="http://wen00072.github.io/files/stm32/LG_SP3.jpg"/></p>
-
-<p>假設你的邏輯分析儀接腳都接好了就可以按開始分析訊號了
-<img src="http://wen00072.github.io/files/stm32/LG_SP4.jpg"/></p>
-
-<p>這是一個成功的Hello World波形分析，圖可能有點小，全圖在<a href="http://wen00072.github.io/files/stm32/usart2.jpg">這邊</a>。
-<img src="http://wen00072.github.io/files/stm32/usart2.jpg"/></p>
-
-<h3>實際驗證</h3>
-
-<p>你需要先把USB 轉 RS232 TTL 轉接線接到版子上如下圖
-<img src="http://wen00072.github.io/files/stm32/STM_USART_Pin.jpg"/></p>
-
-<p>我是使用mintern，執行畫面如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ miniterm.py -b 115200 -p /dev/ttyUSB0
-</span><span class='line'>--- Miniterm on /dev/ttyUSB0: 115200,8,N,1 ---
-</span><span class='line'>--- Quit: Ctrl+]  |  Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H ---
-</span><span class='line'>test
-</span><span class='line'>&gt; test
-</span><span class='line'>&gt; test
-</span><span class='line'>&gt; test
-</span><span class='line'>&gt; testast
-</span><span class='line'>&gt; teadsatdsasd
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="stm-3-ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://homes.soic.indiana.edu/geobrown/index.cgi/teaching">Geoffrey Brown: Teaching </a>
-
-<ul>
-<li>請找 Lab Manual 裏面的link, 書名是<code>Discovering the STM32 Microcontroller</code></li>
-</ul>
-</li>
-<li><a href="http://www.st.com/content/st_com/en/products/evaluation-tools/product-evaluation-tools/mcu-eval-tools/stm32-mcu-eval-tools/stm32-mcu-discovery-kits/32f429idiscovery.html">STM32F4 Discovry Disco 開發版手冊</a></li>
-<li><a href="http://www.st.com/content/st_com/en/products/embedded-software/mcus-embedded-software/stm32-embedded-software/stm32-standard-peripheral-libraries/stsw-stm32065.html">STM32F4 DSP and standard peripherals library</a></li>
 </ul>
 
 ]]></content>

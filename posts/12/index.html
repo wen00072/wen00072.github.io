@@ -11,7 +11,7 @@
 
 
   
-  <meta name="description" content="meta這個字眼好像找不到精確的中文名詞。基本上就是指和一個「主題」有關的「東西」。舉例來說，在多媒體播放當中，「metadata」指的是附於媒體本身的屬性，如影片解析度、作品名稱等。而「meta-programming」指的是寫程式執行輸出結果是另外一段的程式原始碼。 &hellip;">
+  <meta name="description" content="傳統的組裝的情況，常常會需要處理patch，然而當patch數量資料多到某種程度，加上時間推移原資料更動，套用patch會讓人生不如死。而quilt是Linux下面處理多個patch檔案的管理軟體。因為組裝軟體和打包Linux 套件會使用到，所以花點時間看一下整理一下。目前感覺有點像是先用git &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,6 +70,203 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/06/08/study-on-the-quilt/">Quilt初探 - 使用quilt產生和管理patch</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-06-08T07:33:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>7:33 am</span></time>
+        
+           | <a href="/blog/2014/06/08/study-on-the-quilt/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/08/study-on-the-quilt/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>傳統的組裝的情況，常常會需要處理patch，然而當patch數量資料多到某種程度，加上時間推移原資料更動，套用patch會讓人生不如死。而quilt是Linux下面處理多個patch檔案的管理軟體。因為組裝軟體和打包Linux 套件會使用到，所以花點時間看一下整理一下。目前感覺有點像是先用git format-patch產生一些patch檔，另外一邊用git am 去merge這些patch檔。然後merge完可以用git reset HEAD^幾次來unmerge。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#usage">透過quilt產生patch</a>
+
+<ul>
+<li><a href="#files">quilt產生的檔案</a></li>
+</ul>
+</li>
+<li><a href="#apply">透過quilt管理patch</a></li>
+<li><a href="#rc">~/.quiltrc</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p>quilt的格式是<code>quilt 命令</code>，<strong>而它處理的對象是stack</strong>，也就是說你可以使用push, pop。沒有特別指定的話，command處理的對象是stack top。</p>
+
+<hr />
+
+<p><a name="usage"></a></p>
+
+<h2>透過quilt產生patch</h2>
+
+<ul>
+<li><code>quilt new 產生的patch檔案名稱</code></li>
+<li><code>quilt add 要監督那個檔案</code></li>
+<li>更動檔案。</li>
+<li><code>quilt refresh</code>產生patch</li>
+</ul>
+
+
+<p>重複前面動作會再產生新的patch，置於stack的top。可以透過<code>quilt series</code>觀察stack的狀態。另外有兩點值得注意：</p>
+
+<ul>
+<li>假設都是重複更動同一份檔案，<code>quilt refresh</code>就是單純和最原始的檔案diff。舉例來說，下了<code>quilt add</code>後修改了三行再執行<code>quilt refresh</code>產生patch，之後再修改另外五行後執行<code>quilt refresh</code>原本的patch檔案會有第一次改的那三行再加上後來改的那五行。</li>
+<li>一個檔案a，經過<code>quilt new</code> ,<code>quilt add</code>, <code>quilt refresh</code>後，再用quilt產生另外一份檔案的patch後。要再修改檔案a會需要經過<code>quilt new</code> ,<code>quilt add</code>, <code>quilt refresh</code>產生另外全新的patch檔案。</li>
+<li>可以使用<code>quilt header -e</code>去編輯patch檔的詳細說明。另外也可以用<code>quilt header -e patch名稱</code>指定編輯特定patch名稱的詳細說明。</li>
+</ul>
+
+
+<p>quilt會將產生的patch放在目前目錄下的<code>patches</code>目錄，這部份可以透過更改<code>QUILT_PATCHES</code>的變數更改名稱。</p>
+
+<hr />
+
+<p><a name="files"></a></p>
+
+<h3>quilt產生的檔案</h3>
+
+<p><code>quilt new 要產生的patch檔案</code>被執行後會產生</p>
+
+<ul>
+<li>pactches目錄
+
+<ul>
+<li>紀錄patch 順序的series檔案</li>
+</ul>
+</li>
+<li>.pc目錄
+
+<ul>
+<li>applied-patches，和series相同</li>
+<li><code>要產生的patch檔案名稱</code>的目錄</li>
+</ul>
+</li>
+</ul>
+
+
+<p><code>quilt add 要監督那個檔案</code>被執行後會產生
+* .pc目錄/要產生的patch檔案名稱的目錄/監督檔案路徑/監督檔案
+    * ex: ./pc/fix_err_no_27113/libs/liba.c</p>
+
+<p><code>quilt refresh</code>產生patch</p>
+
+<ul>
+<li>.pc目錄/要產生的patch檔案名稱的目錄/.timestamp</li>
+<li>patches/要產生的patch檔案名稱</li>
+</ul>
+
+
+<p><strong>我們可以觀察發現<code>quilt add</code>後quilt會將未修改的原始檔複製一份到.pc目錄/要產生的patch檔案名稱的目錄/監督檔案路徑/監督檔案。之後<code>quilt refresh</code>就是單純的diff產生結果</strong></p>
+
+<hr />
+
+<p><a name="apply"></a></p>
+
+<h2>透過quilt管理patch</h2>
+
+<p>apply patch並管理的步驟是。</p>
+
+<ul>
+<li>取得未apply patch的原始套件目錄。</li>
+<li>將前面產生出來的patches目錄複製到未apply patch的原始的套件目錄當中。</li>
+<li>透過quilt 操作並管理patch</li>
+</ul>
+
+
+<p>假設你有了patches目錄，你可以做以下操作</p>
+
+<ul>
+<li>查詢
+
+<ul>
+<li><code>quilt series</code>查詢有哪些patch</li>
+<li><code>quilt applied</code>查詢已經applied那些patch</li>
+<li><code>quilt unapplied</code>查詢還沒apply那些patch</li>
+<li><code>quilt next</code>查詢下一個要apply的patch</li>
+<li><code>quilt next</code>查詢前一個已經applied的patch</li>
+<li><code>quilt header</code>顯示目前stack top的註解說明資訊及要patch的檔案</li>
+<li><code>quilt header patch名稱</code>顯示目前stack中patch名稱的註解說明資訊及要patch的檔案</li>
+</ul>
+</li>
+<li>套用/還原patch
+
+<ul>
+<li><code>quilt push</code>依照stack反順序apply patch
+
+<ul>
+<li><code>quilt push -a</code>可以一口氣apply patch</li>
+<li><code>quilt push patch名稱</code></li>
+</ul>
+</li>
+<li><code>quilt pop</code>undo 一次已經applied的patch。
+
+<ul>
+<li><code>quilt pop -a</code>可以一口氣apply patch</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>舉例來說，假設patches目錄stack有<code>01_fix</code>, <code>02_fix</code>和<code>03_fix</code>。將該目錄複製到未patch的目錄中，下兩次<code>quilt push</code>會分別patch <code>01_fix</code>, <code>02_fix</code>。之後再<code>quilt pop</code>會變成只有apply <code>01_fix</code>而已。</p>
+
+<hr />
+
+<p><a name="rc"></a></p>
+
+<h2>~/.quiltrc</h2>
+
+<p>使用者透過<code>~/.quiltrc</code>自訂quilt的行為，列舉如下</p>
+
+<ul>
+<li>QUILT_PATCHES：指定產生的patch存放的目錄，預設為patches目錄</li>
+<li>QUILT_PATCH_OPTS：讓quilt呼叫patch執行檔apply patch時傳遞的參數</li>
+<li>QUILT_REFRESH_ARGS和QUILT_DIFF_ARGS：讓quilt呼叫diff執行檔時傳遞的參數</li>
+<li>QUILT_COLORS：不用解釋吧</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>quilt手冊： /usr/share/doc/quilt/quilt.pdf.gz</li>
+<li><a href="http://raphaelhertzog.com/2012/08/08/how-to-use-quilt-to-manage-patches-in-debian-packages/">How to use quilt to manage patches in Debian packages (推)</a></li>
+<li><a href="https://wiki.debian.org/UsingQuilt">UsingQuilt</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Quilt_%28software%29">Wikipedia: Quilt</a></li>
+<li><a href="http://wiki.openwrt.org/doc/devel/patches">OpenWrt Wiki: Working with patches</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2696,78 +2893,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/05/18/access-to-shell-variable-in-the-makefile/">Makefile中Command敘述的Shell變數存取</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-05-18T07:18:00+08:00'><span class='date'><span class='date-month'>May</span> <span class='date-day'>18</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>7:18 am</span></time>
-        
-           | <a href="/blog/2014/05/18/access-to-shell-variable-in-the-makefile/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/05/18/access-to-shell-variable-in-the-makefile/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>想說寫一個loop自動make變數內的目錄</p>
-
-<figure class='code'><figcaption><span>錯誤的Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">DIRS</span> <span class="o">=</span> libs src
-</span><span class='line'>
-</span><span class='line'><span class="nf">all</span><span class="o">:</span>
-</span><span class='line'>  <span class="k">for</span> i in <span class="k">${</span><span class="nv">DIRS</span><span class="k">}</span><span class="p">;</span> <span class="k">do</span> make -C <span class="nv">$i</span><span class="p">;</span> <span class="k">done</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>結果跑出來和想像不同</p>
-
-<figure class='code'><figcaption><span>make結果</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>for i in lib src; do make -C ; done
-</span><span class='line'>make: option requires an argument -- &#39;C&#39;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>原因是$本身在Makefile有特殊意義。要使用$$才能在command敘述中顯示$，因此改進如下</p>
-
-<figure class='code'><figcaption><span>正確的Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">DIRS</span> <span class="o">=</span> libs src
-</span><span class='line'>
-</span><span class='line'><span class="nf">all</span><span class="o">:</span>
-</span><span class='line'>  <span class="k">for</span> i in <span class="k">${</span><span class="nv">DIRS</span><span class="k">}</span><span class="p">;</span> <span class="k">do</span> make -C <span class="nv">$$</span>i<span class="p">;</span> <span class="k">done</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://stackoverflow.com/questions/13774784/how-do-i-use-shell-variables-in-makefile-actions">Stackoverflow: How do I use shell variables in Makefile actions?</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/13">&larr; Older</a>
@@ -2785,6 +2910,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
       </li>
     
@@ -2800,24 +2929,20 @@
         <a href="/blog/2018/12/12/linux-binary-resources/">Linux Binary 縮寫和連結</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04/">Ubuntu 16.04更新到Ubuntu 18.04後Octopress 環境變動</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (43)</a></li><li><a href='/blog/categories/c'>c (34)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (34)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (2)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (43)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.74418604651163%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.3953488372093%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.79069767441861%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.18604651162791%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.5813953488372%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.3953488372093%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.3953488372093%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.3953488372093%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.53488372093022%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.79069767441861%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.4418604651163%'>c(34)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.3953488372093%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.79069767441861%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.79069767441861%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.3953488372093%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.3953488372093%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.3953488372093%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 122.32558139534883%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.3953488372093%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.3953488372093%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.3953488372093%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.3953488372093%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.3953488372093%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.3953488372093%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.3953488372093%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.3953488372093%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.79069767441861%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.5813953488372%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.3953488372093%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.79069767441861%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.5813953488372%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.79069767441861%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.3953488372093%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.3953488372093%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 102.79069767441861%'>glibc(2)</a> <a href='/blog/categories/gnu' style='font-size: 102.79069767441861%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.3953488372093%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.3953488372093%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.3953488372093%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.3953488372093%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.3953488372093%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.79069767441861%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.3953488372093%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.3953488372093%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.79069767441861%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.3953488372093%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 106.97674418604652%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(43)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.18604651162791%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.79069767441861%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.3953488372093%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.3953488372093%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.3953488372093%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.37209302325581%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.79069767441861%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.55813953488372%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.3953488372093%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.3953488372093%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.79069767441861%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.3953488372093%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 119.53488372093022%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.5813953488372%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.97674418604652%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.3953488372093%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.79069767441861%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.3953488372093%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.3953488372093%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.3953488372093%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.5813953488372%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.3953488372093%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.97674418604652%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.3953488372093%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.3953488372093%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.3953488372093%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.3953488372093%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.3953488372093%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.79069767441861%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.97674418604652%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.3953488372093%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.79069767441861%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.3953488372093%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.3953488372093%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.3953488372093%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.3953488372093%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.16279069767442%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.3953488372093%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.79069767441861%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.18604651162791%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.18604651162791%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.18604651162791%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.36363636363636%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.36363636363636%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.72727272727273%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0909090909091%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.45454545454545%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.36363636363636%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.36363636363636%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.36363636363636%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.0909090909091%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.72727272727273%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.72727272727272%'>c(35)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.36363636363636%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.72727272727273%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.72727272727273%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.36363636363636%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.36363636363636%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.36363636363636%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.81818181818181%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.36363636363636%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.36363636363636%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.36363636363636%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.36363636363636%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.36363636363636%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.36363636363636%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.36363636363636%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.36363636363636%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.72727272727273%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.45454545454545%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.36363636363636%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.72727272727273%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.72727272727273%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.36363636363636%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.36363636363636%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0909090909091%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.72727272727273%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.36363636363636%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.36363636363636%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.36363636363636%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.36363636363636%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.36363636363636%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.72727272727273%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.36363636363636%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.36363636363636%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.72727272727273%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.72727272727273%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.81818181818181%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(44)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0909090909091%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.72727272727273%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.36363636363636%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.36363636363636%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.36363636363636%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.18181818181819%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.72727272727273%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.27272727272728%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.36363636363636%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.36363636363636%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.72727272727273%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.36363636363636%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 119.0909090909091%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.45454545454545%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.81818181818181%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.36363636363636%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.72727272727273%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.36363636363636%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.36363636363636%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.36363636363636%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.45454545454545%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.36363636363636%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.81818181818181%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.36363636363636%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.36363636363636%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.36363636363636%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.36363636363636%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.36363636363636%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.72727272727273%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.81818181818181%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.36363636363636%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.72727272727273%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.36363636363636%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.36363636363636%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.36363636363636%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.36363636363636%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.9090909090909%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.36363636363636%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.72727272727273%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0909090909091%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0909090909091%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0909090909091%'>過期(3)</a> </span>
 </section>
 
 

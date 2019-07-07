@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs/</loc>
+<lastmod>2019-06-15T12:09:34+08:00</lastmod>
+</url>
+<url>
 <loc>http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/</loc>
 <lastmod>2019-06-08T18:48:03+08:00</lastmod>
 </url>

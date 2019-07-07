@@ -11,24 +11,27 @@
 
 
   
-  <meta name="description" content="這次介紹編譯glibc 並安裝後的一些發現 目錄 測試環境
-安裝步驟
-觀察與結論 /lib
-/bin
-/sbin
-/etc
-/share
-/var
-/libexec
-/include 參考資料
-附錄 測試環境 1
+  <meta name="description" content="本篇旨在從command line角度拆解 gcc hello.c -o hello 中間發生的事情。 附錄 cc 指令拆解 1
 2
 3
 4
 5
 6
-$ lsb_release -a
-No LSB modules &hellip;">
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+/usr/lib/gcc/x86_64-linux-gnu/7/cc1
+- &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -87,6 +90,1184 @@ No LSB modules &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-06-15T12:09:34+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>12:09 pm</span></time>
+        
+           | <a href="/blog/2019/06/15/field-investigation-link-objs/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2019/06/15/field-investigation-link-objs/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>本篇旨在從command line角度拆解 <code>gcc hello.c -o hello</code> 中間發生的事情。</p>
+
+<h2></h2>
+
+<h2>附錄</h2>
+
+<ul>
+<li><code>cc</code> 指令拆解</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/cc1
+</span><span class='line'>-quiet
+</span><span class='line'>-v
+</span><span class='line'>-imultiarch
+</span><span class='line'>x86_64-linux-gnu
+</span><span class='line'>hello.c
+</span><span class='line'>-quiet
+</span><span class='line'>-dumpbase
+</span><span class='line'>hello.c
+</span><span class='line'>-mtune=generic
+</span><span class='line'>-march=x86-64
+</span><span class='line'>-auxbase
+</span><span class='line'>hello
+</span><span class='line'>-version
+</span><span class='line'>-fstack-protector-strong
+</span><span class='line'>-Wformat
+</span><span class='line'>-Wformat-security
+</span><span class='line'>-o
+</span><span class='line'>/tmp/ccUCGQCr.s</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>as</code> 指令拆解</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>as -v --64 -o /tmp/cct36Qgi.o /tmp/ccUCGQCr.s</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>collect2</code> 指令拆解</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/collect2
+</span><span class='line'>-plugin
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so
+</span><span class='line'>-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
+</span><span class='line'>-plugin-opt=-fresolution=/tmp/ccizEA38.res
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc_s
+</span><span class='line'>-plugin-opt=-pass-through=-lc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc
+</span><span class='line'>-plugin-opt=-pass-through=-lgcc_s
+</span><span class='line'>--sysroot=/
+</span><span class='line'>--build-id
+</span><span class='line'>--eh-frame-hdr
+</span><span class='line'>-m
+</span><span class='line'>elf_x86_64
+</span><span class='line'>--hash-style=gnu
+</span><span class='line'>--as-needed
+</span><span class='line'>-dynamic-linker
+</span><span class='line'>/lib64/ld-linux-x86-64.so.2
+</span><span class='line'>-pie
+</span><span class='line'>-z
+</span><span class='line'>now
+</span><span class='line'>-z
+</span><span class='line'>relro
+</span><span class='line'>-o
+</span><span class='line'>hello
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib
+</span><span class='line'>-L/lib/x86_64-linux-gnu
+</span><span class='line'>-L/lib/../lib
+</span><span class='line'>-L/usr/lib/x86_64-linux-gnu
+</span><span class='line'>-L/usr/lib/../lib
+</span><span class='line'>-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..
+</span><span class='line'>/tmp/cct36Qgi.o
+</span><span class='line'>-lgcc
+</span><span class='line'>--push-state
+</span><span class='line'>--as-needed
+</span><span class='line'>-lgcc_s
+</span><span class='line'>--pop-state
+</span><span class='line'>-lc
+</span><span class='line'>-lgcc
+</span><span class='line'>--push-state
+</span><span class='line'>--as-needed
+</span><span class='line'>-lgcc_s
+</span><span class='line'>--pop-state
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o
+</span><span class='line'>/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>用 <code>strace</code> 觀察 <code>gcc hello.c -o hello</code> 會呼叫哪些執行檔</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ strace -s 8192 -f gcc  -o hello hello.c 2&gt;&1 | grep execve
+</span><span class='line'>execve("/usr/bin/gcc", ["gcc", "-o", "hello", "hello.c"], 0x7fff89e3d720 /* 71 vars */) = 0
+</span><span class='line'>[pid 23886] execve("/usr/lib/gcc/x86_64-linux-gnu/7/cc1", ["/usr/lib/gcc/x86_64-linux-gnu/7/cc1", "-quiet", "-imultiarch", "x86_64-linux-gnu", "hello.c", "-quiet", "-dumpbase", "hello.c", "-mtune=generic", "-march=x86-64", "-auxbase", "hello", "-fstack-protector-strong", "-Wformat", "-Wformat-security", "-o", "/tmp/ccLpZPzY.s"], 0x211e8c0 /* 76 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23886] &lt;... execve resumed&gt; )      = 0
+</span><span class='line'>[pid 23887] execve("/usr/bin/as", ["as", "--64", "-o", "/tmp/cceDpnfo.o", "/tmp/ccLpZPzY.s"], 0x211e8c0 /* 76 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23887] &lt;... execve resumed&gt; )      = 0
+</span><span class='line'>[pid 23888] execve("/usr/lib/gcc/x86_64-linux-gnu/7/collect2", ["/usr/lib/gcc/x86_64-linux-gnu/7/collect2", "-plugin", "/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so", "-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper", "-plugin-opt=-fresolution=/tmp/ccN3BxWN.res", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "-plugin-opt=-pass-through=-lc", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "--sysroot=/", "--build-id", "--eh-frame-hdr", "-m", "elf_x86_64", "--hash-style=gnu", "--as-needed", "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2", "-pie", "-z", "now", "-z", "relro", "-o", "hello", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o", "/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o", "-L/usr/lib/gcc/x86_64-linux-gnu/7", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib", "-L/lib/x86_64-linux-gnu", "-L/lib/../lib", "-L/usr/lib/x86_64-linux-gnu", "-L/usr/lib/../lib", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..", "/tmp/cceDpnfo.o", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "-lc", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o"], 0x211f750 /* 78 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23888] &lt;... execve resumed&gt; )      = 0
+</span><span class='line'>[pid 23889] execve("/usr/bin/ld", ["/usr/bin/ld", "-plugin", "/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so", "-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper", "-plugin-opt=-fresolution=/tmp/ccN3BxWN.res", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "-plugin-opt=-pass-through=-lc", "-plugin-opt=-pass-through=-lgcc", "-plugin-opt=-pass-through=-lgcc_s", "--sysroot=/", "--build-id", "--eh-frame-hdr", "-m", "elf_x86_64", "--hash-style=gnu", "--as-needed", "-dynamic-linker", "/lib64/ld-linux-x86-64.so.2", "-pie", "-z", "now", "-z", "relro", "-o", "hello", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o", "/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o", "-L/usr/lib/gcc/x86_64-linux-gnu/7", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib", "-L/lib/x86_64-linux-gnu", "-L/lib/../lib", "-L/usr/lib/x86_64-linux-gnu", "-L/usr/lib/../lib", "-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..", "/tmp/cceDpnfo.o", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "-lc", "-lgcc", "--push-state", "--as-needed", "-lgcc_s", "--pop-state", "/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o", "/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o"], 0x7ffc38ceec88 /* 78 vars */ &lt;unfinished ...&gt;
+</span><span class='line'>[pid 23889] &lt;... execve resumed&gt; )      = 0</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>完整的 <code>gcc -v -o hello hello.c</code> 輸出</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ gcc -v -o hello hello.c
+</span><span class='line'>Using built-in specs.
+</span><span class='line'>COLLECT_GCC=gcc
+</span><span class='line'>COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
+</span><span class='line'>OFFLOAD_TARGET_NAMES=nvptx-none
+</span><span class='line'>OFFLOAD_TARGET_DEFAULT=1
+</span><span class='line'>Target: x86_64-linux-gnu
+</span><span class='line'>Configured with: ../src/configure -v --with-pkgversion='Ubuntu 7.4.0-1ubuntu1~18.04.1' --with-bugurl=file:///usr/share/doc/gcc-7/README.Bugs --enable-languages=c,ada,c++,go,brig,d,fortran,objc,obj-c++ --prefix=/usr --with-gcc-major-version-only --program-suffix=-7 --program-prefix=x86_64-linux-gnu- --enable-shared --enable-linker-build-id --libexecdir=/usr/lib --without-included-gettext --enable-threads=posix --libdir=/usr/lib --enable-nls --with-sysroot=/ --enable-clocale=gnu --enable-libstdcxx-debug --enable-libstdcxx-time=yes --with-default-libstdcxx-abi=new --enable-gnu-unique-object --disable-vtable-verify --enable-libmpx --enable-plugin --enable-default-pie --with-system-zlib --with-target-system-zlib --enable-objc-gc=auto --enable-multiarch --disable-werror --with-arch-32=i686 --with-abi=m64 --with-multilib-list=m32,m64,mx32 --enable-multilib --with-tune=generic --enable-offload-targets=nvptx-none --without-cuda-driver --enable-checking=release --build=x86_64-linux-gnu --host=x86_64-linux-gnu --target=x86_64-linux-gnu
+</span><span class='line'>Thread model: posix
+</span><span class='line'>gcc version 7.4.0 (Ubuntu 7.4.0-1ubuntu1~18.04.1) 
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/cc1 -quiet -v -imultiarch x86_64-linux-gnu hello.c -quiet -dumpbase hello.c -mtune=generic -march=x86-64 -auxbase hello -version -fstack-protector-strong -Wformat -Wformat-security -o /tmp/ccUCGQCr.s
+</span><span class='line'>GNU C11 (Ubuntu 7.4.0-1ubuntu1~18.04.1) version 7.4.0 (x86_64-linux-gnu)
+</span><span class='line'>  compiled by GNU C version 7.4.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP
+</span><span class='line'>
+</span><span class='line'>GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+</span><span class='line'>ignoring nonexistent directory "/usr/local/include/x86_64-linux-gnu"
+</span><span class='line'>ignoring nonexistent directory "/usr/lib/gcc/x86_64-linux-gnu/7/../../../../x86_64-linux-gnu/include"
+</span><span class='line'>#include "..." search starts here:
+</span><span class='line'>#include &lt;...&gt; search starts here:
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/include
+</span><span class='line'> /usr/local/include
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/include-fixed
+</span><span class='line'> /usr/include/x86_64-linux-gnu
+</span><span class='line'> /usr/include
+</span><span class='line'>End of search list.
+</span><span class='line'>GNU C11 (Ubuntu 7.4.0-1ubuntu1~18.04.1) version 7.4.0 (x86_64-linux-gnu)
+</span><span class='line'>  compiled by GNU C version 7.4.0, GMP version 6.1.2, MPFR version 4.0.1, MPC version 1.1.0, isl version isl-0.19-GMP
+</span><span class='line'>
+</span><span class='line'>GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+</span><span class='line'>Compiler executable checksum: fa57db1fe2d756b22d454aa8428fd3bd
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
+</span><span class='line'> as -v --64 -o /tmp/cct36Qgi.o /tmp/ccUCGQCr.s
+</span><span class='line'>GNU assembler version 2.30 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.30
+</span><span class='line'>COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/
+</span><span class='line'>LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/7/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/7/../../../:/lib/:/usr/lib/
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'
+</span><span class='line'> /usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccizEA38.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o hello /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. /tmp/cct36Qgi.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
+</span><span class='line'>COLLECT_GCC_OPTIONS='-v' '-o' 'hello' '-mtune=generic' '-march=x86-64'</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>collect2 說明</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+<span class='line-number'>182</span>
+<span class='line-number'>183</span>
+<span class='line-number'>184</span>
+<span class='line-number'>185</span>
+<span class='line-number'>186</span>
+<span class='line-number'>187</span>
+<span class='line-number'>188</span>
+<span class='line-number'>189</span>
+<span class='line-number'>190</span>
+<span class='line-number'>191</span>
+<span class='line-number'>192</span>
+<span class='line-number'>193</span>
+<span class='line-number'>194</span>
+<span class='line-number'>195</span>
+<span class='line-number'>196</span>
+<span class='line-number'>197</span>
+<span class='line-number'>198</span>
+<span class='line-number'>199</span>
+<span class='line-number'>200</span>
+<span class='line-number'>201</span>
+<span class='line-number'>202</span>
+<span class='line-number'>203</span>
+<span class='line-number'>204</span>
+<span class='line-number'>205</span>
+<span class='line-number'>206</span>
+<span class='line-number'>207</span>
+<span class='line-number'>208</span>
+<span class='line-number'>209</span>
+<span class='line-number'>210</span>
+<span class='line-number'>211</span>
+<span class='line-number'>212</span>
+<span class='line-number'>213</span>
+<span class='line-number'>214</span>
+<span class='line-number'>215</span>
+<span class='line-number'>216</span>
+<span class='line-number'>217</span>
+<span class='line-number'>218</span>
+<span class='line-number'>219</span>
+<span class='line-number'>220</span>
+<span class='line-number'>221</span>
+<span class='line-number'>222</span>
+<span class='line-number'>223</span>
+<span class='line-number'>224</span>
+<span class='line-number'>225</span>
+<span class='line-number'>226</span>
+<span class='line-number'>227</span>
+<span class='line-number'>228</span>
+<span class='line-number'>229</span>
+<span class='line-number'>230</span>
+<span class='line-number'>231</span>
+<span class='line-number'>232</span>
+<span class='line-number'>233</span>
+<span class='line-number'>234</span>
+<span class='line-number'>235</span>
+<span class='line-number'>236</span>
+<span class='line-number'>237</span>
+<span class='line-number'>238</span>
+<span class='line-number'>239</span>
+<span class='line-number'>240</span>
+<span class='line-number'>241</span>
+<span class='line-number'>242</span>
+<span class='line-number'>243</span>
+<span class='line-number'>244</span>
+<span class='line-number'>245</span>
+<span class='line-number'>246</span>
+<span class='line-number'>247</span>
+<span class='line-number'>248</span>
+<span class='line-number'>249</span>
+<span class='line-number'>250</span>
+<span class='line-number'>251</span>
+<span class='line-number'>252</span>
+<span class='line-number'>253</span>
+<span class='line-number'>254</span>
+<span class='line-number'>255</span>
+<span class='line-number'>256</span>
+<span class='line-number'>257</span>
+<span class='line-number'>258</span>
+<span class='line-number'>259</span>
+<span class='line-number'>260</span>
+<span class='line-number'>261</span>
+<span class='line-number'>262</span>
+<span class='line-number'>263</span>
+<span class='line-number'>264</span>
+<span class='line-number'>265</span>
+<span class='line-number'>266</span>
+<span class='line-number'>267</span>
+<span class='line-number'>268</span>
+<span class='line-number'>269</span>
+<span class='line-number'>270</span>
+<span class='line-number'>271</span>
+<span class='line-number'>272</span>
+<span class='line-number'>273</span>
+<span class='line-number'>274</span>
+<span class='line-number'>275</span>
+<span class='line-number'>276</span>
+<span class='line-number'>277</span>
+<span class='line-number'>278</span>
+<span class='line-number'>279</span>
+<span class='line-number'>280</span>
+<span class='line-number'>281</span>
+<span class='line-number'>282</span>
+<span class='line-number'>283</span>
+<span class='line-number'>284</span>
+<span class='line-number'>285</span>
+<span class='line-number'>286</span>
+<span class='line-number'>287</span>
+<span class='line-number'>288</span>
+<span class='line-number'>289</span>
+<span class='line-number'>290</span>
+<span class='line-number'>291</span>
+<span class='line-number'>292</span>
+<span class='line-number'>293</span>
+<span class='line-number'>294</span>
+<span class='line-number'>295</span>
+<span class='line-number'>296</span>
+<span class='line-number'>297</span>
+<span class='line-number'>298</span>
+<span class='line-number'>299</span>
+<span class='line-number'>300</span>
+<span class='line-number'>301</span>
+<span class='line-number'>302</span>
+<span class='line-number'>303</span>
+<span class='line-number'>304</span>
+<span class='line-number'>305</span>
+<span class='line-number'>306</span>
+<span class='line-number'>307</span>
+<span class='line-number'>308</span>
+<span class='line-number'>309</span>
+<span class='line-number'>310</span>
+<span class='line-number'>311</span>
+<span class='line-number'>312</span>
+<span class='line-number'>313</span>
+<span class='line-number'>314</span>
+<span class='line-number'>315</span>
+<span class='line-number'>316</span>
+<span class='line-number'>317</span>
+<span class='line-number'>318</span>
+<span class='line-number'>319</span>
+<span class='line-number'>320</span>
+<span class='line-number'>321</span>
+<span class='line-number'>322</span>
+<span class='line-number'>323</span>
+<span class='line-number'>324</span>
+<span class='line-number'>325</span>
+<span class='line-number'>326</span>
+<span class='line-number'>327</span>
+<span class='line-number'>328</span>
+<span class='line-number'>329</span>
+<span class='line-number'>330</span>
+<span class='line-number'>331</span>
+<span class='line-number'>332</span>
+<span class='line-number'>333</span>
+<span class='line-number'>334</span>
+<span class='line-number'>335</span>
+<span class='line-number'>336</span>
+<span class='line-number'>337</span>
+<span class='line-number'>338</span>
+<span class='line-number'>339</span>
+<span class='line-number'>340</span>
+<span class='line-number'>341</span>
+<span class='line-number'>342</span>
+<span class='line-number'>343</span>
+<span class='line-number'>344</span>
+<span class='line-number'>345</span>
+<span class='line-number'>346</span>
+<span class='line-number'>347</span>
+<span class='line-number'>348</span>
+<span class='line-number'>349</span>
+<span class='line-number'>350</span>
+<span class='line-number'>351</span>
+<span class='line-number'>352</span>
+<span class='line-number'>353</span>
+<span class='line-number'>354</span>
+<span class='line-number'>355</span>
+<span class='line-number'>356</span>
+<span class='line-number'>357</span>
+<span class='line-number'>358</span>
+<span class='line-number'>359</span>
+<span class='line-number'>360</span>
+<span class='line-number'>361</span>
+<span class='line-number'>362</span>
+<span class='line-number'>363</span>
+<span class='line-number'>364</span>
+<span class='line-number'>365</span>
+<span class='line-number'>366</span>
+<span class='line-number'>367</span>
+<span class='line-number'>368</span>
+<span class='line-number'>369</span>
+<span class='line-number'>370</span>
+<span class='line-number'>371</span>
+<span class='line-number'>372</span>
+<span class='line-number'>373</span>
+<span class='line-number'>374</span>
+<span class='line-number'>375</span>
+<span class='line-number'>376</span>
+<span class='line-number'>377</span>
+<span class='line-number'>378</span>
+<span class='line-number'>379</span>
+<span class='line-number'>380</span>
+<span class='line-number'>381</span>
+<span class='line-number'>382</span>
+<span class='line-number'>383</span>
+<span class='line-number'>384</span>
+<span class='line-number'>385</span>
+<span class='line-number'>386</span>
+<span class='line-number'>387</span>
+<span class='line-number'>388</span>
+<span class='line-number'>389</span>
+<span class='line-number'>390</span>
+<span class='line-number'>391</span>
+<span class='line-number'>392</span>
+<span class='line-number'>393</span>
+<span class='line-number'>394</span>
+<span class='line-number'>395</span>
+<span class='line-number'>396</span>
+<span class='line-number'>397</span>
+<span class='line-number'>398</span>
+<span class='line-number'>399</span>
+<span class='line-number'>400</span>
+<span class='line-number'>401</span>
+<span class='line-number'>402</span>
+<span class='line-number'>403</span>
+<span class='line-number'>404</span>
+<span class='line-number'>405</span>
+<span class='line-number'>406</span>
+<span class='line-number'>407</span>
+<span class='line-number'>408</span>
+<span class='line-number'>409</span>
+<span class='line-number'>410</span>
+<span class='line-number'>411</span>
+<span class='line-number'>412</span>
+<span class='line-number'>413</span>
+<span class='line-number'>414</span>
+<span class='line-number'>415</span>
+<span class='line-number'>416</span>
+<span class='line-number'>417</span>
+<span class='line-number'>418</span>
+<span class='line-number'>419</span>
+<span class='line-number'>420</span>
+<span class='line-number'>421</span>
+<span class='line-number'>422</span>
+<span class='line-number'>423</span>
+<span class='line-number'>424</span>
+<span class='line-number'>425</span>
+<span class='line-number'>426</span>
+<span class='line-number'>427</span>
+<span class='line-number'>428</span>
+<span class='line-number'>429</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ /usr/lib/gcc/x86_64-linux-gnu/7/collect2 --help
+</span><span class='line'>Usage: collect2 [options]
+</span><span class='line'> Wrap linker and generate constructor code if needed.
+</span><span class='line'> Options:
+</span><span class='line'>  -debug          Enable debug output
+</span><span class='line'>  --help          Display this information
+</span><span class='line'>  -v, --version   Display this program's version number
+</span><span class='line'>
+</span><span class='line'>Overview: http://gcc.gnu.org/onlinedocs/gccint/Collect2.html
+</span><span class='line'>Report bugs: &lt;file:///usr/share/doc/gcc-7/README.Bugs&gt;
+</span><span class='line'>
+</span><span class='line'>Usage: /usr/bin/ld [options] file...
+</span><span class='line'>Options:
+</span><span class='line'>  -a KEYWORD                  Shared library control for HP/UX compatibility
+</span><span class='line'>  -A ARCH, --architecture ARCH
+</span><span class='line'>                              Set architecture
+</span><span class='line'>  -b TARGET, --format TARGET  Specify target for following input files
+</span><span class='line'>  -c FILE, --mri-script FILE  Read MRI format linker script
+</span><span class='line'>  -d, -dc, -dp                Force common symbols to be defined
+</span><span class='line'>  --force-group-allocation    Force group members out of groups
+</span><span class='line'>  -e ADDRESS, --entry ADDRESS Set start address
+</span><span class='line'>  -E, --export-dynamic        Export all dynamic symbols
+</span><span class='line'>  --no-export-dynamic         Undo the effect of --export-dynamic
+</span><span class='line'>  -EB                         Link big-endian objects
+</span><span class='line'>  -EL                         Link little-endian objects
+</span><span class='line'>  -f SHLIB, --auxiliary SHLIB Auxiliary filter for shared object symbol table
+</span><span class='line'>  -F SHLIB, --filter SHLIB    Filter for shared object symbol table
+</span><span class='line'>  -g                          Ignored
+</span><span class='line'>  -G SIZE, --gpsize SIZE      Small data size (if no size, same as --shared)
+</span><span class='line'>  -h FILENAME, -soname FILENAME
+</span><span class='line'>                              Set internal name of shared library
+</span><span class='line'>  -I PROGRAM, --dynamic-linker PROGRAM
+</span><span class='line'>                              Set PROGRAM as the dynamic linker to use
+</span><span class='line'>  --no-dynamic-linker         Produce an executable with no program interpreter header
+</span><span class='line'>  -l LIBNAME, --library LIBNAME
+</span><span class='line'>                              Search for library LIBNAME
+</span><span class='line'>  -L DIRECTORY, --library-path DIRECTORY
+</span><span class='line'>                              Add DIRECTORY to library search path
+</span><span class='line'>  --sysroot=&lt;DIRECTORY&gt;       Override the default sysroot location
+</span><span class='line'>  -m EMULATION                Set emulation
+</span><span class='line'>  -M, --print-map             Print map file on standard output
+</span><span class='line'>  -n, --nmagic                Do not page align data
+</span><span class='line'>  -N, --omagic                Do not page align data, do not make text readonly
+</span><span class='line'>  --no-omagic                 Page align data, make text readonly
+</span><span class='line'>  -o FILE, --output FILE      Set output file name
+</span><span class='line'>  -O                          Optimize output file
+</span><span class='line'>  --out-implib FILE           Generate import library
+</span><span class='line'>  -plugin PLUGIN              Load named plugin
+</span><span class='line'>  -plugin-opt ARG             Send arg to last-loaded plugin
+</span><span class='line'>  -flto                       Ignored for GCC LTO option compatibility
+</span><span class='line'>  -flto-partition=            Ignored for GCC LTO option compatibility
+</span><span class='line'>  -fuse-ld=                   Ignored for GCC linker option compatibility
+</span><span class='line'>  --map-whole-files           Ignored for gold option compatibility
+</span><span class='line'>  --no-map-whole-files        Ignored for gold option compatibility
+</span><span class='line'>  -Qy                         Ignored for SVR4 compatibility
+</span><span class='line'>  -q, --emit-relocs           Generate relocations in final output
+</span><span class='line'>  -r, -i, --relocatable       Generate relocatable output
+</span><span class='line'>  -R FILE, --just-symbols FILE
+</span><span class='line'>                              Just link symbols (if directory, same as --rpath)
+</span><span class='line'>  -s, --strip-all             Strip all symbols
+</span><span class='line'>  -S, --strip-debug           Strip debugging symbols
+</span><span class='line'>  --strip-discarded           Strip symbols in discarded sections
+</span><span class='line'>  --no-strip-discarded        Do not strip symbols in discarded sections
+</span><span class='line'>  -t, --trace                 Trace file opens
+</span><span class='line'>  -T FILE, --script FILE      Read linker script
+</span><span class='line'>  --default-script FILE, -dT  Read default linker script
+</span><span class='line'>  -u SYMBOL, --undefined SYMBOL
+</span><span class='line'>                              Start with undefined reference to SYMBOL
+</span><span class='line'>  --require-defined SYMBOL    Require SYMBOL be defined in the final output
+</span><span class='line'>  --unique [=SECTION]         Don't merge input [SECTION | orphan] sections
+</span><span class='line'>  -Ur                         Build global constructor/destructor tables
+</span><span class='line'>  -v, --version               Print version information
+</span><span class='line'>  -V                          Print version and emulation information
+</span><span class='line'>  -x, --discard-all           Discard all local symbols
+</span><span class='line'>  -X, --discard-locals        Discard temporary local symbols (default)
+</span><span class='line'>  --discard-none              Don't discard any local symbols
+</span><span class='line'>  -y SYMBOL, --trace-symbol SYMBOL
+</span><span class='line'>                              Trace mentions of SYMBOL
+</span><span class='line'>  -Y PATH                     Default search path for Solaris compatibility
+</span><span class='line'>  -(, --start-group           Start a group
+</span><span class='line'>  -), --end-group             End a group
+</span><span class='line'>  --accept-unknown-input-arch Accept input files whose architecture cannot be determined
+</span><span class='line'>  --no-accept-unknown-input-arch
+</span><span class='line'>                              Reject input files whose architecture is unknown
+</span><span class='line'>  --as-needed                 Only set DT_NEEDED for following dynamic libs if used
+</span><span class='line'>  --no-as-needed              Always set DT_NEEDED for dynamic libraries mentioned on
+</span><span class='line'>                                the command line
+</span><span class='line'>  -assert KEYWORD             Ignored for SunOS compatibility
+</span><span class='line'>  -Bdynamic, -dy, -call_shared
+</span><span class='line'>                              Link against shared libraries
+</span><span class='line'>  -Bstatic, -dn, -non_shared, -static
+</span><span class='line'>                              Do not link against shared libraries
+</span><span class='line'>  -Bsymbolic                  Bind global references locally
+</span><span class='line'>  -Bsymbolic-functions        Bind global function references locally
+</span><span class='line'>  --check-sections            Check section addresses for overlaps (default)
+</span><span class='line'>  --no-check-sections         Do not check section addresses for overlaps
+</span><span class='line'>  --copy-dt-needed-entries    Copy DT_NEEDED links mentioned inside DSOs that follow
+</span><span class='line'>  --no-copy-dt-needed-entries Do not copy DT_NEEDED links mentioned inside DSOs that follow
+</span><span class='line'>  --cref                      Output cross reference table
+</span><span class='line'>  --defsym SYMBOL=EXPRESSION  Define a symbol
+</span><span class='line'>  --demangle [=STYLE]         Demangle symbol names [using STYLE]
+</span><span class='line'>  --embedded-relocs           Generate embedded relocs
+</span><span class='line'>  --fatal-warnings            Treat warnings as errors
+</span><span class='line'>  --no-fatal-warnings         Do not treat warnings as errors (default)
+</span><span class='line'>  -fini SYMBOL                Call SYMBOL at unload-time
+</span><span class='line'>  --force-exe-suffix          Force generation of file with .exe suffix
+</span><span class='line'>  --gc-sections               Remove unused sections (on some targets)
+</span><span class='line'>  --no-gc-sections            Don't remove unused sections (default)
+</span><span class='line'>  --print-gc-sections         List removed unused sections on stderr
+</span><span class='line'>  --no-print-gc-sections      Do not list removed unused sections
+</span><span class='line'>  --gc-keep-exported          Keep exported symbols when removing unused sections
+</span><span class='line'>  --hash-size=&lt;NUMBER&gt;        Set default hash table size close to &lt;NUMBER&gt;
+</span><span class='line'>  --help                      Print option help
+</span><span class='line'>  -init SYMBOL                Call SYMBOL at load-time
+</span><span class='line'>  -Map FILE                   Write a map file
+</span><span class='line'>  --no-define-common          Do not define Common storage
+</span><span class='line'>  --no-demangle               Do not demangle symbol names
+</span><span class='line'>  --no-keep-memory            Use less memory and more disk I/O
+</span><span class='line'>  --no-undefined              Do not allow unresolved references in object files
+</span><span class='line'>  --allow-shlib-undefined     Allow unresolved references in shared libraries
+</span><span class='line'>  --no-allow-shlib-undefined  Do not allow unresolved references in shared libs
+</span><span class='line'>  --allow-multiple-definition Allow multiple definitions
+</span><span class='line'>  --no-undefined-version      Disallow undefined version
+</span><span class='line'>  --default-symver            Create default symbol version
+</span><span class='line'>  --default-imported-symver   Create default symbol version for imported symbols
+</span><span class='line'>  --no-warn-mismatch          Don't warn about mismatched input files
+</span><span class='line'>  --no-warn-search-mismatch   Don't warn on finding an incompatible library
+</span><span class='line'>  --no-whole-archive          Turn off --whole-archive
+</span><span class='line'>  --noinhibit-exec            Create an output file even if errors occur
+</span><span class='line'>  -nostdlib                   Only use library directories specified on
+</span><span class='line'>                                the command line
+</span><span class='line'>  --oformat TARGET            Specify target of output file
+</span><span class='line'>  --print-output-format       Print default output format
+</span><span class='line'>  --print-sysroot             Print current sysroot
+</span><span class='line'>  -qmagic                     Ignored for Linux compatibility
+</span><span class='line'>  --reduce-memory-overheads   Reduce memory overheads, possibly taking much longer
+</span><span class='line'>  --relax                     Reduce code size by using target specific optimizations
+</span><span class='line'>  --no-relax                  Do not use relaxation techniques to reduce code size
+</span><span class='line'>  --retain-symbols-file FILE  Keep only symbols listed in FILE
+</span><span class='line'>  -rpath PATH                 Set runtime shared library search path
+</span><span class='line'>  -rpath-link PATH            Set link time shared library search path
+</span><span class='line'>  -shared, -Bshareable        Create a shared library
+</span><span class='line'>  -pie, --pic-executable      Create a position independent executable
+</span><span class='line'>  --sort-common [=ascending|descending]
+</span><span class='line'>                              Sort common symbols by alignment [in specified order]
+</span><span class='line'>  --sort-section name|alignment
+</span><span class='line'>                              Sort sections by name or maximum alignment
+</span><span class='line'>  --spare-dynamic-tags COUNT  How many tags to reserve in .dynamic section
+</span><span class='line'>  --split-by-file [=SIZE]     Split output sections every SIZE octets
+</span><span class='line'>  --split-by-reloc [=COUNT]   Split output sections every COUNT relocs
+</span><span class='line'>  --stats                     Print memory usage statistics
+</span><span class='line'>  --target-help               Display target specific options
+</span><span class='line'>  --task-link SYMBOL          Do task level linking
+</span><span class='line'>  --traditional-format        Use same format as native linker
+</span><span class='line'>  --section-start SECTION=ADDRESS
+</span><span class='line'>                              Set address of named section
+</span><span class='line'>  -Tbss ADDRESS               Set address of .bss section
+</span><span class='line'>  -Tdata ADDRESS              Set address of .data section
+</span><span class='line'>  -Ttext ADDRESS              Set address of .text section
+</span><span class='line'>  -Ttext-segment ADDRESS      Set address of text segment
+</span><span class='line'>  -Trodata-segment ADDRESS    Set address of rodata segment
+</span><span class='line'>  -Tldata-segment ADDRESS     Set address of ldata segment
+</span><span class='line'>  --unresolved-symbols=&lt;method&gt;
+</span><span class='line'>                              How to handle unresolved symbols.  &lt;method&gt; is:
+</span><span class='line'>                                ignore-all, report-all, ignore-in-object-files,
+</span><span class='line'>                                ignore-in-shared-libs
+</span><span class='line'>  --verbose [=NUMBER]         Output lots of information during link
+</span><span class='line'>  --version-script FILE       Read version information script
+</span><span class='line'>  --version-exports-section SYMBOL
+</span><span class='line'>                              Take export symbols list from .exports, using
+</span><span class='line'>                                SYMBOL as the version.
+</span><span class='line'>  --dynamic-list-data         Add data symbols to dynamic list
+</span><span class='line'>  --dynamic-list-cpp-new      Use C++ operator new/delete dynamic list
+</span><span class='line'>  --dynamic-list-cpp-typeinfo Use C++ typeinfo dynamic list
+</span><span class='line'>  --dynamic-list FILE         Read dynamic list
+</span><span class='line'>  --warn-common               Warn about duplicate common symbols
+</span><span class='line'>  --warn-constructors         Warn if global constructors/destructors are seen
+</span><span class='line'>  --warn-multiple-gp          Warn if the multiple GP values are used
+</span><span class='line'>  --warn-once                 Warn only once per undefined symbol
+</span><span class='line'>  --warn-section-align        Warn if start of section changes due to alignment
+</span><span class='line'>  --warn-shared-textrel       Warn if shared object has DT_TEXTREL
+</span><span class='line'>  --warn-alternate-em         Warn if an object has alternate ELF machine code
+</span><span class='line'>  --warn-unresolved-symbols   Report unresolved symbols as warnings
+</span><span class='line'>  --error-unresolved-symbols  Report unresolved symbols as errors
+</span><span class='line'>  --whole-archive             Include all objects from following archives
+</span><span class='line'>  --wrap SYMBOL               Use wrapper functions for SYMBOL
+</span><span class='line'>  --ignore-unresolved-symbol SYMBOL
+</span><span class='line'>                              Unresolved SYMBOL will not cause an error or warning
+</span><span class='line'>  --push-state                Push state of flags governing input file handling
+</span><span class='line'>  --pop-state                 Pop state of flags governing input file handling
+</span><span class='line'>  --print-memory-usage        Report target memory usage
+</span><span class='line'>  --orphan-handling =MODE     Control how orphan sections are handled.
+</span><span class='line'>  @FILE                       Read options from FILE
+</span><span class='line'>/usr/bin/ld: supported targets: elf64-x86-64 elf32-i386 elf32-iamcu elf32-x86-64 a.out-i386-linux pei-i386 pei-x86-64 elf64-l1om elf64-k1om elf64-little elf64-big elf32-little elf32-big pe-x86-64 pe-bigobj-x86-64 pe-i386 plugin srec symbolsrec verilog tekhex binary ihex
+</span><span class='line'>/usr/bin/ld: supported emulations: elf_x86_64 elf32_x86_64 elf_i386 elf_iamcu i386linux elf_l1om elf_k1om i386pep i386pe
+</span><span class='line'>/usr/bin/ld: emulation specific options:
+</span><span class='line'>ELF emulations:
+</span><span class='line'>  --ld-generated-unwind-info  Generate exception handling info for PLT
+</span><span class='line'>  --no-ld-generated-unwind-info
+</span><span class='line'>                              Don't generate exception handling info for PLT
+</span><span class='line'>  --build-id[=STYLE]          Generate build ID note
+</span><span class='line'>  --compress-debug-sections=[none|zlib|zlib-gnu|zlib-gabi]
+</span><span class='line'>                              Compress DWARF debug sections using zlib
+</span><span class='line'>                               Default: none
+</span><span class='line'>  -z common-page-size=SIZE    Set common page size to SIZE
+</span><span class='line'>  -z max-page-size=SIZE       Set maximum page size to SIZE
+</span><span class='line'>  -z defs                     Report unresolved symbols in object files.
+</span><span class='line'>  -z muldefs                  Allow multiple definitions
+</span><span class='line'>  -z execstack                Mark executable as requiring executable stack
+</span><span class='line'>  -z noexecstack              Mark executable as not requiring executable stack
+</span><span class='line'>  -z globalaudit              Mark executable requiring global auditing
+</span><span class='line'>  --audit=AUDITLIB            Specify a library to use for auditing
+</span><span class='line'>  -Bgroup                     Selects group name lookup rules for DSO
+</span><span class='line'>  --disable-new-dtags         Disable new dynamic tags
+</span><span class='line'>  --enable-new-dtags          Enable new dynamic tags
+</span><span class='line'>  --eh-frame-hdr              Create .eh_frame_hdr section
+</span><span class='line'>  --no-eh-frame-hdr           Do not create .eh_frame_hdr section
+</span><span class='line'>  --exclude-libs=LIBS         Make all symbols in LIBS hidden
+</span><span class='line'>  --hash-style=STYLE          Set hash style to sysv, gnu or both
+</span><span class='line'>  -P AUDITLIB, --depaudit=AUDITLIB
+</span><span class='line'>                Specify a library to use for auditing dependencies
+</span><span class='line'>  -z combreloc                Merge dynamic relocs into one section and sort
+</span><span class='line'>  -z nocombreloc              Don't merge dynamic relocs into one section
+</span><span class='line'>  -z global                   Make symbols in DSO available for subsequently
+</span><span class='line'>                 loaded objects
+</span><span class='line'>  -z initfirst                Mark DSO to be initialized first at runtime
+</span><span class='line'>  -z interpose                Mark object to interpose all DSOs but executable
+</span><span class='line'>  -z lazy                     Mark object lazy runtime binding (default)
+</span><span class='line'>  -z loadfltr                 Mark object requiring immediate process
+</span><span class='line'>  -z nocopyreloc              Don't create copy relocs
+</span><span class='line'>  -z nodefaultlib             Mark object not to use default search paths
+</span><span class='line'>  -z nodelete                 Mark DSO non-deletable at runtime
+</span><span class='line'>  -z nodlopen                 Mark DSO not available to dlopen
+</span><span class='line'>  -z nodump                   Mark DSO not available to dldump
+</span><span class='line'>  -z now                      Mark object non-lazy runtime binding
+</span><span class='line'>  -z origin                   Mark object requiring immediate $ORIGIN
+</span><span class='line'>              processing at runtime
+</span><span class='line'>  -z relro                    Create RELRO program header (default)
+</span><span class='line'>  -z norelro                  Don't create RELRO program header
+</span><span class='line'>  -z separate-code            Create separate code program header
+</span><span class='line'>  -z noseparate-code          Don't create separate code program header (default)
+</span><span class='line'>  -z common                   Generate common symbols with STT_COMMON type
+</span><span class='line'>  -z nocommon                 Generate common symbols with STT_OBJECT type
+</span><span class='line'>  -z stack-size=SIZE          Set size of stack segment
+</span><span class='line'>  -z text                     Treat DT_TEXTREL in shared object as error
+</span><span class='line'>  -z notext                   Don't treat DT_TEXTREL in shared object as error
+</span><span class='line'>  -z textoff                  Don't treat DT_TEXTREL in shared object as error
+</span><span class='line'>elf_x86_64: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z noreloc-overflow         Disable relocation overflow check
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>  -z ibtplt                   Generate IBT-enabled PLT entries
+</span><span class='line'>  -z ibt                      Generate GNU_PROPERTY_X86_FEATURE_1_IBT
+</span><span class='line'>  -z shstk                    Generate GNU_PROPERTY_X86_FEATURE_1_SHSTK
+</span><span class='line'>  -z bndplt                   Always generate BND prefix in PLT entries
+</span><span class='line'>elf32_x86_64: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z noreloc-overflow         Disable relocation overflow check
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>  -z ibtplt                   Generate IBT-enabled PLT entries
+</span><span class='line'>  -z ibt                      Generate GNU_PROPERTY_X86_FEATURE_1_IBT
+</span><span class='line'>  -z shstk                    Generate GNU_PROPERTY_X86_FEATURE_1_SHSTK
+</span><span class='line'>elf_i386: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>  -z ibtplt                   Generate IBT-enabled PLT entries
+</span><span class='line'>  -z ibt                      Generate GNU_PROPERTY_X86_FEATURE_1_IBT
+</span><span class='line'>  -z shstk                    Generate GNU_PROPERTY_X86_FEATURE_1_SHSTK
+</span><span class='line'>elf_iamcu: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>elf_l1om: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>elf_k1om: 
+</span><span class='line'>  -z noextern-protected-data  Do not treat protected data symbol as external
+</span><span class='line'>  -z dynamic-undefined-weak   Make undefined weak symbols dynamic
+</span><span class='line'>  -z nodynamic-undefined-weak Do not make undefined weak symbols dynamic
+</span><span class='line'>  -z call-nop=PADDING         Use PADDING as 1-byte NOP for branch
+</span><span class='line'>i386pep: 
+</span><span class='line'>  --base_file &lt;basefile&gt;             Generate a base file for relocatable DLLs
+</span><span class='line'>  --dll                              Set image base to the default for DLLs
+</span><span class='line'>  --file-alignment &lt;size&gt;            Set file alignment
+</span><span class='line'>  --heap &lt;size&gt;                      Set initial size of the heap
+</span><span class='line'>  --image-base &lt;address&gt;             Set start address of the executable
+</span><span class='line'>  --major-image-version &lt;number&gt;     Set version number of the executable
+</span><span class='line'>  --major-os-version &lt;number&gt;        Set minimum required OS version
+</span><span class='line'>  --major-subsystem-version &lt;number&gt; Set minimum required OS subsystem version
+</span><span class='line'>  --minor-image-version &lt;number&gt;     Set revision number of the executable
+</span><span class='line'>  --minor-os-version &lt;number&gt;        Set minimum required OS revision
+</span><span class='line'>  --minor-subsystem-version &lt;number&gt; Set minimum required OS subsystem revision
+</span><span class='line'>  --section-alignment &lt;size&gt;         Set section alignment
+</span><span class='line'>  --stack &lt;size&gt;                     Set size of the initial stack
+</span><span class='line'>  --subsystem &lt;name&gt;[:&lt;version&gt;]     Set required OS subsystem [& version]
+</span><span class='line'>  --support-old-code                 Support interworking with old code
+</span><span class='line'>  --[no-]leading-underscore          Set explicit symbol underscore prefix mode
+</span><span class='line'>  --[no-]insert-timestamp            Use a real timestamp rather than zero. (default)
+</span><span class='line'>                                     This makes binaries non-deterministic
+</span><span class='line'>  --add-stdcall-alias                Export symbols with and without @nn
+</span><span class='line'>  --disable-stdcall-fixup            Don't link _sym to _sym@nn
+</span><span class='line'>  --enable-stdcall-fixup             Link _sym to _sym@nn without warnings
+</span><span class='line'>  --exclude-symbols sym,sym,...      Exclude symbols from automatic export
+</span><span class='line'>  --exclude-all-symbols              Exclude all symbols from automatic export
+</span><span class='line'>  --exclude-libs lib,lib,...         Exclude libraries from automatic export
+</span><span class='line'>  --exclude-modules-for-implib mod,mod,...
+</span><span class='line'>                                     Exclude objects, archive members from auto
+</span><span class='line'>                                     export, place into import library instead.
+</span><span class='line'>  --export-all-symbols               Automatically export all globals to DLL
+</span><span class='line'>  --kill-at                          Remove @nn from exported symbols
+</span><span class='line'>  --output-def &lt;file&gt;                Generate a .DEF file for the built DLL
+</span><span class='line'>  --warn-duplicate-exports           Warn about duplicate exports.
+</span><span class='line'>  --compat-implib                    Create backward compatible import libs;
+</span><span class='line'>                                       create __imp_&lt;SYMBOL&gt; as well.
+</span><span class='line'>  --enable-auto-image-base           Automatically choose image base for DLLs
+</span><span class='line'>                                       unless user specifies one
+</span><span class='line'>  --disable-auto-image-base          Do not auto-choose image base. (default)
+</span><span class='line'>  --dll-search-prefix=&lt;string&gt;       When linking dynamically to a dll without
+</span><span class='line'>                                       an importlib, use &lt;string&gt;&lt;basename&gt;.dll
+</span><span class='line'>                                       in preference to lib&lt;basename&gt;.dll 
+</span><span class='line'>  --enable-auto-import               Do sophisticated linking of _sym to
+</span><span class='line'>                                       __imp_sym for DATA references
+</span><span class='line'>  --disable-auto-import              Do not auto-import DATA items from DLLs
+</span><span class='line'>  --enable-runtime-pseudo-reloc      Work around auto-import limitations by
+</span><span class='line'>                                       adding pseudo-relocations resolved at
+</span><span class='line'>                                       runtime.
+</span><span class='line'>  --disable-runtime-pseudo-reloc     Do not add runtime pseudo-relocations for
+</span><span class='line'>                                       auto-imported DATA.
+</span><span class='line'>  --enable-extra-pep-debug            Enable verbose debug output when building
+</span><span class='line'>                                       or linking to DLLs (esp. auto-import)
+</span><span class='line'>  --enable-long-section-names        Use long COFF section names even in
+</span><span class='line'>                                       executable image files
+</span><span class='line'>  --disable-long-section-names       Never use long COFF section names, even
+</span><span class='line'>                                       in object files
+</span><span class='line'>  --high-entropy-va                  Image is compatible with 64-bit address space
+</span><span class='line'>                                       layout randomization (ASLR)
+</span><span class='line'>  --dynamicbase            Image base address may be relocated using
+</span><span class='line'>                     address space layout randomization (ASLR)
+</span><span class='line'>  --forceinteg         Code integrity checks are enforced
+</span><span class='line'>  --nxcompat       Image is compatible with data execution prevention
+</span><span class='line'>  --no-isolation       Image understands isolation but do not isolate the image
+</span><span class='line'>  --no-seh             Image does not use SEH. No SE handler may
+</span><span class='line'>                     be called in this image
+</span><span class='line'>  --no-bind            Do not bind this image
+</span><span class='line'>  --wdmdriver      Driver uses the WDM model
+</span><span class='line'>  --tsaware                  Image is Terminal Server aware
+</span><span class='line'>  --build-id[=STYLE]         Generate build ID
+</span><span class='line'>i386pe: 
+</span><span class='line'>  --base_file &lt;basefile&gt;             Generate a base file for relocatable DLLs
+</span><span class='line'>  --dll                              Set image base to the default for DLLs
+</span><span class='line'>  --file-alignment &lt;size&gt;            Set file alignment
+</span><span class='line'>  --heap &lt;size&gt;                      Set initial size of the heap
+</span><span class='line'>  --image-base &lt;address&gt;             Set start address of the executable
+</span><span class='line'>  --major-image-version &lt;number&gt;     Set version number of the executable
+</span><span class='line'>  --major-os-version &lt;number&gt;        Set minimum required OS version
+</span><span class='line'>  --major-subsystem-version &lt;number&gt; Set minimum required OS subsystem version
+</span><span class='line'>  --minor-image-version &lt;number&gt;     Set revision number of the executable
+</span><span class='line'>  --minor-os-version &lt;number&gt;        Set minimum required OS revision
+</span><span class='line'>  --minor-subsystem-version &lt;number&gt; Set minimum required OS subsystem revision
+</span><span class='line'>  --section-alignment &lt;size&gt;         Set section alignment
+</span><span class='line'>  --stack &lt;size&gt;                     Set size of the initial stack
+</span><span class='line'>  --subsystem &lt;name&gt;[:&lt;version&gt;]     Set required OS subsystem [& version]
+</span><span class='line'>  --support-old-code                 Support interworking with old code
+</span><span class='line'>  --[no-]leading-underscore          Set explicit symbol underscore prefix mode
+</span><span class='line'>  --thumb-entry=&lt;symbol&gt;             Set the entry point to be Thumb &lt;symbol&gt;
+</span><span class='line'>  --[no-]insert-timestamp            Use a real timestamp rather than zero (default).
+</span><span class='line'>                                     This makes binaries non-deterministic
+</span><span class='line'>  --add-stdcall-alias                Export symbols with and without @nn
+</span><span class='line'>  --disable-stdcall-fixup            Don't link _sym to _sym@nn
+</span><span class='line'>  --enable-stdcall-fixup             Link _sym to _sym@nn without warnings
+</span><span class='line'>  --exclude-symbols sym,sym,...      Exclude symbols from automatic export
+</span><span class='line'>  --exclude-all-symbols              Exclude all symbols from automatic export
+</span><span class='line'>  --exclude-libs lib,lib,...         Exclude libraries from automatic export
+</span><span class='line'>  --exclude-modules-for-implib mod,mod,...
+</span><span class='line'>                                     Exclude objects, archive members from auto
+</span><span class='line'>                                     export, place into import library instead.
+</span><span class='line'>  --export-all-symbols               Automatically export all globals to DLL
+</span><span class='line'>  --kill-at                          Remove @nn from exported symbols
+</span><span class='line'>  --output-def &lt;file&gt;                Generate a .DEF file for the built DLL
+</span><span class='line'>  --warn-duplicate-exports           Warn about duplicate exports
+</span><span class='line'>  --compat-implib                    Create backward compatible import libs;
+</span><span class='line'>                                       create __imp_&lt;SYMBOL&gt; as well.
+</span><span class='line'>  --enable-auto-image-base[=&lt;address&gt;] Automatically choose image base for DLLs
+</span><span class='line'>                                       (optionally starting with address) unless
+</span><span class='line'>                                       specifically set with --image-base
+</span><span class='line'>  --disable-auto-image-base          Do not auto-choose image base. (default)
+</span><span class='line'>  --dll-search-prefix=&lt;string&gt;       When linking dynamically to a dll without
+</span><span class='line'>                                       an importlib, use &lt;string&gt;&lt;basename&gt;.dll
+</span><span class='line'>                                       in preference to lib&lt;basename&gt;.dll 
+</span><span class='line'>  --enable-auto-import               Do sophisticated linking of _sym to
+</span><span class='line'>                                       __imp_sym for DATA references
+</span><span class='line'>  --disable-auto-import              Do not auto-import DATA items from DLLs
+</span><span class='line'>  --enable-runtime-pseudo-reloc      Work around auto-import limitations by
+</span><span class='line'>                                       adding pseudo-relocations resolved at
+</span><span class='line'>                                       runtime.
+</span><span class='line'>  --disable-runtime-pseudo-reloc     Do not add runtime pseudo-relocations for
+</span><span class='line'>                                       auto-imported DATA.
+</span><span class='line'>  --enable-extra-pe-debug            Enable verbose debug output when building
+</span><span class='line'>                                       or linking to DLLs (esp. auto-import)
+</span><span class='line'>  --large-address-aware              Executable supports virtual addresses
+</span><span class='line'>                                       greater than 2 gigabytes
+</span><span class='line'>  --disable-large-address-aware      Executable does not support virtual
+</span><span class='line'>                                       addresses greater than 2 gigabytes
+</span><span class='line'>  --enable-long-section-names        Use long COFF section names even in
+</span><span class='line'>                                       executable image files
+</span><span class='line'>  --disable-long-section-names       Never use long COFF section names, even
+</span><span class='line'>                                       in object files
+</span><span class='line'>  --dynamicbase            Image base address may be relocated using
+</span><span class='line'>                     address space layout randomization (ASLR)
+</span><span class='line'>  --forceinteg         Code integrity checks are enforced
+</span><span class='line'>  --nxcompat       Image is compatible with data execution prevention
+</span><span class='line'>  --no-isolation       Image understands isolation but do not isolate the image
+</span><span class='line'>  --no-seh             Image does not use SEH. No SE handler may
+</span><span class='line'>                     be called in this image
+</span><span class='line'>  --no-bind            Do not bind this image
+</span><span class='line'>  --wdmdriver      Driver uses the WDM model
+</span><span class='line'>  --tsaware                  Image is Terminal Server aware
+</span><span class='line'>  --build-id[=STYLE]         Generate build ID
+</span><span class='line'>
+</span><span class='line'>Report bugs to &lt;http://www.sourceware.org/bugzilla/&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2994,172 +4175,6 @@ No LSB modules &hellip;">
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Bash下自動完成gvim &#8211;remote-tab</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2017-03-28T21:15:16+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>28</span><span class='date-suffix'>th</span>, <span class='date-year'>2017</span></span> <span class='time'>9:15 pm</span></time>
-        
-           | <a href="/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2017/03/28/gvim-remote-tabzi-dong-wan-cheng/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>在gvim需要開tab要打<code>--remote-tab</code>，打久就開始厭煩想偷懶。後來整理網路上的bash_completion相關資料拼湊一個堪用的版本分享一下。因為我只是想偷懶，所以完全沒有去了解bash_completion的細節。嘛，反正可以組裝需要的功能就好。</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#ac_env">測試環境</a></li>
-<li><a href="#ac_inst">安裝方式</a></li>
-<li><a href="#ac_use">使用方式</a></li>
-<li><a href="#ac_gvf">gvim bash_completion script</a></li>
-<li><a href="#ac_ref">參考資料</a></li>
-</ul>
-
-
-<p><a name="ac_env"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release  -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 16.04.2 LTS
-</span><span class='line'>Release:  16.04
-</span><span class='line'>Codename: xenial</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="ac_inst"></a></p>
-
-<h2>安裝方式</h2>
-
-<ol>
-<li>將<a href="#ac_gvf">下面</a>文字貼到編輯器，存成<code>/etc/bash_completion.d/gvim</code></li>
-<li>使用下面指令新增gvim completion</li>
-</ol>
-
-
-<figure class='code'><figcaption><span>新增gvim completion指令</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ . /etc/bash_completion.d/gvim
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p></p>
-
-<p><a name="ac_use"></a></p>
-
-<h2>使用方式</h2>
-
-<ul>
-<li>一般使用，直接gvim <code>tab</code> 顯示檔案或目錄</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>新增gvim completion指令</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ gvim `tab`
-</span><span class='line'>changelog.Debian.gz  copyright            README.emacs         RelNotes/
-</span><span class='line'>changelog.gz         NEWS.Debian.gz       README.md
-</span><span class='line'>contrib/             README.Debian        README.source
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>要使用tab時，下gvim -<code>tab</code> 就會自動填入<code>--remote-tab</code>，接下來再按<code>tab</code>即可選擇檔案或目錄</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>新增gvim completion指令</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ gvim --remote-tab
-</span><span class='line'>changelog.Debian.gz  copyright            README.emacs         RelNotes/
-</span><span class='line'>changelog.gz         NEWS.Debian.gz       README.md
-</span><span class='line'>contrib/             README.Debian        README.source
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="ac_gvf"></a></p>
-
-<h2>gvim bash_completion script</h2>
-
-<figure class='code'><figcaption><span>gvim</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>_gvim<span class="o">()</span>
-</span><span class='line'><span class="o">{</span>
-</span><span class='line'>    <span class="nb">local </span>cur prev
-</span><span class='line'>    <span class="nv">COMPREPLY</span><span class="o">=()</span>
-</span><span class='line'>    <span class="nv">cur</span><span class="o">=</span><span class="s2">&quot;${COMP_WORDS[COMP_CWORD]}&quot;</span>
-</span><span class='line'>    <span class="nv">prev</span><span class="o">=</span><span class="s2">&quot;${COMP_WORDS[COMP_CWORD-1]}&quot;</span>
-</span><span class='line'>    <span class="nv">opts</span><span class="o">=</span><span class="s2">&quot;--remote-tab&quot;</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">if</span> <span class="o">[[</span> <span class="k">${</span><span class="nv">cur</span><span class="k">}</span> <span class="o">==</span> -* <span class="o">]]</span> <span class="p">;</span> <span class="k">then</span>
-</span><span class='line'>        <span class="nv">COMPREPLY</span><span class="o">=(</span> <span class="k">$(</span><span class="nb">compgen</span> -W <span class="s2">&quot;${opts}&quot;</span> -- <span class="k">${</span><span class="nv">cur</span><span class="k">})</span> <span class="o">)</span>
-</span><span class='line'>        <span class="k">return</span> 0
-</span><span class='line'>    <span class="k">fi</span>
-</span><span class='line'>
-</span><span class='line'>    compopt -o default<span class="p">;</span> <span class="nv">COMPREPLY</span><span class="o">=()</span>
-</span><span class='line'>    <span class="k">return</span> 0
-</span><span class='line'><span class="o">}</span>
-</span><span class='line'><span class="nb">complete</span> -F _gvim gvim
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="ac_ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="https://debian-administration.org/article/316/An_introduction_to_bash_completion_part_1">An introduction to bash completion: part 1</a></li>
-<li><a href="https://debian-administration.org/article/317/An_introduction_to_bash_completion_part_2">An introduction to bash completion: part 2</a></li>
-<li><a href="http://stackoverflow.com/questions/12933362/getting-compgen-to-include-slashes-on-directories-when-looking-for-files">stackoverflow: Getting compgen to include slashes on directories when looking for files</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -3173,6 +4188,10 @@ No LSB modules &hellip;">
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
@@ -3190,24 +4209,20 @@ No LSB modules &hellip;">
         <a href="/blog/2018/12/12/linux-binary-resources/">Linux Binary 縮寫和連結</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2018/12/06/update-octopress-environment-for-ubuntu-18-dot-04/">Ubuntu 16.04更新到Ubuntu 18.04後Octopress 環境變動</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (43)</a></li><li><a href='/blog/categories/c'>c (34)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (34)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (2)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (1)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (43)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.74418604651163%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.3953488372093%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.79069767441861%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.18604651162791%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.5813953488372%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.3953488372093%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.3953488372093%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.3953488372093%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.53488372093022%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.79069767441861%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.4418604651163%'>c(34)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.3953488372093%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.79069767441861%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.79069767441861%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.3953488372093%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.3953488372093%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.3953488372093%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 122.32558139534883%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.3953488372093%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.3953488372093%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.3953488372093%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.3953488372093%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.3953488372093%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.3953488372093%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.3953488372093%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.3953488372093%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.79069767441861%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.5813953488372%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.3953488372093%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.79069767441861%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.5813953488372%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.79069767441861%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.3953488372093%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.3953488372093%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 102.79069767441861%'>glibc(2)</a> <a href='/blog/categories/gnu' style='font-size: 102.79069767441861%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.3953488372093%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.3953488372093%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.3953488372093%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.3953488372093%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.3953488372093%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.79069767441861%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.3953488372093%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.3953488372093%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.79069767441861%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 101.3953488372093%'>linker(1)</a> <a href='/blog/categories/linker-script' style='font-size: 106.97674418604652%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(43)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.18604651162791%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.79069767441861%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.3953488372093%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.3953488372093%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.3953488372093%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.37209302325581%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.79069767441861%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.55813953488372%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.3953488372093%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.3953488372093%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.79069767441861%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.3953488372093%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 119.53488372093022%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.5813953488372%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.97674418604652%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.3953488372093%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.79069767441861%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.3953488372093%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.3953488372093%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.3953488372093%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.5813953488372%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.3953488372093%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.97674418604652%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.3953488372093%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.3953488372093%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.3953488372093%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.3953488372093%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.3953488372093%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.79069767441861%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.97674418604652%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.3953488372093%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.79069767441861%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.3953488372093%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.3953488372093%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.3953488372093%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.3953488372093%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 111.16279069767442%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.3953488372093%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.79069767441861%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.18604651162791%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.18604651162791%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.18604651162791%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.36363636363636%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.36363636363636%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.72727272727273%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0909090909091%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.45454545454545%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.36363636363636%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.36363636363636%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.36363636363636%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.0909090909091%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.72727272727273%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.72727272727272%'>c(35)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.36363636363636%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.72727272727273%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.72727272727273%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.36363636363636%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.36363636363636%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.36363636363636%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.81818181818181%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.36363636363636%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.36363636363636%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.36363636363636%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.36363636363636%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.36363636363636%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.36363636363636%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.36363636363636%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.36363636363636%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.72727272727273%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.45454545454545%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.36363636363636%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.72727272727273%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.72727272727273%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.36363636363636%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.36363636363636%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0909090909091%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.72727272727273%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.36363636363636%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.36363636363636%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.36363636363636%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.36363636363636%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.36363636363636%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.72727272727273%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.36363636363636%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.36363636363636%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.72727272727273%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.72727272727273%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.81818181818181%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(44)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0909090909091%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.72727272727273%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.36363636363636%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.36363636363636%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.36363636363636%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.18181818181819%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.72727272727273%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.27272727272728%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.36363636363636%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.36363636363636%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.72727272727273%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.36363636363636%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 119.0909090909091%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.45454545454545%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.81818181818181%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.36363636363636%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.72727272727273%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.36363636363636%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.36363636363636%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.36363636363636%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.45454545454545%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.36363636363636%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.81818181818181%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.36363636363636%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.36363636363636%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.36363636363636%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.36363636363636%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.36363636363636%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.72727272727273%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.81818181818181%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.36363636363636%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.72727272727273%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.36363636363636%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.36363636363636%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.36363636363636%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.36363636363636%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.9090909090909%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.36363636363636%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.72727272727273%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0909090909091%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0909090909091%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0909090909091%'>過期(3)</a> </span>
 </section>
 
 
