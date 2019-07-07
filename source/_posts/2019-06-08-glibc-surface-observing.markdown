@@ -1,0 +1,77 @@
+---
+layout: post
+title: "在Ubuntu 18.04.2 trace 程式呼叫 glibc 函數"
+date: 2019-06-08 15:39:12 +0800
+comments: true
+categories: [ C, Linux, glibc ]
+---
+
+不囉唆，直接上懶人包。
+
+
+## 環境設定
+
+```
+#!/bin/bash
+# 其實直接在剪下指令貼在終端機就就可以了
+# 安裝套件並下載libcsource code
+DBG_PATH=~/tmp/lib_debug
+sudo apt install -y libc6-dbg
+mkdir -p $DBG_PATH
+cd $DBG_PATH
+apt source libc6-dev
+rm glibc_2.27-3ubuntu1.debian.tar.xz  glibc_2.27.orig.tar.xz glibc_2.27-3ubuntu1.dsc
+
+# 設定load directory
+LIBC_PATH=${DBG_PATH}/glibc-2.27
+EX_FILES=~/tmp/lib_debug/ld_dir.ex
+rm -f $EX_FILES
+for i in $(find ${LIBC_PATH}/* -maxdepth 0 -type d); \
+  do echo "directory $i" >> $EX_FILES ; 
+done
+```
+
+## 使用方式
+
+```
+gdb 你的執行檔 -x ~/tmp/lib_debug/ld_dir.ex
+```
+
+## 範例
+
+### 程式
+
+```
+#include <stdio.h>
+
+int main(void)
+{
+    printf("Hello world\n");
+
+    return 0;
+}
+```
+
+### 示範操作
+
+```
+$ gdb ./hello -x ~/tmp/lib_debug/ld_dir.ex
+GNU gdb (Ubuntu 8.1-0ubuntu3) 8.1.0.20180409-git
+....
+Reading symbols from ./hello...done.
+(gdb) b main
+Breakpoint 1 at 0x63e: file hello.c, line 5.
+(gdb) r
+Starting program: /tmp/hello 
+
+Breakpoint 1, main () at hello.c:5
+5	    printf("Hello world\n");
+(gdb) s
+_IO_puts (str=0x5555555546e4 "Hello world") at ioputs.c:33
+33	{
+(gdb) 
+```
+
+## 參考資料
+
+* [fcamel 技術隨手記: 追踪 glibc 裡的程式](http://fcamel-life.blogspot.com/2012/01/glibc.html)
