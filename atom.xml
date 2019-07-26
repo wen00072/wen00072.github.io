@@ -4,7 +4,7 @@
   <title><![CDATA[My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-07-07T19:21:47+08:00</updated>
+  <updated>2019-07-26T20:49:44+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -3564,6 +3564,19 @@
 <span class='line-number'>163</span>
 <span class='line-number'>164</span>
 <span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
 </pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
 </span><span class='line'>&quot; Start vundle
 </span><span class='line'>&quot;====================================================================
@@ -3661,17 +3674,19 @@
 </span><span class='line'>set statusline+=%{SyntasticStatuslineFlag()}
 </span><span class='line'>set statusline+=%*
 </span><span class='line'>
+</span><span class='line'>let g:loaded_syntastic_c_checker = 1
+</span><span class='line'>let g:loaded_syntastic_cpp_checker = 1
 </span><span class='line'>let g:syntastic_always_populate_loc_list = 1
 </span><span class='line'>let g:syntastic_auto_loc_list = 1
 </span><span class='line'>let g:syntastic_check_on_open = 1
 </span><span class='line'>let g:syntastic_check_on_wq = 0
-</span><span class='line'>autocmd VimEnter * SyntasticToggleMode &quot; disable syntastic by default
 </span><span class='line'>
+</span><span class='line'>autocmd VimEnter * SyntasticToggleMode &quot; disable syntastic by default
 </span><span class='line'>
 </span><span class='line'>&quot;====================================================================
 </span><span class='line'>&quot; pymode settings
 </span><span class='line'>&quot;====================================================================
-</span><span class='line'>let g:pymode_lint = 0    &quot; Prefer to use syntastic to check lint
+</span><span class='line'>let g:pymode_lint = 1    &quot; Prefer to use syntastic to check lint
 </span><span class='line'>let g:pymode_folding = 0 &quot; Unfold all
 </span><span class='line'>
 </span><span class='line'>&quot;====================================================================
@@ -3715,7 +3730,7 @@
 </span><span class='line'>
 </span><span class='line'>&quot; uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
 </span><span class='line'>set encoding=utf-8
-</span><span class='line'>set fileencoding=utf-8
+</span><span class='line'>set fileencoding=utf-8a
 </span><span class='line'>
 </span><span class='line'>&quot;====================================================================
 </span><span class='line'>&quot; Python Settings
@@ -3729,6 +3744,17 @@
 </span><span class='line'>    \ set autoindent |
 </span><span class='line'>    \ set fileformat=unix
 </span><span class='line'>let python_highlight_all=1
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; pandoc Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>let g:pandoc#syntax#conceal#use = 0
+</span><span class='line'>
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>&quot; YCM Settings
+</span><span class='line'>&quot;====================================================================
+</span><span class='line'>let g:ycm_global_ycm_extra_conf = &#39;~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py&#39;
+</span><span class='line'>let g:ycm_show_diagnostics_ui = 0
 </span></code></pre></td></tr></table></div></figure>
 
 
