@@ -17,6 +17,7 @@ categories: [C, Linux, linker, glibc]
     * [`cc` 指令拆解](#fl0707-app-cc)
     * [`as` 指令拆解](#fl0707-app-as)
     * [`collect2` 指令拆解](#fl0707-app-cc2)
+        * [`ld` 指令拆解](#fl0707-app-ld)
     * [用 `strace` 觀察 `gcc hello.c -o hello` 會呼叫哪些執行檔](#fl0707-app-strace)
     * [完整的 `gcc -v -o hello hello.c` 輸出](#fl0707-app-gcc)
     * [collect2 說明](#fl0707-app-cc2-help)
@@ -159,6 +160,64 @@ hello
 /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
 ```
 
+<a name="fl0707-app-ld"></a>
+### `ld` 指令拆解
+
+要注意的是`ld`是由`collect2`呼叫的
+
+```
+/usr/bin/ld
+-plugin
+/usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so
+-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper
+-plugin-opt=-fresolution=/tmp/ccCwkJOE.res
+-plugin-opt=-pass-through=-lgcc
+-plugin-opt=-pass-through=-lgcc_s
+-plugin-opt=-pass-through=-lc
+-plugin-opt=-pass-through=-lgcc
+-plugin-opt=-pass-through=-lgcc_s
+--sysroot=/
+--build-id
+--eh-frame-hdr
+-m
+elf_x86_64
+--hash-style=gnu
+--as-needed
+-dynamic-linker
+/lib64/ld-linux-x86-64.so.2
+-pie
+-z
+now
+-z
+relro
+-o
+hello
+/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o
+/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o
+/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o
+-L/usr/lib/gcc/x86_64-linux-gnu/7
+-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu
+-L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib
+-L/lib/x86_64-linux-gnu
+-L/lib/../lib
+-L/usr/lib/x86_64-linux-gnu
+-L/usr/lib/../lib
+-L/usr/lib/gcc/x86_64-linux-gnu/7/../../..
+/tmp/ccinSYzz.o
+-lgcc
+--push-state
+--as-needed
+-lgcc_s
+--pop-state
+-lc
+-lgcc
+--push-state
+--as-needed
+-lgcc_s
+--pop-state
+/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o
+/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
+```
 
 <a name="fl0707-app-strace"></a>
 ### 用 `strace` 觀察 `gcc hello.c -o hello` 會呼叫哪些執行檔

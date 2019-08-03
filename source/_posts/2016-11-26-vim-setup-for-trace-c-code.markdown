@@ -571,17 +571,19 @@ set statusline+=%#warningmsg#
 set statusline+=%{SyntasticStatuslineFlag()}
 set statusline+=%*
 
+let g:loaded_syntastic_c_checker = 1
+let g:loaded_syntastic_cpp_checker = 1
 let g:syntastic_always_populate_loc_list = 1
 let g:syntastic_auto_loc_list = 1
 let g:syntastic_check_on_open = 1
 let g:syntastic_check_on_wq = 0
-autocmd VimEnter * SyntasticToggleMode " disable syntastic by default
 
+autocmd VimEnter * SyntasticToggleMode " disable syntastic by default
 
 "====================================================================
 " pymode settings
 "====================================================================
-let g:pymode_lint = 0    " Prefer to use syntastic to check lint
+let g:pymode_lint = 1    " Prefer to use syntastic to check lint
 let g:pymode_folding = 0 " Unfold all
 
 "====================================================================
@@ -625,7 +627,7 @@ set clipboard+=unnamed
 
 " uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
 set encoding=utf-8
-set fileencoding=utf-8
+set fileencoding=utf-8a
 
 "====================================================================
 " Python Settings
@@ -640,6 +642,16 @@ au BufNewFile,BufRead *.py
     \ set fileformat=unix
 let python_highlight_all=1
 
+"====================================================================
+" pandoc Settings
+"====================================================================
+let g:pandoc#syntax#conceal#use = 0
+
+"====================================================================
+" YCM Settings
+"====================================================================
+let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py'
+let g:ycm_show_diagnostics_ui = 0
 ```
 
 * gvim -> `:PluginInstall` 安裝Plugin重新開啟收工
