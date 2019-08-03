@@ -11,18 +11,7 @@
 
 
   
-  <meta name="description" content="上一篇
-回總目錄 本篇目錄 MEMORY命令
-PHDRS命令
-VERSION命令
-Linker script 中使用的expression 常數
-Symbolic 常數
-Symbol命名規則
-孤兒 Section
-Location Counter
-Operators
-計算結果
-Expression &hellip;">
+  <meta name="description" content="rtenv是成功大學資訊工程系同學寫出來給CM3的小型作業系統，之前使用rtenv寫作業的時候曾經trace變數trace到C code裏面沒有，但是卻在linker script找到。可是那時候看的感覺就是一堆符號，所以就沒繼續追下去。這也是我想要了解linker script的起點。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +70,397 @@ Expression &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/12/22/rtenv-linker-script-explained/">Rtenv的linker Script解釋</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-12-22T19:18:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>7:18 pm</span></time>
+        
+           | <a href="/blog/2014/12/22/rtenv-linker-script-explained/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/12/22/rtenv-linker-script-explained/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="https://github.com/southernbear/rtenv.git">rtenv</a>是成功大學資訊工程系同學寫出來給CM3的小型作業系統，之前使用rtenv寫作業的時候曾經trace變數trace到C code裏面沒有，但是卻在linker script找到。可是那時候看的感覺就是一堆符號，所以就沒繼續追下去。這也是我想要了解linker script的起點。看完liner script語法後，自然要回來看一下是否可以了解他的描述，先看完整語法。</p>
+
+<figure class='code'><figcaption><span>main.ld</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">ENTRY</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
+</span><span class='line'><span class="n">MEMORY</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">FLASH</span> <span class="p">(</span><span class="n">rx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">128</span><span class="n">K</span>
+</span><span class='line'>  <span class="n">RAM</span> <span class="p">(</span><span class="n">rwx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x20000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">20</span><span class="n">K</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">SECTIONS</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">KEEP</span><span class="p">(</span><span class="o">*</span><span class="p">(.</span><span class="n">isr_vector</span><span class="p">))</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">_smodule</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">module</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">_emodule</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="n">_sprogram</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">program</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">_eprogram</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="n">_sromdev</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">rom</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">_eromdev</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="n">_sidata</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="o">&gt;</span><span class="n">FLASH</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="cm">/* Initialized data will initially be loaded in FLASH at the end of the .text section. */</span>
+</span><span class='line'>    <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">_sidata</span><span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="n">_sdata</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>        <span class="cm">/* Initialized data */</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>        <span class="n">_edata</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">_sbss</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>         <span class="cm">/* Zero-filled run time allocate data memory */</span>
+</span><span class='line'>        <span class="n">_ebss</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">_estack</span> <span class="o">=</span> <span class="n">ORIGIN</span><span class="p">(</span><span class="n">RAM</span><span class="p">)</span> <span class="o">+</span> <span class="n">LENGTH</span><span class="p">(</span><span class="n">RAM</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>很長令人害怕嗎？先從大方向拆解</p>
+
+<ul>
+<li>程式起始點是<code>main</code></li>
+<li>使用<code>MEMORY</code>指令設了兩個region，分別為<code>FLASH</code>和<code>RAM</code></li>
+<li>輸出object檔案有三個section，分別是<code>.text</code>, <code>.data</code> , <code>.bss</code></li>
+</ul>
+
+
+<p>然後我們再往下看<code>MEMORY</code>和<code>SETCIONS</code>命令的描述：</p>
+
+<h2><code>MEMORY</code></h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">MEMORY</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">FLASH</span> <span class="p">(</span><span class="n">rx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">128</span><span class="n">K</span>
+</span><span class='line'>  <span class="n">RAM</span> <span class="p">(</span><span class="n">rwx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x20000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">20</span><span class="n">K</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到我們有兩個region</p>
+
+<ul>
+<li><code>FLASH</code>
+
+<ul>
+<li>唯讀、可執行</li>
+<li>起始位址0x00000000</li>
+<li>長度128k</li>
+</ul>
+</li>
+<li><code>RAM</code>
+
+<ul>
+<li>可讀寫和執行</li>
+<li>起始位址0x20000000</li>
+<li>長度20k</li>
+</ul>
+</li>
+</ul>
+
+
+<p>口說無憑，可以看一下CM3的<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0179b/CHDDBAEC.html">Memory map</a>，確認一下0x00000000是不是寫程式的區段，而0x20000000是不是RAM的區段（好吧是SRAM）</p>
+
+<h2><code>SECTION</code></h2>
+
+<p>剛才講過有三個section，我們一個一個分別討論：</p>
+
+<h2><code>.text</code></h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">KEEP</span><span class="p">(</span><span class="o">*</span><span class="p">(.</span><span class="n">isr_vector</span><span class="p">))</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">_smodule</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">module</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">_emodule</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="n">_sprogram</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">program</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">_eprogram</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="n">_sromdev</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">rom</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">_eromdev</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="n">_sidata</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'><span class="p">}</span> <span class="o">&gt;</span><span class="n">FLASH</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>這個section要放在FLASH的region</li>
+<li>所有輸入object檔案的8個section會放入這個輸出object檔案section，分別為
+
+<ul>
+<li><code>.isr_vector</code>，這個section不可以被garbage collect回收</li>
+<li><code>.text</code></li>
+<li>所有.text.開頭的section</li>
+<li><code>.rodata</code>
+
+<ul>
+<li>所有.rodata開頭的section</li>
+</ul>
+</li>
+<li><code>.module</code></li>
+<li><code>.program</code></li>
+<li>所有.rom.開頭的section</li>
+</ul>
+</li>
+<li>這個section有7個symbol，分別是
+
+<ul>
+<li><code>_smodule</code>
+
+<ul>
+<li><code>.module</code>起始位址</li>
+</ul>
+</li>
+<li><code>_emodule</code>
+
+<pre><code>* `.module`結束位址
+</code></pre></li>
+<li><code>_sprogram</code>
+
+<pre><code>* `.program`起始位址
+</code></pre></li>
+<li><code>_eprogram</code>
+
+<pre><code>* `.program`結束位址
+</code></pre>
+
+<ul>
+<li><code>_sromdev</code>
+
+<ul>
+<li>所有.rom.開頭的section集合的起始位址</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>_eromdev</code>
+
+<pre><code>* 所有.rom.開頭的section集合的結束位址
+</code></pre></li>
+<li><code>_sidata</code>
+
+<pre><code>* `.data` section起始位址
+</code></pre></li>
+</ul>
+</li>
+</ul>
+
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+
+<h2><code>.data</code></h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/* Initialized data will initially be loaded in FLASH at the end of the .text section. */</span>
+</span><span class='line'><span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">_sidata</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>  <span class="n">_sdata</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>        <span class="cm">/* Initialized data */</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="o">*</span><span class="p">)</span>
+</span><span class='line'>  <span class="n">_edata</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'><span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>這部份表示</p>
+
+<ul>
+<li><code>.data</code>的LMA (載入記憶體位址）是<code>_sidata</code>，就是<code>.text</code>結束的地方。另外這邊你要自己搬，有興趣請查原始碼。</li>
+<li><code>.data</code>要放在RAM的region</li>
+<li>所有輸入object檔案的2個section會放入這個輸出object檔案section，分別為
+
+<ul>
+<li><code>.data</code></li>
+<li>所有.data開頭的section</li>
+</ul>
+</li>
+<li>這個section有2個symbol，分別是
+
+<ul>
+<li><code>_sdata</code>
+
+<ul>
+<li><code>.data</code>的起始位址</li>
+</ul>
+</li>
+<li><code>_edata</code>
+
+<ul>
+<li><code>.data</code>的結束位址</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+
+<h2><code>.bss</code></h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">.</span><span class="nl">bss</span> <span class="p">:</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">_sbss</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>         <span class="cm">/* Zero-filled run time allocate data memory */</span>
+</span><span class='line'>  <span class="n">_ebss</span> <span class="o">=</span> <span class="p">.;</span>
+</span><span class='line'><span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>所有輸入object檔案的<code>.bss</code>會放入這個輸出object檔案section</li>
+<li><code>.bss</code>要放在RAM的region</li>
+<li>這個section有2個symbol，分別是
+
+<ul>
+<li><code>_sbss</code>
+
+<ul>
+<li><code>.bss</code>的起始位址</li>
+</ul>
+</li>
+<li><code>_ebss</code>
+
+<ul>
+<li><code>.bss</code>的結束位址</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+
+<h2>stack</h2>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">_estack</span> <span class="o">=</span> <span class="n">ORIGIN</span><span class="p">(</span><span class="n">RAM</span><span class="p">)</span> <span class="o">+</span> <span class="n">LENGTH</span><span class="p">(</span><span class="n">RAM</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>有印象程式使用的stack是由記憶體最後面往前面長的嘛？沒印象？那就估狗<code>linux</code>, <code>stack</code>, <code>text</code>的圖片就可以看到了。這邊也是同樣的概念，所以他的<code>_estack</code> symbol位址會是RAM的開頭位址加上RAM的size。</p>
+
+<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -4852,352 +5232,6 @@ Expression &hellip;">
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/11/29/catch-the-leak-gdb-and-valgrind-siamese-juggling/">抓漏 - Gdb 和 Valgrind 合體技</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-11-29T08:27:00+08:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>8:27 am</span></time>
-        
-           | <a href="/blog/2014/11/29/catch-the-leak-gdb-and-valgrind-siamese-juggling/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/11/29/catch-the-leak-gdb-and-valgrind-siamese-juggling/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>接續<a href="http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak">前一篇</a>的話題。在查資料的時候看到valgrind可以和gdb合作，試了一下發現他的作法和我想的不一樣。原本以為是valgrind跑出來以後直接把漏掉的call stack和program counter傳給gdb，而gdb把他當成一種中斷點。結果完全不是，他的用法是：</p>
-
-<ul>
-<li>跑valgrind，參數指定要和gdb合體，還有你要抓漏的程式</li>
-<li>另外一邊執行gdb，載入你要抓漏的程式</li>
-<li>gdb 連到valgrind</li>
-<li>從gdb中設<strong>懷疑漏掉</strong>的中斷點</li>
-<li>從gdb叫valgrind開始執行你要抓漏的程式，gdb將會中斷在你設置的中斷點</li>
-<li>在使用valgrind提供的指令，比對執行中斷點之前和之後是否有memory leak</li>
-</ul>
-
-
-<p>測試程式碼和測試環境和<a href="http://wen00072.github.io/blog/2014/11/29/catching-leakage-use-valgrind-checking-c-memory-leak">前一篇</a>一模一樣，所以就請自行看連結。</p>
-
-<h2>合體示範</h2>
-
-<ul>
-<li>跑valgrind，參數指定要和gdb合體，還有你要抓漏的程式
-
-<ul>
-<li><code>valgrind --vgdb=yes --vgdb-error=0 ./你要抓漏的程式</code></li>
-</ul>
-</li>
-</ul>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ valgrind --vgdb=yes --vgdb-error=0 ./leak
-</span><span class='line'>==28450== Memcheck, a memory error detector
-</span><span class='line'>==28450== Copyright (C) 2002-2013, and GNU GPL'd, by Julian Seward et al.
-</span><span class='line'>==28450== Using Valgrind-3.10.0.SVN and LibVEX; rerun with -h for copyright info
-</span><span class='line'>==28450== Command: ./leak
-</span><span class='line'>==28450== 
-</span><span class='line'>==28450== (action at startup) vgdb me ... 
-</span><span class='line'>==28450== 
-</span><span class='line'>==28450== TO DEBUG THIS PROCESS USING GDB: start GDB like this
-</span><span class='line'>==28450==   /path/to/gdb ./leak
-</span><span class='line'>==28450== and then give GDB the following command
-</span><span class='line'>==28450==   target remote | /usr/lib/valgrind/../../bin/vgdb --pid=28450
-</span><span class='line'>==28450== --pid is optional if only one valgrind process is running
-</span><span class='line'>==28450== </span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>另外一邊執行gdb，載入你要抓漏的程式</li>
-</ul>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ gdb ./leak
-</span><span class='line'>GNU gdb (Ubuntu 7.7.1-0ubuntu5~14.04.2) 7.7.1
-</span><span class='line'>Copyright (C) 2014 Free Software Foundation, Inc.
-</span><span class='line'>License GPLv3+: GNU GPL version 3 or later &lt;http://gnu.org/licenses/gpl.html&gt;
-</span><span class='line'>This is free software: you are free to change and redistribute it.
-</span><span class='line'>There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
-</span><span class='line'>and "show warranty" for details.
-</span><span class='line'>This GDB was configured as "x86_64-linux-gnu".
-</span><span class='line'>Type "show configuration" for configuration details.
-</span><span class='line'>For bug reporting instructions, please see:
-</span><span class='line'>&lt;http://www.gnu.org/software/gdb/bugs/&gt;.
-</span><span class='line'>Find the GDB manual and other documentation resources online at:
-</span><span class='line'>&lt;http://www.gnu.org/software/gdb/documentation/&gt;.
-</span><span class='line'>For help, type "help".
-</span><span class='line'>Type "apropos word" to search for commands related to "word"...
-</span><span class='line'>Reading symbols from ./leak...done.
-</span><span class='line'>(gdb) </span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>gdb 連到valgrind
-
-<ul>
-<li><code>target remote | vgdb</code></li>
-</ul>
-</li>
-</ul>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb)  target remote | vgdb
-</span><span class='line'>Remote debugging using | vgdb
-</span><span class='line'>relaying data between gdb and process 28450
-</span><span class='line'>Reading symbols from /lib64/ld-linux-x86-64.so.2...Reading symbols from /usr/lib/debug//lib/x86_64-linux-gnu/ld-2.19.so...done.
-</span><span class='line'>done.
-</span><span class='line'>Loaded symbols for /lib64/ld-linux-x86-64.so.2
-</span><span class='line'>0x00000000040012d0 in _start () from /lib64/ld-linux-x86-64.so.2
-</span><span class='line'>(gdb) </span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>從gdb中設<strong>懷疑漏掉</strong>的中斷點</li>
-</ul>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>(gdb) b 47
-</span><span class='line'>Breakpoint 1 at 0x400703: file leak.c, line 47.
-</span><span class='line'>(gdb) b 48
-</span><span class='line'>Breakpoint 2 at 0x400708: file leak.c, line 48.</span></code></pre></td></tr></table></div></figure>
-
-
-<p>47, 48行內容是</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mi">47</span>      <span class="nf">leak1</span><span class="p">();</span>
-</span><span class='line'><span class="mi">48</span>        <span class="n">ch_ptr</span> <span class="o">=</span> <span class="n">leak2</span><span class="p">();</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>從gdb叫valgrind開始執行你要抓漏的程式，gdb將會中斷在你設置的中斷點</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">c</span>
-</span><span class='line'><span class="n">Continuing</span><span class="p">.</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Breakpoint</span> <span class="mi">1</span><span class="p">,</span> <span class="n">main</span> <span class="p">()</span> <span class="n">at</span> <span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">47</span>
-</span><span class='line'><span class="mi">47</span>        <span class="n">leak1</span><span class="p">();</span>
-</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>在使用valgrind提供的指令，比對執行中斷點之前和之後是否有memory leak
-
-<ul>
-<li>詳細指令可以在gdb中打<code>help monitor</code>查詢</li>
-</ul>
-</li>
-</ul>
-
-
-<p>執行中斷點前</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">monitor</span> <span class="n">leak_check</span> <span class="n">full</span> <span class="n">reachable</span> <span class="n">any</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="n">All</span> <span class="n">heap</span> <span class="n">blocks</span> <span class="n">were</span> <span class="n">freed</span> <span class="o">--</span> <span class="n">no</span> <span class="n">leaks</span> <span class="n">are</span> <span class="n">possible</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>執行下一步後再檢查</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">n</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Breakpoint</span> <span class="mi">2</span><span class="p">,</span> <span class="n">main</span> <span class="p">()</span> <span class="n">at</span> <span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">48</span>
-</span><span class='line'><span class="mi">48</span>        <span class="n">ch_ptr</span> <span class="o">=</span> <span class="n">leak2</span><span class="p">();</span>
-</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">monitor</span> <span class="n">leak_check</span> <span class="n">full</span> <span class="n">reachable</span> <span class="n">any</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="mi">100</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">1</span> <span class="n">blocks</span> <span class="n">are</span> <span class="n">still</span> <span class="n">reachable</span> <span class="n">in</span> <span class="n">loss</span> <span class="n">record</span> <span class="mi">1</span> <span class="n">of</span> <span class="mi">1</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">at</span> <span class="mh">0x4C2AB80</span><span class="o">:</span> <span class="n">malloc</span> <span class="p">(</span><span class="n">in</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">valgrind</span><span class="o">/</span><span class="n">vgpreload_memcheck</span><span class="o">-</span><span class="n">amd64</span><span class="o">-</span><span class="n">linux</span><span class="p">.</span><span class="n">so</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x40065E</span><span class="o">:</span> <span class="n">leak1</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">11</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x400707</span><span class="o">:</span> <span class="n">main</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">47</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="n">LEAK</span> <span class="nl">SUMMARY</span><span class="p">:</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">definitely</span> <span class="nl">lost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">0</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">indirectly</span> <span class="nl">lost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">0</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>      <span class="n">possibly</span> <span class="nl">lost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">0</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">still</span> <span class="nl">reachable</span><span class="p">:</span> <span class="mi">100</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">1</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>         <span class="nl">suppressed</span><span class="p">:</span> <span class="mi">0</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">0</span> <span class="n">blocks</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>多執行幾步後再看看leak情況</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">n</span>
-</span><span class='line'><span class="mi">49</span>        <span class="k">if</span><span class="p">(</span><span class="n">ch_ptr</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">n</span>
-</span><span class='line'><span class="mi">50</span>            <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">ch_ptr</span><span class="p">);</span>
-</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">n</span>
-</span><span class='line'><span class="mi">53</span>        <span class="n">lk_ptr</span> <span class="o">=</span> <span class="n">leak3</span><span class="p">();</span>
-</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">n</span>
-</span><span class='line'><span class="mi">54</span>        <span class="k">if</span><span class="p">(</span><span class="n">lk_ptr</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'><span class="p">(</span><span class="n">gdb</span><span class="p">)</span> <span class="n">monitor</span> <span class="n">leak_check</span> <span class="n">full</span> <span class="n">reachable</span> <span class="n">any</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="mi">8</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">1</span> <span class="n">blocks</span> <span class="n">are</span> <span class="n">still</span> <span class="n">reachable</span> <span class="n">in</span> <span class="n">loss</span> <span class="n">record</span> <span class="mi">2</span> <span class="n">of</span> <span class="mi">5</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">at</span> <span class="mh">0x4C2AB80</span><span class="o">:</span> <span class="n">malloc</span> <span class="p">(</span><span class="n">in</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">valgrind</span><span class="o">/</span><span class="n">vgpreload_memcheck</span><span class="o">-</span><span class="n">amd64</span><span class="o">-</span><span class="n">linux</span><span class="p">.</span><span class="n">so</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x4006C3</span><span class="o">:</span> <span class="n">leak3</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">33</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x400732</span><span class="o">:</span> <span class="n">main</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">53</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="mi">14</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">1</span> <span class="n">blocks</span> <span class="n">are</span> <span class="n">still</span> <span class="n">reachable</span> <span class="n">in</span> <span class="n">loss</span> <span class="n">record</span> <span class="mi">3</span> <span class="n">of</span> <span class="mi">5</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">at</span> <span class="mh">0x4C2AB80</span><span class="o">:</span> <span class="n">malloc</span> <span class="p">(</span><span class="n">in</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">valgrind</span><span class="o">/</span><span class="n">vgpreload_memcheck</span><span class="o">-</span><span class="n">amd64</span><span class="o">-</span><span class="n">linux</span><span class="p">.</span><span class="n">so</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x4EC02B9</span><span class="o">:</span> <span class="n">strdup</span> <span class="p">(</span><span class="n">strdup</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">42</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x400687</span><span class="o">:</span> <span class="n">leak2</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">20</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x40070C</span><span class="o">:</span> <span class="n">main</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">48</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="mi">14</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">1</span> <span class="n">blocks</span> <span class="n">are</span> <span class="n">still</span> <span class="n">reachable</span> <span class="n">in</span> <span class="n">loss</span> <span class="n">record</span> <span class="mi">4</span> <span class="n">of</span> <span class="mi">5</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">at</span> <span class="mh">0x4C2AB80</span><span class="o">:</span> <span class="n">malloc</span> <span class="p">(</span><span class="n">in</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">valgrind</span><span class="o">/</span><span class="n">vgpreload_memcheck</span><span class="o">-</span><span class="n">amd64</span><span class="o">-</span><span class="n">linux</span><span class="p">.</span><span class="n">so</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x4EC02B9</span><span class="o">:</span> <span class="n">strdup</span> <span class="p">(</span><span class="n">strdup</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">42</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x4006E2</span><span class="o">:</span> <span class="n">leak3</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">37</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x400732</span><span class="o">:</span> <span class="n">main</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">53</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="mi">100</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">1</span> <span class="n">blocks</span> <span class="n">are</span> <span class="n">definitely</span> <span class="n">lost</span> <span class="n">in</span> <span class="n">loss</span> <span class="n">record</span> <span class="mi">5</span> <span class="n">of</span> <span class="mi">5</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">at</span> <span class="mh">0x4C2AB80</span><span class="o">:</span> <span class="n">malloc</span> <span class="p">(</span><span class="n">in</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">lib</span><span class="o">/</span><span class="n">valgrind</span><span class="o">/</span><span class="n">vgpreload_memcheck</span><span class="o">-</span><span class="n">amd64</span><span class="o">-</span><span class="n">linux</span><span class="p">.</span><span class="n">so</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x40065E</span><span class="o">:</span> <span class="n">leak1</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">11</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">by</span> <span class="mh">0x400707</span><span class="o">:</span> <span class="n">main</span> <span class="p">(</span><span class="n">leak</span><span class="p">.</span><span class="nl">c</span><span class="p">:</span><span class="mi">47</span><span class="p">)</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span> <span class="n">LEAK</span> <span class="nl">SUMMARY</span><span class="p">:</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">definitely</span> <span class="nl">lost</span><span class="p">:</span> <span class="mi">100</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">1</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">indirectly</span> <span class="nl">lost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">0</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>      <span class="n">possibly</span> <span class="nl">lost</span><span class="p">:</span> <span class="mi">0</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">0</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>    <span class="n">still</span> <span class="nl">reachable</span><span class="p">:</span> <span class="mi">36</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">3</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>         <span class="nl">suppressed</span><span class="p">:</span> <span class="mi">0</span> <span class="n">bytes</span> <span class="n">in</span> <span class="mi">0</span> <span class="n">blocks</span>
-</span><span class='line'><span class="o">==</span><span class="mi">28450</span><span class="o">==</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://billiob.net/blog/20140330_vgdb.html">gdb + valgrind - (billiob&rsquo;s blog)</a></li>
-<li><code>man valgrind</code></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/10">&larr; Older</a>
@@ -5215,6 +5249,10 @@ Expression &hellip;">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/03/load-elf-binary-trace/">Load_elf_binary Trace</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
@@ -5230,24 +5268,20 @@ Expression &hellip;">
         <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2018/12/12/linux-binary-resources/">Linux Binary 縮寫和連結</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.36363636363636%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.36363636363636%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.72727272727273%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0909090909091%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.45454545454545%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.36363636363636%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.36363636363636%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.36363636363636%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.0909090909091%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.72727272727273%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.72727272727272%'>c(35)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.36363636363636%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.72727272727273%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.72727272727273%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.36363636363636%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.36363636363636%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.36363636363636%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.81818181818181%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.36363636363636%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.36363636363636%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.36363636363636%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.36363636363636%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.36363636363636%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.36363636363636%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.36363636363636%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.36363636363636%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.72727272727273%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.45454545454545%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.36363636363636%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.72727272727273%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.72727272727273%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.36363636363636%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.36363636363636%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0909090909091%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.72727272727273%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.36363636363636%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.36363636363636%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.36363636363636%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.36363636363636%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.36363636363636%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.72727272727273%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.36363636363636%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.36363636363636%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.72727272727273%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.72727272727273%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.81818181818181%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(44)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0909090909091%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.72727272727273%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.36363636363636%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.36363636363636%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.36363636363636%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.18181818181819%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.72727272727273%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.27272727272728%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.36363636363636%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.36363636363636%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.72727272727273%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.36363636363636%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 119.0909090909091%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.45454545454545%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.81818181818181%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.36363636363636%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.72727272727273%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.36363636363636%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.36363636363636%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.36363636363636%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.45454545454545%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.36363636363636%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.81818181818181%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.36363636363636%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.36363636363636%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.36363636363636%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.36363636363636%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.36363636363636%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.72727272727273%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.81818181818181%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.36363636363636%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.72727272727273%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.36363636363636%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.36363636363636%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.36363636363636%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.36363636363636%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.9090909090909%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.36363636363636%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.72727272727273%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0909090909091%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0909090909091%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0909090909091%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 148.0%'>c(36)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
 </section>
 
 

@@ -11,8 +11,7 @@
 
 
   
-  <meta name="description" content="好吧，這個標題我也不滿意，不過就將就一下吧。 簡單來說在Ubuntu內只要可以找得到的distribution，你就有辦法讓它在你的Ubuntu使用。使用順序如下： 下載你想要執行的套件 命令： 1
-debootstrap --arch=你要跑的target平台 --variant=minbase &hellip;">
+  <meta name="description" content="在組裝的過程中，常常會遇到用source去載入一個shell script，裏面通常是一組的環境變數。然而如果專案大到某個程度，這個script就會塞入很多複雜的function，例如某專案的build/envsetup.sh。這時候要去trace用肉眼去看實在是太過殘酷， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -71,6 +70,128 @@ debootstrap --arch=你要跑的target平台 --variant=minbase &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/01/22/how-to-trace-in-a-bash-script-function/">如何trace Bash Script中的function</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-01-22T22:35:00+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:35 pm</span></time>
+        
+           | <a href="/blog/2015/01/22/how-to-trace-in-a-bash-script-function/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/01/22/how-to-trace-in-a-bash-script-function/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在組裝的過程中，常常會遇到用source去載入一個shell script，裏面通常是一組的環境變數。然而如果專案大到某個程度，這個script就會塞入很多複雜的function，例如某專案的build/envsetup.sh。這時候要去trace用肉眼去看實在是太過殘酷，最近為了這個問題想到了一招很簡單的方式，那就是：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ bash -x</span></code></pre></td></tr></table></div></figure>
+
+
+<p>沒錯就這麼簡單，直接來看例子吧。首先我們有一個script裏面有function。</p>
+
+<figure class='code'><figcaption><span>demo.sh</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="c">#!/bin/bash</span>
+</span><span class='line'><span class="k">function</span> whatsoever<span class="o">()</span>
+</span><span class='line'><span class="o">{</span>
+</span><span class='line'>    <span class="nb">echo</span> <span class="s2">&quot;My code works, I don&#39;t know why.&quot;</span>
+</span><span class='line'><span class="o">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是剛才講的操作</p>
+
+<figure class='code'><figcaption><span>demo.sh</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span>bash -x
+</span><span class='line'>+ <span class="s1">&#39;[&#39;</span> -z <span class="s1">&#39;\s-\v\$ &#39;</span> <span class="s1">&#39;]&#39;</span>
+</span><span class='line'>+ <span class="nb">shopt</span> -s checkwinsize
+</span><span class='line'>... <span class="c"># 中間發生超多事，有興趣自行研究。發現好玩的再跟我說。</span>
+</span><span class='line'>
+</span><span class='line'><span class="nv">$ </span><span class="nb">cd</span> /tmp
+</span><span class='line'>+ <span class="nb">cd</span> /tmp
+</span><span class='line'><span class="nv">$ </span>. demo.sh
+</span><span class='line'>+ . demo.sh
+</span><span class='line'><span class="nv">$ </span>whatsoever
+</span><span class='line'>+ whatsoever
+</span><span class='line'>+ <span class="nb">echo</span> <span class="s1">&#39;My code works, I don&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;t know why.&#39;</span>
+</span><span class='line'>My code works, I don<span class="err">&#39;</span>t know why.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>打完收工，謝謝收看。</p>
+
+<h2>更新</h2>
+
+<p>網友Scott Tasi大大說這個方式和下面的方式相同：</p>
+
+<figure class='code'><figcaption><span>demo.sh</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nb">set</span> -x
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我就學天線寶寶再重複一下實驗</p>
+
+<figure class='code'><figcaption><span>demo.sh</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class='bash'><span class='line'><span class="nv">$ </span><span class="nb">set</span> -x
+</span><span class='line'><span class="nv">$ </span>. demo.sh
+</span><span class='line'>+ . demo.sh
+</span><span class='line'><span class="nv">$ </span>whatsoever
+</span><span class='line'>+ whatsoever
+</span><span class='line'>+ <span class="nb">echo</span> <span class="s1">&#39;My code works, I don&#39;</span><span class="se">\&#39;</span><span class="s1">&#39;t know why.&#39;</span>
+</span><span class='line'>My code works, I don<span class="s1">&#39;t know why.</span>
+</span><span class='line'><span class="s1">$ set +x</span>
+</span><span class='line'><span class="s1">+ set +x</span>
+</span><span class='line'><span class="s1">$ whatsoever </span>
+</span><span class='line'><span class="s1">My code works, I don&#39;</span>t know why.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>結論就是，用<code>set -x</code>，<code>set +x</code>就可以了。不過<code>bash -x</code>跑出來的訊息還真的嚇了我一跳，原來載入一個bash有那麼東的東西要做。這就是所謂的微言大意嗎？</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1217,397 +1338,6 @@ debootstrap --arch=你要跑的target平台 --variant=minbase &hellip;">
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/12/22/rtenv-linker-script-explained/">Rtenv的linker Script解釋</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-12-22T19:18:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>22</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>7:18 pm</span></time>
-        
-           | <a href="/blog/2014/12/22/rtenv-linker-script-explained/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/12/22/rtenv-linker-script-explained/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><a href="https://github.com/southernbear/rtenv.git">rtenv</a>是成功大學資訊工程系同學寫出來給CM3的小型作業系統，之前使用rtenv寫作業的時候曾經trace變數trace到C code裏面沒有，但是卻在linker script找到。可是那時候看的感覺就是一堆符號，所以就沒繼續追下去。這也是我想要了解linker script的起點。看完liner script語法後，自然要回來看一下是否可以了解他的描述，先看完整語法。</p>
-
-<figure class='code'><figcaption><span>main.ld</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">ENTRY</span><span class="p">(</span><span class="n">main</span><span class="p">)</span>
-</span><span class='line'><span class="n">MEMORY</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">FLASH</span> <span class="p">(</span><span class="n">rx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">128</span><span class="n">K</span>
-</span><span class='line'>  <span class="n">RAM</span> <span class="p">(</span><span class="n">rwx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x20000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">20</span><span class="n">K</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">SECTIONS</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="n">KEEP</span><span class="p">(</span><span class="o">*</span><span class="p">(.</span><span class="n">isr_vector</span><span class="p">))</span>
-</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
-</span><span class='line'>         <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">_smodule</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">module</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">_emodule</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="n">_sprogram</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">program</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">_eprogram</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="n">_sromdev</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">rom</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">_eromdev</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="n">_sidata</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="o">&gt;</span><span class="n">FLASH</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="cm">/* Initialized data will initially be loaded in FLASH at the end of the .text section. */</span>
-</span><span class='line'>    <span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">_sidata</span><span class="p">)</span>
-</span><span class='line'>    <span class="p">{</span>
-</span><span class='line'>        <span class="n">_sdata</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>        <span class="cm">/* Initialized data */</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>        <span class="n">_edata</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="p">.</span><span class="nl">bss</span> <span class="p">:</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">_sbss</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>        <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>         <span class="cm">/* Zero-filled run time allocate data memory */</span>
-</span><span class='line'>        <span class="n">_ebss</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="n">_estack</span> <span class="o">=</span> <span class="n">ORIGIN</span><span class="p">(</span><span class="n">RAM</span><span class="p">)</span> <span class="o">+</span> <span class="n">LENGTH</span><span class="p">(</span><span class="n">RAM</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>很長令人害怕嗎？先從大方向拆解</p>
-
-<ul>
-<li>程式起始點是<code>main</code></li>
-<li>使用<code>MEMORY</code>指令設了兩個region，分別為<code>FLASH</code>和<code>RAM</code></li>
-<li>輸出object檔案有三個section，分別是<code>.text</code>, <code>.data</code> , <code>.bss</code></li>
-</ul>
-
-
-<p>然後我們再往下看<code>MEMORY</code>和<code>SETCIONS</code>命令的描述：</p>
-
-<h2><code>MEMORY</code></h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">MEMORY</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">FLASH</span> <span class="p">(</span><span class="n">rx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x00000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">128</span><span class="n">K</span>
-</span><span class='line'>  <span class="n">RAM</span> <span class="p">(</span><span class="n">rwx</span><span class="p">)</span> <span class="o">:</span> <span class="n">ORIGIN</span> <span class="o">=</span> <span class="mh">0x20000000</span><span class="p">,</span> <span class="n">LENGTH</span> <span class="o">=</span> <span class="mi">20</span><span class="n">K</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>可以看到我們有兩個region</p>
-
-<ul>
-<li><code>FLASH</code>
-
-<ul>
-<li>唯讀、可執行</li>
-<li>起始位址0x00000000</li>
-<li>長度128k</li>
-</ul>
-</li>
-<li><code>RAM</code>
-
-<ul>
-<li>可讀寫和執行</li>
-<li>起始位址0x20000000</li>
-<li>長度20k</li>
-</ul>
-</li>
-</ul>
-
-
-<p>口說無憑，可以看一下CM3的<a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0179b/CHDDBAEC.html">Memory map</a>，確認一下0x00000000是不是寫程式的區段，而0x20000000是不是RAM的區段（好吧是SRAM）</p>
-
-<h2><code>SECTION</code></h2>
-
-<p>剛才講過有三個section，我們一個一個分別討論：</p>
-
-<h2><code>.text</code></h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">.</span><span class="nl">text</span> <span class="p">:</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">KEEP</span><span class="p">(</span><span class="o">*</span><span class="p">(.</span><span class="n">isr_vector</span><span class="p">))</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">)</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">text</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="p">)</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">rodata</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">_smodule</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">module</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">_emodule</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="n">_sprogram</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">program</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">_eprogram</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="n">_sromdev</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">rom</span><span class="p">.</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">_eromdev</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="n">_sidata</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'><span class="p">}</span> <span class="o">&gt;</span><span class="n">FLASH</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>這個section要放在FLASH的region</li>
-<li>所有輸入object檔案的8個section會放入這個輸出object檔案section，分別為
-
-<ul>
-<li><code>.isr_vector</code>，這個section不可以被garbage collect回收</li>
-<li><code>.text</code></li>
-<li>所有.text.開頭的section</li>
-<li><code>.rodata</code>
-
-<ul>
-<li>所有.rodata開頭的section</li>
-</ul>
-</li>
-<li><code>.module</code></li>
-<li><code>.program</code></li>
-<li>所有.rom.開頭的section</li>
-</ul>
-</li>
-<li>這個section有7個symbol，分別是
-
-<ul>
-<li><code>_smodule</code>
-
-<ul>
-<li><code>.module</code>起始位址</li>
-</ul>
-</li>
-<li><code>_emodule</code>
-
-<pre><code>* `.module`結束位址
-</code></pre></li>
-<li><code>_sprogram</code>
-
-<pre><code>* `.program`起始位址
-</code></pre></li>
-<li><code>_eprogram</code>
-
-<pre><code>* `.program`結束位址
-</code></pre>
-
-<ul>
-<li><code>_sromdev</code>
-
-<ul>
-<li>所有.rom.開頭的section集合的起始位址</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><code>_eromdev</code>
-
-<pre><code>* 所有.rom.開頭的section集合的結束位址
-</code></pre></li>
-<li><code>_sidata</code>
-
-<pre><code>* `.data` section起始位址
-</code></pre></li>
-</ul>
-</li>
-</ul>
-
-
-<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
-
-<h2><code>.data</code></h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cm">/* Initialized data will initially be loaded in FLASH at the end of the .text section. */</span>
-</span><span class='line'><span class="p">.</span><span class="nl">data</span> <span class="p">:</span> <span class="n">AT</span> <span class="p">(</span><span class="n">_sidata</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">_sdata</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="p">)</span>        <span class="cm">/* Initialized data */</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">data</span><span class="o">*</span><span class="p">)</span>
-</span><span class='line'>  <span class="n">_edata</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'><span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>這部份表示</p>
-
-<ul>
-<li><code>.data</code>的LMA (載入記憶體位址）是<code>_sidata</code>，就是<code>.text</code>結束的地方。另外這邊你要自己搬，有興趣請查原始碼。</li>
-<li><code>.data</code>要放在RAM的region</li>
-<li>所有輸入object檔案的2個section會放入這個輸出object檔案section，分別為
-
-<ul>
-<li><code>.data</code></li>
-<li>所有.data開頭的section</li>
-</ul>
-</li>
-<li>這個section有2個symbol，分別是
-
-<ul>
-<li><code>_sdata</code>
-
-<ul>
-<li><code>.data</code>的起始位址</li>
-</ul>
-</li>
-<li><code>_edata</code>
-
-<ul>
-<li><code>.data</code>的結束位址</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
-
-<h2><code>.bss</code></h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">.</span><span class="nl">bss</span> <span class="p">:</span> <span class="p">{</span>
-</span><span class='line'>  <span class="n">_sbss</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'>  <span class="o">*</span><span class="p">(.</span><span class="n">bss</span><span class="p">)</span>         <span class="cm">/* Zero-filled run time allocate data memory */</span>
-</span><span class='line'>  <span class="n">_ebss</span> <span class="o">=</span> <span class="p">.;</span>
-</span><span class='line'><span class="p">}</span> <span class="o">&gt;</span><span class="n">RAM</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>所有輸入object檔案的<code>.bss</code>會放入這個輸出object檔案section</li>
-<li><code>.bss</code>要放在RAM的region</li>
-<li>這個section有2個symbol，分別是
-
-<ul>
-<li><code>_sbss</code>
-
-<ul>
-<li><code>.bss</code>的起始位址</li>
-</ul>
-</li>
-<li><code>_ebss</code>
-
-<ul>
-<li><code>.bss</code>的結束位址</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
-
-<h2>stack</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">_estack</span> <span class="o">=</span> <span class="n">ORIGIN</span><span class="p">(</span><span class="n">RAM</span><span class="p">)</span> <span class="o">+</span> <span class="n">LENGTH</span><span class="p">(</span><span class="n">RAM</span><span class="p">);</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>有印象程式使用的stack是由記憶體最後面往前面長的嘛？沒印象？那就估狗<code>linux</code>, <code>stack</code>, <code>text</code>的圖片就可以看到了。這邊也是同樣的概念，所以他的<code>_estack</code> symbol位址會是RAM的開頭位址加上RAM的size。</p>
-
-<p>這些symbol是有意義的，你需要查詢程式原始碼看他們在做三小。相信我，這值得一看。</p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/9">&larr; Older</a>
@@ -1625,6 +1355,10 @@ debootstrap --arch=你要跑的target平台 --variant=minbase &hellip;">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/03/load-elf-binary-trace/">Load_elf_binary Trace</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
@@ -1640,24 +1374,20 @@ debootstrap --arch=你要跑的target平台 --variant=minbase &hellip;">
         <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2018/12/12/linux-binary-resources/">Linux Binary 縮寫和連結</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (35)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (1)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (1)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (44)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.36363636363636%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.36363636363636%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.72727272727273%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0909090909091%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.45454545454545%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.36363636363636%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.36363636363636%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.36363636363636%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.0909090909091%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.72727272727273%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 147.72727272727272%'>c(35)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.36363636363636%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.72727272727273%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.72727272727273%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.36363636363636%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.36363636363636%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.36363636363636%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.81818181818181%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.36363636363636%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.36363636363636%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.36363636363636%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 101.36363636363636%'>elf(1)</a> <a href='/blog/categories/f9' style='font-size: 101.36363636363636%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.36363636363636%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.36363636363636%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.36363636363636%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.72727272727273%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.45454545454545%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.36363636363636%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.72727272727273%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.45454545454545%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.72727272727273%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.36363636363636%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.36363636363636%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0909090909091%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.72727272727273%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.36363636363636%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.36363636363636%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.36363636363636%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.36363636363636%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.36363636363636%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.72727272727273%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 101.36363636363636%'>kernel(1)</a> <a href='/blog/categories/ld' style='font-size: 101.36363636363636%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.72727272727273%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.72727272727273%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.81818181818181%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(44)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0909090909091%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.72727272727273%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.36363636363636%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.36363636363636%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.36363636363636%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.18181818181819%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.72727272727273%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.27272727272728%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.36363636363636%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.36363636363636%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.72727272727273%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.36363636363636%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 119.0909090909091%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.45454545454545%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.81818181818181%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.36363636363636%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.72727272727273%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.36363636363636%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.36363636363636%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.36363636363636%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.45454545454545%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.36363636363636%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.81818181818181%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.36363636363636%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.36363636363636%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.36363636363636%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.36363636363636%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.36363636363636%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.72727272727273%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.81818181818181%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.36363636363636%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.72727272727273%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.36363636363636%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.36363636363636%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.36363636363636%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.36363636363636%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.9090909090909%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.36363636363636%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.72727272727273%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0909090909091%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0909090909091%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0909090909091%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 148.0%'>c(36)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
 </section>
 
 

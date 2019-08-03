@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Linux | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/linux/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-07-26T20:49:44+08:00</updated>
+  <updated>2019-08-03T18:25:56+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,19 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Load_elf_binary Trace]]></title>
+    <link href="http://wen00072.github.io/blog/2019/08/03/load-elf-binary-trace/"/>
+    <updated>2019-08-03T18:11:05+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/08/03/load-elf-binary-trace</id>
+    <content type="html"><![CDATA[<p><a href="/files/load_elf.graphml">原始檔</a>，請用<a href="https://www.yworks.com/products/yed">yED</a>開啟。</p>
+
+<p>下面圖片是<code>svg</code>檔案，需要直接按滑鼠右鍵儲存即可。</p>
+
+<p><img src="http://wen00072.github.io/files/load_elf.svg"></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[田野調查：Ubuntu 18.04.2 產生執行檔細節]]></title>
@@ -1623,55 +1636,6 @@ same_func1.c: func1_OP1
 </li>
 </ul>
 
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[使用strace找出程式缺少的檔案路徑]]></title>
-    <link href="http://wen00072.github.io/blog/2016/04/10/use-strace-to-trace-missing-files/"/>
-    <updated>2016-04-10T01:14:38+08:00</updated>
-    <id>http://wen00072.github.io/blog/2016/04/10/use-strace-to-trace-missing-files</id>
-    <content type="html"><![CDATA[<p>這算極短篇。在組裝別人軟體的時候，常常出現缺少檔案的錯誤，運氣不好的不會跟你說缺少的檔案的期待路徑；運氣更差的就會連錯誤都不印，直接程式crash。我後來知道strace之後，才發覺它可以結省很多印log和trace程式碼的時間。</p>
-
-<p>這次就以前一篇執行openocd遇到的問題為例：第一次編譯openocd後，直接執行會出現找不到openocd.cfg檔案。經過一些試誤後才有上一篇整理出來的指令。</p>
-
-<p>錯誤訊息如下</p>
-
-<pre><code>$ openocd 
-Open On-Chip Debugger 0.10.0-dev-00250-g9c37747 (2016-04-07-22:20)
-Licensed under GNU GPL v2
-For bug reports, read
-    http://openocd.org/doc/doxygen/bugs.html
-embedded:startup.tcl:60: Error: Can't find openocd.cfg
-in procedure 'script' 
-at file "embedded:startup.tcl", line 60
-Error: Debug Adapter has to be specified, see "interface" command
-embedded:startup.tcl:60: Error: 
-in procedure 'script' 
-at file "embedded:startup.tcl", line 60
-</code></pre>
-
-<p>用strace 觀察輸出訊息如下：</p>
-
-<pre><code>$ strace -f openocd 2&gt;&amp;1  | grep cfg
-open("openocd.cfg", O_RDONLY)           = -1 ENOENT (No such file or directory)
-open("/home/asdf/.openocd/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
-open("/usr/local/share/openocd/site/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
-open("/usr/local/share/openocd/scripts/openocd.cfg", O_RDONLY) = -1 ENOENT (No such file or directory)
-write(2, "embedded:startup.tcl:60: Error: "..., 118embedded:startup.tcl:60: Error: Can't find openocd.cfg
-</code></pre>
-
-<p>從輸出訊息可以知道，openocd會依下面的順序讀取openocd.cfg</p>
-
-<ul>
-<li>目前目錄的openocd.cfg</li>
-<li>~/.openocd/openocd.cfg</li>
-<li>/usr/local/share/openocd/site/openocd.cfg</li>
-<li>/usr/local/share/openocd/scripts/openocd.cfg</li>
-</ul>
-
-
-<p>所以接下來就是在openocd的原始碼中挑和你開發target可以使用config 檔案，放入~/.openocd、改成openocd.cfg。當然事情沒那麼簡單，解掉這個問題接下來還會有一些缺少檔案的問題，一樣靠strace就可以搞定。</p>
 ]]></content>
   </entry>
   

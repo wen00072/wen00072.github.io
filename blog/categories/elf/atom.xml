@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Elf | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/elf/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-07-26T20:49:44+08:00</updated>
+  <updated>2019-08-03T18:25:56+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,19 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Load_elf_binary Trace]]></title>
+    <link href="http://wen00072.github.io/blog/2019/08/03/load-elf-binary-trace/"/>
+    <updated>2019-08-03T18:11:05+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/08/03/load-elf-binary-trace</id>
+    <content type="html"><![CDATA[<p><a href="/files/load_elf.graphml">原始檔</a>，請用<a href="https://www.yworks.com/products/yed">yED</a>開啟。</p>
+
+<p>下面圖片是<code>svg</code>檔案，需要直接按滑鼠右鍵儲存即可。</p>
+
+<p><img src="http://wen00072.github.io/files/load_elf.svg"></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Linux Binary 縮寫和連結]]></title>
