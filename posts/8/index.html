@@ -11,7 +11,7 @@
 
 
   
-  <meta name="description" content="在組裝的過程中，常常會遇到用source去載入一個shell script，裏面通常是一組的環境變數。然而如果專案大到某個程度，這個script就會塞入很多複雜的function，例如某專案的build/envsetup.sh。這時候要去trace用肉眼去看實在是太過殘酷， &hellip;">
+  <meta name="description" content=" Hello world在那邊？背景說明 from Wen Liao ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,6 +70,44 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/01/24/hello-world-in-where-background-note-slides-on-line/">Hello World在那邊？背景說明投影片上線</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-01-24T16:35:00+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>4:35 pm</span></time>
+        
+           | <a href="/blog/2015/01/24/hello-world-in-where-background-note-slides-on-line/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/01/24/hello-world-in-where-background-note-slides-on-line/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/43848623" width="425" height="355" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-43848623" title="Hello world在那邊？背景說明" target="_blank">Hello world在那邊？背景說明</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="d8f1004085d00132de3b7a1c3ec56d64" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -727,617 +765,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/12/23/look-for-hello-worldn/">尋找&quot;Hello World\n&quot;</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-12-23T20:16:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2014</span></span> <span class='time'>8:16 pm</span></time>
-        
-           | <a href="/blog/2014/12/23/look-for-hello-worldn/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/12/23/look-for-hello-worldn/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>很多人應該知道學C語言第一個程式</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello world.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>不知道有沒有會問，那個&quot;Hello world\n&quot;放在什麼地方？我承認我用了很多年，到最近才開始去想這個問題。我想再加碼討論不同情況的&quot;Hello world\n&quot;執行檔會放在什麼地方？接下來我們一個一個討論吧</p>
-
-<h2>共用Makefile</h2>
-
-<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-Wall -Werror -g
-</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span>hello
-</span><span class='line'><span class="nv">OBJS</span><span class="o">=</span><span class="k">$(</span>patsubst %, %.o, <span class="k">$(</span>TARGET<span class="k">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">all</span><span class="o">:</span> <span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">%.o</span><span class="o">:</span> %.<span class="n">c</span>
-</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="k">$(</span>patsubst %.o, %, <span class="nv">$@</span><span class="k">)</span> <span class="nv">$^</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
-</span><span class='line'>  rm *.o *~ <span class="k">$(</span>TARGET<span class="k">)</span> -f
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>看不懂語法？唔，我也想不出來為什麼當初這樣寫，應該是剛學<code>patsubst</code>所以到處都想用兩下。不過只有幾行，花個時間估狗一下吧？</p>
-
-<h2>版本一</h2>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello world.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>要知道&quot;Hello world.\n&quot;放在那邊，可以反組譯一下，組合語言下沒有秘密。</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mo">000000000040052</span><span class="n">d</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;:</span>
-</span><span class='line'>  <span class="mi">40052</span><span class="nl">d</span><span class="p">:</span>       <span class="mi">55</span>                      <span class="n">push</span>   <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="mi">40052</span><span class="nl">e</span><span class="p">:</span>       <span class="mi">48</span> <span class="mi">89</span> <span class="n">e5</span>                <span class="n">mov</span>    <span class="o">%</span><span class="n">rsp</span><span class="p">,</span><span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="mi">400531</span><span class="o">:</span>       <span class="n">bf</span> <span class="n">d4</span> <span class="mo">05</span> <span class="mi">40</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x4005d4</span><span class="p">,</span><span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="mi">400536</span><span class="o">:</span>       <span class="n">e8</span> <span class="n">d5</span> <span class="n">fe</span> <span class="n">ff</span> <span class="n">ff</span>          <span class="n">callq</span>  <span class="mi">400410</span> <span class="o">&lt;</span><span class="n">puts</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
-</span><span class='line'>  <span class="mi">40053</span><span class="nl">b</span><span class="p">:</span>       <span class="n">b8</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x0</span><span class="p">,</span><span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="mi">400540</span><span class="o">:</span>       <span class="mi">5</span><span class="n">d</span>                      <span class="n">pop</span>    <span class="o">%</span><span class="n">rbp</span>
-</span><span class='line'>  <span class="mi">400541</span><span class="o">:</span>       <span class="n">c3</span>                      <span class="n">retq</span>
-</span><span class='line'>  <span class="mi">400542</span><span class="o">:</span>       <span class="mi">66</span> <span class="mi">2</span><span class="n">e</span> <span class="mf">0f</span> <span class="mf">1f</span> <span class="mi">84</span> <span class="mo">00</span> <span class="mo">00</span>    <span class="n">nopw</span>   <span class="o">%</span><span class="nl">cs</span><span class="p">:</span><span class="mh">0x0</span><span class="p">(</span><span class="o">%</span><span class="n">rax</span><span class="p">,</span><span class="o">%</span><span class="n">rax</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span>
-</span><span class='line'>  <span class="mi">400549</span><span class="o">:</span>       <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span>
-</span><span class='line'>  <span class="mi">40054</span><span class="nl">c</span><span class="p">:</span>       <span class="mf">0f</span> <span class="mf">1f</span> <span class="mi">40</span> <span class="mo">00</span>             <span class="n">nopl</span>   <span class="mh">0x0</span><span class="p">(</span><span class="o">%</span><span class="n">rax</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>我們可以看到沒有<code>printf</code>而是出現<code>puts</code>，目前只能猜測在沒有format string的情況下gcc會把<code>printf</code>換成<code>puts</code>，原因可能和效能有關係。</p>
-
-<p>從<a href="http://wiki.osdev.org/Calling_Conventions#Cheat_Sheets">這邊</a>關於System V X86_64的表格中我們可以看到，參數傳遞使用的暫存器依序為<code>rdi</code>, <code>rsi</code>, <code>rdx</code>, <code>rcx</code>, <code>r8</code>, <code>r9</code></p>
-
-<p>所以我們可以看到<code>0x4005d4</code>會被傳進<code>puts</code>，那麼<code>0x4005d4</code>在那邊呢？我們可以從symbol table中推測應該在<code>.rodata</code> section。</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">t</span> <span class="n">hello</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'><span class="mo">00000000004005</span><span class="n">d0</span> <span class="n">l</span>    <span class="n">d</span>  <span class="p">.</span><span class="n">rodata</span>   <span class="mo">0000000000000000</span>              <span class="p">.</span><span class="n">rodata</span>
-</span><span class='line'><span class="mf">00000000004005e4</span> <span class="n">l</span>    <span class="n">d</span>  <span class="p">.</span><span class="n">eh_frame_hdr</span>    <span class="mo">0000000000000000</span>              <span class="p">.</span><span class="n">eh_frame_hdr</span>
-</span><span class='line'><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>接下來我們去看<code>.rodata</code>裏面的內容，果然找到&quot;Hello world.\n&quot;</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">j</span> <span class="p">.</span><span class="n">rodata</span> <span class="n">hello</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">hello</span><span class="p">:</span>     <span class="n">file</span> <span class="n">format</span> <span class="n">elf64</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Contents</span> <span class="n">of</span> <span class="n">section</span> <span class="p">.</span><span class="nl">rodata</span><span class="p">:</span>
-</span><span class='line'> <span class="mi">4005</span><span class="n">d0</span> <span class="mo">01000200</span> <span class="mi">48656</span><span class="n">c6c</span> <span class="mf">6f20776f</span> <span class="mi">726</span><span class="n">c6400</span>  <span class="p">....</span><span class="n">Hello</span> <span class="n">world</span><span class="p">.</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>當然這樣是不太夠，再加碼：</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">h</span> <span class="n">hello</span> <span class="o">|</span> <span class="n">grep</span> <span class="n">ro</span> <span class="o">-</span><span class="n">n2</span>
-</span><span class='line'><span class="mi">32</span><span class="o">-</span> <span class="mi">13</span> <span class="p">.</span><span class="n">fini</span>         <span class="mo">0000000</span><span class="mi">9</span>  <span class="mo">00000000004005</span><span class="n">c4</span>  <span class="mo">00000000004005</span><span class="n">c4</span>  <span class="mo">000005</span><span class="n">c4</span>  <span class="mi">2</span><span class="o">**</span><span class="mi">2</span>
-</span><span class='line'><span class="mi">33</span><span class="o">-</span>                  <span class="n">CONTENTS</span><span class="p">,</span> <span class="n">ALLOC</span><span class="p">,</span> <span class="n">LOAD</span><span class="p">,</span> <span class="n">READONLY</span><span class="p">,</span> <span class="n">CODE</span>
-</span><span class='line'><span class="mi">34</span><span class="o">:</span> <span class="mi">14</span> <span class="p">.</span><span class="n">rodata</span>       <span class="mo">00000010</span>  <span class="mo">00000000004005</span><span class="n">d0</span>  <span class="mo">00000000004005</span><span class="n">d0</span>  <span class="mo">000005</span><span class="n">d0</span>  <span class="mi">2</span><span class="o">**</span><span class="mi">2</span>
-</span><span class='line'><span class="mi">35</span><span class="o">-</span>                  <span class="n">CONTENTS</span><span class="p">,</span> <span class="n">ALLOC</span><span class="p">,</span> <span class="n">LOAD</span><span class="p">,</span> <span class="n">READONLY</span><span class="p">,</span> <span class="n">DATA</span>
-</span><span class='line'><span class="mi">36</span><span class="o">-</span> <span class="mi">15</span> <span class="p">.</span><span class="n">eh_frame_hdr</span> <span class="mo">00000034</span>  <span class="mf">00000000004005e0</span>  <span class="mf">00000000004005e0</span>  <span class="mf">000005e0</span>  <span class="mi">2</span><span class="o">**</span><span class="mi">2</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>這邊顯示的資料說<code>.rodata</code>是唯讀的。也就是說有人想寫這塊記憶體就會ＧＧ。幸運的是這個statement似乎很難去改字串資料。</p>
-
-<h2>版本二</h2>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="kt">char</span> <span class="o">*</span><span class="n">str</span> <span class="o">=</span> <span class="s">&quot;Hello world.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">str</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>一樣需要先來反組譯一下，組合語言下沒有秘密。直接挑重點。</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">d</span> <span class="n">hello</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'>  <span class="mi">400535</span><span class="o">:</span>       <span class="mi">48</span> <span class="n">c7</span> <span class="mi">45</span> <span class="n">f8</span> <span class="n">e4</span> <span class="mo">05</span> <span class="mi">40</span>    <span class="n">movq</span>   <span class="err">$</span><span class="mh">0x4005e4</span><span class="p">,</span><span class="o">-</span><span class="mh">0x8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="mi">40053</span><span class="nl">c</span><span class="p">:</span>       <span class="mo">00</span>
-</span><span class='line'>  <span class="mi">40053</span><span class="nl">d</span><span class="p">:</span>       <span class="mi">48</span> <span class="mi">8</span><span class="n">b</span> <span class="mi">45</span> <span class="n">f8</span>             <span class="n">mov</span>    <span class="o">-</span><span class="mh">0x8</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span><span class="o">%</span><span class="n">rax</span>
-</span><span class='line'>  <span class="mi">400541</span><span class="o">:</span>       <span class="mi">48</span> <span class="mi">89</span> <span class="n">c6</span>                <span class="n">mov</span>    <span class="o">%</span><span class="n">rax</span><span class="p">,</span><span class="o">%</span><span class="n">rsi</span>
-</span><span class='line'>  <span class="mi">400544</span><span class="o">:</span>       <span class="n">bf</span> <span class="n">f2</span> <span class="mo">05</span> <span class="mi">40</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x4005f2</span><span class="p">,</span><span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="mi">400549</span><span class="o">:</span>       <span class="n">b8</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x0</span><span class="p">,</span><span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="mi">40054</span><span class="nl">e</span><span class="p">:</span>       <span class="n">e8</span> <span class="n">bd</span> <span class="n">fe</span> <span class="n">ff</span> <span class="n">ff</span>          <span class="n">callq</span>  <span class="mi">400410</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>可以看到這次使用了<code>printf</code>，而且傳了兩個參數，第一個是<code>0x4005f2</code>，第二個是<code>0x4005e4</code>。這邊要注意的是，<code>%rsi</code>這邊感覺有點脫褲子放屁，不知道為什麼不直接<code>movq  $0x4005e4, %rsi</code>。不管怎樣，如第一版方式看看這兩個位址在那個section。</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">t</span> <span class="n">hello</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'><span class="mf">00000000004005e0</span> <span class="n">l</span>    <span class="n">d</span>  <span class="p">.</span><span class="n">rodata</span>  <span class="mo">0000000000000000</span>              <span class="p">.</span><span class="n">rodata</span>
-</span><span class='line'><span class="mf">00000000004005f</span><span class="mi">8</span> <span class="n">l</span>    <span class="n">d</span>  <span class="p">.</span><span class="n">eh_frame_hdr</span>    <span class="mo">0000000000000000</span>              <span class="p">.</span><span class="n">eh_frame_hdr</span>
-</span><span class='line'><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>看起來又是<code>.rodata</code>，所以我們再看<code>rodata</code>裏面放什麼東西。</p>
-
-<figure class='code'><figcaption><span>Hello.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">j</span> <span class="p">.</span><span class="n">rodata</span> <span class="n">hello</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">hello</span><span class="p">:</span>     <span class="n">file</span> <span class="n">format</span> <span class="n">elf64</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Contents</span> <span class="n">of</span> <span class="n">section</span> <span class="p">.</span><span class="nl">rodata</span><span class="p">:</span>
-</span><span class='line'> <span class="mf">4005e0</span> <span class="mo">01000200</span> <span class="mi">48656</span><span class="n">c6c</span> <span class="mf">6f20776f</span> <span class="mi">726</span><span class="n">c640a</span>  <span class="p">....</span><span class="n">Hello</span> <span class="n">world</span><span class="p">.</span>
-</span><span class='line'> <span class="mf">4005f</span><span class="mi">0</span> <span class="mo">00257300</span>                             <span class="p">.</span><span class="o">%</span><span class="n">s</span><span class="p">.</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>所以你可以看到，真正的行為是把<code>"%s"</code>和<code>Hello World\n</code>這兩個字串的位址傳給<code>printf</code></p>
-
-<p>前面說<code>.rodata</code>是read only。那麼我們故意改兩下看看。</p>
-
-<figure class='code'><figcaption><span>改看看放在.rodata的值</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="kt">char</span> <span class="o">*</span><span class="n">str</span> <span class="o">=</span> <span class="s">&quot;Hello world</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">str</span><span class="p">);</span>
-</span><span class='line'>    <span class="o">*</span><span class="n">str</span> <span class="o">=</span> <span class="sc">&#39;Q&#39;</span><span class="p">;</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>結果就會出現組裝工最好的朋友：<code>Segmentation fault (core dumped)</code></p>
-
-<figure class='code'><figcaption><span>改看看放在.rodata的值</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="p">.</span><span class="o">/</span><span class="n">hello</span>
-</span><span class='line'><span class="n">Hello</span> <span class="n">world</span>
-</span><span class='line'><span class="n">Segmentation</span> <span class="n">fault</span> <span class="p">(</span><span class="n">core</span> <span class="n">dumped</span><span class="p">)</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>版本三</h2>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="kt">char</span> <span class="n">str</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;Hello world.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">str</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>這個可以看到是一個有初始值的陣列，而在函數內的變數會放在stack。所以我這樣測，下面結果又臭又長，用力找可以看到（精確的來說，湊到）&quot;Hello world.&quot;的字串。</p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">j</span> <span class="p">.</span><span class="n">text</span> <span class="n">hello</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">hello</span><span class="p">:</span>     <span class="n">file</span> <span class="n">format</span> <span class="n">elf64</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Contents</span> <span class="n">of</span> <span class="n">section</span> <span class="p">.</span><span class="nl">text</span><span class="p">:</span>
-</span><span class='line'> <span class="mi">4004</span><span class="n">b0</span> <span class="mi">31</span><span class="n">ed4989</span> <span class="n">d15e4889</span> <span class="n">e24883e4</span> <span class="n">f0505449</span>  <span class="mf">1.</span><span class="n">I</span><span class="p">..</span><span class="o">^</span><span class="n">H</span><span class="p">..</span><span class="n">H</span><span class="p">...</span><span class="n">PTI</span>
-</span><span class='line'> <span class="mi">4004</span><span class="n">c0</span> <span class="n">c7c07006</span> <span class="mi">400048</span><span class="n">c7</span> <span class="n">c1000640</span> <span class="mo">004</span><span class="mi">8</span><span class="n">c7c7</span>  <span class="p">..</span><span class="n">p</span><span class="p">.</span><span class="err">@</span><span class="p">.</span><span class="n">H</span><span class="p">....</span><span class="err">@</span><span class="p">.</span><span class="n">H</span><span class="p">..</span>
-</span><span class='line'> <span class="mi">4004</span><span class="n">d0</span> <span class="mi">9</span><span class="n">d054000</span> <span class="n">e8b7ffff</span> <span class="n">fff4660f</span> <span class="mf">1f</span><span class="mi">440000</span>  <span class="p">..</span><span class="err">@</span><span class="p">.......</span><span class="n">f</span><span class="p">..</span><span class="n">D</span><span class="p">..</span>
-</span><span class='line'> <span class="mf">4004e0</span> <span class="n">b84f1060</span> <span class="mo">00554</span><span class="mi">82</span><span class="n">d</span> <span class="mi">48106000</span> <span class="mf">4883f</span><span class="mi">80</span><span class="n">e</span>  <span class="p">.</span><span class="n">O</span><span class="p">.</span><span class="err">`</span><span class="p">.</span><span class="n">UH</span><span class="o">-</span><span class="n">H</span><span class="p">.</span><span class="err">`</span><span class="p">.</span><span class="n">H</span><span class="p">...</span>
-</span><span class='line'> <span class="mf">4004f</span><span class="mi">0</span> <span class="mf">4889e577</span> <span class="mo">025</span><span class="n">dc3b8</span> <span class="mo">00000000</span> <span class="mi">4885</span><span class="n">c074</span>  <span class="n">H</span><span class="p">..</span><span class="n">w</span><span class="p">.]......</span><span class="n">H</span><span class="p">..</span><span class="n">t</span>
-</span><span class='line'> <span class="mi">400500</span> <span class="n">f45dbf48</span> <span class="mf">106000ff</span> <span class="n">e00f1f80</span> <span class="mo">00000000</span>  <span class="p">.].</span><span class="n">H</span><span class="p">.</span><span class="err">`</span><span class="p">..........</span>
-</span><span class='line'> <span class="mi">400510</span> <span class="n">b8481060</span> <span class="mo">00554</span><span class="mi">82</span><span class="n">d</span> <span class="mi">48106000</span> <span class="mi">48</span><span class="n">c1f803</span>  <span class="p">.</span><span class="n">H</span><span class="p">.</span><span class="err">`</span><span class="p">.</span><span class="n">UH</span><span class="o">-</span><span class="n">H</span><span class="p">.</span><span class="err">`</span><span class="p">.</span><span class="n">H</span><span class="p">...</span>
-</span><span class='line'> <span class="mi">400520</span> <span class="mf">4889e548</span> <span class="mi">89</span><span class="n">c248c1</span> <span class="n">ea3f4801</span> <span class="n">d048d1f8</span>  <span class="n">H</span><span class="p">..</span><span class="n">H</span><span class="p">..</span><span class="n">H</span><span class="p">..</span><span class="o">?</span><span class="n">H</span><span class="p">..</span><span class="n">H</span><span class="p">..</span>
-</span><span class='line'> <span class="mi">400530</span> <span class="mi">75025</span><span class="n">dc3</span> <span class="n">ba000000</span> <span class="mo">004</span><span class="mi">885</span><span class="n">d2</span> <span class="mf">74f</span><span class="mi">45</span><span class="n">d48</span>  <span class="n">u</span><span class="p">.]......</span><span class="n">H</span><span class="p">..</span><span class="n">t</span><span class="p">.]</span><span class="n">H</span>
-</span><span class='line'> <span class="mi">400540</span> <span class="mi">89</span><span class="n">c6bf48</span> <span class="mf">106000ff</span> <span class="n">e20f1f80</span> <span class="mo">00000000</span>  <span class="p">...</span><span class="n">H</span><span class="p">.</span><span class="err">`</span><span class="p">..........</span>
-</span><span class='line'> <span class="mi">400550</span> <span class="mi">803</span><span class="n">df10a</span> <span class="mi">20000075</span> <span class="mi">11554889</span> <span class="n">e5e87eff</span>  <span class="p">.</span><span class="o">=</span><span class="p">..</span> <span class="p">..</span><span class="n">u</span><span class="p">.</span><span class="n">UH</span><span class="p">...</span><span class="o">~</span><span class="p">.</span>
-</span><span class='line'> <span class="mi">400560</span> <span class="n">ffff5dc6</span> <span class="mo">05</span><span class="n">de0a20</span> <span class="mf">0001f</span><span class="mi">3</span><span class="n">c3</span> <span class="mf">0f1f</span><span class="mi">4000</span>  <span class="p">..]....</span> <span class="p">......</span><span class="err">@</span><span class="p">.</span>
-</span><span class='line'> <span class="mi">400570</span> <span class="mi">48833</span><span class="n">da8</span> <span class="mi">08200000</span> <span class="mi">741</span><span class="n">eb800</span> <span class="mo">0000004</span><span class="mi">8</span>  <span class="n">H</span><span class="p">.</span><span class="o">=</span><span class="p">..</span> <span class="p">..</span><span class="n">t</span><span class="p">......</span><span class="n">H</span>
-</span><span class='line'> <span class="mi">400580</span> <span class="mi">85</span><span class="n">c07414</span> <span class="mi">55</span><span class="n">bf200e</span> <span class="mi">60004889</span> <span class="n">e5ffd05d</span>  <span class="p">..</span><span class="n">t</span><span class="p">.</span><span class="n">U</span><span class="p">.</span> <span class="p">.</span><span class="err">`</span><span class="p">.</span><span class="n">H</span><span class="p">....]</span>
-</span><span class='line'> <span class="mi">400590</span> <span class="n">e97bffff</span> <span class="n">ff0f1f00</span> <span class="n">e973ffff</span> <span class="n">ff554889</span>  <span class="p">.{.......</span><span class="n">s</span><span class="p">...</span><span class="n">UH</span><span class="p">.</span>
-</span><span class='line'> <span class="mi">4005</span><span class="n">a0</span> <span class="n">e54883ec</span> <span class="mi">2064488</span><span class="n">b</span> <span class="mo">04252</span><span class="mi">800</span> <span class="mo">00004</span><span class="mi">889</span>  <span class="p">.</span><span class="n">H</span><span class="p">..</span> <span class="n">dH</span><span class="p">..</span><span class="o">%</span><span class="p">(...</span><span class="n">H</span><span class="p">.</span>
-</span><span class='line'> <span class="mi">4005</span><span class="n">b0</span> <span class="mf">45f</span><span class="mi">831</span><span class="n">c0</span> <span class="mi">48</span><span class="n">b84865</span> <span class="mi">6</span><span class="n">c6c6f20</span> <span class="mf">776f</span><span class="mi">4889</span>  <span class="n">E</span><span class="mf">.1</span><span class="p">.</span><span class="n">H</span><span class="p">.</span><span class="n">Hello</span> <span class="n">woH</span><span class="p">.</span>
-</span><span class='line'> <span class="mi">4005</span><span class="n">c0</span> <span class="mf">45e0</span><span class="n">c745</span> <span class="n">e8726c64</span> <span class="mf">2e66</span><span class="n">c745</span> <span class="n">ec0a0048</span>  <span class="n">E</span><span class="p">..</span><span class="n">E</span><span class="p">.</span><span class="n">rld</span><span class="p">.</span><span class="n">f</span><span class="p">.</span><span class="n">E</span><span class="p">...</span><span class="n">H</span>
-</span><span class='line'> <span class="mi">4005</span><span class="n">d0</span> <span class="mi">8</span><span class="n">d45e048</span> <span class="mi">89</span><span class="n">c6bf84</span> <span class="mo">064000</span><span class="n">b8</span> <span class="mo">00000000</span>  <span class="p">.</span><span class="n">E</span><span class="p">.</span><span class="n">H</span><span class="p">.....</span><span class="err">@</span><span class="p">......</span>
-</span><span class='line'> <span class="mf">4005e0</span> <span class="n">e89bfeff</span> <span class="n">ffb80000</span> <span class="mo">00004</span><span class="mi">88</span><span class="n">b</span> <span class="mf">55f</span><span class="mi">86448</span>  <span class="p">..........</span><span class="n">H</span><span class="p">.</span><span class="n">U</span><span class="p">.</span><span class="n">dH</span>
-</span><span class='line'> <span class="mf">4005f</span><span class="mi">0</span> <span class="mi">33142528</span> <span class="mo">00000074</span> <span class="mf">05e872</span><span class="n">fe</span> <span class="n">ffffc9c3</span>  <span class="mf">3.</span><span class="o">%</span><span class="p">(...</span><span class="n">t</span><span class="p">..</span><span class="n">r</span><span class="p">.....</span>
-</span><span class='line'> <span class="mi">400600</span> <span class="mi">41574189</span> <span class="n">ff415649</span> <span class="mf">89f</span><span class="mi">64155</span> <span class="mi">4989</span><span class="n">d541</span>  <span class="n">AWA</span><span class="p">..</span><span class="n">AVI</span><span class="p">..</span><span class="n">AUI</span><span class="p">..</span><span class="n">A</span>
-</span><span class='line'> <span class="mi">400610</span> <span class="mi">544</span><span class="n">c8d25</span> <span class="n">f8072000</span> <span class="mi">55488</span><span class="n">d2d</span> <span class="n">f8072000</span>  <span class="n">TL</span><span class="p">.</span><span class="o">%</span><span class="p">..</span> <span class="p">.</span><span class="n">UH</span><span class="p">.</span><span class="o">-</span><span class="p">..</span> <span class="p">.</span>
-</span><span class='line'> <span class="mi">400620</span> <span class="mi">534</span><span class="n">c29e5</span> <span class="mi">31</span><span class="n">db48c1</span> <span class="n">fd034883</span> <span class="n">ec08e80d</span>  <span class="n">SL</span><span class="p">)</span><span class="mf">.1</span><span class="p">.</span><span class="n">H</span><span class="p">...</span><span class="n">H</span><span class="p">.....</span>
-</span><span class='line'> <span class="mi">400630</span> <span class="n">feffff48</span> <span class="mi">85</span><span class="n">ed741e</span> <span class="mf">0f1f</span><span class="mi">8400</span> <span class="mo">00000000</span>  <span class="p">...</span><span class="n">H</span><span class="p">..</span><span class="n">t</span><span class="p">.........</span>
-</span><span class='line'> <span class="mi">400640</span> <span class="mi">4</span><span class="n">c89ea4c</span> <span class="mf">89f</span><span class="mi">64489</span> <span class="n">ff41ff14</span> <span class="n">dc4883c3</span>  <span class="n">L</span><span class="p">..</span><span class="n">L</span><span class="p">..</span><span class="n">D</span><span class="p">..</span><span class="n">A</span><span class="p">...</span><span class="n">H</span><span class="p">..</span>
-</span><span class='line'> <span class="mi">400650</span> <span class="mo">014</span><span class="mi">839</span><span class="n">eb</span> <span class="mi">75</span><span class="n">ea4883</span> <span class="n">c4085b5d</span> <span class="mi">415</span><span class="n">c415d</span>  <span class="p">.</span><span class="n">H9</span><span class="p">.</span><span class="n">u</span><span class="p">.</span><span class="n">H</span><span class="p">...[]</span><span class="n">A</span><span class="err">\</span><span class="n">A</span><span class="p">]</span>
-</span><span class='line'> <span class="mi">400660</span> <span class="mf">415e415</span><span class="n">f</span> <span class="n">c366662e</span> <span class="mf">0f1f</span><span class="mi">8400</span> <span class="mo">00000000</span>  <span class="n">A</span><span class="o">^</span><span class="n">A_</span><span class="p">.</span><span class="n">ff</span><span class="p">.........</span>
-</span><span class='line'> <span class="mi">400670</span> <span class="n">f3c3</span>                                 <span class="p">..</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>當然這樣證據不夠，還是反組譯一下好了。一樣挑重點。</p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">d</span> <span class="n">hello</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">b4</span><span class="p">:</span>  <span class="mi">48</span> <span class="n">b8</span> <span class="mi">48</span> <span class="mi">65</span> <span class="mi">6</span><span class="n">c</span> <span class="mi">6</span><span class="n">c</span> <span class="mf">6f</span>   <span class="n">movabs</span> <span class="err">$</span><span class="mh">0x6f77206f6c6c6548</span><span class="p">,</span><span class="o">%</span><span class="n">rax</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">bb</span><span class="p">:</span>  <span class="mi">20</span> <span class="mi">77</span> <span class="mf">6f</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">be</span><span class="p">:</span>  <span class="mi">48</span> <span class="mi">89</span> <span class="mi">45</span> <span class="n">e0</span>              <span class="n">mov</span>    <span class="o">%</span><span class="n">rax</span><span class="p">,</span><span class="o">-</span><span class="mh">0x20</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">c2</span><span class="p">:</span>  <span class="n">c7</span> <span class="mi">45</span> <span class="n">e8</span> <span class="mi">72</span> <span class="mi">6</span><span class="n">c</span> <span class="mi">64</span> <span class="mi">2</span><span class="n">e</span>    <span class="n">movl</span>   <span class="err">$</span><span class="mh">0x2e646c72</span><span class="p">,</span><span class="o">-</span><span class="mh">0x18</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">c9</span><span class="p">:</span>  <span class="mi">66</span> <span class="n">c7</span> <span class="mi">45</span> <span class="n">ec</span> <span class="mi">0</span><span class="n">a</span> <span class="mo">00</span>      <span class="n">movw</span>   <span class="err">$</span><span class="mh">0xa</span><span class="p">,</span><span class="o">-</span><span class="mh">0x14</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">)</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">cf</span><span class="p">:</span>  <span class="mi">48</span> <span class="mi">8</span><span class="n">d</span> <span class="mi">45</span> <span class="n">e0</span>           <span class="n">lea</span>    <span class="o">-</span><span class="mh">0x20</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span><span class="o">%</span><span class="n">rax</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">d3</span><span class="p">:</span>  <span class="mi">48</span> <span class="mi">89</span> <span class="n">c6</span>                 <span class="n">mov</span>    <span class="o">%</span><span class="n">rax</span><span class="p">,</span><span class="o">%</span><span class="n">rsi</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">d6</span><span class="p">:</span>  <span class="n">bf</span> <span class="mi">84</span> <span class="mo">06</span> <span class="mi">40</span> <span class="mo">00</span>           <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x400684</span><span class="p">,</span><span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">db</span><span class="p">:</span>  <span class="n">b8</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span>           <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x0</span><span class="p">,</span><span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="mf">4005e0</span><span class="o">:</span>  <span class="n">e8</span> <span class="mi">9</span><span class="n">b</span> <span class="n">fe</span> <span class="n">ff</span> <span class="n">ff</span>           <span class="n">callq</span>  <span class="mi">400480</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
-</span><span class='line'><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>先來猜測這一段在做啥：</p>
-
-<ul>
-<li>呼叫printf</li>
-<li>所以要帶參數，也就是&quot;%s&quot;和<code>str</code></li>
-</ul>
-
-
-<p><code>str</code>的部份可以看到，其實存在stack中
-首先是<code>movabs $0x6f77206f6c6c6548,%rax</code></p>
-
-<p>請對照<a href="http://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart">ASCII 表</a>
-因為x86用<a href="http://en.wikipedia.org/wiki/Endianness">little endian</a>，所以請從右到左來看operand <code>0x6f77206f6c6c6548</code></p>
-
-<ul>
-<li><code>0x48</code>：<code>H</code></li>
-<li><code>0x65</code>：<code>e</code></li>
-<li><code>0x6c</code>：<code>l</code></li>
-<li><code>0x6c</code>：<code>l</code></li>
-<li><code>0x6f</code>：<code>o</code></li>
-<li><code>0x20</code>：<code></code></li>
-<li><code>0x77</code>：<code>w</code></li>
-<li><code>0x77</code>：<code>o</code></li>
-</ul>
-
-
-<p>接下來是<code>4005c2:    c7 45 e8 72 6c 64 2e    movl   $0x2e646c72,-0x18(%rbp)</code>
-一樣，對照表格可以看到
-* <code>0x72</code>：<code>r</code>
-* <code>0x6c</code>：<code>l</code>
-* <code>0x64</code>：<code>d</code>
-* <code>0x2e</code>：<code>.</code></p>
-
-<p>最後是<code>movw   $0xa,-0x14(%rbp)</code>
-* <code>0xa</code>：<code>\n</code></p>
-
-<p>把資料存到stack後，再把stack address傳給printf，相對動作是</p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'>  <span class="mi">4005</span><span class="nl">cf</span><span class="p">:</span>       <span class="mi">48</span> <span class="mi">8</span><span class="n">d</span> <span class="mi">45</span> <span class="n">e0</span>             <span class="n">lea</span>    <span class="o">-</span><span class="mh">0x20</span><span class="p">(</span><span class="o">%</span><span class="n">rbp</span><span class="p">),</span><span class="o">%</span><span class="n">rax</span>
-</span><span class='line'>  <span class="mi">4005</span><span class="nl">d3</span><span class="p">:</span>       <span class="mi">48</span> <span class="mi">89</span> <span class="n">c6</span>                <span class="n">mov</span>    <span class="o">%</span><span class="n">rax</span><span class="p">,</span><span class="o">%</span><span class="n">rsi</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>而<code>"%s"</code>存在<code>.rodata</code>，從<code>objdump -t hello</code>可以看到<code>.rodata</code>位址是<code>0x400680</code>，內容是</p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">j</span> <span class="p">.</span><span class="n">rodata</span> <span class="n">hello</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">hello</span><span class="p">:</span>     <span class="n">file</span> <span class="n">format</span> <span class="n">elf64</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Contents</span> <span class="n">of</span> <span class="n">section</span> <span class="p">.</span><span class="nl">rodata</span><span class="p">:</span>
-</span><span class='line'> <span class="mi">400680</span> <span class="mo">01000200</span> <span class="mi">257300</span>                      <span class="p">....</span><span class="o">%</span><span class="n">s</span><span class="p">.</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>也就是說<code>"%s"</code>放在<code>0x400684</code>，因此直接把該位址當作參數傳給printf</p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'>  <span class="mi">4005</span><span class="nl">d6</span><span class="p">:</span>       <span class="n">bf</span> <span class="mi">84</span> <span class="mo">06</span> <span class="mi">40</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x400684</span><span class="p">,</span><span class="o">%</span><span class="n">edi</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>最後做個總結，這個版本的&quot;Hello world.\n&quot;程式本身&quot;hardcode&quot;到stack內。更簡單的說，&quot;Hello world.\n&quot;放在<code>.text</code>裏面。</p>
-
-<h2>版本四</h2>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>  <span class="k">static</span> <span class="kt">char</span> <span class="n">str</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;Hello world.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
-</span><span class='line'>  <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s&quot;</span><span class="p">,</span> <span class="n">str</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'>  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>一樣反組譯一下。直接挑重點。</p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">d</span> <span class="n">hello</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'>  <span class="mi">400531</span><span class="o">:</span>       <span class="n">be</span> <span class="mi">40</span> <span class="mi">10</span> <span class="mi">60</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x601040</span><span class="p">,</span><span class="o">%</span><span class="n">esi</span>
-</span><span class='line'>  <span class="mi">400536</span><span class="o">:</span>       <span class="n">bf</span> <span class="n">d4</span> <span class="mo">05</span> <span class="mi">40</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x4005d4</span><span class="p">,</span><span class="o">%</span><span class="n">edi</span>
-</span><span class='line'>  <span class="mi">40053</span><span class="nl">b</span><span class="p">:</span>       <span class="n">b8</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span> <span class="mo">00</span>          <span class="n">mov</span>    <span class="err">$</span><span class="mh">0x0</span><span class="p">,</span><span class="o">%</span><span class="n">eax</span>
-</span><span class='line'>  <span class="mi">400540</span><span class="o">:</span>       <span class="n">e8</span> <span class="n">cb</span> <span class="n">fe</span> <span class="n">ff</span> <span class="n">ff</span>          <span class="n">callq</span>  <span class="mi">400410</span> <span class="o">&lt;</span><span class="n">printf</span><span class="err">@</span><span class="n">plt</span><span class="o">&gt;</span>
-</span><span class='line'><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><code>0x601040</code>和<code>0x4005d4</code>在那邊呢？我們可以看一下section資訊，可以看到這兩個分別落在<code>.data</code>和<code>.rodata</code></p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">t</span> <span class="n">hello</span>
-</span><span class='line'><span class="p">...</span>
-</span><span class='line'><span class="mo">00000000004005</span><span class="n">d0</span> <span class="n">l</span>    <span class="n">d</span>  <span class="p">.</span><span class="n">rodata</span>   <span class="mo">0000000000000000</span>              <span class="p">.</span><span class="n">rodata</span>
-</span><span class='line'><span class="mo">0000000000601030</span> <span class="n">l</span>    <span class="n">d</span>  <span class="p">.</span><span class="n">data</span>    <span class="mo">0000000000000000</span>              <span class="p">.</span><span class="n">data</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>馬上來看<code>.data</code>和<code>.rodata</code>的內容</p>
-
-<figure class='code'><figcaption><span>Hello3.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">j</span> <span class="p">.</span><span class="n">rodata</span> <span class="n">hello</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">hello</span><span class="p">:</span>     <span class="n">file</span> <span class="n">format</span> <span class="n">elf64</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Contents</span> <span class="n">of</span> <span class="n">section</span> <span class="p">.</span><span class="nl">rodata</span><span class="p">:</span>
-</span><span class='line'> <span class="mi">4005</span><span class="n">d0</span> <span class="mo">01000200</span> <span class="mi">257300</span>                      <span class="p">....</span><span class="o">%</span><span class="n">s</span><span class="p">.</span>
-</span><span class='line'>
-</span><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">s</span> <span class="o">-</span><span class="n">j</span> <span class="p">.</span><span class="n">data</span> <span class="n">hello</span>
-</span><span class='line'>
-</span><span class='line'><span class="nl">hello</span><span class="p">:</span>     <span class="n">file</span> <span class="n">format</span> <span class="n">elf64</span><span class="o">-</span><span class="n">x86</span><span class="o">-</span><span class="mi">64</span>
-</span><span class='line'>
-</span><span class='line'><span class="n">Contents</span> <span class="n">of</span> <span class="n">section</span> <span class="p">.</span><span class="nl">data</span><span class="p">:</span>
-</span><span class='line'> <span class="mi">601030</span> <span class="mo">00000000</span> <span class="mo">00000000</span> <span class="mo">00000000</span> <span class="mo">00000000</span>  <span class="p">................</span>
-</span><span class='line'> <span class="mi">601040</span> <span class="mi">48656</span><span class="n">c6c</span> <span class="mf">6f20776f</span> <span class="mi">726</span><span class="n">c642e</span> <span class="mi">0</span><span class="n">a00</span>      <span class="n">Hello</span> <span class="n">world</span><span class="p">...</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>結論</h2>
-
-<p>依照程式的寫法，你的資料會放在不同的section。沒弄好就會把程式搞爛，有興趣的朋友可以自己設計其他實驗看看。</p>
-
-<h2>補充 2015-01-29</h2>
-
-<p>感謝Scott大大的補充。從上面的反組譯中可以看到在呼叫printf之前都會去把%eax設成零。Scott大大提醒以後才知道這樣設定是有原因的。說明如下</p>
-
-<p>首先printf是一個有趣的函數，有沒有人想過為什麼他的參數的數量可以變動？我先承認我這兩年才去了解，基本上這東西叫作<code>va_arg</code>，細節就不談了，有興趣<code>man va_arg</code>就好了，那天想起來或是有人敲碗再解釋。</p>
-
-<p>回到前面，因為printf是非固定參數數量，而ABI中有又有規範<code>va_arg</code>時候該如何傳遞。在<a href="http://www.x86-64.org/documentation/abi.pdf">X86的ABI</a>規範3.5.7中提到，在傳遞這樣參數的時候，需要把要傳遞的浮點型態變數數量放在eax暫存器中。而這次範例中的printf恰巧都沒有浮點型態變數，所以將eax設成0。Scott大大沒說我還以為單純是歸零的動作orz。</p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://stackoverflow.com/questions/1685483/how-can-i-examine-contents-of-a-data-section-of-an-elf-file-on-linux">stackoverflow: How can I examine contents of a data section of an ELF file on Linux?</a></li>
-<li><a href="http://en.wikipedia.org/wiki/Endianness">Endianness</a></li>
-<li><a href="http://en.wikipedia.org/wiki/ASCII#ASCII_printable_code_chart">ASCII 表</a></li>
-<li><a href="http://wiki.osdev.org/Calling_Conventions#Cheat_Sheets">OSDev: Calling Conventions</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/9">&larr; Older</a>
@@ -1355,6 +782,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/04/hello-world-disassm/">Hello World 反組譯輸出</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/03/load-elf-binary-trace/">Load_elf_binary Trace</a>
       </li>
     
@@ -1370,24 +801,20 @@
         <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (37)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (37)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (4)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 148.0%'>c(36)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.33333333333334%'>c(37)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 105.33333333333333%'>glibc(4)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
 </section>
 
 

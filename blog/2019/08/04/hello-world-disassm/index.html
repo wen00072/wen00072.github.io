@@ -1,0 +1,625 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Hello World 反組譯輸出 - My code works, I don&#8217;t know why.</title>
+  <meta name="author" content="Wen Liao">
+  <meta property="og:image" content="https://wen00072.github.io/files/pb.jpg" />
+
+
+  
+  <meta name="description" content="單純以後剪貼用的。有興趣的朋友可以注意以下觀察重點 _init section
+text section 開頭symbol 為_start
+_start呼叫__libc_start_main
+__libc_csu_init section
+__libc_csu_fini section
+_fini &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="My code works, I don't know why." type="application/atom+xml">
+  <link href="/stylesheets/data-table.css" media="screen, projection" rel="stylesheet" type="text/css" />
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">My code works, I don&#8217;t know why.</a></h1>
+  
+    <h2>國王的耳朵是驢耳朵</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="wen00072.github.io">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+  <li><a href="/categories">Categories</a></li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Hello World 反組譯輸出</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-08-04T21:07:11+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:07 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><p>單純以後剪貼用的。有興趣的朋友可以注意以下觀察重點</p>
+
+<ul>
+<li><code>_init</code> section</li>
+<li><code>text</code> section 開頭symbol 為<code>_start</code></li>
+<li><code>_start</code>呼叫<code>__libc_start_main</code></li>
+<li><code>__libc_csu_init</code> section</li>
+<li><code>__libc_csu_fini</code> section</li>
+<li><code>_fini</code> section</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ objdump -d hello
+</span><span class='line'>
+</span><span class='line'>hello:     file format elf64-x86-64
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .init:
+</span><span class='line'>
+</span><span class='line'>00000000000004f0 &lt;_init&gt;:
+</span><span class='line'> 4f0: 48 83 ec 08             sub    $0x8,%rsp
+</span><span class='line'> 4f4: 48 8b 05 ed 0a 20 00    mov    0x200aed(%rip),%rax        # 200fe8 &lt;__gmon_start__&gt;
+</span><span class='line'> 4fb: 48 85 c0                test   %rax,%rax
+</span><span class='line'> 4fe: 74 02                   je     502 &lt;_init+0x12&gt;
+</span><span class='line'> 500: ff d0                   callq  *%rax
+</span><span class='line'> 502: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'> 506: c3                      retq   
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .plt:
+</span><span class='line'>
+</span><span class='line'>0000000000000510 &lt;.plt&gt;:
+</span><span class='line'> 510: ff 35 aa 0a 20 00       pushq  0x200aaa(%rip)        # 200fc0 &lt;_GLOBAL_OFFSET_TABLE_+0x8&gt;
+</span><span class='line'> 516: ff 25 ac 0a 20 00       jmpq   *0x200aac(%rip)        # 200fc8 &lt;_GLOBAL_OFFSET_TABLE_+0x10&gt;
+</span><span class='line'> 51c: 0f 1f 40 00             nopl   0x0(%rax)
+</span><span class='line'>
+</span><span class='line'>0000000000000520 &lt;printf@plt&gt;:
+</span><span class='line'> 520: ff 25 aa 0a 20 00       jmpq   *0x200aaa(%rip)        # 200fd0 &lt;printf@GLIBC_2.2.5&gt;
+</span><span class='line'> 526: 68 00 00 00 00          pushq  $0x0
+</span><span class='line'> 52b: e9 e0 ff ff ff          jmpq   510 &lt;.plt&gt;
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .plt.got:
+</span><span class='line'>
+</span><span class='line'>0000000000000530 &lt;__cxa_finalize@plt&gt;:
+</span><span class='line'> 530: ff 25 c2 0a 20 00       jmpq   *0x200ac2(%rip)        # 200ff8 &lt;__cxa_finalize@GLIBC_2.2.5&gt;
+</span><span class='line'> 536: 66 90                   xchg   %ax,%ax
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .text:
+</span><span class='line'>
+</span><span class='line'>0000000000000540 &lt;_start&gt;:
+</span><span class='line'> 540: 31 ed                   xor    %ebp,%ebp
+</span><span class='line'> 542: 49 89 d1                mov    %rdx,%r9
+</span><span class='line'> 545: 5e                      pop    %rsi
+</span><span class='line'> 546: 48 89 e2                mov    %rsp,%rdx
+</span><span class='line'> 549: 48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+</span><span class='line'> 54d: 50                      push   %rax
+</span><span class='line'> 54e: 54                      push   %rsp
+</span><span class='line'> 54f: 4c 8d 05 8a 01 00 00    lea    0x18a(%rip),%r8        # 6e0 &lt;__libc_csu_fini&gt;
+</span><span class='line'> 556: 48 8d 0d 13 01 00 00    lea    0x113(%rip),%rcx        # 670 &lt;__libc_csu_init&gt;
+</span><span class='line'> 55d: 48 8d 3d e6 00 00 00    lea    0xe6(%rip),%rdi        # 64a &lt;main&gt;
+</span><span class='line'> 564: ff 15 76 0a 20 00       callq  *0x200a76(%rip)        # 200fe0 &lt;__libc_start_main@GLIBC_2.2.5&gt;
+</span><span class='line'> 56a: f4                      hlt    
+</span><span class='line'> 56b: 0f 1f 44 00 00          nopl   0x0(%rax,%rax,1)
+</span><span class='line'>
+</span><span class='line'>0000000000000570 &lt;deregister_tm_clones&gt;:
+</span><span class='line'> 570: 48 8d 3d 99 0a 20 00    lea    0x200a99(%rip),%rdi        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 577: 55                      push   %rbp
+</span><span class='line'> 578: 48 8d 05 91 0a 20 00    lea    0x200a91(%rip),%rax        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 57f: 48 39 f8                cmp    %rdi,%rax
+</span><span class='line'> 582: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 585: 74 19                   je     5a0 &lt;deregister_tm_clones+0x30&gt;
+</span><span class='line'> 587: 48 8b 05 4a 0a 20 00    mov    0x200a4a(%rip),%rax        # 200fd8 &lt;_ITM_deregisterTMCloneTable&gt;
+</span><span class='line'> 58e: 48 85 c0                test   %rax,%rax
+</span><span class='line'> 591: 74 0d                   je     5a0 &lt;deregister_tm_clones+0x30&gt;
+</span><span class='line'> 593: 5d                      pop    %rbp
+</span><span class='line'> 594: ff e0                   jmpq   *%rax
+</span><span class='line'> 596: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 59d: 00 00 00 
+</span><span class='line'> 5a0: 5d                      pop    %rbp
+</span><span class='line'> 5a1: c3                      retq   
+</span><span class='line'> 5a2: 0f 1f 40 00             nopl   0x0(%rax)
+</span><span class='line'> 5a6: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 5ad: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>00000000000005b0 &lt;register_tm_clones&gt;:
+</span><span class='line'> 5b0: 48 8d 3d 59 0a 20 00    lea    0x200a59(%rip),%rdi        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 5b7: 48 8d 35 52 0a 20 00    lea    0x200a52(%rip),%rsi        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 5be: 55                      push   %rbp
+</span><span class='line'> 5bf: 48 29 fe                sub    %rdi,%rsi
+</span><span class='line'> 5c2: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 5c5: 48 c1 fe 03             sar    $0x3,%rsi
+</span><span class='line'> 5c9: 48 89 f0                mov    %rsi,%rax
+</span><span class='line'> 5cc: 48 c1 e8 3f             shr    $0x3f,%rax
+</span><span class='line'> 5d0: 48 01 c6                add    %rax,%rsi
+</span><span class='line'> 5d3: 48 d1 fe                sar    %rsi
+</span><span class='line'> 5d6: 74 18                   je     5f0 &lt;register_tm_clones+0x40&gt;
+</span><span class='line'> 5d8: 48 8b 05 11 0a 20 00    mov    0x200a11(%rip),%rax        # 200ff0 &lt;_ITM_registerTMCloneTable&gt;
+</span><span class='line'> 5df: 48 85 c0                test   %rax,%rax
+</span><span class='line'> 5e2: 74 0c                   je     5f0 &lt;register_tm_clones+0x40&gt;
+</span><span class='line'> 5e4: 5d                      pop    %rbp
+</span><span class='line'> 5e5: ff e0                   jmpq   *%rax
+</span><span class='line'> 5e7: 66 0f 1f 84 00 00 00    nopw   0x0(%rax,%rax,1)
+</span><span class='line'> 5ee: 00 00 
+</span><span class='line'> 5f0: 5d                      pop    %rbp
+</span><span class='line'> 5f1: c3                      retq   
+</span><span class='line'> 5f2: 0f 1f 40 00             nopl   0x0(%rax)
+</span><span class='line'> 5f6: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 5fd: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>0000000000000600 &lt;__do_global_dtors_aux&gt;:
+</span><span class='line'> 600: 80 3d 09 0a 20 00 00    cmpb   $0x0,0x200a09(%rip)        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 607: 75 2f                   jne    638 &lt;__do_global_dtors_aux+0x38&gt;
+</span><span class='line'> 609: 48 83 3d e7 09 20 00    cmpq   $0x0,0x2009e7(%rip)        # 200ff8 &lt;__cxa_finalize@GLIBC_2.2.5&gt;
+</span><span class='line'> 610: 00 
+</span><span class='line'> 611: 55                      push   %rbp
+</span><span class='line'> 612: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 615: 74 0c                   je     623 &lt;__do_global_dtors_aux+0x23&gt;
+</span><span class='line'> 617: 48 8b 3d ea 09 20 00    mov    0x2009ea(%rip),%rdi        # 201008 &lt;__dso_handle&gt;
+</span><span class='line'> 61e: e8 0d ff ff ff          callq  530 &lt;__cxa_finalize@plt&gt;
+</span><span class='line'> 623: e8 48 ff ff ff          callq  570 &lt;deregister_tm_clones&gt;
+</span><span class='line'> 628: c6 05 e1 09 20 00 01    movb   $0x1,0x2009e1(%rip)        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 62f: 5d                      pop    %rbp
+</span><span class='line'> 630: c3                      retq   
+</span><span class='line'> 631: 0f 1f 80 00 00 00 00    nopl   0x0(%rax)
+</span><span class='line'> 638: f3 c3                   repz retq 
+</span><span class='line'> 63a: 66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+</span><span class='line'>
+</span><span class='line'>0000000000000640 &lt;frame_dummy&gt;:
+</span><span class='line'> 640: 55                      push   %rbp
+</span><span class='line'> 641: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 644: 5d                      pop    %rbp
+</span><span class='line'> 645: e9 66 ff ff ff          jmpq   5b0 &lt;register_tm_clones&gt;
+</span><span class='line'>
+</span><span class='line'>000000000000064a &lt;main&gt;:
+</span><span class='line'> 64a: 55                      push   %rbp
+</span><span class='line'> 64b: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 64e: 48 8d 3d 9f 00 00 00    lea    0x9f(%rip),%rdi        # 6f4 &lt;_IO_stdin_used+0x4&gt;
+</span><span class='line'> 655: b8 00 00 00 00          mov    $0x0,%eax
+</span><span class='line'> 65a: e8 c1 fe ff ff          callq  520 &lt;printf@plt&gt;
+</span><span class='line'> 65f: b8 00 00 00 00          mov    $0x0,%eax
+</span><span class='line'> 664: 5d                      pop    %rbp
+</span><span class='line'> 665: c3                      retq   
+</span><span class='line'> 666: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 66d: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>0000000000000670 &lt;__libc_csu_init&gt;:
+</span><span class='line'> 670: 41 57                   push   %r15
+</span><span class='line'> 672: 41 56                   push   %r14
+</span><span class='line'> 674: 49 89 d7                mov    %rdx,%r15
+</span><span class='line'> 677: 41 55                   push   %r13
+</span><span class='line'> 679: 41 54                   push   %r12
+</span><span class='line'> 67b: 4c 8d 25 36 07 20 00    lea    0x200736(%rip),%r12        # 200db8 &lt;__frame_dummy_init_array_entry&gt;
+</span><span class='line'> 682: 55                      push   %rbp
+</span><span class='line'> 683: 48 8d 2d 36 07 20 00    lea    0x200736(%rip),%rbp        # 200dc0 &lt;__init_array_end&gt;
+</span><span class='line'> 68a: 53                      push   %rbx
+</span><span class='line'> 68b: 41 89 fd                mov    %edi,%r13d
+</span><span class='line'> 68e: 49 89 f6                mov    %rsi,%r14
+</span><span class='line'> 691: 4c 29 e5                sub    %r12,%rbp
+</span><span class='line'> 694: 48 83 ec 08             sub    $0x8,%rsp
+</span><span class='line'> 698: 48 c1 fd 03             sar    $0x3,%rbp
+</span><span class='line'> 69c: e8 4f fe ff ff          callq  4f0 &lt;_init&gt;
+</span><span class='line'> 6a1: 48 85 ed                test   %rbp,%rbp
+</span><span class='line'> 6a4: 74 20                   je     6c6 &lt;__libc_csu_init+0x56&gt;
+</span><span class='line'> 6a6: 31 db                   xor    %ebx,%ebx
+</span><span class='line'> 6a8: 0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)
+</span><span class='line'> 6af: 00 
+</span><span class='line'> 6b0: 4c 89 fa                mov    %r15,%rdx
+</span><span class='line'> 6b3: 4c 89 f6                mov    %r14,%rsi
+</span><span class='line'> 6b6: 44 89 ef                mov    %r13d,%edi
+</span><span class='line'> 6b9: 41 ff 14 dc             callq  *(%r12,%rbx,8)
+</span><span class='line'> 6bd: 48 83 c3 01             add    $0x1,%rbx
+</span><span class='line'> 6c1: 48 39 dd                cmp    %rbx,%rbp
+</span><span class='line'> 6c4: 75 ea                   jne    6b0 &lt;__libc_csu_init+0x40&gt;
+</span><span class='line'> 6c6: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'> 6ca: 5b                      pop    %rbx
+</span><span class='line'> 6cb: 5d                      pop    %rbp
+</span><span class='line'> 6cc: 41 5c                   pop    %r12
+</span><span class='line'> 6ce: 41 5d                   pop    %r13
+</span><span class='line'> 6d0: 41 5e                   pop    %r14
+</span><span class='line'> 6d2: 41 5f                   pop    %r15
+</span><span class='line'> 6d4: c3                      retq   
+</span><span class='line'> 6d5: 90                      nop
+</span><span class='line'> 6d6: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 6dd: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>00000000000006e0 &lt;__libc_csu_fini&gt;:
+</span><span class='line'> 6e0: f3 c3                   repz retq 
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .fini:
+</span><span class='line'>
+</span><span class='line'>00000000000006e4 &lt;_fini&gt;:
+</span><span class='line'> 6e4: 48 83 ec 08             sub    $0x8,%rsp
+</span><span class='line'> 6e8: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'> 6ec: c3   </span></code></pre></td></tr></table></div></figure>
+
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">Wen Liao</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2019-08-04T21:07:11+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:07 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/c/'>c</a>, <a class='category' href='/blog/categories/glibc/'>glibc</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  <a href="//twitter.com/share" class="twitter-share-button" data-url="http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/" data-via="" data-counturl="http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/" >Tweet</a>
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2019/08/03/load-elf-binary-trace/" title="Previous Post: load_elf_binary Trace">&laquo; load_elf_binary Trace</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2019/08/04/hello-world-disassm/">Hello World 反組譯輸出</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/08/03/load-elf-binary-trace/">Load_elf_binary Trace</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>Top Categories</h1>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (37)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+</section>
+<section>
+  <h1>Categories</h1>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (37)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (4)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+</section>
+<section>
+  <h1>Category Cloud</h1>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.33333333333334%'>c(37)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 105.33333333333333%'>glibc(4)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
+</section>
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+<a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/">Creative Commons Attribution-NonCommercial 4.0 International License</a>.<br>
+  Copyright &copy; 2019 - Wen Liao -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'httpwen00072githubio';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/';
+        var disqus_url = 'http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
