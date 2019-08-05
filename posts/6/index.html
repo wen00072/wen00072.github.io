@@ -11,7 +11,12 @@
 
 
   
-  <meta name="description" content="搬了一百多篇文章後，很明顯地發現Octopress產生頁面速度慢到爆炸，有多慢呢？大概下了rake preview指令後要幾十秒才能更新。我猜測rake preview實作上可能是把source/_posts全部都抓起來重新產生頁面造成的問題。 目前能夠找到的方法只能算是workaround， &hellip;">
+  <meta name="description" content="想說裝個Ubuntu 到USB 3.0 Disk上，隨手紀錄一下 目錄 事先準備
+測試環境
+使用Virtualbox 安裝Linux 到 USB disk
+使用Virtualbox 從USB Disk 開機
+安裝後設定
+參考資料 事先準備 USB 3.0 Disk，寫入速度愈快愈好。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,6 +75,147 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/04/03/boot-linux-form-usb-and-vm/">透過 Virtualbox 安裝Linux到USB Disk上</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-04-03T19:21:01+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>7:21 pm</span></time>
+        
+           | <a href="/blog/2015/04/03/boot-linux-form-usb-and-vm/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/04/03/boot-linux-form-usb-and-vm/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>想說裝個Ubuntu 到USB 3.0 Disk上，隨手紀錄一下</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#usb_prepare">事先準備</a></li>
+<li><a href="#usb_env">測試環境</a></li>
+<li><a href="#usb_install">使用Virtualbox 安裝Linux 到 USB disk</a></li>
+<li><a href="#usb_boot">使用Virtualbox 從USB Disk 開機</a></li>
+<li><a href="#usb_setup">安裝後設定</a></li>
+<li><a href="#usb_ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="usb_prepare"></a></p>
+
+<h2>事先準備</h2>
+
+<ul>
+<li>USB 3.0 Disk，寫入速度愈快愈好。另外你要看你喜歡的Linux Distribution決定USB空間大小。我是隨便買個299號稱寫入速度20MB的16G USB Disk。</li>
+<li>安裝VirtualBox</li>
+<li>你喜歡的 Linux Distribution iso檔案</li>
+<li>USB 插槽要2.0，很遺憾3.0目前為止Virtual Box不支援。不用鐵齒，我在這邊浪費三小時生命。</li>
+</ul>
+
+
+<p><a name="usb_env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.2 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ vboxmanage --version
+</span><span class='line'>4.3.26r98988</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="usb_install"></a></p>
+
+<h2>使用Virtualbox 安裝Linux 到 USB disk</h2>
+
+<ul>
+<li>Virtualbox 新增machine，只要把光碟設成ISO檔。不用新增硬碟。</li>
+<li>開機Virtualbox machine，出現GUI後，到Virtualbox machine　的 Device -> USB 挑你要安裝的USB volume。</li>
+<li>開始安裝。因為USB disk有寫入次數限制，所以我不開swap。剩下就是下一步下一步，除非你玩Arch Linux或是Ubuntu server。順帶一題，我安裝Ubuntu server 到USB失敗kerker。</li>
+</ul>
+
+
+<p><a name="usb_boot"></a></p>
+
+<h2>使用Virtualbox 從USB Disk 開機</h2>
+
+<p>這邊有幾個要注意的地方</p>
+
+<ul>
+<li>你要有USB 的對應partition 的device node權限。精確的來說，你要在<code>disk</code>的group中。請用下面的指令
+
+<ul>
+<li><code>sudo usermod -G -a disk $USER</code></li>
+<li><font color="red">血的教訓，<code>usermod -G</code>一定要加<code>-a</code>，不然你group就會只有<code>disk</code>，如果剛好你的帳號是唯一在<code>sudo</code>group的話，就只好拿rescue disk開機救回了。</font></li>
+<li>目前我只能logout session重新login才能更新group。</li>
+</ul>
+</li>
+<li>你要讓virtualbox 可以直接用USB disk對應的partition 開機。請用下面的指令。
+
+<ul>
+<li><code>VBoxManage internalcommands createrawvmdk -filename /path/to/file.vmdk -rawdisk /dev/sdx</code></li>
+</ul>
+</li>
+</ul>
+
+
+<p>接下來就是開另外一個新的Virtualbox machine，指定該檔案。打完收工！</p>
+
+<p><a name="usb_setup"></a></p>
+
+<h2>安裝後設定</h2>
+
+<p>主要是要減少寫入Disk的機會，目前找到的方式有</p>
+
+<ul>
+<li>關掉瀏覽器的cache</li>
+<li>mount disk option加入noatime</li>
+<li>安裝zram-config</li>
+<li>把/tmp改成tmpfs</li>
+</ul>
+
+
+<p><a name="usb_ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://raspberrypi.stackexchange.com/questions/169/how-can-i-extend-the-life-of-my-sd-card">stackexchange: How can I extend the life of my SD card?</a></li>
+<li><a href="https://www.virtualbox.org/manual/ch09.html#rawdisk">Virtualbox manual: 9.9.1.1. Access to entire physical hard disk</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -869,1068 +1015,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/03/10/talk-git-directory/">談談.git 目錄</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-03-10T23:21:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:21 pm</span></time>
-        
-           | <a href="/blog/2015/03/10/talk-git-directory/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/10/talk-git-directory/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>如果有使用git的朋友，可能會知道git是一個分散式版本控制系統。這表示repository會放一份在本機上面。仔細或是有看書的人，會知道這些repository沒有意外會放在工作目錄的<code>.git</code>下面。今天無聊來這個目錄戳戳看。</p>
-
-<p>因為愈寫愈多，還是弄一下目錄好了</p>
-
-<ul>
-<li><a href="#g_env">測試環境</a></li>
-<li><a href="#g_bkg">背景知識</a></li>
-<li><a href="#g_list">.git目錄列表</a></li>
-<li><a href="#g_1st_file">.git第一層檔案</a>
-
-<ul>
-<li><a href="#gidx">index</a></li>
-<li><a href="#gpkref">packed-refs</a></li>
-<li><a href="#gconf">config</a></li>
-<li><a href="#gorg_head">ORIG_HEAD</a></li>
-<li><a href="#gdesc">description</a></li>
-<li><a href="#ghead">HEAD</a></li>
-</ul>
-</li>
-<li><a href="#g_1st_dir">.git第一層目錄</a>
-
-<ul>
-<li><a href="#g_1st_dir_br">branches</a></li>
-<li><a href="#g_1st_dir_hk">hooks</a></li>
-<li><a href="#g_1st_dir_inf">info</a></li>
-<li><a href="#g_1st_dir_log">logs</a></li>
-<li><a href="#g_1st_dir_obj">objects</a></li>
-<li><a href="#g_1st_dir_ref">refs</a></li>
-</ul>
-</li>
-<li><a href="#g_ref">參考資料</a></li>
-</ul>
-
-
-<p><a name="g_env"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.2 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span><span class='line'>
-</span><span class='line'>$ git --version
-</span><span class='line'>git version 2.3.0
-</span><span class='line'>
-</span><span class='line'>$ git remote show 
-</span><span class='line'>origin
-</span><span class='line'>$ git remote show origin 
-</span><span class='line'>* remote origin
-</span><span class='line'>  Fetch URL: https://github.com/pcman-bbs/pcmanx.git
-</span><span class='line'>  Push  URL: https://github.com/pcman-bbs/pcmanx.git
-</span><span class='line'>  HEAD branch: master
-</span><span class='line'>  Remote branches:
-</span><span class='line'>    gtk3                          tracked
-</span><span class='line'>    master                        tracked
-</span><span class='line'>    next-release                  tracked
-</span><span class='line'>    show_web_search_in_popup_menu tracked
-</span><span class='line'>    transparent_background        tracked
-</span><span class='line'>  Local branch configured for 'git pull':
-</span><span class='line'>    master merges with remote master
-</span><span class='line'>  Local ref configured for 'git push':
-</span><span class='line'>    master pushes to master (up to date)</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="g_list"></a></p>
-
-<h2>.git目錄列表</h2>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>/tmp/pcmanx$ ls -gG --group-directories-first .git
-</span><span class='line'>total 56
-</span><span class='line'>drwxrwxr-x 2  4096 Mar  3 23:36 branches
-</span><span class='line'>drwxrwxr-x 2  4096 Mar  3 23:36 hooks
-</span><span class='line'>drwxrwxr-x 2  4096 Mar  3 23:36 info
-</span><span class='line'>drwxrwxr-x 3  4096 Mar  3 23:37 logs
-</span><span class='line'>drwxrwxr-x 4  4096 Mar  3 23:36 objects
-</span><span class='line'>drwxrwxr-x 5  4096 Mar  3 23:37 refs
-</span><span class='line'>-rw-rw-r-- 1   264 Mar  3 23:37 config
-</span><span class='line'>-rw-rw-r-- 1    73 Mar  3 23:36 description
-</span><span class='line'>-rw-rw-r-- 1    23 Mar  3 23:37 HEAD
-</span><span class='line'>-rw-rw-r-- 1 12256 Mar  4 23:11 index
-</span><span class='line'>-rw-rw-r-- 1    41 Mar  4 23:11 ORIG_HEAD
-</span><span class='line'>-rw-rw-r-- 1   829 Mar  3 23:37 packed-refs</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="g_bkg"></a></p>
-
-<h2>背景知識</h2>
-
-<p>這邊只列出需要的背景知識，可能有錯。</p>
-
-<ul>
-<li>Git 的基本上資料有分blob, tree, commit, tag這四種型態</li>
-<li>Git 的branch可以視為放一個檔案，這個檔案存放某個commit的HASH資訊</li>
-</ul>
-
-
-<p>多說無益，直接操作，先來看這四種型態是三小</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git log
-</span><span class='line'>commit fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>來看一下 fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304裏面是啥</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>tree 2f6db7ea7db6b66cb4c07a98e78b580f67872db6
-</span><span class='line'>parent 3fb419f40c10d67bd1b9b18152fb43cca58ca411
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>可以看到有放</p>
-
-<ul>
-<li>tree型態的HASH</li>
-<li>上一個commit的HASH</li>
-<li>commit的訊息</li>
-</ul>
-
-
-<p>接下來來看tree吧</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 2f6db7ea7db6b66cb4c07a98e78b580f67872db6
-</span><span class='line'>...
-</span><span class='line'>100644 blob 5bc4b3f69d730535eb3a8aee28d7ef9273225d50  .gitignore
-</span><span class='line'>...
-</span><span class='line'>040000 tree b0b46378d75b1737257fef9d9eb433489b2d0ea0  build</span></code></pre></td></tr></table></div></figure>
-
-
-<p>有沒有和Linux的<a href="http://en.wikipedia.org/wiki/Ext2#Directories">File system</a>很像？<del>目錄</del>tree資料放的是<del>inode</del>HASH值和檔案名稱的對應表。</p>
-
-<p>我們可以看到HASH的型態有tree和blob，理所當然來看看blob吧。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 5bc4b3f69d730535eb3a8aee28d7ef9273225d50
-</span><span class='line'>## autotools generated
-</span><span class='line'>Doxyfile
-</span><span class='line'>INSTALL
-</span><span class='line'>Makefile
-</span><span class='line'>Makefile.in
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>很明顯這是一個資料存放的地方。</p>
-
-<p>然後我們來看branch是不是真的放在檔案，檔案內容是某個commit HASH吧，直接看範例。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b br1
-</span><span class='line'>Switched to a new branch 'br1'
-</span><span class='line'>$ git checkout -b br2
-</span><span class='line'>Switched to a new branch 'br2'
-</span><span class='line'>$ tree .git/refs/
-</span><span class='line'>.git/refs/
-</span><span class='line'>├── heads
-</span><span class='line'>│   ├── br1
-</span><span class='line'>│   ├── br2
-</span><span class='line'>│   └── master
-</span><span class='line'>├── remotes
-</span><span class='line'>│   └── origin
-</span><span class='line'>│       └── HEAD
-</span><span class='line'>└── tags
-</span><span class='line'>
-</span><span class='line'>$ git log
-</span><span class='line'>commit fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>...
-</span><span class='line'>$ cat .git/refs/heads/br1 
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>$ cat .git/refs/heads/br2
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>$ cat .git/refs/heads/master 
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="g_1st_file"></a></p>
-
-<h2>.git第一層檔案</h2>
-
-<p>用file看一下，可以看到大部分都是純文字檔：</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>/tmp/pcmanx$ find .git -maxdepth 1 -type f -exec file {} \;
-</span><span class='line'>.git/index: Git index, version 2, 144 entries
-</span><span class='line'>.git/packed-refs: ASCII text
-</span><span class='line'>.git/config: ASCII text
-</span><span class='line'>.git/ORIG_HEAD: ASCII text
-</span><span class='line'>.git/description: ASCII text
-</span><span class='line'>.git/HEAD: ASCII text</span></code></pre></td></tr></table></div></figure>
-
-
-<p>接下來分別討論</p>
-
-<ul>
-<li><a href="#gidx">index</a></li>
-<li><a href="#gpkref">packed-refs</a></li>
-<li><a href="#gconf">config</a></li>
-<li><a href="#gorg_head">ORIG_HEAD</a></li>
-<li><a href="#gdesc">description</a></li>
-<li><a href="#ghead">HEAD</a></li>
-</ul>
-
-
-<p><a name="gidx"></a></p>
-
-<h2>index</h2>
-
-<p>先看下面的操作。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ file .git/index 
-</span><span class='line'>.git/index: Git index, version 2, 144 entries
-</span><span class='line'>
-</span><span class='line'>$ find -type f | grep -v .git\/ | cut -c 3- | sort | wc -l
-</span><span class='line'>144
-</span><span class='line'>
-</span><span class='line'>$ git ls-files | wc -l
-</span><span class='line'>144</span></code></pre></td></tr></table></div></figure>
-
-
-<p>有興趣的人可以把<code>| wc -l</code>去掉玩看看，基本上這個是在描述repository的目錄結構。也就是說，哪個檔案要放在那個目錄。更精確的來說，協助那個blob hash要放在哪個tree中。根據<a href="http://schacon.github.io/gitbook/7_the_git_index.html">這邊</a>的說法，這個檔案可以協助</p>
-
-<ul>
-<li>提供產生tree object時需要的資料</li>
-<li>提供比對working directory和tree的資訊</li>
-<li>merge產生衝突時，可以從index取得的資料協助解決衝突。不過這邊不是很懂，就單純字面翻譯了。</li>
-</ul>
-
-
-<p><a name="gpkref"></a></p>
-
-<h2>packed-refs</h2>
-
-<p>簡單來說，考量效率，git提供pack ref目錄的功能，ref的概念請看前面背景知識。</p>
-
-<p>一樣，看例子比較快。</p>
-
-<p>先用<code>git show-ref</code>看看我們有哪些reference</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git show-ref
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/master
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/HEAD
-</span><span class='line'>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
-</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
-</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
-</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
-</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
-</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
-</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
-</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
-</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
-</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
-</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure>
-
-
-<p>看看<code>packed-refs</code>裏面是三小？有沒有發現和上面很像啊？</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/packed-refs 
-</span><span class='line'>## pack-refs with: peeled fully-peeled 
-</span><span class='line'>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
-</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
-</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
-</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
-</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
-</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
-</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
-</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
-</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
-</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
-</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure>
-
-
-<p>看一下ref目錄，上面的那些reference並不存在在<code>.git/ref</code>裏面</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
-</span><span class='line'>.git/refs/
-</span><span class='line'>├── heads
-</span><span class='line'>│   └── master
-</span><span class='line'>├── remotes
-</span><span class='line'>│   └── origin
-</span><span class='line'>│       └── HEAD
-</span><span class='line'>└── tags
-</span><span class='line'>
-</span><span class='line'>4 directories, 2 files</span></code></pre></td></tr></table></div></figure>
-
-
-<p>好，生一個branch看看。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b I_got_a_new_ref
-</span><span class='line'>Switched to a new branch 'I_got_a_new_ref'</span></code></pre></td></tr></table></div></figure>
-
-
-<p>喔喔！<code>.git/refs</code>出現了剛才產生的ref</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
-</span><span class='line'>.git/refs/
-</span><span class='line'>├── heads
-</span><span class='line'>│   ├── I_got_a_new_ref
-</span><span class='line'>│   └── master
-</span><span class='line'>├── remotes
-</span><span class='line'>│   └── origin
-</span><span class='line'>│       └── HEAD
-</span><span class='line'>└── tags
-</span><span class='line'>
-</span><span class='line'>4 directories, 3 files</span></code></pre></td></tr></table></div></figure>
-
-
-<p>跑一下<code>git gc</code>整理一下</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git gc
-</span><span class='line'>Counting objects: 5002, done.
-</span><span class='line'>Delta compression using up to 4 threads.
-</span><span class='line'>Compressing objects: 100% (1068/1068), done.
-</span><span class='line'>Writing objects: 100% (5002/5002), done.
-</span><span class='line'>Total 5002 (delta 3913), reused 5002 (delta 3913)</span></code></pre></td></tr></table></div></figure>
-
-
-<p>疑？剛才的branch不見了。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/refs/
-</span><span class='line'>.git/refs/
-</span><span class='line'>├── heads
-</span><span class='line'>├── remotes
-</span><span class='line'>│   └── origin
-</span><span class='line'>│       └── HEAD
-</span><span class='line'>└── tags
-</span><span class='line'>
-</span><span class='line'>4 directories, 1 file</span></code></pre></td></tr></table></div></figure>
-
-
-<p>跑去pack-ref了</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/packed-refs 
-</span><span class='line'>## pack-refs with: peeled fully-peeled 
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/I_got_a_new_ref
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/heads/master
-</span><span class='line'>c86b440bafe24caecfe0dbfbbd73031a1bcd1178 refs/remotes/origin/gtk3
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 refs/remotes/origin/master
-</span><span class='line'>22da092eb00b78946fd70de24427d702a77b925b refs/remotes/origin/next-release
-</span><span class='line'>98ff18f84fad4686012bf6183734eeb1ec5d7f46 refs/remotes/origin/show_web_search_in_popup_menu
-</span><span class='line'>9542889d17d276321d6da2de8d1f9d95f76fb483 refs/remotes/origin/transparent_background
-</span><span class='line'>7a3629ab3da7c609cf3698319ab606ebae0998e7 refs/tags/0.3.2@221
-</span><span class='line'>f57350c72987263c2b745690bdc8013fbbd6067c refs/tags/0.3.3@243
-</span><span class='line'>522d1dc2568b5c7c256e05ca69412480e1afcfb3 refs/tags/0.3.4
-</span><span class='line'>8e9d9520125f64a0b894a5d575f0c2d98c3ec06b refs/tags/0.3.4@301
-</span><span class='line'>7031115a8ea1151efc1536b43a509774ca2c0777 refs/tags/0.3.7
-</span><span class='line'>3f4dcbe6e1aa0045fbeb9f1f761ce035e65defea refs/tags/1.1
-</span><span class='line'>098d158c8d8a7ce7c6b2c5c47c967c6137beced2 refs/tags/1.2</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gconf"></a></p>
-
-<h2>config</h2>
-
-<p>其實這個是個大哉問，就值得專門開一個章節討論。所以我整理到<a href="http://wen00072.github.io/blog/2015/03/08/introduction-to-git-config">這個頁面</a>，請自行前往閱讀。</p>
-
-<p><a name="gorg_head"></a></p>
-
-<h2>ORIG_HEAD</h2>
-
-<p>這個檔案很有趣，一開始其實不存在。後來不知道怎麼突然跑出來，問了估狗和男人(man git reset)後得到的答案就是當reset的時候會把舊的HEAD hash放到這邊。為什麼要這樣做呢，當然是反悔用的。你可以<code>man git commit</code>找<code>ORIG_HEAD</code>就可以看看<code>git commit --amend</code>同效果的範例了。</p>
-
-<p><a name="gdesc"></a></p>
-
-<h2>description</h2>
-
-<p>懶得解釋，跳過</p>
-
-<p><a name="ghead"></a></p>
-
-<h2>HEAD</h2>
-
-<p>望文生義，當然是指向目前所在的commit。</p>
-
-<p>等等！</p>
-
-<p>指向目前所在的commit是三小？
-一樣，來看例子。</p>
-
-<p>目前clone下來，裏面放的是一個檔案，檔案裏面是什麼呢？一樣是個commit HASH</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/HEAD 
-</span><span class='line'>ref: refs/heads/master
-</span><span class='line'>
-</span><span class='line'>$ cat .git/refs/heads/master
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>
-</span><span class='line'>$ git cat-file -t fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>commit</span></code></pre></td></tr></table></div></figure>
-
-
-<p>那我直接checkout一個不是branch的可以嘛？當然沒問題。
-可以看到git會把你checkout的commit HASH寫入.git/HEAD</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ strace git checkout 93f0addca5b2723ff0f1b744b032f359
-</span><span class='line'>...
-</span><span class='line'>open("/tmp/pcmanx/.git/HEAD.lock", O_RDWR|O_CREAT|O_EXCL, 0666) = 3
-</span><span class='line'>write(3, "93f0addca5b2723ff0f1b744b032f359"..., 40) = 40
-</span><span class='line'>write(3, "\n", 1)                       = 1
-</span><span class='line'>close(3)                                = 0
-</span><span class='line'>...
-</span><span class='line'>rename("/tmp/pcmanx/.git/HEAD.lock", "/tmp/pcmanx/.git/HEAD") = 0
-</span><span class='line'>...
-</span><span class='line'>
-</span><span class='line'>$ cat .git/HEAD 
-</span><span class='line'>93f0addca5b2723ff0f1b744b032f359938a286d</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="g_1st_dir"></a></p>
-
-<h2>第一層目錄</h2>
-
-<ul>
-<li><a href="#g_1st_dir_br">branches</a></li>
-<li><a href="#g_1st_dir_hk">hooks</a></li>
-<li><a href="#g_1st_dir_inf">info</a></li>
-<li><a href="#g_1st_dir_log">logs</a></li>
-<li><a href="#g_1st_dir_obj">objects</a></li>
-<li><a href="#g_1st_dir_ref">refs</a></li>
-</ul>
-
-
-<p><a name="g_1st_dir_br"></a></p>
-
-<h2>branches</h2>
-
-<p>快過期的東西(<a href="http://git-scm.com/docs/gitrepository-layout">出處</a>)，跳過。</p>
-
-<p><a name="g_1st_dir_hk"></a></p>
-
-<h2>hooks</h2>
-
-<p>hook，這個翻成中文很鳥，保留原文。基本上就是一組callback，特定的時候會去呼叫。我目前生意沒有做很大，有需要再去看。列出預設的檔案如下</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ ll .git/hooks/
-</span><span class='line'>total 48
-</span><span class='line'>drwxrwxr-x 2 wen wen 4096 Mar  9 23:10 ./
-</span><span class='line'>drwxrwxr-x 8 wen wen 4096 Mar  9 23:21 ../
-</span><span class='line'>-rwxrwxr-x 1 wen wen  452 Mar  9 23:10 applypatch-msg.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen  896 Mar  9 23:10 commit-msg.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen  189 Mar  9 23:10 post-update.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen  398 Mar  9 23:10 pre-applypatch.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen 1642 Mar  9 23:10 pre-commit.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen 1239 Mar  9 23:10 prepare-commit-msg.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen 1348 Mar  9 23:10 pre-push.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen 4898 Mar  9 23:10 pre-rebase.sample*
-</span><span class='line'>-rwxrwxr-x 1 wen wen 3611 Mar  9 23:10 update.sample*</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="g_1st_dir_inf"></a></p>
-
-<h2>info</h2>
-
-<p>儲存資訊，廢話。目前裏面只有一個exclude，而且檔案內容還都是註解。但是<a href="http://git-scm.com/docs/gitrepository-layout">這邊</a>有說還有其他檔案。另外值得提的是exclude說明有提到<code>.gitignore</code>針對的是<code>git status</code>, <code>git rm</code>, <code>git add</code>, <code>git clean</code>。其他的操作還是得在<code>.git/log/exclude</code>中設定。</p>
-
-<p><a name="g_1st_dir_log"></a></p>
-
-<h2>logs</h2>
-
-<p>這是存放log的地方。log是什麼呢？直接看個例子。</p>
-
-<p>我們先新增一個測試檔案</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ touch test2
-</span><span class='line'>$ git add test2
-</span><span class='line'>$ git commit test2 -m "test2"
-</span><span class='line'>[master 09580e4] test2
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 test2</span></code></pre></td></tr></table></div></figure>
-
-
-<p>執行<code>git reflog</code>，可以看到你剛才的動作以及有當次HEAD的commit HASH已經被記起來。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git reflog 
-</span><span class='line'>09580e4 HEAD@{0}: commit: test2
-</span><span class='line'>fd5d6ab HEAD@{1}: checkout: moving from 93f0addca5b2723ff0f1b744b032f359938a286d to master
-</span><span class='line'>93f0add HEAD@{2}: checkout: moving from master to 93f0addca5b2723ff0f1b744b032f359938a286d
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>這東西有什麼用處呢？當然是讓你反悔用的。再來看個例子</p>
-
-<p>首先開一個branch</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b demo_reflog
-</span><span class='line'>Switched to a new branch 'demo_reflog'</span></code></pre></td></tr></table></div></figure>
-
-
-<p>新增並commit file1</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ touch file1
-</span><span class='line'>$ git add file1
-</span><span class='line'>$ git commit file1 -m "file 1"
-</span><span class='line'>[demo_reflog c982c70] file 1
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 file1</span></code></pre></td></tr></table></div></figure>
-
-
-<p>然後新增並commit file2</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ touch file2
-</span><span class='line'>$ git add file2
-</span><span class='line'>$ git commit file2 -m "file 2"
-</span><span class='line'>[demo_reflog b85f4d4] file 2
-</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
-</span><span class='line'> create mode 100644 file2</span></code></pre></td></tr></table></div></figure>
-
-
-<p>切回master並且宰掉剛才的branch</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout master 
-</span><span class='line'>Switched to branch 'master'
-</span><span class='line'>Your branch is up-to-date with 'origin/master'.
-</span><span class='line'>
-</span><span class='line'>$ git branch -D demo_reflog  
-</span><span class='line'>Deleted branch demo_reflog (was b85f4d4).</span></code></pre></td></tr></table></div></figure>
-
-
-<p>假設上一個動作是手滑誤刪，能不能反悔。
-YES YOU CAN!</p>
-
-<p>先看看log</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git reflog 
-</span><span class='line'>fd5d6ab HEAD@{0}: checkout: moving from demo_reflog to master
-</span><span class='line'>b85f4d4 HEAD@{1}: commit: file 2
-</span><span class='line'>c982c70 HEAD@{2}: commit: file 1
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>可以知道上次branch最後commit的HASH，那麼我們就可以切過去然後開另外一個branch了。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git checkout -b i_am_back b85f4d4
-</span><span class='line'>Switched to a new branch 'i_am_back'</span></code></pre></td></tr></table></div></figure>
-
-
-<p>可以看到資料回來了。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git log --pretty=oneline --abbrev-commit
-</span><span class='line'>b85f4d4 file 2
-</span><span class='line'>c982c70 file 1
-</span><span class='line'>fd5d6ab Fix invisible cairo caret issue.
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>當然這還是險招，git本身保留是有保存期限的。有興趣問男人。<code>man git gc</code></p>
-
-<p>不知道有沒有會問：「啊不是要介紹<code>.git/logs</code>嘛？」</p>
-
-<p>問得好！猜猜剛才git reflogs檔案從哪裡讀出來？</p>
-
-<p>一樣請出strace大大</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ strace -e open git reflog 
-</span><span class='line'>...
-</span><span class='line'>open("/tmp/pcmanx/.git/logs/HEAD", O_RDONLY) = 3
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>有看到<code>.git/logs/HEAD</code>吧？有沒有想看一下裏面是啥？至少我想看。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ cat .git/logs/HEAD
-</span><span class='line'>...
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 c982c70f00875b83e4845ca35ef0ca4c70f73e64 Wen.Liao &lt;censored&gt; 1425997414 +0800  commit: file 1
-</span><span class='line'>c982c70f00875b83e4845ca35ef0ca4c70f73e64 b85f4d4dca4012a2d1785750061fae9e03e817e1 Wen.Liao &lt;censored&gt; 1425997438 +0800  commit: file 2
-</span><span class='line'>b85f4d4dca4012a2d1785750061fae9e03e817e1 fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 Wen.Liao &lt;censored&gt; 1425997673 +0800  checkout: moving from demo_reflog to master
-</span><span class='line'>fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304 b85f4d4dca4012a2d1785750061fae9e03e817e1 Wen.Liao &lt;censored&gt; 1425997732 +0800  checkout: moving from master to b85f4d4
-</span><span class='line'>b85f4d4dca4012a2d1785750061fae9e03e817e1 b85f4d4dca4012a2d1785750061fae9e03e817e1 Wen.Liao &lt;censored&gt; 1425997746 +0800  checkout: moving from b85f4d4dca4012a2d1785750061fae9e03e817e1 to i_am_back</span></code></pre></td></tr></table></div></figure>
-
-
-<p>精確的來說，<code>.git/logs</code>下面不只紀錄HEAD的log，還有各種ref的log。有興趣的朋友可以自行參考<a href="http://git-scm.com/docs/gitrepository-layout">這邊</a>，並且進去目錄逛逛。</p>
-
-<p><a name="g_1st_dir_obj"></a></p>
-
-<h2>objects</h2>
-
-<p>先看剛clone下來的目錄結構</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
-</span><span class='line'>.git/objects/
-</span><span class='line'>├── info
-</span><span class='line'>└── pack
-</span><span class='line'>    ├── pack-6042320de285747900cc3263a47f7bab429cabf8.idx
-</span><span class='line'>    └── pack-6042320de285747900cc3263a47f7bab429cabf8.pack</span></code></pre></td></tr></table></div></figure>
-
-
-<p>來生一個目錄和並且commit一個東西進去。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ mkdir tree
-</span><span class='line'>$ echo test &gt; tree/file
-</span><span class='line'>$ git add tree/file 
-</span><span class='line'>$ git commit tree/file -m "test tree and file"
-</span><span class='line'>[master 2ba01ef] test tree and file
-</span><span class='line'> 1 file changed, 1 insertion(+)
-</span><span class='line'> create mode 100644 tree/file</span></code></pre></td></tr></table></div></figure>
-
-
-<p>然後看看這個目錄變化吧</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
-</span><span class='line'>.git/objects/
-</span><span class='line'>├── 2b
-</span><span class='line'>│   └── a01ef5583f35dd57b5fb5bde732f73bc315b6d
-</span><span class='line'>├── 9d
-</span><span class='line'>│   └── aeafb9864cf43055ae93beb0afd6c7d144bfa4
-</span><span class='line'>├── de
-</span><span class='line'>│   └── f69c2c316574aaf328e546486fa750eb9c53a0
-</span><span class='line'>├── e1
-</span><span class='line'>│   └── b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
-</span><span class='line'>├── info
-</span><span class='line'>└── pack
-</span><span class='line'>    ├── pack-6042320de285747900cc3263a47f7bab429cabf8.idx
-</span><span class='line'>    └── pack-6042320de285747900cc3263a47f7bab429cabf8.pack
-</span><span class='line'>
-</span><span class='line'>6 directories, 6 files</span></code></pre></td></tr></table></div></figure>
-
-
-<p>接下來把目錄和檔案混起來，用<code>git cat-file -p</code>看看裏面是啥</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 2ba01ef5583f35dd57b5fb5bde732f73bc315b6d
-</span><span class='line'>tree def69c2c316574aaf328e546486fa750eb9c53a0
-</span><span class='line'>parent fd5d6abe34f41f8687c1fc5e2ab0a2f65c570304
-</span><span class='line'>author Wen.Liao &lt;censored&gt; 1425999641 +0800
-</span><span class='line'>committer Wen.Liao &lt;censored&gt; 1425999641 +0800
-</span><span class='line'>
-</span><span class='line'>test tree and file</span></code></pre></td></tr></table></div></figure>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p 9daeafb9864cf43055ae93beb0afd6c7d144bfa4
-</span><span class='line'>test</span></code></pre></td></tr></table></div></figure>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p def69c2c316574aaf328e546486fa750eb9c53a0
-</span><span class='line'>100644 blob 5bc4b3f69d730535eb3a8aee28d7ef9273225d50  .gitignore
-</span><span class='line'>...
-</span><span class='line'>040000 tree e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19  tree</span></code></pre></td></tr></table></div></figure>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git cat-file -p e1b8ecbb1f19709f3a4867a0ffe08bb2e07acf19
-</span><span class='line'>100644 blob 9daeafb9864cf43055ae93beb0afd6c7d144bfa4  file</span></code></pre></td></tr></table></div></figure>
-
-
-<p>其實不難猜，你local commit的東西會被處理後變成object，並且依照hash分門別類地存放。</p>
-
-<p>接下來我們來做個測試</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ git gc
-</span><span class='line'>Counting objects: 5006, done.
-</span><span class='line'>Delta compression using up to 4 threads.
-</span><span class='line'>Compressing objects: 100% (1070/1070), done.
-</span><span class='line'>Writing objects: 100% (5006/5006), done.
-</span><span class='line'>Total 5006 (delta 3914), reused 5001 (delta 3913)</span></code></pre></td></tr></table></div></figure>
-
-
-<p>可以看到，剛才的目錄全部消失，而pack目錄的檔案名稱也和前面的不同了。對照上面<code>git gc</code>的訊息，可以知道<code>git gc</code>做了壓縮，並且將這些object一起壓到pack目錄的檔案中了。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ tree .git/objects/
-</span><span class='line'>.git/objects/
-</span><span class='line'>├── info
-</span><span class='line'>│   └── packs
-</span><span class='line'>└── pack
-</span><span class='line'>    ├── pack-57d163604c430e1919a18e97c5b1312291b62721.idx
-</span><span class='line'>    └── pack-57d163604c430e1919a18e97c5b1312291b62721.pack
-</span><span class='line'>
-</span><span class='line'>2 directories, 3 files</span></code></pre></td></tr></table></div></figure>
-
-
-<p>所以我們可以從觀察中做出結論。Git object的存放有兩種型式</p>
-
-<ul>
-<li>loose object：就是剛才看到用[HASH前兩碼]/[剩下HASH] 的目錄檔案結構</li>
-<li>packed object: 把object壓縮成兩個檔案</li>
-</ul>
-
-
-<p>而looose object型式經過<code>git gc</code>後會有可能轉換成packed object，反之亦然。詳細規則問男人。
-由於<code>git gc</code>是用來<strong>清除</strong>和<strong>整理</strong>local repository，也就是說做了<code>git gc</code>是有可能刪除用不到的資料。詳細情況一樣請問男人<code>man git gc</code></p>
-
-<p><a name="g_1st_dir_ref"></a></p>
-
-<h2>refs</h2>
-
-<ul>
-<li><a href="#g_bkg">背景知識</a>和<a href="#gpkref">packed-ref</a>有提到，就不要拖台錢了。</li>
-</ul>
-
-
-<p><a name="g_ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://stackoverflow.com/questions/4084921/what-does-the-git-index-contain-exactly">Stackoverflow: What does the git index contain EXACTLY?</a></li>
-<li><a href="http://schacon.github.io/gitbook/7_the_git_index.html">Git Community Book: The Git Index</a></li>
-<li><a href="http://stackoverflow.com/questions/964876/head-and-orig-head-in-git">Stackoverflow: HEAD and ORIG_HEAD in Git</a></li>
-<li><a href="http://git-scm.com/book/en/v2/Git-Internals-Git-Objects">ProGit: 10.2 Git Internals - Git Objects</a></li>
-<li><a href="http://gitready.com/advanced/2009/03/23/whats-inside-your-git-directory.html">what&rsquo;s inside your .git directory</a></li>
-<li><a href="http://git-scm.com/docs/git-pack-refs">git-pack-refs - Pack heads and tags for efficient repository access</a></li>
-<li><a href="http://git-scm.com/book/en/v2/Customizing-Git-Git-Configuration#_git_config">ProGit: 8.1 Customizing Git - Git Configuration</a></li>
-<li><a href="http://git-scm.com/docs/gitrepository-layout">gitrepository-layout - Git Repository Layout</a></li>
-<li><a href="http://schacon.github.io/gitbook/7_how_git_stores_objects.html">Git Community Book: How Git Stores Objects</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/7">&larr; Older</a>
@@ -1948,6 +1032,10 @@ YES YOU CAN!</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Glibc Obj File Symbols</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/04/hello-world-disassm/">Hello World 反組譯輸出</a>
       </li>
     
@@ -1963,24 +1051,20 @@ YES YOU CAN!</p>
         <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (37)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (37)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (4)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.33333333333334%'>c(37)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 105.33333333333333%'>glibc(4)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.65217391304348%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.30434782608695%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.6086956521739%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.91304347826087%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.21739130434783%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.30434782608695%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.30434782608695%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.30434782608695%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.26086956521739%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.6086956521739%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.56521739130434%'>c(38)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.30434782608695%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.6086956521739%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.6086956521739%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.30434782608695%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.30434782608695%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.30434782608695%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.86956521739131%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.30434782608695%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.30434782608695%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.30434782608695%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.6086956521739%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.30434782608695%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.30434782608695%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.30434782608695%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.30434782608695%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.6086956521739%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.21739130434783%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.30434782608695%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.6086956521739%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.21739130434783%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.6086956521739%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.30434782608695%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.30434782608695%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.52173913043478%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.6086956521739%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.30434782608695%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.30434782608695%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.30434782608695%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.30434782608695%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.30434782608695%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.6086956521739%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.6086956521739%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.30434782608695%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.6086956521739%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.6086956521739%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.52173913043478%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(46)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.91304347826087%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.6086956521739%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.30434782608695%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.30434782608695%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.30434782608695%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.82608695652173%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.6086956521739%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.73913043478261%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.30434782608695%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.30434782608695%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.6086956521739%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.30434782608695%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.26086956521739%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.21739130434783%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.52173913043478%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.30434782608695%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.6086956521739%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.30434782608695%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.30434782608695%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.30434782608695%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.21739130434783%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.30434782608695%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.52173913043478%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.30434782608695%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.30434782608695%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.30434782608695%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.30434782608695%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.30434782608695%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.6086956521739%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.52173913043478%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.30434782608695%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.6086956521739%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.30434782608695%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.30434782608695%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.30434782608695%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.30434782608695%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.43478260869566%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.30434782608695%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.6086956521739%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.91304347826087%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.91304347826087%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.91304347826087%'>過期(3)</a> </span>
 </section>
 
 
