@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/c/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-08-05T20:43:03+08:00</updated>
+  <updated>2019-08-05T20:59:12+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -31,9 +31,15 @@ Codename:   bionic
 
 $ gcc --version
 gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
+
+$ dpkg -l | grep libc6:amd64 
+ii  libc6:amd64                                   2.27-3ubuntu1                                amd64        GNU C Library: Shared libraries
 </code></pre>
 
 <h2>目錄</h2>
+
+<ul>
+<li><a href="#obsm-gcc">gcc7</a>
 
 <ul>
 <li><a href="#obsm1">/usr/lib/gcc/x86_64-linux-gnu/7/crtbegin.o</a></li>
@@ -50,11 +56,31 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 <li><a href="#obsm12">/usr/lib/gcc/x86_64-linux-gnu/7/crtprec80.o</a></li>
 <li><a href="#obsm13">/usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o</a></li>
 </ul>
+</li>
+<li><a href="#obsm-glibc">glibc6</a>
 
+<ul>
+<li><a href="#obsm21">/usr/lib/x86_64-linux-gnu/crt1.o</a></li>
+<li><a href="#obsm22">/usr/lib/x86_64-linux-gnu/crti.o</a></li>
+<li><a href="#obsm23">/usr/lib/x86_64-linux-gnu/crtn.o</a></li>
+<li><a href="#obsm24">/usr/lib/x86_64-linux-gnu/gcrt1.o</a></li>
+<li><a href="#obsm25">/usr/lib/x86_64-linux-gnu/grcrt1.o</a></li>
+<li><a href="#obsm26">/usr/lib/x86_64-linux-gnu/libtsan_preinit.o</a></li>
+<li><a href="#obsm27">/usr/lib/x86_64-linux-gnu/Mcrt1.o</a></li>
+<li><a href="#obsm28">/usr/lib/x86_64-linux-gnu/rcrt1.o</a></li>
+<li><a href="#obsm29">/usr/lib/x86_64-linux-gnu/Scrt1.o</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="obsm-gcc"></a></p>
+
+<h2>gcc 7</h2>
 
 <p><a name="obsm1"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtbegin.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbegin.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -81,7 +107,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm2"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -111,7 +137,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm3"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginT.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginT.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -143,7 +169,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm4"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtend.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtend.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -159,7 +185,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm5"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -175,7 +201,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm6"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtfastmath.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtfastmath.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -198,7 +224,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm7"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadbegin.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadbegin.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -214,7 +240,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm8"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadend.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadend.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -230,7 +256,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm9"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadtable.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadtable.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -248,7 +274,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm10"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec32.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec32.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -270,7 +296,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm11"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec64.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec64.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -292,7 +318,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm12"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec80.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec80.o:</h3>
 
 <pre><code>0000000000000000 b .bss
 0000000000000000 n .comment
@@ -314,7 +340,7 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 
 <p><a name="obsm13"></a></p>
 
-<h2>/usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o:</h2>
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o:</h3>
 
 <pre><code>                 U __asan_init
 0000000000000000 a asan_preinit.cc
@@ -329,6 +355,187 @@ gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
 0000000000000000 D __local_asan_preinit
 0000000000000000 n .note.GNU-stack
 0000000000000000 d .preinit_array
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm-glibc"></a></p>
+
+<h2>glibc6</h2>
+
+<p><a name="obsm21"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crt1.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000030 T _dl_relocate_static_pie
+0000000000000000 r .eh_frame
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm22"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crti.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 T _fini
+0000000000000000 t .fini
+                 U _GLOBAL_OFFSET_TABLE_
+                 w __gmon_start__
+0000000000000000 T _init
+0000000000000000 t .init
+0000000000000000 n .note.GNU-stack
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm23"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crtn.o:</h3>
+
+<pre><code>nm: /usr/lib/x86_64-linux-gnu/crtn.o: no symbols
+</code></pre>
+
+<p><a name="obsm24"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/gcrt1.o:</h3>
+
+<pre><code>                 U atexit
+0000000000000000 b .bss
+0000000000000000 b called.4604
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000080 T _dl_relocate_static_pie
+0000000000000000 r .eh_frame
+                 U etext
+                 U __GI_memcpy
+                 U __GI_memmove
+                 U __GI_memset
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000030 T __gmon_start__
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+                 U _mcleanup
+                 U __monstartup
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm25"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/grcrt1.o:</h3>
+
+<pre><code>                 U atexit
+0000000000000000 b .bss
+0000000000000000 b called.4604
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000000 r .eh_frame
+                 U etext
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000030 T __gmon_start__
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+                 U _mcleanup
+                 U __monstartup
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm26"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/libtsan_preinit.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_str
+0000000000000000 D __local_tsan_preinit
+0000000000000000 n .note.GNU-stack
+0000000000000000 d .preinit_array
+0000000000000000 t .text
+                 U __tsan_init
+0000000000000000 a tsan_preinit.cc
+</code></pre>
+
+<p><a name="obsm27"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/Mcrt1.o:</h3>
+
+<pre><code>nm: /usr/lib/x86_64-linux-gnu/Mcrt1.o: no symbols
+</code></pre>
+
+<p><a name="obsm28"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/rcrt1.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000000 r .eh_frame
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm29"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/Scrt1.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000000 r .eh_frame
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
 0000000000000000 t .text
 </code></pre>
 ]]></content>
