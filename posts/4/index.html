@@ -11,10 +11,17 @@
 
 
   
-  <meta name="description" content="以前稍微接觸過GNU Inline Assembly，對於那些奇怪的符號總是覺得匪夷所思。這次找時間把他整理一下。雖然釐清了一些觀念，不過卻產生更多的疑惑，也許以後有機會看到範例會慢慢有感覺吧。 目錄 前言
-測試環境
-語法 Output operands
-Input operands &hellip;">
+  <meta name="description" content="更新： Apr/09/2016：感謝網友柏瑀的告知，修正白字。 git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。 一樣，先講測試環境，避免無法reproduce的問題。 1
+2
+3
+4
+5
+6
+7
+8
+9
+$ lsb_release -a
+No LSB &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -73,6 +80,533 @@ Input operands &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/01/24/talk-more-about-git-remote/">再談 Git Remote</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-01-24T20:30:32+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>8:30 pm</span></time>
+        
+           | <a href="/blog/2016/01/24/talk-more-about-git-remote/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><ul>
+<li>更新：
+
+<ul>
+<li>Apr/09/2016：感謝網友柏瑀的告知，修正白字。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。</p>
+
+<p>一樣，先講測試環境，避免無法reproduce的問題。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ git --version
+</span><span class='line'>git version 2.7.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>本次介紹目錄如下</p>
+
+<ul>
+<li><a href="#gr_gb">背景說明</a></li>
+<li><a href="#gr_cmd">git remote指令介紹</a>
+
+<ul>
+<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
+<li><a href="#gr_cmd_add">新增remote</a></li>
+<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
+<li><a href="#gr_cmd_push">remote的branch操作</a></li>
+<li><a href="#gr_cmd_rm">刪除remote</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="gr_gb"></a></p>
+
+<h2>背景說明</h2>
+
+<p>先來問問男人<code>git remote</code>是什麼吧？</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>GIT-REMOTE(1)                                     Git Manual                                    GIT-REMOTE(1)
+</span><span class='line'>
+</span><span class='line'>NAME
+</span><span class='line'>       git-remote - Manage set of tracked repositories
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>白話來說，<code>git remote</code>是用來管理<font color="red">多個</font>tracked repositories。（中文難翻，意思是你要追蹤的git repository）。在大部分的情況，<code>git clone</code>下來後只需要和原本clone的遠端互動的話，你只有一個remote，那麼你機乎不會感受到remote的運作，我天生駑鈍，剛開始只是覺得奇怪怎麼有時候後會有個<code>origin</code>跑出來而已。</p>
+
+<p>如果夠幸運（還是不幸？）你不太會需要遇到需要處理remote的情況。不過在github上面，倒是蠻有機會要用到remote，情境如下。</p>
+
+<ul>
+<li>你在github上面有帳號，要fork別人的project <code>A</code>，fork來的稱為<code>A+</code></li>
+<li>你在<code>A+</code>開發，同時<code>A</code>也在開發</li>
+<li><code>A+</code>有需要和<code>A</code>同步，也許是<code>A</code>有新功能，或是你要回饋程式碼總不能回饋和<code>A</code>差異太大的程式碼</li>
+</ul>
+
+
+<p><code>A+</code>和<code>A</code>同步，是remote常用的情境。常用到github直接給<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>。大概描述如下：</p>
+
+<ul>
+<li><code>A+</code>加一個remote，URL為<code>A</code>的URL。白話來說，就是<code>A+</code>要track repository <code>A</code>。
+
+<ul>
+<li>remote必須給個名字，github的<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>上給的名字叫upstream。</li>
+</ul>
+</li>
+<li>既然加了一個tracked repository，你就可以做
+
+<ul>
+<li>拉remote程式碼下來</li>
+<li>切換到remote下面的branch</li>
+<li><strong>merge remote 的branch</strong></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="gr_cmd"></a></p>
+
+<h2>git remote指令介紹</h2>
+
+<p>在介紹指令之前，先建立示範git repository 以便下面的說明。情境如下</p>
+
+<ol>
+<li>建立新的git repository，稱為<code>repo_1</code></li>
+<li>clone <code>repo_1</code>到<code>repo_2</code></li>
+<li>clone <code>repo_2</code>到<code>repo_3</code></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git init repo_1
+</span><span class='line'>Initialized empty Git repository in /tmp/test_remote/repo_1/.git/
+</span><span class='line'>
+</span><span class='line'>$ cd repo_1/
+</span><span class='line'>/repo_1$ touch test_file &amp;&amp; git add test_file &amp;&amp; git commit -a -m &quot;init for test&quot;
+</span><span class='line'>[master (root-commit) 6847c3c] init for test
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_file
+</span><span class='line'>
+</span><span class='line'>$ cd ../
+</span><span class='line'>
+</span><span class='line'>$ git clone --bare repo_1 repo_2
+</span><span class='line'>Cloning into bare repository &#39;repo_2&#39;...
+</span><span class='line'>done.
+</span><span class='line'>
+</span><span class='line'>$ git clone repo_2/ repo_3
+</span><span class='line'>Cloning into &#39;repo_3&#39;...
+</span><span class='line'>done.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>關於repo_2的&ndash;bare部份，一言難盡。長話短說，不這樣幹repo_3不能push到repo_2，有興趣可以看<a href="http://stackoverflow.com/questions/2816369/git-push-error-remote-rejected-master-master-branch-is-currently-checked">這邊</a>。</p>
+
+<p>如果你的git repository是clone過來的，一定會有一個預設remote。沒意外的會叫<code>origin</code> <del>(什麼？你的remote叫<code>aosp</code>? 呃太複雜不討論)</del>，接下來你可以對於remote 操作，分別說明如下：</p>
+
+<ul>
+<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
+<li><a href="#gr_cmd_add">新增remote</a></li>
+<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
+<li><a href="#gr_cmd_push">remote的branch操作</a></li>
+<li><a href="#gr_cmd_rm">刪除remote</a></li>
+</ul>
+
+
+<p><a name="gr_cmd_status"></a></p>
+
+<h2>查詢remote資訊</h2>
+
+<ul>
+<li><code>git remote</code>
+
+<ul>
+<li>顯示remote名稱</li>
+</ul>
+</li>
+<li><code>git remote -v</code>
+
+<ul>
+<li>顯示remote名稱及remote URL</li>
+</ul>
+</li>
+<li><code>git remote show remote名稱</code>
+
+<ul>
+<li>顯示<code>remote名稱</code>的詳細資訊</li>
+</ul>
+</li>
+</ul>
+
+
+<p>直接看範例</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_3
+</span><span class='line'>
+</span><span class='line'>$ git remote
+</span><span class='line'>origin
+</span><span class='line'>
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
+</span><span class='line'>
+</span><span class='line'>$ git remote show origin
+</span><span class='line'>* remote origin
+</span><span class='line'>  Fetch URL: /tmp/test_remote/repo_2/
+</span><span class='line'>  Push  URL: /tmp/test_remote/repo_2/
+</span><span class='line'>  HEAD branch: master
+</span><span class='line'>  Remote branch:
+</span><span class='line'>    master tracked
+</span><span class='line'>  Local branch configured for &#39;git pull&#39;:
+</span><span class='line'>    master merges with remote master
+</span><span class='line'>  Local ref configured for &#39;git push&#39;:
+</span><span class='line'>    master pushes to master (up to date)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gr_cmd_add"></a></p>
+
+<h2>新增remote</h2>
+
+<ul>
+<li><code>git add remote名稱 remote_repository_URL</code></li>
+</ul>
+
+
+<p>範例如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote add upstream /tmp/test_remote/repo_1/
+</span><span class='line'>
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
+</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (fetch)
+</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (push)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>新增完畢後，請記得<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>是你要操作remote的參數。</p>
+
+<p>另外你還可以加入多個remote來場大亂鬥。例如你從<code>A</code> fork <code>A+</code>，也許有人fork 出來的<code>A++</code>有你想要的功能，就可以再把<code>A++</code>加入你<code>A</code> repository的remote。</p>
+
+<p><a name="gr_cmd_fetch"></a></p>
+
+<h2>拉remote repository</h2>
+
+<ul>
+<li><code>git fetch remote_名稱</code></li>
+<li><code>git pull remote_名稱/remote_branch_名稱</code></li>
+</ul>
+
+
+<p>我們先在<code>repo_1</code>開一個branch稱為<code>br1</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_1/
+</span><span class='line'>
+</span><span class='line'>$ git checkout -b br1
+</span><span class='line'>Switched to a new branch &#39;br1&#39;
+</span><span class='line'>
+</span><span class='line'>$ touch test_on_branch &amp;&amp; git add test_on_branch &amp;&amp; git commit test_on_branch -m &quot;test&quot;
+</span><span class='line'>[br1 cc7222f] test
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_on_branch
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是範例時間</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git fetch upstream
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'> * [new branch]      br1        -&gt; upstream/br1
+</span><span class='line'> * [new branch]      master     -&gt; upstream/master
+</span><span class='line'>
+</span><span class='line'>$ ls
+</span><span class='line'>test_file
+</span><span class='line'>
+</span><span class='line'>$ git pull upstream br1
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'> * branch            br1        -&gt; FETCH_HEAD
+</span><span class='line'>Updating 6847c3c..cc7222f
+</span><span class='line'>Fast-forward
+</span><span class='line'> test_on_branch | 0
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_on_branch
+</span><span class='line'>
+</span><span class='line'>$ ls
+</span><span class='line'>test_file  test_on_branch
+</span><span class='line'>
+</span><span class='line'>$ git status
+</span><span class='line'>On branch master
+</span><span class='line'>Your branch is ahead of &#39;origin/master&#39; by 1 commit.
+</span><span class='line'>  (use &quot;git push&quot; to publish your local commits)
+</span><span class='line'>nothing to commit, working directory clean
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注意最後的指令，因為我們pull了<code>upstream/br1</code>，所以local多了一個commit。因此訊息中有說你目前repository 比<code>origin/master</code>(你clone的remote/branch)多一個commit。你可以push回<code>origin/master</code>。</p>
+
+<p><a name="gr_cmd_push"></a></p>
+
+<h2>remote的branch操作</h2>
+
+<p>原則就是命令中有參數會是<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>。</p>
+
+<ul>
+<li>切換</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout upstream/br1
+</span><span class='line'>Note: checking out &#39;upstream/br1&#39;.
+</span><span class='line'>
+</span><span class='line'>You are in &#39;detached HEAD&#39; state. You can look around, make experimental
+</span><span class='line'>changes and commit them, and you can discard any commits you make in this
+</span><span class='line'>state without impacting any branches by performing another checkout.
+</span><span class='line'>
+</span><span class='line'>If you want to create a new branch to retain commits you create, you may
+</span><span class='line'>do so (now or later) by using -b with the checkout command again. Example:
+</span><span class='line'>
+</span><span class='line'>  git checkout -b &lt;new-branch-name&gt;
+</span><span class='line'>
+</span><span class='line'>HEAD is now at bd026e3... test
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>中間的一堆英文簡單來說是因為git checkout沒特別參數，git只是把HEAD指到命令中的hash而已。如果你要同時在local開一個branch，可以這樣幹：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout --track  upstream/br1
+</span><span class='line'>Branch br1 set up to track remote branch br1 from upstream.
+</span><span class='line'>Switched to a new branch &#39;br1&#39;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>merge</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'># 先在upstream/br1建立新的commit
+</span><span class='line'>$ cd /tmp/test_remote/repo_1/
+</span><span class='line'>
+</span><span class='line'>$ touch test1_on_branch &amp;&amp; git add test1_on_branch &amp;&amp; git commit test1_on_branch -m &quot;test1&quot;
+</span><span class='line'>[br1 d82612a] test1
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test1_on_branch
+</span><span class='line'>
+</span><span class='line'># 切回repo_3
+</span><span class='line'>cd /tmp/test_remote/repo_3
+</span><span class='line'>
+</span><span class='line'># 先fetch
+</span><span class='line'>$ git fetch upstream
+</span><span class='line'>remote: Counting objects: 2, done.
+</span><span class='line'>remote: Compressing objects: 100% (2/2), done.
+</span><span class='line'>remote: Total 2 (delta 0), reused 0 (delta 0)
+</span><span class='line'>Unpacking objects: 100% (2/2), done.
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'>   bd026e3..d82612a  br1        -&gt; upstream/br1
+</span><span class='line'>
+</span><span class='line'># 再merge，事實上和git pull upstream br1 一樣效果（默）
+</span><span class='line'>$ git merge upstream/br1
+</span><span class='line'>Updating bd026e3..d82612a
+</span><span class='line'>Fast-forward
+</span><span class='line'> test1_on_branch | 0
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test1_on_branch
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gr_cmd_rm"></a></p>
+
+<h2>刪除remote</h2>
+
+<ul>
+<li>git remote remove remote名稱</li>
+</ul>
+
+
+<p>範例如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote remove upstream
+</span><span class='line'>
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin    /tmp/test_remote/repo_2 (fetch)
+</span><span class='line'>origin    /tmp/test_remote/repo_2 (push)
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3286,44 +3820,6 @@ Input operands &hellip;">
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/08/30/using-as-slide-is-online/">GNU as 投影片上線</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-08-30T11:44:36+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:44 am</span></time>
-        
-           | <a href="/blog/2015/08/30/using-as-slide-is-online/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/30/using-as-slide-is-online/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/key/vAKND86uAQxxJj" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
-
-
-<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/gnu-as" title="GNU AS簡介" target="_blank">GNU AS簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
-
-<script async class="speakerdeck-embed" data-id="161641ad32e84a3893c81b2c65437720" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/5">&larr; Older</a>
@@ -3341,6 +3837,10 @@ Input operands &hellip;">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a>
       </li>
     
@@ -3356,24 +3856,20 @@ Input operands &hellip;">
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (3)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.65217391304348%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.30434782608695%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.6086956521739%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.91304347826087%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.21739130434783%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.30434782608695%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.30434782608695%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.30434782608695%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.26086956521739%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.6086956521739%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.56521739130434%'>c(38)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.30434782608695%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.6086956521739%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.6086956521739%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.30434782608695%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.30434782608695%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.30434782608695%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.86956521739131%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.30434782608695%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.30434782608695%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.30434782608695%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.6086956521739%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.30434782608695%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.30434782608695%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.30434782608695%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.30434782608695%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.6086956521739%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.21739130434783%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.30434782608695%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.6086956521739%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.21739130434783%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.6086956521739%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.30434782608695%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.30434782608695%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.52173913043478%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.6086956521739%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.30434782608695%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.30434782608695%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.30434782608695%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.30434782608695%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.30434782608695%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.6086956521739%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.6086956521739%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.30434782608695%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.6086956521739%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.6086956521739%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.52173913043478%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(46)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.91304347826087%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.6086956521739%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.30434782608695%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.30434782608695%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.30434782608695%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.82608695652173%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.6086956521739%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.73913043478261%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.30434782608695%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.30434782608695%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.6086956521739%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.30434782608695%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.26086956521739%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.21739130434783%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.52173913043478%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.30434782608695%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.6086956521739%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.30434782608695%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.30434782608695%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.30434782608695%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.21739130434783%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.30434782608695%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.52173913043478%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.30434782608695%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.30434782608695%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.30434782608695%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.30434782608695%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.30434782608695%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.6086956521739%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.52173913043478%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.30434782608695%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.6086956521739%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.30434782608695%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.30434782608695%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.30434782608695%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.30434782608695%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.43478260869566%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.30434782608695%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.6086956521739%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.91304347826087%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.91304347826087%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.91304347826087%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.31914893617021%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.27659574468085%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.55319148936171%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.82978723404256%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.1063829787234%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.27659574468085%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.27659574468085%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.27659574468085%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.14893617021276%'>binutils(15)</a> <a href='/blog/categories/buildroot' style='font-size: 102.55319148936171%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.7872340425532%'>c(39)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.27659574468085%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.55319148936171%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.55319148936171%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.27659574468085%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.27659574468085%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.27659574468085%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.42553191489361%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.27659574468085%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.27659574468085%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.27659574468085%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.55319148936171%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.27659574468085%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.27659574468085%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.27659574468085%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.27659574468085%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.55319148936171%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.1063829787234%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.27659574468085%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.55319148936171%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.1063829787234%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.55319148936171%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.27659574468085%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.27659574468085%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.38297872340425%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.55319148936171%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.27659574468085%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.27659574468085%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.27659574468085%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.27659574468085%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.27659574468085%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.55319148936171%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 103.82978723404256%'>kernel(3)</a> <a href='/blog/categories/ld' style='font-size: 101.27659574468085%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.55319148936171%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.55319148936171%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.38297872340425%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(47)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.82978723404256%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.55319148936171%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.27659574468085%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.27659574468085%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.27659574468085%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.65957446808511%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.55319148936171%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.48936170212767%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.27659574468085%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.27659574468085%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.55319148936171%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.27659574468085%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 117.87234042553192%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.1063829787234%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.38297872340425%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.27659574468085%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.55319148936171%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.27659574468085%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.27659574468085%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.27659574468085%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.1063829787234%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.27659574468085%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.38297872340425%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.27659574468085%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.27659574468085%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.27659574468085%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.27659574468085%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.27659574468085%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.55319148936171%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.38297872340425%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.27659574468085%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.55319148936171%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.27659574468085%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.27659574468085%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.27659574468085%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.27659574468085%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.2127659574468%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.27659574468085%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.55319148936171%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.82978723404256%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.82978723404256%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.82978723404256%'>過期(3)</a> </span>
 </section>
 
 

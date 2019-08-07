@@ -11,8 +11,8 @@
 
 
   
-  <meta name="description" content="
-Slideshare GNU Make, Autotools, CMake 簡介 from Wen Liao Speaker Deck ">
+  <meta name="description" content="之前的文章有提到使用pbuilder驗證套件。最近抽空玩了一下。整理到這邊。 [回收以前文章]
+pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來產生並測是套件。如此一來可以確認是否debian目錄下面的設定是否真的可以在這些乾淨的環境被編譯和安裝。 目錄： &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -71,6 +71,302 @@ Slideshare GNU Make, Autotools, CMake 簡介 from Wen Liao Speaker Deck ">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/">[Debian套件打包] 使用pbuilder驗證套件</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-07-31T03:57:00+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>3:57 am</span></time>
+        
+           | <a href="/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>之前的<a href="http://wen00072.github.io/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages">文章</a>有提到使用pbuilder驗證套件。最近抽空玩了一下。整理到這邊。</p>
+
+<p>[回收以前文章]
+pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來產生並測是套件。如此一來可以確認是否debian目錄下面的設定是否真的可以在這些乾淨的環境被編譯和安裝。</p>
+
+<h2>目錄：</h2>
+
+<ul>
+<li><a href="#env">環境設定並建立image</a></li>
+<li><a href="#pkg">使用pbuilder打包source package</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<hr />
+
+<p><a name="env"></a></p>
+
+<h2>環境設定並建立image</h2>
+
+<ul>
+<li>測試環境</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>lsb_release -a畫面</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Debian
+</span><span class='line'>Description:  Debian GNU/Linux unstable (sid)
+</span><span class='line'>Release:  unstable
+</span><span class='line'>Codename: sid
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>先使用下面指令產生乾淨的Linux環境所對應的tarball，之後會用chroot切換到該環境中。</p>
+
+<ul>
+<li><code>sudo pbuilder create</code></li>
+</ul>
+
+
+<figure class='code'><figcaption><span>執行畫面</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ sudo pbuilder create
+</span><span class='line'>W: /root/.pbuilderrc does not exist
+</span><span class='line'>I: Distribution is sid.
+</span><span class='line'>I: Current time: Thu Jul 31 12:44:44 CST 2014
+</span><span class='line'>I: pbuilder-time-stamp: 1406781884
+</span><span class='line'>I: Building the build environment
+</span><span class='line'>I: running debootstrap
+</span><span class='line'>...
+</span><span class='line'>I: new cache content grep_2.18-2_amd64.deb added
+</span><span class='line'>I: unmounting dev/pts filesystem
+</span><span class='line'>I: unmounting run/shm filesystem
+</span><span class='line'>I: unmounting proc filesystem
+</span><span class='line'>I: creating base tarball [/var/cache/pbuilder/base.tgz]
+</span><span class='line'>I: cleaning the build env
+</span><span class='line'>I: removing directory /var/cache/pbuilder/build//27394 and its subdirectories
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>從log中可以看到處理的時候會暫時放在<code>/var/cache/pbuilder/build//27394</code>中，當執行結束的時候會刪除。</p>
+
+<p>我們可以更進一步看一下<code>/var/cache/pbuilder</code>目錄：</p>
+
+<figure class='code'><figcaption><span>/var/cache/pbuilder</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>#  tree -d /var/cache/pbuilder
+</span><span class='line'>.
+</span><span class='line'>|-- aptcache
+</span><span class='line'>|-- build
+</span><span class='line'>|-- ccache
+</span><span class='line'>|-- pbuildd
+</span><span class='line'>|-- pbuilder-mnt
+</span><span class='line'>|-- pbuilder-umlresult
+</span><span class='line'>`-- result
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>aptcache目錄可以看到裡面就是一堆deb檔案。我們可以合理的推論當測試十有需要額外安裝相依套件下載後會先存放在這邊。</p>
+
+<p>接下來我們可以使用下面的方式玩一下</p>
+
+<ul>
+<li><code>sudo pbuilder --login</code></li>
+</ul>
+
+
+<figure class='code'><figcaption><span>sudo pbuilder &#8211;login 執行畫面</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ sudo pbuilder --login
+</span><span class='line'>W: /root/.pbuilderrc does not exist
+</span><span class='line'>I: Building the build Environment
+</span><span class='line'>I: extracting base tarball [/var/cache/pbuilder/base.tgz]
+</span><span class='line'>I: creating local configuration
+</span><span class='line'>I: copying local configuration
+</span><span class='line'>I: mounting /proc filesystem
+</span><span class='line'>I: mounting /run/shm filesystem
+</span><span class='line'>I: mounting /dev/pts filesystem
+</span><span class='line'>I: policy-rc.d already exists
+</span><span class='line'>I: Obtaining the cached apt archive contents
+</span><span class='line'>I: entering the shell
+</span><span class='line'>File extracted to: /var/cache/pbuilder/build//10030
+</span><span class='line'>
+</span><span class='line'>root@debian:/#
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>重點是<code>File extracted to: /var/cache/pbuilder/build//10030</code>，所以我們可以在本機中去看<code>/var/cache/pbuilder/build/10030</code>，裡面就是一個完整的Linux root</p>
+
+<figure class='code'><figcaption><span>列出目錄：/var/cache/pbuilder/build/10030</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>##  ls /var/cache/pbuilder/build/10030
+</span><span class='line'>bin  boot  dev    etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>當我們離開pbuilder shell後，可以看到該root目錄也隨之消失。如此一來，可以確保所有的資料一開始都會是從<code>/var/cache/pbuilder/base.tgz</code>解出來最乾淨的狀態。</p>
+
+<figure class='code'><figcaption><span>離開pbuilder &#8211;login</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>root@debian:/# exit
+</span><span class='line'>logout
+</span><span class='line'>I: Copying back the cached apt archive contents
+</span><span class='line'>I: unmounting dev/pts filesystem
+</span><span class='line'>I: unmounting run/shm filesystem
+</span><span class='line'>I: unmounting proc filesystem
+</span><span class='line'>I: cleaning the build env
+</span><span class='line'>I: removing directory /var/cache/pbuilder/build//10030 and its subdirectories
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="pkg"></a></p>
+
+<h2>使用pbuilder打包驗證source package</h2>
+
+<p>我自己的方式是先用<code>debbuild -S</code>或是<code>dpkg-buildpackage -S</code>產生dsc檔案。在同一個目錄下面下下面的指令。</p>
+
+<ul>
+<li><code>sudo pbuilder --build 你的套件.dsc</code></li>
+</ul>
+
+
+<p>當你原始套件debian/control的depend沒寫好，pbuilder乾淨的環境就不會安裝depend的套件而執行失敗。這時候你就要加入缺少的depend套件到debian/control。最後產生的套件會放在<code>/var/cache/pbuilder/result/</code>中</p>
+
+<p>執行畫面如下：</p>
+
+<figure class='code'><figcaption><span>sudo pbuilder &#8211;build testautotools_0-1.dsc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>W: /root/.pbuilderrc does not exist
+</span><span class='line'>I: using fakeroot in build.
+</span><span class='line'>I: pbuilder: network access will be disabled during build
+</span><span class='line'>I: Current time: Thu Jul 31 15:28:32 CST 2014
+</span><span class='line'>I: pbuilder-time-stamp: 1406791712
+</span><span class='line'>I: Building the build Environment
+</span><span class='line'>...
+</span><span class='line'>I: Obtaining the cached apt archive contents
+</span><span class='line'>I: Installing the build-deps
+</span><span class='line'> -&gt; Attempting to satisfy build-dependencies
+</span><span class='line'> -&gt; Creating pbuilder-satisfydepends-dummy package
+</span><span class='line'>...
+</span><span class='line'>I: Extracting source
+</span><span class='line'>dpkg-source: warning: extracting unsigned source package (testautotools_0-1.dsc)
+</span><span class='line'>dpkg-source: info: extracting testautotools in testautotools-0
+</span><span class='line'>dpkg-source: info: unpacking testautotools_0.orig.tar.xz
+</span><span class='line'>dpkg-source: info: unpacking testautotools_0-1.debian.tar.xz
+</span><span class='line'>I: Building the package
+</span><span class='line'>I: Running cd tmp/buildd/*/ &amp;&amp; env PATH=&quot;/usr/sbin:/usr/bin:/sbin:/bin&quot; dpkg-buildpackage -us -uc  -rfakeroot
+</span><span class='line'>...
+</span><span class='line'>I: Copying back the cached apt archive contents
+</span><span class='line'>I: unmounting dev/pts filesystem
+</span><span class='line'>I: unmounting run/shm filesystem
+</span><span class='line'>I: unmounting proc filesystem
+</span><span class='line'>I: cleaning the build env
+</span><span class='line'>I: removing directory /var/cache/pbuilder/build//18912 and its subdirectories
+</span><span class='line'>I: Current time: Thu Jul 31 15:29:09 CST 2014
+</span><span class='line'>I: pbuilder-time-stamp: 1406791749
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://wiki.ubuntu.com/PbuilderHowto">PbuilderHowto </a></li>
+<li><a href="https://wiki.debian.org/Diaspora/Packaging/pbuilder">Debian: Pbuilder</a></li>
+<li><a href="https://www.debian.org/doc/manuals/maint-guide/build.en.html">Debian New Maintainers&#8217; Guide: Chapter 6. Building the package</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1100,136 +1396,6 @@ Slideshare GNU Make, Autotools, CMake 簡介 from Wen Liao Speaker Deck ">
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages/">[Debian套件打包] 設定好debian目錄後的打包</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-06-12T03:28:00+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>12</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>3:28 am</span></time>
-        
-           | <a href="/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>這邊探討打包的工具。有dpkg-buildpackage, debuild, pbuilder, 和git-buildpackage等工具，分別討論如下：</p>
-
-<p>如果單獨要rebuild套件，可以使用下面的指令。
-<code>fakeroot debian/rules binary</code>
-<code>fakeroot debian/rules build</code></p>
-
-<hr />
-
-<h2>dpkg-buildpackage</h2>
-
-<p><a href="http://wen00072.github.io/blog/2014/05/28/package-deb-packages-loose-style">從Autotools tarball打包deb套件: 不嚴謹style</a>提到產生並設定好debian後，可以透過dpkg-buildpackage自動打包成deb檔案。而dpkg-buildpackage會做</p>
-
-<ul>
-<li>套件大掃除 (debian/rules clean)</li>
-<li>整理source檔案如apply patch (dpkg-source -b)</li>
-<li>編譯 (debian/rules build)</li>
-<li>安裝產生的檔案到<strong>虛擬</strong> root (fakeroot debian/rules binary)並打包
-
-<ul>
-<li>如/usr/bin/xxx，/usr/share/doc/xxx, 等</li>
-</ul>
-</li>
-<li>使用gpg sign .dsc 檔案</li>
-<li>產生並sign .changes 檔案</li>
-</ul>
-
-
-<hr />
-
-<h2>debuild</h2>
-
-<p>除了dpkg-buildpackage外，也有更嚴謹的套件產生工具<code>debuild</code>可以使用。之前的測試用程式，用debuild全部會失敗，因為他提供了更多的檢查。列舉一些錯誤訊息如下。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>E: testautotools: copyright-contains-dh_make-todo-boilerplate
-</span><span class='line'>W: testautotools: readme-debian-contains-debmake-template
-</span><span class='line'>E: testautotools: description-is-dh_make-template
-</span><span class='line'>E: testautotools: maintainer-address-malformed unknown &lt;user@unknown&gt;
-</span><span class='line'>E: testautotools: section-is-dh_make-template
-</span><span class='line'>W: testautotools: superfluous-clutter-in-homepage &lt;insert the upstream URL, if relevant&gt;
-</span><span class='line'>W: testautotools: bad-homepage &lt;insert the upstream URL, if relevant&gt;</span></code></pre></td></tr></table></div></figure>
-
-
-<p>和dpkg-buildpackage一樣，自幹可以下<code>-uc -us</code>跳過sign的步驟。另外你也可以自訂一些初始參數，存到/etc/devscripts.conf或是~/.devscripts下面。手冊建議可以加入：</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>DEBSIGN_KEYID=你的_GPG_keyID
-</span><span class='line'>DEBUILD_LINTIAN_OPTS="-i -I --show-overrides"</span></code></pre></td></tr></table></div></figure>
-
-
-<hr />
-
-<h2>pbuilder</h2>
-
-<p>pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來產生並測是套件。如此一來可以確認是否debian目錄下面的設定是否真的可以在這些乾淨的環境被編譯和安裝。</p>
-
-<p>照手冊整理使用方式：<strong>我全部沒測過</strong>，當作以後的課題好了。</p>
-
-<ul>
-<li>環境設定</li>
-<li>建立image</li>
-<li>使用pbuilder打包source package (套件名稱.orig.tar.gz, 套件名稱.debian.tar.gz, 套件名稱.dsc)</li>
-<li>sign</li>
-</ul>
-
-
-<hr />
-
-<h2>透過版本控制版本來 buildpackage</h2>
-
-<ul>
-<li>git-buildpackage</li>
-<li>svn-buildpackage</li>
-<li>cvs-buildpackage</li>
-</ul>
-
-
-<hr />
-
-<h2>Autobuilder</h2>
-
-<p>Autobuilder是Debian提供的服務，會自動rebuild原始套件，產生不同平台如X86, ARM專用的套件。</p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="https://www.debian.org/doc/manuals/maint-guide/build.en.html">Debian New Maintainers&#8217; Guide: Chapter 6. Building the package</a></li>
-<li><a href="http://fourdollars.blogspot.tw/2011/07/pbuilder-distcowbuilder-dist-debian.html">使用 pbuilder-dist/cowbuilder-dist 協助編譯及打包 Debian package</a></li>
-<li><a href="http://hychen.wuweig.org/blog/2011/02/13/li-yong-cowbuilder-jian-li-bu-tong-de-debian-package-bian-yi-huan-jing/">利用 Cowbuilder 建立不同的debian Package 編譯環境</a></li>
-<li><a href="http://wi.fd.idv.tw/debian/package">四元的學習筆記</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/12">&larr; Older</a>
@@ -1247,6 +1413,10 @@ Slideshare GNU Make, Autotools, CMake 簡介 from Wen Liao Speaker Deck ">
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a>
       </li>
     
@@ -1262,24 +1432,20 @@ Slideshare GNU Make, Autotools, CMake 簡介 from Wen Liao Speaker Deck ">
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (3)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.65217391304348%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.30434782608695%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.6086956521739%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.91304347826087%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.21739130434783%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.30434782608695%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.30434782608695%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.30434782608695%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.26086956521739%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.6086956521739%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.56521739130434%'>c(38)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.30434782608695%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.6086956521739%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.6086956521739%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.30434782608695%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.30434782608695%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.30434782608695%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.86956521739131%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.30434782608695%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.30434782608695%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.30434782608695%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.6086956521739%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.30434782608695%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.30434782608695%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.30434782608695%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.30434782608695%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.6086956521739%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.21739130434783%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.30434782608695%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.6086956521739%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.21739130434783%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.6086956521739%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.30434782608695%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.30434782608695%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.52173913043478%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.6086956521739%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.30434782608695%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.30434782608695%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.30434782608695%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.30434782608695%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.30434782608695%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.6086956521739%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.6086956521739%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.30434782608695%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.6086956521739%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.6086956521739%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.52173913043478%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(46)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.91304347826087%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.6086956521739%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.30434782608695%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.30434782608695%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.30434782608695%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.82608695652173%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.6086956521739%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.73913043478261%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.30434782608695%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.30434782608695%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.6086956521739%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.30434782608695%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.26086956521739%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.21739130434783%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.52173913043478%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.30434782608695%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.6086956521739%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.30434782608695%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.30434782608695%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.30434782608695%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.21739130434783%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.30434782608695%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.52173913043478%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.30434782608695%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.30434782608695%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.30434782608695%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.30434782608695%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.30434782608695%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.6086956521739%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.52173913043478%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.30434782608695%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.6086956521739%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.30434782608695%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.30434782608695%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.30434782608695%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.30434782608695%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.43478260869566%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.30434782608695%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.6086956521739%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.91304347826087%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.91304347826087%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.91304347826087%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.31914893617021%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.27659574468085%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.55319148936171%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.82978723404256%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.1063829787234%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.27659574468085%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.27659574468085%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.27659574468085%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.14893617021276%'>binutils(15)</a> <a href='/blog/categories/buildroot' style='font-size: 102.55319148936171%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.7872340425532%'>c(39)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.27659574468085%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.55319148936171%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.55319148936171%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.27659574468085%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.27659574468085%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.27659574468085%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.42553191489361%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.27659574468085%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.27659574468085%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.27659574468085%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.55319148936171%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.27659574468085%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.27659574468085%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.27659574468085%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.27659574468085%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.55319148936171%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.1063829787234%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.27659574468085%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.55319148936171%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.1063829787234%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.55319148936171%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.27659574468085%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.27659574468085%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.38297872340425%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.55319148936171%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.27659574468085%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.27659574468085%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.27659574468085%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.27659574468085%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.27659574468085%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.55319148936171%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 103.82978723404256%'>kernel(3)</a> <a href='/blog/categories/ld' style='font-size: 101.27659574468085%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.55319148936171%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.55319148936171%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.38297872340425%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(47)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.82978723404256%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.55319148936171%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.27659574468085%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.27659574468085%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.27659574468085%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.65957446808511%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.55319148936171%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.48936170212767%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.27659574468085%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.27659574468085%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.55319148936171%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.27659574468085%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 117.87234042553192%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.1063829787234%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.38297872340425%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.27659574468085%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.55319148936171%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.27659574468085%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.27659574468085%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.27659574468085%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.1063829787234%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.27659574468085%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.38297872340425%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.27659574468085%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.27659574468085%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.27659574468085%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.27659574468085%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.27659574468085%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.55319148936171%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.38297872340425%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.27659574468085%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.55319148936171%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.27659574468085%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.27659574468085%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.27659574468085%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.27659574468085%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.2127659574468%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.27659574468085%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.55319148936171%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.82978723404256%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.82978723404256%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.82978723404256%'>過期(3)</a> </span>
 </section>
 
 

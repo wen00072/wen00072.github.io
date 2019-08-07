@@ -11,9 +11,7 @@
 
 
   
-  <meta name="description" content="如果有使用git的朋友，可能會知道git是一個分散式版本控制系統。這表示repository會放一份在本機上面。仔細或是有看書的人，會知道這些repository沒有意外會放在工作目錄的.git下面。今天無聊來這個目錄戳戳看。 因為愈寫愈多，還是弄一下目錄好了 測試環境
-背景知識
-.git目錄列表 &hellip;">
+  <meta name="description" content=" 故事：自由軟體和 Richard Stallman from Wen Liao ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -72,6 +70,44 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line/">故事：自由軟體和 Richard Stallman 投影片上線</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-03-15T23:44:00+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:44 pm</span></time>
+        
+           | <a href="/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/03/15/story-free-software-and-richard-stallman-slides-on-line/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/45855449" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/richard-stallman-45855449" title="故事：自由軟體和 Richard Stallman" target="_blank">故事：自由軟體和 Richard Stallman</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="c20dc69814f0439d8e8db97761ca012c" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3187,235 +3223,6 @@ Demo情境</p>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/02/07/by-qemu-arm-installation-of-debian-systems/">在X86 Linux下透過Qemu安裝ARM的Debian系統</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-02-07T00:40:00+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>12:40 am</span></time>
-        
-           | <a href="/blog/2015/02/07/by-qemu-arm-installation-of-debian-systems/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2015/02/07/by-qemu-arm-installation-of-debian-systems/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>安裝順序如下</p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.1 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>安裝Qemu</h2>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo apt-get install qemu-system-arm</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>拉ARM安裝相關檔案</h2>
-
-<ul>
-<li>首先先來看Qemu有支援那些ARM平台</li>
-</ul>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ qemu-system-arm -machine help
-</span><span class='line'>Supported machines are:
-</span><span class='line'>versatileab          ARM Versatile/AB (ARM926EJ-S)
-</span><span class='line'>versatilepb          ARM Versatile/PB (ARM926EJ-S)
-</span><span class='line'>lm3s811evb           Stellaris LM3S811EVB
-</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
-
-
-<p>安裝ARM版本Debian需要</p>
-
-<ul>
-<li>kernel</li>
-<li>initrd</li>
-<li>ISO
-首先到提供Debian下載的網站中的debian/dists找一個你想安裝的版本，我選了7.8 (Wheezy)。
-假設Debain下載網站叫host</li>
-</ul>
-
-
-<p>先抓平台相關的kernel和initrd，路徑如下</p>
-
-<pre>http://host/debian/dists/Debian7.8/main/installer-armel/20130430/images/</pre>
-
-
-<p>下面有不同的ARM平台，還記得上面<code>qemu-system-arm -machine help</code>，請和這邊目錄下的比對，挑一個順眼的。我使用
-versatile，所以就切到下面的目錄</p>
-
-<pre>http://host/debian/dists/Debian7.8/main/installer-armel/20130430/images/versatile/netboot/</pre>
-
-
-<p>把下面的兩個檔案拉下來</p>
-
-<ul>
-<li>initrd.gz</li>
-<li>vmlinuz-3.2.0-4-versatile</li>
-</ul>
-
-
-<p>接下來在同樣的主機上，下載ISO檔。</p>
-
-<pre>http://host/debian-cd/7.8.0/armel</pre>
-
-
-<h2>開始安裝</h2>
-
-<p>透過下面的指令安裝虛擬磁碟，請自行決定大小</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ qemu-img create debian.img 8G</span></code></pre></td></tr></table></div></figure>
-
-
-<p>然後叫qemu載入ARM kernel，initrd，以及ISO</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ qemu-system-arm -M versatileab -kernel ./vmlinuz-3.2.0-4-versatile -initrd ./initrd.gz -cdrom ./debian-7.8.0-armel-DVD-1.iso -hda debian.img -m 1024</span></code></pre></td></tr></table></div></figure>
-
-
-<p>這邊可以看到versatileab又出現了，請往上找一下這個字串吧。</p>
-
-<h2>抽出虛擬磁碟的kernel和initrd</h2>
-
-<p>最tricky的地方在這邊，理論上你要透過loopback裝置mount 虛擬磁碟，複製/boot就可以了。但是現實就是，因為磁碟機/root的partition有offset，所以直接mount程式無法辨認Filesystem所以無法mount。正確方式如下</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo fdisk -l -u debian.img 
-</span><span class='line'>
-</span><span class='line'>Disk debian.img: 8589 MB, 8589934592 bytes
-</span><span class='line'>255 heads, 63 sectors/track, 1044 cylinders, total 16777216 sectors
-</span><span class='line'>Units = sectors of 1 * 512 = 512 bytes
-</span><span class='line'>Sector size (logical/physical): 512 bytes / 512 bytes
-</span><span class='line'>I/O size (minimum/optimal): 512 bytes / 512 bytes
-</span><span class='line'>Disk identifier: 0x000823a0
-</span><span class='line'>
-</span><span class='line'>     Device Boot      Start         End      Blocks   Id  System
-</span><span class='line'>debian.img1            2048    15988735     7993344   83  Linux
-</span><span class='line'>debian.img2        15990782    16775167      392193    5  Extended
-</span><span class='line'>debian.img5        15990784    16775167      392192   82  Linux swap / Solaris</span></code></pre></td></tr></table></div></figure>
-
-
-<p>有兩個東西要注意</p>
-
-<ul>
-<li>unit為512 bytes</li>
-<li>root partition offset為2048個unit</li>
-</ul>
-
-
-<p>所以正確的mount方式如下</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ sudo mount -o loop,offset=$((2048 * 512)) debian.img /mnt</span></code></pre></td></tr></table></div></figure>
-
-
-<p>接下來抽出就簡單了，請在剛才安裝的虛擬磁碟檔案同一個目錄操作。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ mkdir boot
-</span><span class='line'>$ cp /mnt/boot/* boot/ -rv</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>載入安裝的系統</h2>
-
-<p>這邊就照表操課，我有指定localhost將port 2222 forward到Qemu的port 22，以便將來ssh進去</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ qemu-system-arm -M versatileab -kernel ./boot/vmlinuz-3.2.0-4-versatile -initrd ./boot/initrd.img-3.2.0-4-versatile -hda debian.img -m 1024 -append "root=/dev/sda1" -redir tcp:2222::22</span></code></pre></td></tr></table></div></figure>
-
-
-<p>驗收看看是不是真的可以連進去，並且裏面真的是ARM的binary？</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ ssh -p 2222 user@localhost
-</span><span class='line'>user@localhost's password: 
-</span><span class='line'>Linux debian 3.2.0-4-versatile #1 Debian 3.2.65-1+deb7u1 armv5tejl
-</span><span class='line'>
-</span><span class='line'>The programs included with the Debian GNU/Linux system are free software;
-</span><span class='line'>the exact distribution terms for each program are described in the
-</span><span class='line'>individual files in /usr/share/doc/*/copyright.
-</span><span class='line'>
-</span><span class='line'>Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
-</span><span class='line'>permitted by applicable law.
-</span><span class='line'>You have mail.
-</span><span class='line'>Last login: Fri Feb  6 09:35:07 2015
-</span><span class='line'>user@debian:~$ file /bin/ls
-</span><span class='line'>/bin/ls: ELF 32-bit LSB executable, ARM, version 1 (SYSV), dynamically linked (uses shared libs), for GNU/Linux 2.6.26, BuildID[sha1]=0x5bc97dbca9ac168932d898a5e2eaf68e8fde5e16, stripped</span></code></pre></td></tr></table></div></figure>
-
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://pominglee.blogspot.tw/2012/11/qemu-arm-debian-linux.html">Dr. Lee&rsquo;s blog: 安裝 qemu arm 版 Debian Linux</a></li>
-<li><a href="http://www.bramschoenmakers.nl/en/node/100.html">Connecting to SSH server on QEmu guest</a></li>
-<li><a href="https://bbs.archlinux.org/viewtopic.php?id=95326">ArchLinux: Qemu, mounting a raw img to temp file, mount needs a filesystem type.</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/8">&larr; Older</a>
@@ -3433,6 +3240,10 @@ versatile，所以就切到下面的目錄</p>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a>
       </li>
     
@@ -3448,24 +3259,20 @@ versatile，所以就切到下面的目錄</p>
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (3)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.65217391304348%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.30434782608695%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.6086956521739%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.91304347826087%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.21739130434783%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.30434782608695%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.30434782608695%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.30434782608695%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.26086956521739%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.6086956521739%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.56521739130434%'>c(38)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.30434782608695%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.6086956521739%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.6086956521739%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.30434782608695%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.30434782608695%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.30434782608695%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.86956521739131%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.30434782608695%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.30434782608695%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.30434782608695%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.6086956521739%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.30434782608695%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.30434782608695%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.30434782608695%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.30434782608695%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.6086956521739%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.21739130434783%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.30434782608695%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.6086956521739%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.21739130434783%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.6086956521739%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.30434782608695%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.30434782608695%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.52173913043478%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.6086956521739%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.30434782608695%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.30434782608695%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.30434782608695%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.30434782608695%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.30434782608695%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.6086956521739%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.6086956521739%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.30434782608695%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.6086956521739%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.6086956521739%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.52173913043478%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(46)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.91304347826087%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.6086956521739%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.30434782608695%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.30434782608695%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.30434782608695%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.82608695652173%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.6086956521739%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.73913043478261%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.30434782608695%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.30434782608695%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.6086956521739%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.30434782608695%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.26086956521739%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.21739130434783%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.52173913043478%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.30434782608695%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.6086956521739%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.30434782608695%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.30434782608695%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.30434782608695%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.21739130434783%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.30434782608695%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.52173913043478%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.30434782608695%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.30434782608695%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.30434782608695%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.30434782608695%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.30434782608695%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.6086956521739%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.52173913043478%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.30434782608695%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.6086956521739%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.30434782608695%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.30434782608695%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.30434782608695%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.30434782608695%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.43478260869566%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.30434782608695%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.6086956521739%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.91304347826087%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.91304347826087%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.91304347826087%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.31914893617021%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.27659574468085%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.55319148936171%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.82978723404256%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.1063829787234%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.27659574468085%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.27659574468085%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.27659574468085%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.14893617021276%'>binutils(15)</a> <a href='/blog/categories/buildroot' style='font-size: 102.55319148936171%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.7872340425532%'>c(39)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.27659574468085%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.55319148936171%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.55319148936171%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.27659574468085%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.27659574468085%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.27659574468085%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.42553191489361%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.27659574468085%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.27659574468085%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.27659574468085%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.55319148936171%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.27659574468085%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.27659574468085%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.27659574468085%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.27659574468085%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.55319148936171%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.1063829787234%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.27659574468085%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.55319148936171%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.1063829787234%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.55319148936171%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.27659574468085%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.27659574468085%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.38297872340425%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.55319148936171%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.27659574468085%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.27659574468085%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.27659574468085%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.27659574468085%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.27659574468085%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.55319148936171%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 103.82978723404256%'>kernel(3)</a> <a href='/blog/categories/ld' style='font-size: 101.27659574468085%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.55319148936171%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.55319148936171%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.38297872340425%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(47)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.82978723404256%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.55319148936171%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.27659574468085%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.27659574468085%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.27659574468085%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.65957446808511%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.55319148936171%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.48936170212767%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.27659574468085%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.27659574468085%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.55319148936171%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.27659574468085%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 117.87234042553192%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.1063829787234%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.38297872340425%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.27659574468085%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.55319148936171%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.27659574468085%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.27659574468085%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.27659574468085%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.1063829787234%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.27659574468085%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.38297872340425%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.27659574468085%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.27659574468085%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.27659574468085%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.27659574468085%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.27659574468085%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.55319148936171%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.38297872340425%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.27659574468085%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.55319148936171%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.27659574468085%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.27659574468085%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.27659574468085%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.27659574468085%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.2127659574468%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.27659574468085%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.55319148936171%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.82978723404256%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.82978723404256%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.82978723404256%'>過期(3)</a> </span>
 </section>
 
 

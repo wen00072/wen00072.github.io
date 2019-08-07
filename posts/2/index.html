@@ -11,7 +11,20 @@
 
 
   
-  <meta name="description" content="最近看了How to C 2016，反正很多記不起來乾脆寫起來以後剪貼。 GNU Flags -std=c99 Warning flags -Wall -Wextra -Werror -Wshadow -Wno-missing-field-initializers -Wstrict- &hellip;">
+  <meta name="description" content="由於個人需求，需要在vim下面使用稍微複雜的字串搜尋取代。故整理這篇以後可以參考。 目錄 測試環境
+問題描述以及POSIX regex grouping 簡介
+參考語法
+範例 測試環境 1
+2
+3
+4
+5
+6
+7
+8
+9
+$ lsb_release -a
+No LSB modules are &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,6 +83,176 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2018/08/26/vim-posix-group-regex/">Vim POSIX Group Regex 使用方式</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2018-08-26T16:22:09+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>4:22 pm</span></time>
+        
+           | <a href="/blog/2018/08/26/vim-posix-group-regex/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2018/08/26/vim-posix-group-regex/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>由於個人需求，需要在<code>vim</code>下面使用稍微複雜的字串搜尋取代。故整理這篇以後可以參考。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#vreg-grp-env">測試環境</a></li>
+<li><a href="#vreg-grp-intro">問題描述以及POSIX regex grouping 簡介</a></li>
+<li><a href="#vreg-grp-syn">參考語法</a></li>
+<li><a href="#vreg-grp-ex">範例</a></li>
+</ul>
+
+
+<p><a name="vreg-grp-env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 18.04.1 LTS
+</span><span class='line'>Release:  18.04
+</span><span class='line'>Codename: bionic
+</span><span class='line'>
+</span><span class='line'>$ vim --version
+</span><span class='line'>VIM - Vi IMproved 8.0 (2016 Sep 12, compiled Apr 10 2018 21:31:58)</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="vreg-grp-intro"></a></p>
+
+<h2>問題描述以及POSIX regex grouping 簡介</h2>
+
+<p>Regular express 的特色是他可以match不同的pattern，所以用於搜尋和取代是非常的方便，然而當要把<strong>符合條件的字串前面或後面加上字串</strong>就會有一個問題，那就是<strong>符合的字串要怎麼表示？</strong>舉例來說，當我們想要在下面log<code>[mem....]</code> 之後放入<code>test</code>，要怎麼做到? 這時候我們就可以使用<code>reguler expression</code>的<code>group</code> 功能了</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] usable
+</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] reserved
+</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] usable</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="vreg-grp-syn"></a></p>
+
+<h2>參考語法</h2>
+
+<ul>
+<li>指定<code>group</code>，一組regex可以指定零到多個<code>group</code>
+
+<ul>
+<li><code>\(match_patter\)</code></li>
+</ul>
+</li>
+<li>取值
+
+<ul>
+<li><code>\0</code>
+
+<ul>
+<li>前項所有的<code>group</code></li>
+</ul>
+</li>
+<li><code>\1</code>
+
+<ul>
+<li>第一組<code>group</code></li>
+</ul>
+</li>
+<li><code>\2</code>
+
+<ul>
+<li>第二組<code>group</code></li>
+</ul>
+</li>
+<li><code>\3</code>
+
+<ul>
+<li>第三組<code>group</code></li>
+</ul>
+</li>
+<li>千秋萬世直到永遠</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vreg-grp-ex"></a></p>
+
+<h2>範例</h2>
+
+<p>就用上面的訊息當範例吧</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] usable
+</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] reserved
+</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] usable</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>範例一： 在[mem &hellip;]之後插入test</h3>
+
+<ul>
+<li>指令: <code>:%s/\(\[mem.*\]\)/\1 test/g</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] test usable
+</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] test reserved
+</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] test usable</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>範例二： 設定三組<code>group</code>，都插入<code>test</code></h3>
+
+<ul>
+<li>指令: <code>:%s/\(^\[.*\]\) \(\BIOS-e820:\) \(\[mem.*\]\)/\1 test1 \2 test2 \3 test3 /g</code></li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000000000-0x0000000000057fff] test3  usable
+</span><span class='line'>[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000058000-0x0000000000058fff] test3  reserved
+</span><span class='line'>[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000059000-0x000000000009dfff] test3  usable</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -3567,571 +3750,6 @@ Codename:   trusty
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2016/10/03/locate-function-source-code-via-gdb/">使用gdb 靜態分析C 語言名稱和參數相同函數的原始檔位置</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2016-10-03T14:36:00+08:00'><span class='date'><span class='date-month'>Oct</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2016</span></span> <span class='time'>2:36 pm</span></time>
-        
-           | <a href="/blog/2016/10/03/locate-function-source-code-via-gdb/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2016/10/03/locate-function-source-code-via-gdb/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>前言</h2>
-
-<p>感謝<a href="http://scottt.tw/">Scott</a>大大的資訊。</p>
-
-<p>忘記那邊看過的名言：「手上有了新玩具，就會想要馬上拿來用。」</p>
-
-<h2>動機</h2>
-
-<p>組裝軟體的時候，有一件事很讓我困擾。那就是當整包SDK有兩個以上名稱和參數相同的函數的時候。當這種情況發生時，trace code就很麻煩，你必須要花時間釐清到底最後會使用到那一個函數。而這些config可能用下面兩種方式切換這些名稱和參數相同的函數：</p>
-
-<ol>
-<li>巨集
-
-<ul>
-<li><code>#if</code></li>
-<li><code>#ifdef</code></li>
-</ul>
-</li>
-<li>Makefile
-
-<ul>
-<li>在檔案中根據不同變數編譯不同的檔案</li>
-</ul>
-</li>
-</ol>
-
-
-<p>我以前會視情況用下面兩種方法找到該函數編譯實際使用的原始檔位置</p>
-
-<ol>
-<li>下毒藥，只要相同名字的函數都塞入<code>#error 可以辨別的字串</code>。編譯時根據錯誤訊息判斷使用哪個函數</li>
-<li>gdb設斷點，runtime透過中斷函數的方式取得函數的檔案和行號</li>
-</ol>
-
-
-<p>不過<a href="http://scottt.tw/">Scott</a>大大的今天給的資訊讓我可以更省力的處理這個問題了。</p>
-
-<p>如果只想要知道用法，看完下面指令就可以收工回家了。</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'>gdb -ex <span class="s1">&#39;file 你的執行檔或是shared library檔&#39;</span> -ex <span class="s1">&#39;info line 要查的函數&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>當然用<code>gdb</code>編譯時不要忘記加debug option。</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#gds_env">測試環境</a></li>
-<li><a href="#gds_files">測試檔案</a>
-
-<ul>
-<li><a href="#gds_files_1">test_same_func.c</a></li>
-<li><a href="#gds_files_2">same_func1.c</a></li>
-<li><a href="#gds_files_3">same_func2.c</a></li>
-<li><a href="#gds_files_mk">Makefile</a></li>
-</ul>
-</li>
-<li><a href="#gds_test">測試結果</a></li>
-<li><a href="#gds_ref">延伸資料</a></li>
-</ul>
-
-
-<p><a name="gds_env"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 14.04.5 LTS
-</span><span class='line'>Release:  14.04
-</span><span class='line'>Codename: trusty
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gds_files"></a></p>
-
-<h2>測試檔案</h2>
-
-<p>簡單來說，就是實作切換兩種方式同樣名稱和參數的函數：</p>
-
-<ol>
-<li>巨集</li>
-<li>Makefile</li>
-</ol>
-
-
-<p>所以我們會有</p>
-
-<ol>
-<li><a href="#gds_files_1">測試檔案進入點</a></li>
-<li><a href="#gds_files_2">測試檔一</a>
-
-<ul>
-<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
-<li>和測試檔二完全一模一樣</li>
-</ul>
-</li>
-<li><a href="#gds_files_3">測試檔二</a>
-
-<ul>
-<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
-<li>和測試檔一完全一模一樣</li>
-</ul>
-</li>
-<li><a href="#gds_files_mk">Makefile</a>
-
-<ul>
-<li>除了編譯以外，還提供兩個變數，由command line傳入
-
-<ul>
-<li>USE_FILE=1
-
-<ul>
-<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
-</ul>
-</li>
-<li>EN_OP1=1
-
-<ul>
-<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-</li>
-</ol>
-
-
-<p><a name="gds_files_1"></a></p>
-
-<h3>test_same_func.c</h3>
-
-<ul>
-<li>測試檔案進入點，呼叫func1()。func1()在compile time才被決定</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>test_same_func.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'><span class="k">extern</span> <span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">);</span>
-</span><span class='line'>
-</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello World</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">func1</span><span class="p">();</span>
-</span><span class='line'>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gds_files_2"></a></p>
-
-<h3>same_func1.c</h3>
-
-<ul>
-<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
-<li>和<a href="#gds_files_2">same_func2</a>完全一模一樣</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>same_func1.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#if OP1</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="cp">#else</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_NOT_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="cp">#endif</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gds_files_3"></a></p>
-
-<h3>same_func2.c</h3>
-
-<ul>
-<li>實作使用巨集<code>OP1</code>切換同樣名稱和參數</li>
-<li>和<a href="#gds_files_1">same_func1</a>完全一模一樣</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>same_func2.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">#if OP1</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="cp">#else</span>
-</span><span class='line'><span class="kt">void</span> <span class="nf">func1</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
-</span><span class='line'><span class="p">{</span>
-</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;%s: %s_NOT_OP1</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">__FILE__</span><span class="p">,</span> <span class="n">__PRETTY_FUNCTION__</span><span class="p">);</span>
-</span><span class='line'><span class="p">}</span>
-</span><span class='line'><span class="cp">#endif</span>
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gds_files_mk"></a></p>
-
-<h3>Makefile</h3>
-
-<p>提供兩個變數，由command line傳入</p>
-
-<ul>
-<li>USE_FILE=1
-
-<ul>
-<li>沒傳入時預設編譯<font color="red"><strong>測試檔二</strong></font>，當該參數傳入<code>USE_FILE=1</code>時會變成編譯<font color="red"><strong>測試檔一</strong></font></li>
-</ul>
-</li>
-<li>EN_OP1=1
-
-<ul>
-<li>當該參數傳入時才會開啟<code>OP1</code>巨集</li>
-</ul>
-</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">CFLAGS</span><span class="o">+=</span>-Wall -Werror -g3
-</span><span class='line'><span class="nv">TARGET</span><span class="o">=</span>test_same_func
-</span><span class='line'><span class="nv">SRCS</span><span class="o">=</span>test_same_func.c
-</span><span class='line'>
-</span><span class='line'><span class="cp">ifeq ($(USE_FILE), 1)</span>
-</span><span class='line'>    SRCS +<span class="o">=</span> same_func1.c
-</span><span class='line'><span class="cp">else</span>
-</span><span class='line'>    SRCS +<span class="o">=</span> same_func2.c
-</span><span class='line'><span class="cp">endif</span>
-</span><span class='line'>
-</span><span class='line'><span class="cp">ifeq ($(EN_OP1), 1)</span>
-</span><span class='line'>    CFLAGS +<span class="o">=</span> -DOP1<span class="o">=</span>1
-</span><span class='line'><span class="cp">endif</span>
-</span><span class='line'>
-</span><span class='line'><span class="nv">OBJS</span><span class="o">=</span><span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OBJS</span><span class="k">)</span>
-</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="nv">$@</span> <span class="nv">$^</span>
-</span><span class='line'>  gdb -ex <span class="s1">&#39;file $@&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">%.o</span><span class="o">:</span> %.<span class="n">c</span>
-</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> <span class="k">$(</span>CFLAGS<span class="k">)</span> -c <span class="nv">$^</span>
-</span><span class='line'>
-</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
-</span><span class='line'>  rm *.o *~ <span class="k">$(</span>TARGET<span class="k">)</span> -f
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gds_test"></a></p>
-
-<h2>測試結果</h2>
-
-<p>前面提過，<code>func1()</code>的實作受兩個變數影響，分別為</p>
-
-<ol>
-<li>巨集<code>OP1</code>是否有設定
-
-<ul>
-<li>只有<code>OP1</code> 被設定<strong>並且</strong>非零時才會進入<code>OP1</code>的<code>func1()</code></li>
-</ul>
-</li>
-<li>Makefile變數<code>USE_FILE</code>是否有設定
-
-<ul>
-<li>只有<code>USE_FILE</code>為1的時候才會使用<code>same_func1.c</code>，其他情形都編譯<code>same_func2.c</code></li>
-</ul>
-</li>
-</ol>
-
-
-<p>所以我們make 指令有下面四種變化</p>
-
-<ol>
-<li><a href="">巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</a></li>
-<li><a href="">設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</a></li>
-<li><a href="">巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></a></li>
-<li><a href="">全部設定巨集<code>OP1</code>和<code>USE_FILE</code></a></li>
-</ol>
-
-
-<p><a name=""></a></p>
-
-<h3>巨集<code>OP1</code>和<code>USE_FILE</code>都沒設定</h3>
-
-<p>gdb驗證結果的確是</p>
-
-<ol>
-<li>編譯<code>same_func2.c</code></li>
-<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
-</span><span class='line'>default settings: OP1 disable and use same_func1.c
-</span><span class='line'>rm *.o *~ test_same_func -f
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>make
-</span><span class='line'>cc -Wall -Werror -g3 -c test_same_func.c
-</span><span class='line'>cc -Wall -Werror -g3 -c same_func2.c
-</span><span class='line'>cc -o test_same_func test_same_func.o same_func2.o
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
-</span><span class='line'>...
-</span><span class='line'>Line <span class="m">11</span> of <span class="s2">&quot;same_func2.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
-</span><span class='line'>Hello World
-</span><span class='line'>same_func2.c: func1_NOT_OP1
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name=""></a></p>
-
-<h3>設定巨集<code>OP1</code>，<code>USE_FILE</code>沒設定</h3>
-
-<p>gdb驗證結果的確是</p>
-
-<ol>
-<li>編譯<code>same_func2.c</code></li>
-<li>使用<code>OP1</code>版本的<code>func1()</code></li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
-</span><span class='line'>rm *.o *~ test_same_func -f
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>make <span class="nv">EN_OP1</span><span class="o">=</span>1
-</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c test_same_func.c
-</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c same_func2.c
-</span><span class='line'>cc -o test_same_func test_same_func.o same_func2.o
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
-</span><span class='line'>...
-</span><span class='line'>Line <span class="m">5</span> of <span class="s2">&quot;same_func2.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
-</span><span class='line'>Hello World
-</span><span class='line'>same_func2.c: func1_OP1
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name=""></a></p>
-
-<h3>巨集<code>OP1</code>沒設定，但是設定<code>USE_FILE</code></h3>
-
-<p>gdb驗證結果的確是</p>
-
-<ol>
-<li>編譯<code>same_func1.c</code></li>
-<li>使用非<code>OP1</code>版本的<code>func1()</code></li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
-</span><span class='line'>rm *.o *~ test_same_func -f
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>make <span class="nv">USE_FILE</span><span class="o">=</span>1
-</span><span class='line'>cc -Wall -Werror -g3 -c test_same_func.c
-</span><span class='line'>cc -Wall -Werror -g3 -c same_func1.c
-</span><span class='line'>cc -o test_same_func test_same_func.o same_func1.o
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
-</span><span class='line'>...
-</span><span class='line'>Line <span class="m">11</span> of <span class="s2">&quot;same_func1.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
-</span><span class='line'>Hello World
-</span><span class='line'>same_func1.c: func1_NOT_OP1
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name=""></a></p>
-
-<h3>全部設定巨集<code>OP1</code>和<code>USE_FILE</code></h3>
-
-<p>gdb驗證結果的確是</p>
-
-<ol>
-<li>編譯<code>same_func1.c</code></li>
-<li>使用<code>OP1</code>版本的<code>func1()</code></li>
-</ol>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='sh'><span class='line'><span class="nv">$ </span>make clean
-</span><span class='line'>rm *.o *~ test_same_func -f
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>make <span class="nv">EN_OP1</span><span class="o">=</span><span class="m">1</span> <span class="nv">USE_FILE</span><span class="o">=</span>1
-</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c test_same_func.c
-</span><span class='line'>cc -Wall -Werror -g3 -DOP1<span class="o">=</span><span class="m">1</span> -c same_func1.c
-</span><span class='line'>cc -o test_same_func test_same_func.o same_func1.o
-</span><span class='line'>
-</span><span class='line'><span class="nv">$ </span>gdb -ex <span class="s1">&#39;file test_same_func&#39;</span> -ex <span class="s1">&#39;info line func1&#39;</span> -ex <span class="s1">&#39;quit&#39;</span>
-</span><span class='line'>...
-</span><span class='line'>Line <span class="m">5</span> of <span class="s2">&quot;same_func1.c&quot;</span> starts at address 0x400597 &lt;func1&gt; and ends at 0x40059b &lt;func1+4&gt;.
-</span><span class='line'>Hello World
-</span><span class='line'>same_func1.c: func1_OP1
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="gds_ref"></a></p>
-
-<h2>延伸資料</h2>
-
-<ul>
-<li><a href="https://docs.google.com/document/d/1w1nPmCLpeRN3kEYglzHwozhWXY0ddT9oe6JCZocsPNE/edit">Using GDB to Help You Read Linux Kernel Code without Running It</a>
-
-<ul>
-<li><a href="http://scottt.tw/">Scott</a>大大的文件，描述使用gdb 靜態分析Linux kernel的技巧</li>
-</ul>
-</li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/3">&larr; Older</a>
@@ -4149,6 +3767,10 @@ Codename:   trusty
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a>
       </li>
     
@@ -4164,24 +3786,20 @@ Codename:   trusty
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (38)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (46)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (3)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.65217391304348%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.30434782608695%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.6086956521739%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.91304347826087%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.21739130434783%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.30434782608695%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.30434782608695%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.30434782608695%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.26086956521739%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.6086956521739%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.56521739130434%'>c(38)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.30434782608695%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.6086956521739%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.6086956521739%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.30434782608695%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.30434782608695%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.30434782608695%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.86956521739131%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.30434782608695%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.30434782608695%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.30434782608695%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.6086956521739%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.30434782608695%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.30434782608695%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.30434782608695%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.30434782608695%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.6086956521739%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.21739130434783%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.30434782608695%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.6086956521739%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.21739130434783%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.6086956521739%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.30434782608695%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.30434782608695%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.52173913043478%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.6086956521739%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.30434782608695%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.30434782608695%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.30434782608695%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.30434782608695%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.30434782608695%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.6086956521739%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.6086956521739%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.30434782608695%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.6086956521739%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.6086956521739%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.52173913043478%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(46)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.91304347826087%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.6086956521739%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.30434782608695%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.30434782608695%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.30434782608695%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.82608695652173%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.6086956521739%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.73913043478261%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.30434782608695%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.30434782608695%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.6086956521739%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.30434782608695%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.26086956521739%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.21739130434783%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.52173913043478%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.30434782608695%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.6086956521739%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.30434782608695%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.30434782608695%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.30434782608695%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.21739130434783%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.30434782608695%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.52173913043478%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.30434782608695%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.30434782608695%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.30434782608695%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.30434782608695%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.30434782608695%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.6086956521739%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.52173913043478%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.30434782608695%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.6086956521739%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.30434782608695%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.30434782608695%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.30434782608695%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.30434782608695%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.43478260869566%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.30434782608695%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.6086956521739%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.91304347826087%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.91304347826087%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.91304347826087%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.31914893617021%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.27659574468085%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.55319148936171%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.82978723404256%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.1063829787234%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.27659574468085%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.27659574468085%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.27659574468085%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.14893617021276%'>binutils(15)</a> <a href='/blog/categories/buildroot' style='font-size: 102.55319148936171%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.7872340425532%'>c(39)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.27659574468085%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.55319148936171%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.55319148936171%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.27659574468085%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.27659574468085%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.27659574468085%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.42553191489361%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.27659574468085%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.27659574468085%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.27659574468085%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.55319148936171%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.27659574468085%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.27659574468085%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.27659574468085%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.27659574468085%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.55319148936171%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.1063829787234%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.27659574468085%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.55319148936171%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.1063829787234%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.55319148936171%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.27659574468085%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.27659574468085%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.38297872340425%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.55319148936171%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.27659574468085%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.27659574468085%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.27659574468085%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.27659574468085%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.27659574468085%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.55319148936171%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 103.82978723404256%'>kernel(3)</a> <a href='/blog/categories/ld' style='font-size: 101.27659574468085%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.55319148936171%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.55319148936171%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.38297872340425%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(47)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.82978723404256%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.55319148936171%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.27659574468085%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.27659574468085%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.27659574468085%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.65957446808511%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.55319148936171%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.48936170212767%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.27659574468085%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.27659574468085%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.55319148936171%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.27659574468085%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 117.87234042553192%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.1063829787234%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.38297872340425%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.27659574468085%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.55319148936171%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.27659574468085%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.27659574468085%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.27659574468085%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.1063829787234%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.27659574468085%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.38297872340425%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.27659574468085%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.27659574468085%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.27659574468085%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.27659574468085%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.27659574468085%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.55319148936171%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.38297872340425%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.27659574468085%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.55319148936171%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.27659574468085%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.27659574468085%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.27659574468085%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.27659574468085%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.2127659574468%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.27659574468085%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.55319148936171%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.82978723404256%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.82978723404256%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.82978723404256%'>過期(3)</a> </span>
 </section>
 
 
