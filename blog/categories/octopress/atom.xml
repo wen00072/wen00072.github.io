@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Octopress | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/octopress/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-08-07T21:45:07+08:00</updated>
+  <updated>2020-01-26T14:27:41+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -24,7 +24,7 @@
 
 <h2>預安裝套件</h2>
 
-<pre><code>sudo apt -y gcc libcurl4-openssl-dev libxml2-dev
+<pre><code>sudo apt install -y gcc libcurl4-openssl-dev libxml2-dev
 </code></pre>
 
 <h2>Ruby 相關更新，完全不知道做啥</h2>

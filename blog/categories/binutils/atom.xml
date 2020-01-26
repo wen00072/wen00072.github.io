@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Binutils | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/binutils/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2019-08-07T21:45:07+08:00</updated>
+  <updated>2020-01-26T14:27:41+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,18 +12,6 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
-  
-  <entry>
-    <title type="html"><![CDATA[Hello World 的一生投影片]]></title>
-    <link href="http://wen00072.github.io/blog/2019/08/07/hello-world-slides/"/>
-    <updated>2019-08-07T21:43:47+08:00</updated>
-    <id>http://wen00072.github.io/blog/2019/08/07/hello-world-slides</id>
-    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/key/1nl4PUuvTgsqr9" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
-
-
-<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-161964384" title="Hello world 的一生" target="_blank">Hello world 的一生</a> </strong> from <strong><a href="https://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
-]]></content>
-  </entry>
   
   <entry>
     <title type="html"><![CDATA[談談strip]]></title>
@@ -1144,6 +1132,21 @@ Disassembly of section .fini:
 <p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-43848623" title="Hello world在那邊？背景說明" target="_blank">Hello world在那邊？背景說明</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
 
 <script async class="speakerdeck-embed" data-id="d8f1004085d00132de3b7a1c3ec56d64" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
+
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[GNU Ld的linker Script簡介投影片上線]]></title>
+    <link href="http://wen00072.github.io/blog/2014/12/25/introduction-to-gnu-ld-linker-script-slides-on-line/"/>
+    <updated>2014-12-25T11:01:00+08:00</updated>
+    <id>http://wen00072.github.io/blog/2014/12/25/introduction-to-gnu-ld-linker-script-slides-on-line</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/42996920" width="425" height="355" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/gnu-ldlinker-script" title="Gnu ld的linker script簡介" target="_blank">GNU ld的linker script簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+
+<script async class="speakerdeck-embed" data-id="cb9576a06e0f0132f68022c1cc0a8a7f" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
 
 ]]></content>
   </entry>
