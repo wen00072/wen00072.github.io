@@ -12,7 +12,7 @@ categories: [Octopress]
 
 ## 預安裝套件
 ```
-sudo apt -y gcc libcurl4-openssl-dev libxml2-dev
+sudo apt install -y gcc libcurl4-openssl-dev libxml2-dev
 ```
 
 ## Ruby 相關更新，完全不知道做啥
