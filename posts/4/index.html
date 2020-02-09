@@ -11,10 +11,17 @@
 
 
   
-  <meta name="description" content="以下為課程筆記，我沒有專業能力判斷是否有誤解，請自行斟酌。 街屋立面產生原因 新建物
-街道拓寬舊的建築物被切掉 人造石材質卷草工法 開模
-泥塑(堆花） 三角窗有一段時期流行將轉角切成三等份。範例如下： 日治時代唯二允許的廟會 (待查證） 北港朝天宮
-霞海城隍廟 &hellip;">
+  <meta name="description" content="更新： Apr/09/2016：感謝網友柏瑀的告知，修正白字。 git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。 一樣，先講測試環境，避免無法reproduce的問題。 1
+2
+3
+4
+5
+6
+7
+8
+9
+$ lsb_release -a
+No LSB &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -73,6 +80,1640 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/01/24/talk-more-about-git-remote/">再談 Git Remote</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-01-24T20:30:32+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>8:30 pm</span></time>
+        
+           | <a href="/blog/2016/01/24/talk-more-about-git-remote/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2016/01/24/talk-more-about-git-remote/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><ul>
+<li>更新：
+
+<ul>
+<li>Apr/09/2016：感謝網友柏瑀的告知，修正白字。</li>
+</ul>
+</li>
+</ul>
+
+
+<p>git remote 是一個常常被忽略的東西，這次就來看看這個指令和對應的觀念吧。</p>
+
+<p>一樣，先講測試環境，避免無法reproduce的問題。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ git --version
+</span><span class='line'>git version 2.7.0
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>本次介紹目錄如下</p>
+
+<ul>
+<li><a href="#gr_gb">背景說明</a></li>
+<li><a href="#gr_cmd">git remote指令介紹</a>
+
+<ul>
+<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
+<li><a href="#gr_cmd_add">新增remote</a></li>
+<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
+<li><a href="#gr_cmd_push">remote的branch操作</a></li>
+<li><a href="#gr_cmd_rm">刪除remote</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="gr_gb"></a></p>
+
+<h2>背景說明</h2>
+
+<p>先來問問男人<code>git remote</code>是什麼吧？</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>GIT-REMOTE(1)                                     Git Manual                                    GIT-REMOTE(1)
+</span><span class='line'>
+</span><span class='line'>NAME
+</span><span class='line'>       git-remote - Manage set of tracked repositories
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>白話來說，<code>git remote</code>是用來管理<font color="red">多個</font>tracked repositories。（中文難翻，意思是你要追蹤的git repository）。在大部分的情況，<code>git clone</code>下來後只需要和原本clone的遠端互動的話，你只有一個remote，那麼你機乎不會感受到remote的運作，我天生駑鈍，剛開始只是覺得奇怪怎麼有時候後會有個<code>origin</code>跑出來而已。</p>
+
+<p>如果夠幸運（還是不幸？）你不太會需要遇到需要處理remote的情況。不過在github上面，倒是蠻有機會要用到remote，情境如下。</p>
+
+<ul>
+<li>你在github上面有帳號，要fork別人的project <code>A</code>，fork來的稱為<code>A+</code></li>
+<li>你在<code>A+</code>開發，同時<code>A</code>也在開發</li>
+<li><code>A+</code>有需要和<code>A</code>同步，也許是<code>A</code>有新功能，或是你要回饋程式碼總不能回饋和<code>A</code>差異太大的程式碼</li>
+</ul>
+
+
+<p><code>A+</code>和<code>A</code>同步，是remote常用的情境。常用到github直接給<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>。大概描述如下：</p>
+
+<ul>
+<li><code>A+</code>加一個remote，URL為<code>A</code>的URL。白話來說，就是<code>A+</code>要track repository <code>A</code>。
+
+<ul>
+<li>remote必須給個名字，github的<a href="https://help.github.com/articles/configuring-a-remote-for-a-fork/">懶人包</a>上給的名字叫upstream。</li>
+</ul>
+</li>
+<li>既然加了一個tracked repository，你就可以做
+
+<ul>
+<li>拉remote程式碼下來</li>
+<li>切換到remote下面的branch</li>
+<li><strong>merge remote 的branch</strong></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="gr_cmd"></a></p>
+
+<h2>git remote指令介紹</h2>
+
+<p>在介紹指令之前，先建立示範git repository 以便下面的說明。情境如下</p>
+
+<ol>
+<li>建立新的git repository，稱為<code>repo_1</code></li>
+<li>clone <code>repo_1</code>到<code>repo_2</code></li>
+<li>clone <code>repo_2</code>到<code>repo_3</code></li>
+</ol>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git init repo_1
+</span><span class='line'>Initialized empty Git repository in /tmp/test_remote/repo_1/.git/
+</span><span class='line'>
+</span><span class='line'>$ cd repo_1/
+</span><span class='line'>/repo_1$ touch test_file &amp;&amp; git add test_file &amp;&amp; git commit -a -m &quot;init for test&quot;
+</span><span class='line'>[master (root-commit) 6847c3c] init for test
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_file
+</span><span class='line'>
+</span><span class='line'>$ cd ../
+</span><span class='line'>
+</span><span class='line'>$ git clone --bare repo_1 repo_2
+</span><span class='line'>Cloning into bare repository &#39;repo_2&#39;...
+</span><span class='line'>done.
+</span><span class='line'>
+</span><span class='line'>$ git clone repo_2/ repo_3
+</span><span class='line'>Cloning into &#39;repo_3&#39;...
+</span><span class='line'>done.
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>關於repo_2的&ndash;bare部份，一言難盡。長話短說，不這樣幹repo_3不能push到repo_2，有興趣可以看<a href="http://stackoverflow.com/questions/2816369/git-push-error-remote-rejected-master-master-branch-is-currently-checked">這邊</a>。</p>
+
+<p>如果你的git repository是clone過來的，一定會有一個預設remote。沒意外的會叫<code>origin</code> <del>(什麼？你的remote叫<code>aosp</code>? 呃太複雜不討論)</del>，接下來你可以對於remote 操作，分別說明如下：</p>
+
+<ul>
+<li><a href="#gr_cmd_status">查詢remote資訊</a></li>
+<li><a href="#gr_cmd_add">新增remote</a></li>
+<li><a href="#gr_cmd_fetch">拉remote repository</a></li>
+<li><a href="#gr_cmd_push">remote的branch操作</a></li>
+<li><a href="#gr_cmd_rm">刪除remote</a></li>
+</ul>
+
+
+<p><a name="gr_cmd_status"></a></p>
+
+<h2>查詢remote資訊</h2>
+
+<ul>
+<li><code>git remote</code>
+
+<ul>
+<li>顯示remote名稱</li>
+</ul>
+</li>
+<li><code>git remote -v</code>
+
+<ul>
+<li>顯示remote名稱及remote URL</li>
+</ul>
+</li>
+<li><code>git remote show remote名稱</code>
+
+<ul>
+<li>顯示<code>remote名稱</code>的詳細資訊</li>
+</ul>
+</li>
+</ul>
+
+
+<p>直接看範例</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_3
+</span><span class='line'>
+</span><span class='line'>$ git remote
+</span><span class='line'>origin
+</span><span class='line'>
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
+</span><span class='line'>
+</span><span class='line'>$ git remote show origin
+</span><span class='line'>* remote origin
+</span><span class='line'>  Fetch URL: /tmp/test_remote/repo_2/
+</span><span class='line'>  Push  URL: /tmp/test_remote/repo_2/
+</span><span class='line'>  HEAD branch: master
+</span><span class='line'>  Remote branch:
+</span><span class='line'>    master tracked
+</span><span class='line'>  Local branch configured for &#39;git pull&#39;:
+</span><span class='line'>    master merges with remote master
+</span><span class='line'>  Local ref configured for &#39;git push&#39;:
+</span><span class='line'>    master pushes to master (up to date)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gr_cmd_add"></a></p>
+
+<h2>新增remote</h2>
+
+<ul>
+<li><code>git add remote名稱 remote_repository_URL</code></li>
+</ul>
+
+
+<p>範例如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote add upstream /tmp/test_remote/repo_1/
+</span><span class='line'>
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (fetch)
+</span><span class='line'>origin    /tmp/test_remote/repo_2/ (push)
+</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (fetch)
+</span><span class='line'>upstream  /tmp/test_remote/repo_1/ (push)
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>新增完畢後，請記得<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>是你要操作remote的參數。</p>
+
+<p>另外你還可以加入多個remote來場大亂鬥。例如你從<code>A</code> fork <code>A+</code>，也許有人fork 出來的<code>A++</code>有你想要的功能，就可以再把<code>A++</code>加入你<code>A</code> repository的remote。</p>
+
+<p><a name="gr_cmd_fetch"></a></p>
+
+<h2>拉remote repository</h2>
+
+<ul>
+<li><code>git fetch remote_名稱</code></li>
+<li><code>git pull remote_名稱/remote_branch_名稱</code></li>
+</ul>
+
+
+<p>我們先在<code>repo_1</code>開一個branch稱為<code>br1</code></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ cd /tmp/test_remote/repo_1/
+</span><span class='line'>
+</span><span class='line'>$ git checkout -b br1
+</span><span class='line'>Switched to a new branch &#39;br1&#39;
+</span><span class='line'>
+</span><span class='line'>$ touch test_on_branch &amp;&amp; git add test_on_branch &amp;&amp; git commit test_on_branch -m &quot;test&quot;
+</span><span class='line'>[br1 cc7222f] test
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_on_branch
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來就是範例時間</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git fetch upstream
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'> * [new branch]      br1        -&gt; upstream/br1
+</span><span class='line'> * [new branch]      master     -&gt; upstream/master
+</span><span class='line'>
+</span><span class='line'>$ ls
+</span><span class='line'>test_file
+</span><span class='line'>
+</span><span class='line'>$ git pull upstream br1
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'> * branch            br1        -&gt; FETCH_HEAD
+</span><span class='line'>Updating 6847c3c..cc7222f
+</span><span class='line'>Fast-forward
+</span><span class='line'> test_on_branch | 0
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test_on_branch
+</span><span class='line'>
+</span><span class='line'>$ ls
+</span><span class='line'>test_file  test_on_branch
+</span><span class='line'>
+</span><span class='line'>$ git status
+</span><span class='line'>On branch master
+</span><span class='line'>Your branch is ahead of &#39;origin/master&#39; by 1 commit.
+</span><span class='line'>  (use &quot;git push&quot; to publish your local commits)
+</span><span class='line'>nothing to commit, working directory clean
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注意最後的指令，因為我們pull了<code>upstream/br1</code>，所以local多了一個commit。因此訊息中有說你目前repository 比<code>origin/master</code>(你clone的remote/branch)多一個commit。你可以push回<code>origin/master</code>。</p>
+
+<p><a name="gr_cmd_push"></a></p>
+
+<h2>remote的branch操作</h2>
+
+<p>原則就是命令中有參數會是<code>remote_名稱</code>、<code>remote_名稱 remote_branch_名稱</code>或<code>remote_名稱/remote_branch_名稱</code>。</p>
+
+<ul>
+<li>切換</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout upstream/br1
+</span><span class='line'>Note: checking out &#39;upstream/br1&#39;.
+</span><span class='line'>
+</span><span class='line'>You are in &#39;detached HEAD&#39; state. You can look around, make experimental
+</span><span class='line'>changes and commit them, and you can discard any commits you make in this
+</span><span class='line'>state without impacting any branches by performing another checkout.
+</span><span class='line'>
+</span><span class='line'>If you want to create a new branch to retain commits you create, you may
+</span><span class='line'>do so (now or later) by using -b with the checkout command again. Example:
+</span><span class='line'>
+</span><span class='line'>  git checkout -b &lt;new-branch-name&gt;
+</span><span class='line'>
+</span><span class='line'>HEAD is now at bd026e3... test
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>中間的一堆英文簡單來說是因為git checkout沒特別參數，git只是把HEAD指到命令中的hash而已。如果你要同時在local開一個branch，可以這樣幹：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git checkout --track  upstream/br1
+</span><span class='line'>Branch br1 set up to track remote branch br1 from upstream.
+</span><span class='line'>Switched to a new branch &#39;br1&#39;
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>merge</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'># 先在upstream/br1建立新的commit
+</span><span class='line'>$ cd /tmp/test_remote/repo_1/
+</span><span class='line'>
+</span><span class='line'>$ touch test1_on_branch &amp;&amp; git add test1_on_branch &amp;&amp; git commit test1_on_branch -m &quot;test1&quot;
+</span><span class='line'>[br1 d82612a] test1
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test1_on_branch
+</span><span class='line'>
+</span><span class='line'># 切回repo_3
+</span><span class='line'>cd /tmp/test_remote/repo_3
+</span><span class='line'>
+</span><span class='line'># 先fetch
+</span><span class='line'>$ git fetch upstream
+</span><span class='line'>remote: Counting objects: 2, done.
+</span><span class='line'>remote: Compressing objects: 100% (2/2), done.
+</span><span class='line'>remote: Total 2 (delta 0), reused 0 (delta 0)
+</span><span class='line'>Unpacking objects: 100% (2/2), done.
+</span><span class='line'>From /tmp/test_remote/repo_1
+</span><span class='line'>   bd026e3..d82612a  br1        -&gt; upstream/br1
+</span><span class='line'>
+</span><span class='line'># 再merge，事實上和git pull upstream br1 一樣效果（默）
+</span><span class='line'>$ git merge upstream/br1
+</span><span class='line'>Updating bd026e3..d82612a
+</span><span class='line'>Fast-forward
+</span><span class='line'> test1_on_branch | 0
+</span><span class='line'> 1 file changed, 0 insertions(+), 0 deletions(-)
+</span><span class='line'> create mode 100644 test1_on_branch
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="gr_cmd_rm"></a></p>
+
+<h2>刪除remote</h2>
+
+<ul>
+<li>git remote remove remote名稱</li>
+</ul>
+
+
+<p>範例如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>$ git remote remove upstream
+</span><span class='line'>
+</span><span class='line'>$ git remote -v
+</span><span class='line'>origin    /tmp/test_remote/repo_2 (fetch)
+</span><span class='line'>origin    /tmp/test_remote/repo_2 (push)
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/12/10/about-inline-asm/">關於GNU Inline Assembly</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-12-10T22:16:49+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:16 pm</span></time>
+        
+           | <a href="/blog/2015/12/10/about-inline-asm/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/12/10/about-inline-asm/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>以前稍微接觸過GNU Inline Assembly，對於那些奇怪的符號總是覺得匪夷所思。這次找時間把他整理一下。雖然釐清了一些觀念，不過卻產生更多的疑惑，也許以後有機會看到範例會慢慢有感覺吧。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#ia-preface">前言</a></li>
+<li><a href="#ia-env">測試環境</a></li>
+<li><a href="#ia-syntax">語法</a>
+
+<ul>
+<li><a href="#ia-output">Output operands</a></li>
+<li><a href="#ia-input">Input operands</a></li>
+<li><a href="#ia-clo-reg">Clobbered registers list</a></li>
+<li><a href="#ia-constr">Constraints</a></li>
+</ul>
+</li>
+<li><a href="#ia-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="ia-preface"></a></p>
+
+<h2>前言</h2>
+
+<p>我自己對於GNU Inline Assembly的看法。</p>
+
+<ul>
+<li>編譯器 夠聰明，所以暫存器分配可以安心交給編譯器處理。也就是說語法上面要處理這塊。</li>
+<li>暫存器、變數有些資訊仍然要讓編譯器知道，讓編譯器產生object binary遵守這樣的規則，如
+
+<ul>
+<li>這個operand是一個暫存器</li>
+<li>這個operand是一塊記憶體</li>
+<li>這個operand是浮點常數</li>
+<li>&hellip;</li>
+</ul>
+</li>
+<li>不想讓編譯器幫你安排暫存器，而是在Inline Assembly指定暫存器的話，就要明確的列出來。讓編譯器知道這些暫存器有被改過資料，進而針對這些暫存器做適當的處理。</li>
+</ul>
+
+
+<p><a name="ia-env"></a></p>
+
+<h2>測試環境</h2>
+
+<p>我使用ARMv7為主的Banana Pi開發版加上Lubuntu 14.04作為測試環境。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ dmesg
+</span><span class='line'>...
+</span><span class='line'>[    0.000000] Linux version 3.4.90 (bananapi@lemaker) (gcc version 4.6.3 (Ubuntu/Linaro 4.6.3-1ubuntu5) ) #2 SMP PREEMPT Tue Aug 5 14:11:40 CST 2014
+</span><span class='line'>[    0.000000] CPU: ARMv7 Processor [410fc074] revision 4 (ARMv7), cr=10c5387d
+</span><span class='line'>...
+</span><span class='line'>
+</span><span class='line'>$ gcc -v
+</span><span class='line'>...
+</span><span class='line'>Target: arm-linux-gnueabihf
+</span><span class='line'>...
+</span><span class='line'>gcc version 4.8.4 (Ubuntu/Linaro 4.8.4-2ubuntu1~14.04) </span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="ia-syntax"></a></p>
+
+<h2>語法</h2>
+
+<p>inline assembler關鍵字是<code>asm</code>，不過<code>__asm__</code>也可以使用(<a href="#ia_ps0">註</a>)。</p>
+
+<p>根據目前(Dec/2015)的<a href="https://gcc.gnu.org/onlinedocs/gcc/index.html#Top">gcc手冊</a>，inline assembler有分為<code>basic</code>和<code>extended</code>兩種。雖然我使用的平台是gcc 4.8.4，而且gcc 4.8.5<a href="https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/index.html#Top">手冊</a>(官方網站上沒有4.8.4手冊)並沒有提到這個部份。但是目前<strong>語法上</strong>測試的確沒有問題，但是有些說明上面卻很難驗證是否可以套用到4.8.5上(例如最佳化的說明、需要注意常犯的錯誤)，請自行斟酌。</p>
+
+<p>以下是整理自最新的手冊說明，請自行斟酌您使用的gcc版本是否有符合。</p>
+
+<h3>Basic inline assembler</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="p">[</span> <span class="k">volatile</span> <span class="p">]</span> <span class="n">asm</span><span class="p">(</span><span class="s">&quot;Assembler Template&quot;</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>以下是整理自最新(Dec/2015)的手冊說明節錄，請自行斟酌您使用的gcc版本是否有符合。</p>
+
+<ul>
+<li>basic inline assembler 預設就是volatile</li>
+<li>基本上編譯器只是把引號內的東西抄錄，所以只要組譯器支援的語法，就可以寫入Assembler Template內</li>
+<li>和extended inline assembler的差異
+
+<ul>
+<li>extended inline assembler 只允許在函數內使用</li>
+<li>有<code>naked</code>屬性的函數必須使用basic inline assembler(見<a href="#ia_ps1">註解</a>)</li>
+<li>basic inline assembler就是把template內的字串作為組合語言組譯。而<code>%</code>字元在extended inline assembler有特別意義，然而有些組合語言如x86中<code>%</code>是暫存器語法的一部份。以至於<code>%</code>字元要在extended inline assembler中改為<code>%%</code>才是真正的意思，舉個例子<code>%eax</code>-><code>%%eax</code></li>
+</ul>
+</li>
+<li>有要使用C 語言的資料，使用extended inline assembler比較妥當</li>
+<li>GCC 最佳化時是有可能把你的inline assembler幹掉或是和你想的不一樣，請注意</li>
+<li>你不可以從一個<code>asm(..)</code>裏面跳到另外一個<code>asm(..)</code>的label</li>
+</ul>
+
+
+<p>最簡單的<del>廢話</del>範例如下</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">asm</span><span class="p">(</span><span class="s">&quot;nop&quot;</span><span class="p">);</span> <span class="cm">/* 啥事都不要做 */</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在沒有使用C 語言的變數下，就和一般的組合語言沒有差太多。
+更複雜一點的例子可以看<a href="https://github.com/embedded2014/rtenv/blob/master/kernel.c#L10">rtenv</a>裏面的使用方式：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">size_t</span> <span class="nf">strlen</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="kt">size_t</span> <span class="nf">strlen</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">s</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span>
+</span><span class='line'>        <span class="s">&quot;    sub  r3, r0, #1            </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;strlen_loop:               </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    ldrb r2, [r3, #1]!        </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    cmp  r2, #0                </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   bne  strlen_loop        </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    sub  r0, r3, r0            </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    bx   lr                    </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="o">:::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>要注意<code>__attribute__ ((naked));</code>是有意義的。這是為何這段範例沒有直接指名用到C 語言函式變數名稱的關鍵點。有興趣請看<a href="https://gcc.gnu.org/onlinedocs/gcc/ARM-Function-Attributes.html#ARM-Function-Attributes">這邊</a>，請直接找字串<code>naked</code>。</p>
+
+<h3>Extended inline assembler</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'> <span class="n">asm</span> <span class="p">[</span><span class="k">volatile</span><span class="p">]</span> <span class="p">(</span> <span class="nl">AssemblerTemplate</span>
+</span><span class='line'>                    <span class="p">:</span> <span class="n">OutputOperands</span>   <span class="c1">// optional</span>
+</span><span class='line'>                  <span class="p">[</span> <span class="o">:</span> <span class="n">InputOperands</span>    <span class="c1">// optional</span>
+</span><span class='line'>                  <span class="p">[</span> <span class="o">:</span> <span class="n">Clobbers</span> <span class="p">]</span>       <span class="c1">// optional</span>
+</span><span class='line'>                  <span class="p">])</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>Assembler Template基本上就是你要寫的組語加上 Inline Assembler 專用的符號。要注意的是，在編譯的過程中，你寫的inline assembler可能由於最佳化考慮不會被組譯。如果你確認你inline assembler一定要被組譯，請加上<code>volatile</code> keyword。</p>
+
+<p>Assembler 專用的符號節錄如下：</p>
+
+<table  style="width:100%">
+    <tr>
+        <th>符號</th>
+        <th>說明</th>
+    </tr>
+    <tr>
+        <td width=15%">%%</td>
+        <td>單一%字元</td>
+    </tr>
+    <tr>
+        <td>%{</td>
+        <td>單一{字元</td>
+    </tr>
+    <tr>
+        <td>%}</td>
+        <td>單一}字元</td>
+    </tr>
+    <tr>
+        <td>|{</td>
+        <td>單一|字元</td>
+    </tr>
+    <tr>
+        <td>%=</td>
+        <td>只知道並驗證過會產生唯一的數字。用途部份看不懂，英文真是奧妙的東西啊。</td>
+    </tr>
+</table>
+
+
+<p></p>
+
+<p>AssemblerTemplate</p>
+
+<p>由於<a href="#ia-preface">前言</a>提到的三項個人猜測，造成inline assembler要使用C 語言變數時語法會出現很多令人眼花撩亂的符號。</p>
+
+<p>由於編譯器提供協助分配暫存器和記憶體，也就是說需要有對應的語法指定目前指令的operand是什麼。GCC 有兩種方式指定，分別是</p>
+
+<ul>
+<li>編號指定，從零開始編號</li>
+<li>Symbolic name指定: GCC 3.1以後支援<a href="https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/Extended-Asm.html#Extended-Asm">出處</a></li>
+</ul>
+
+
+<p>分別給個範例讓各位感受一下</p>
+
+<h4>編號指定，從零開始編號</h4>
+
+<p>這邊<code>%0</code>, <code>%1</code>就是編號。後面operand可以看到就是指定變數、以及變數的限制。這邊簡單解釋一下<code>=</code>表示這是一個輸出、而<code>r</code>表示變數要放在暫存器中、<code>m</code>表示變數是放在記憶體中。有興趣比對編譯出來的binary反組譯時的組合語言請看<a href="#ia_ps2">這邊</a>。不過編號和指令中的operand似乎很隨意，我沒有看到特殊規範。只能交叉比對assembler template和input/output operands才能看出端倪。我猜更複雜的情況你還要比對反組譯出來的結果。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;mov %0, %1 </span><span class="se">\n</span><span class="s">  \</span>
+</span><span class='line'><span class="s">         add %1, %0, $1&quot;</span> <span class="o">:</span> <span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">),</span> <span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span> <span class="o">:</span> <span class="s">&quot;r&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">),</span> <span class="s">&quot;r&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;var1 = %d, var2 = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;ldr r5, %0 </span><span class="se">\n</span><span class="s">&quot;</span><span class="o">:</span>           <span class="o">:</span> <span class="s">&quot;m&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span> <span class="s">&quot;r5&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;str r4, %0&quot;</span>   <span class="o">:</span> <span class="s">&quot;=m&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span><span class="o">:</span>          <span class="o">:</span> <span class="s">&quot;r4&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>Symbolic name指定</h4>
+
+<p>編號的缺點就是可讀性比較差，所以gcc 3.1出現使用symbolic name的方式。至於那一個比較好，看你自己習慣。</p>
+
+<p>直接把上面的範例更改一下。<a href="https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/Extended-Asm.html#Extended-Asm">GCC 4.8.5手冊</a>上面說symbolic name隨便取，甚至和變數同名稱都可以，<strong>只要單一asm(&hellip;)內的 symbolic name不要重複就好</strong>。有興趣比對編譯出來的binary反組譯時的組合語言請看<a href="#ia_ps3">這邊</a>。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;mov %[my_var1], %[my_var2] </span><span class="se">\n</span><span class="s">  \</span>
+</span><span class='line'><span class="s">         add %[my_var3], %[my_var4], $1&quot;</span> <span class="o">:</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">my_var1</span><span class="p">]</span> <span class="s">&quot;=r&quot;</span> <span class="p">(</span><span class="n">var1</span><span class="p">),</span> <span class="p">[</span><span class="n">my_var3</span><span class="p">]</span> <span class="s">&quot;=r&quot;</span> <span class="p">(</span><span class="n">var2</span><span class="p">)</span> <span class="o">:</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">my_var2</span><span class="p">]</span> <span class="s">&quot;r&quot;</span>  <span class="p">(</span><span class="n">var2</span><span class="p">),</span> <span class="p">[</span><span class="n">my_var4</span><span class="p">]</span> <span class="s">&quot;r&quot;</span>  <span class="p">(</span><span class="n">var1</span><span class="p">)</span> <span class="o">:</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;var1 = %d, var2 = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">var1</span><span class="p">,</span> <span class="n">var2</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;ldr r5, %[my_var1] </span><span class="se">\n</span><span class="s">&quot;</span><span class="o">::</span> <span class="p">[</span><span class="n">my_var1</span><span class="p">]</span> <span class="s">&quot;m&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span> <span class="s">&quot;r5&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;str r4, %[my_var1]&quot;</span><span class="o">:</span> <span class="p">[</span><span class="n">my_var1</span><span class="p">]</span> <span class="s">&quot;=m&quot;</span> <span class="p">(</span><span class="n">var2</span><span class="p">)</span><span class="o">::</span> <span class="s">&quot;r4&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下來來看每個欄位吧。</p>
+
+<p><a name="ia-output"></a></p>
+
+<h4>Output operands</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">[</span> <span class="p">[</span><span class="n">asmSymbolicName</span><span class="p">]</span> <span class="p">]</span> <span class="n">constraint</span> <span class="p">(</span><span class="n">cvariablename</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>[asmSymbolicName]</code> 是GCC 3.1以後支援語法，如前所述，不用Symbolic Name就用編號方式對應assembler template operand。</p>
+
+<p>指定結果要存在C 語言中的那個變數。要注意的除了要設定對的資訊（constraints，<a href="#ia-constr">下面</a>會節錄) 以外，operand的prefix一定要是<code>=</code>或<code>+</code>這兩個constraint。</p>
+
+<p>隨便舉幾個範例</p>
+
+<ul>
+<li><code>=r(var1)</code>：變數請寫入並放在暫存器中</li>
+<li><code>=m(var1)</code>：變數請寫入並存到記憶體中</li>
+</ul>
+
+
+<p><a name="ia-input"></a></p>
+
+<h4>Input operands</h4>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="p">[</span> <span class="p">[</span><span class="n">asmSymbolicName</span><span class="p">]</span> <span class="p">]</span> <span class="n">constraint</span> <span class="p">(</span><span class="n">cvariablename</span><span class="p">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><code>[asmSymbolicName]</code> 是GCC 3.1以後支援語法，如前所述，不用Symbolic Name就用編號方式對應assembler template operand。</p>
+
+<p>指定要從在C 語言中的那個變數取出資料。主要是要設定對的資訊（constraints，<a href="#ia-constr">下面</a>會節錄) 。</p>
+
+<ul>
+<li><code>r(var1)</code>：變數請放在暫存器中</li>
+<li><code>m(var1)</code>：變數是在記憶體中</li>
+</ul>
+
+
+<p><a name="ia-clo-reg"></a></p>
+
+<h4>Clobbered registers list</h4>
+
+<p>先講結論，在<code>asm("語法")</code>中明確地指定暫存器名稱的話，要在這邊列出。</p>
+
+<p>現在我會習慣查單字。<code>Clobbered</code>查英文單字會發現就是把東西用力地砸毀。所以翻譯成中文就是「砸爛的暫存器列表」。什麼是爛掉的暫存器？就是本節前面的結論囉。</p>
+
+<p>另外從Dec/2015的gcc 手冊還有找到下面<a href="https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html#Clobbers">語法</a>，一樣請注意版本問題</p>
+
+<table  style="width:100%">
+    <tr>
+        <th>符號</th>
+        <th>說明</th>
+    </tr>
+    <tr>
+        <td width="15%">&#8220;cc&#8221;</td>
+        <td>和狀態有關的flag暫存器會被修改</td>
+    </tr>
+    <tr>
+        <td>&#8220;memory&#8221;</td>
+        <td>這段組合語言會讀寫列出operand以外的記憶體內容，因此編譯器會視情況備份暫存器或讀寫記憶體</td>
+    </tr>
+</table>
+
+
+<p><a name="ia-constr"></a></p>
+
+<h3>Constraints</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="o">&lt;</span><span class="n">Constraints</span><span class="o">&gt;</span>       <span class="o">::=</span> <span class="o">&lt;</span><span class="n">Constraint</span> <span class="n">Modifier</span><span class="o">&gt;</span> <span class="o">&lt;</span><span class="n">Other</span> <span class="n">Constraints</span><span class="o">&gt;</span> <span class="o">|</span> <span class="o">&lt;</span><span class="n">Other</span> <span class="n">Constraints</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">Other</span> <span class="n">Constraints</span><span class="o">&gt;</span> <span class="o">::=</span> <span class="o">&lt;</span><span class="n">Simple</span> <span class="n">Constraints</span><span class="o">&gt;</span> <span class="o">|</span> <span class="o">&lt;</span><span class="n">Machine</span> <span class="n">Constraints</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="p">;</span> <span class="cm">/* 以上BNF是我整理的，terminal symbol請自行看手冊 */</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>節錄整理我<del>看得懂</del>感興趣的部份。</p>
+
+<h5>Simple Constraints</h5>
+
+<table  style="width:100%">
+    <tr>
+        <th>符號</th>
+        <th>說明</th>
+    </tr>
+    <tr>
+        <td width="15%">空白字元</td>
+        <td>會被忽略，排版用</td>
+    </tr>
+    <tr>
+        <td>m</td>
+        <td>operand 存放在記憶體中</td>
+    </tr>
+    <tr>
+        <td>r</td>
+        <td>operand 將被放在暫存器中</td>
+    </tr>
+    <tr>
+        <td>i</td>
+        <td>operand 是一個整數常數，該常數包含下面的情形(symbolic name)：`#define MAX_LINE (32)`</td>
+    </tr>
+    <tr>
+        <td>n</td>
+        <td>operand 是一個整數常數，只允許填入數字</td>
+    </tr>
+    <tr>
+        <td>E</td>
+        <td>operand 是一個浮點數常數，不清楚和`F`的差異</td>
+    </tr>
+    <tr>
+        <td>F</td>
+        <td>operand 是一個浮點數常數，不清楚和`E`的差異</td>
+    </tr>
+    <tr>
+        <td>g</td>
+        <td>operand 存在暫存器(r)或是記憶體內(m)，或是這是一個整數常數</td>
+    </tr>    
+    <tr>
+        <td>X</td>
+        <td>不用檢查operand</td>
+    </tr>
+</table>
+
+
+<p>　　</p>
+
+<p>你可以使用組合技如<code>"rim"</code>，如果這樣寫的話，意思是要編譯器幫你挑一個最適合的方式處理對應於assembler template內的operand。
+　　</p>
+
+<h5>Constraint Modifier</h5>
+
+<table  style="width:100%">
+    <tr>
+        <th>符號</th>
+        <th>說明</th>
+    </tr>
+    <tr>
+        <td width="15%">=</td>
+        <td>表示這是一個write only的operand，必須為contraint開始字元。</td>
+    </tr>
+    <tr>
+        <td>+</td>
+        <td>表示這個 operand 在指令中是同時被讀寫的，必須為contraint開始字元。</td>
+    </tr>
+    <tr>
+        <td>&</td>
+        <td>該operand 為earlyclobber。earlyclobber就是在instruction讀取該operand前，該operand會被寫入。雖然如此，到底是多久前？是和data hazard有關嘛？還是跟資料一致性有關？或者是和編譯器 最佳化造成非預期結果有關？真是一團謎<font color="red">完全搞不懂做啥用，也不清楚使用時機。</font><a href="http://lxr.free-electrons.com/source/arch/arm/include/asm/uaccess.h#L364">這邊有範例</a>，一樣搞不懂為什麼要有+, &的modifier</td>
+    </tr>
+    <tr>
+        <td>%</td>
+        <td>該operand 可以讓編譯器 決定這個operand是否和後面的operand交換(commutative)，<font color="red">完全搞不懂做啥用</font></td>
+    </tr>
+</table>
+
+
+<p>　　</p>
+
+<h5>ARM 專用的Constraint</h5>
+
+<p>我參考的是gcc 4.8.5手冊(因為和測試環境的gcc版本最接近)，可能有版本的問題，這些我都沒有做實驗測試，請自行斟酌。</p>
+
+<table  style="width:100%">
+    <tr>
+        <th>符號</th>
+        <th>說明(一般模式)</th>
+    </tr>
+    <tr>
+        <td width="20%">w</td>
+        <td width="80%">VFP 浮點運算</td>
+    </tr>
+    <tr>
+        <td>G</td>
+        <td>浮點運算的0.0</td>
+    </tr>
+    <tr>
+        <td>I</td>
+        <td>8 bit正整數</td>
+    </tr>
+    <tr>
+        <td>K</td>
+        <td>I contraint 的invert (一的補數)，Wen: 不知道為什麼要扯到I constraint？</td>
+    </tr>
+    <tr>
+        <td>L</td>
+        <td>I contraint 的負數 (二的補數)，Wen: 不知道為什麼要扯到I constraint？</td>
+    </tr>
+    <tr>
+        <td>M</td>
+        <td>0 ~ 32的正整數</td>
+    </tr>
+    <tr>
+        <td>Q</td>
+        <td>要參考的記憶體位址存放在一個暫存器內</td>
+    </tr>
+    <tr>
+        <td>R</td>
+        <td>operand是一個const pool內的東西，不要問我const pool是啥，估狗到都和Java有關</td>
+    </tr>
+    <tr>
+        <td>S</td>
+        <td>operand 目前檔案中.text內的一個symbol</td>
+    </tr>
+    <tr>
+        <td>Uv</td>
+        <td>VFP load/store 指令可存取的記憶體</td>
+    </tr>
+    <tr>
+        <td>Uy</td>
+        <td>iWMMXt load/store 指令可存取的記憶體</td>
+    </tr>
+    <tr>
+        <td>Uq</td>
+        <td>ARMv4 ldrsb 指令可存取的記憶體</td>
+    </tr>
+</table>
+
+
+<p></p>
+
+<p>完整列表在這邊，要注意的是2015年12月的手冊又多了一些新的contstraint。請自行參考。</p>
+
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/Machine-Constraints.html#Machine-Constraints">gcc 4.8.5: Constraints for Particular Machines</a>
+
+<ul>
+<li>請自行參考你的硬體平台</li>
+</ul>
+</li>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/Machine-Constraints.html#Machine-Constraints">Dec/2015手冊: 6.44.4.4 Constraints for Particular Machines</a></li>
+</ul>
+
+
+<p><a name="ia-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li>中文
+
+<ul>
+<li><a href="http://www.study-area.org/cyril/opentools/opentools/x969.html">(BIG5)用Open Source工具開發軟體: 新軟體開發關念: Chapter 4. GNU Compiler Collection</a>
+
+<ul>
+<li>題外話，寫這位文件的作者個人非常佩服，但是網路上似乎關於這位作者只有這份文件。真是神祕的人物</li>
+</ul>
+</li>
+<li><a href="http://nano-chicken.blogspot.tw/2010/12/inline-assembly.html">Nano雞排: Inline Assembly</a></li>
+</ul>
+</li>
+<li>英文
+
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/Using-Assembly-Language-with-C.html#Using-Assembly-Language-with-C">gcc: How to Use Inline Assembly Language in C Code</a>
+
+<ul>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc/index.html#Top">手冊</a>上寫是給<code>gcc 6.0</code>，我目前從GGG release網站上看到<a href="https://gcc.gnu.org/releases.html">最新版本</a>是5.3，怪。</li>
+<li>為什麼列出這個，因為我原本找的gcc-4.8.5 對於assembler template說明沒有特別列出gcc 支援的inline assembler符號。另外這份的文件結構的確比4.8.5清楚。</li>
+</ul>
+</li>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/Extended-Asm.html#Extended-Asm">gcc-4.8.5: Assembler Instructions with C Expression Operands</a></li>
+<li><a href="https://gcc.gnu.org/onlinedocs/gcc-4.8.5/gcc/Constraints.html#Constraints">gcc-4.8.5: Constraints for asm Operands</a></li>
+<li><a href="http://www.ethernut.de/en/documents/arm-inline-asm.html">ARM GCC Inline Assembler Cookbook</a>
+
+<ul>
+<li>相當推荐，不論是給的說明和範例，更厲害的是關於contraint部份寫的比手冊清楚，一樣我沒測過就是了。</li>
+</ul>
+</li>
+<li><a href="http://ericw.ca/notes/a-tiny-guide-to-gcc-inline-assembly.html">A Tiny Guide to GCC Inline Assembly</a></li>
+<li><a href="https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html">GCC-Inline-Assembly-HOWTO</a></li>
+<li><a href="http://wiki.osdev.org/Inline_Assembly">OSDev: Inline Assembly</a></li>
+<li><a href="http://asm.sourceforge.net/articles/rmiyagi-inline-asm.txt">Introduction to GCC inline assembler</a>
+
+<ul>
+<li>似乎有點古老。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>附錄</h2>
+
+<p><a name="ia_ps0"></a></p>
+
+<ul>
+<li>C 語言標準有提到編譯器可以使用<code>asm</code> keyword，而且沒有定義語法。有興趣可以找<code>C11</code>、<code>C99</code>、<code>C89</code>的標準，直接搜尋<code>asm</code>就可以看到了。</li>
+</ul>
+
+
+<hr />
+
+<p><a name="ia_ps1"></a></p>
+
+<ul>
+<li><code>naked</code>使用basic inline assembler和extended inline assembler比較</li>
+</ul>
+
+
+<p>下面兩個函數，<code>strcmp1</code>沒有任何extended inline assembler而<code>strcmp2</code>硬塞了一個下去：</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="nf">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span>
+</span><span class='line'>        <span class="s">&quot;strcmp_lop1:                </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   ldrb    r2, [r0],#1     </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   ldrb    r3, [r1],#1     </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   cmp     r2, #1          </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   it      hi              </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   cmphi   r2, r3          </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   beq     strcmp_lop1      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    sub     r0, r2, r3      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   bx      lr              </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="o">:::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="nf">strcmp2</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">strcmp2</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>        <span class="kt">int</span> <span class="n">i</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span>
+</span><span class='line'>        <span class="s">&quot;strcmp_lop2:                </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   ldrb    r2, [r0],#1     </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   ldrb    r3, [r1],#1     </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   cmp     r2, #1          </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   it      hi              </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   cmphi   r2, r3          </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   mov     %1, $1 </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   beq     strcmp_lop2      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    sub     r0, r2, r3      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   bx      lr              </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="o">:</span><span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>我們可以比較一下下面兩個函數最後編譯出來的指令，<code>strcmp2</code>顯然和我們預期的差很多。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="mf">000083f</span><span class="mi">4</span> <span class="o">&lt;</span><span class="n">strcmp1</span><span class="o">&gt;:</span>
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span> <span class="n">__attribute__</span> <span class="p">((</span><span class="kr">naked</span><span class="p">));</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">strcmp1</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">b</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="mi">4</span><span class="o">:</span>  <span class="n">f810</span> <span class="mi">2</span><span class="n">b01</span>     <span class="n">ldrb</span><span class="p">.</span><span class="n">w</span> <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r0</span><span class="p">],</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="mi">8</span><span class="o">:</span>  <span class="n">f811</span> <span class="mi">3</span><span class="n">b01</span>     <span class="n">ldrb</span><span class="p">.</span><span class="n">w</span> <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r1</span><span class="p">],</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">c</span><span class="p">:</span>  <span class="mi">2</span><span class="n">a01</span>         <span class="n">cmp</span>  <span class="n">r2</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">e</span><span class="p">:</span>  <span class="n">bf88</span>         <span class="n">it</span>   <span class="n">hi</span>
+</span><span class='line'>    <span class="mi">8400</span><span class="o">:</span>  <span class="mi">429</span><span class="n">a</span>         <span class="n">cmphi</span>    <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'>    <span class="mi">8402</span><span class="o">:</span>  <span class="n">d0f7</span>         <span class="n">beq</span><span class="p">.</span><span class="n">n</span>  <span class="mf">83f</span><span class="mi">4</span> <span class="o">&lt;</span><span class="n">strcmp1</span><span class="o">&gt;</span>
+</span><span class='line'>    <span class="mi">8404</span><span class="o">:</span>  <span class="n">eba2</span> <span class="mo">0003</span>    <span class="n">sub</span><span class="p">.</span><span class="n">w</span>  <span class="n">r0</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'>    <span class="mi">8408</span><span class="o">:</span>  <span class="mi">4770</span>        <span class="n">bx</span>   <span class="n">lr</span>
+</span><span class='line'>        <span class="s">&quot;   beq     strcmp_lop1      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    sub     r0, r2, r3      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   bx      lr              </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="o">:::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>    <span class="mi">840</span><span class="nl">a</span><span class="p">:</span>  <span class="mi">4618</span>        <span class="n">mov</span>  <span class="n">r0</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'>
+</span><span class='line'><span class="mo">0000</span><span class="mi">840</span><span class="n">c</span> <span class="o">&lt;</span><span class="n">strcmp2</span><span class="o">&gt;:</span>
+</span><span class='line'>        <span class="s">&quot;   beq     strcmp_lop2      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;    sub     r0, r2, r3      </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="s">&quot;   bx      lr              </span><span class="se">\n</span><span class="s">&quot;</span>
+</span><span class='line'>        <span class="o">:</span><span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">::</span>
+</span><span class='line'>    <span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ia_ps2"></a></p>
+
+<ul>
+<li>範例一的反組譯節錄</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">d</span> <span class="o">-</span><span class="n">S</span> <span class="n">asm</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="mf">000083f</span><span class="mi">4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;:</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">a</span><span class="p">:</span>  <span class="mi">230</span><span class="n">c</span>         <span class="n">movs</span> <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">12</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">c</span><span class="p">:</span>  <span class="mi">603</span><span class="n">b</span>         <span class="n">str</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">e</span><span class="p">:</span>  <span class="mi">230</span><span class="n">a</span>         <span class="n">movs</span> <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">10</span>
+</span><span class='line'>    <span class="mi">8400</span><span class="o">:</span>  <span class="mi">607</span><span class="n">b</span>         <span class="n">str</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;mov %0, %1 </span><span class="se">\n</span><span class="s">  \</span>
+</span><span class='line'><span class="s">         add %1, %0, $1&quot;</span> <span class="o">:</span> <span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">),</span> <span class="s">&quot;=r&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span> <span class="o">:</span> <span class="s">&quot;r&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">),</span> <span class="s">&quot;r&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span><span class="p">);</span>
+</span><span class='line'>    <span class="mi">8402</span><span class="o">:</span>  <span class="mi">687</span><span class="n">b</span>         <span class="n">ldr</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'>    <span class="mi">8404</span><span class="o">:</span>  <span class="mi">683</span><span class="n">a</span>         <span class="n">ldr</span>  <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>    <span class="mi">8406</span><span class="o">:</span>  <span class="mi">461</span><span class="n">a</span>         <span class="n">mov</span>  <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'>    <span class="mi">8408</span><span class="o">:</span>  <span class="n">f102</span> <span class="mo">0301</span>    <span class="n">add</span><span class="p">.</span><span class="n">w</span>  <span class="n">r3</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mi">840</span><span class="nl">c</span><span class="p">:</span>  <span class="mi">603</span><span class="n">a</span>         <span class="n">str</span>  <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>    <span class="mi">840</span><span class="nl">e</span><span class="p">:</span>  <span class="mi">607</span><span class="n">b</span>         <span class="n">str</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;ldr r5, %0 </span><span class="se">\n</span><span class="s">&quot;</span><span class="o">:</span>           <span class="o">:</span> <span class="s">&quot;m&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span> <span class="s">&quot;r5&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="mi">8424</span><span class="o">:</span>  <span class="mi">683</span><span class="n">d</span>         <span class="n">ldr</span>  <span class="n">r5</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;str r4, %0&quot;</span>   <span class="o">:</span> <span class="s">&quot;=m&quot;</span><span class="p">(</span><span class="n">var2</span><span class="p">)</span><span class="o">:</span>          <span class="o">:</span> <span class="s">&quot;r4&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="mi">8426</span><span class="o">:</span>  <span class="mi">607</span><span class="n">c</span>         <span class="n">str</span>  <span class="n">r4</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="p">...</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p><a name="ia_ps3"></a></p>
+
+<ul>
+<li>範例二的反組譯節錄</li>
+</ul>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="err">$</span> <span class="n">objdump</span> <span class="o">-</span><span class="n">d</span> <span class="o">-</span><span class="n">S</span> <span class="n">asm</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="mf">000083f</span><span class="mi">4</span> <span class="o">&lt;</span><span class="n">main</span><span class="o">&gt;:</span>
+</span><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var1</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">a</span><span class="p">:</span>  <span class="mi">230</span><span class="n">c</span>         <span class="n">movs</span> <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">12</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">c</span><span class="p">:</span>  <span class="mi">603</span><span class="n">b</span>         <span class="n">str</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="kt">int</span> <span class="n">var2</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+</span><span class='line'>    <span class="mf">83f</span><span class="nl">e</span><span class="p">:</span>  <span class="mi">230</span><span class="n">a</span>         <span class="n">movs</span> <span class="n">r3</span><span class="p">,</span> <span class="err">#</span><span class="mi">10</span>
+</span><span class='line'>    <span class="mi">8400</span><span class="o">:</span>  <span class="mi">607</span><span class="n">b</span>         <span class="n">str</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;mov %[my_var1], %[my_var2] </span><span class="se">\n</span><span class="s">  \</span>
+</span><span class='line'><span class="s">         add %[my_var3], %[my_var4], $1&quot;</span> <span class="o">:</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">my_var1</span><span class="p">]</span> <span class="s">&quot;=r&quot;</span> <span class="p">(</span><span class="n">var1</span><span class="p">),</span> <span class="p">[</span><span class="n">my_var3</span><span class="p">]</span> <span class="s">&quot;=r&quot;</span> <span class="p">(</span><span class="n">var2</span><span class="p">)</span> <span class="o">:</span>
+</span><span class='line'>            <span class="p">[</span><span class="n">my_var2</span><span class="p">]</span> <span class="s">&quot;r&quot;</span>  <span class="p">(</span><span class="n">var2</span><span class="p">),</span> <span class="p">[</span><span class="n">my_var4</span><span class="p">]</span> <span class="s">&quot;r&quot;</span>  <span class="p">(</span><span class="n">var1</span><span class="p">)</span> <span class="o">:</span><span class="p">);</span>
+</span><span class='line'>    <span class="mi">8402</span><span class="o">:</span>  <span class="mi">687</span><span class="n">b</span>         <span class="n">ldr</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'>    <span class="mi">8404</span><span class="o">:</span>  <span class="mi">683</span><span class="n">a</span>         <span class="n">ldr</span>  <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>    <span class="mi">8406</span><span class="o">:</span>  <span class="mi">461</span><span class="n">a</span>         <span class="n">mov</span>  <span class="n">r2</span><span class="p">,</span> <span class="n">r3</span>
+</span><span class='line'>    <span class="mi">8408</span><span class="o">:</span>  <span class="n">f102</span> <span class="mo">0301</span>    <span class="n">add</span><span class="p">.</span><span class="n">w</span>  <span class="n">r3</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="err">#</span><span class="mi">1</span>
+</span><span class='line'>    <span class="mi">840</span><span class="nl">c</span><span class="p">:</span>  <span class="mi">603</span><span class="n">a</span>         <span class="n">str</span>  <span class="n">r2</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>    <span class="mi">840</span><span class="nl">e</span><span class="p">:</span>  <span class="mi">607</span><span class="n">b</span>         <span class="n">str</span>  <span class="n">r3</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;ldr r5, %[my_var1] </span><span class="se">\n</span><span class="s">&quot;</span><span class="o">::</span> <span class="p">[</span><span class="n">my_var1</span><span class="p">]</span> <span class="s">&quot;m&quot;</span><span class="p">(</span><span class="n">var1</span><span class="p">)</span><span class="o">:</span> <span class="s">&quot;r5&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="mi">8424</span><span class="o">:</span>  <span class="mi">683</span><span class="n">d</span>         <span class="n">ldr</span>  <span class="n">r5</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">0</span><span class="p">]</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="n">asm</span><span class="p">(</span><span class="s">&quot;str r4, %[my_var1]&quot;</span><span class="o">:</span> <span class="p">[</span><span class="n">my_var1</span><span class="p">]</span> <span class="s">&quot;=m&quot;</span> <span class="p">(</span><span class="n">var2</span><span class="p">)</span><span class="o">::</span> <span class="s">&quot;r4&quot;</span><span class="p">);</span>
+</span><span class='line'>    <span class="mi">8426</span><span class="o">:</span>  <span class="mi">607</span><span class="n">c</span>         <span class="n">str</span>  <span class="n">r4</span><span class="p">,</span> <span class="p">[</span><span class="n">r7</span><span class="p">,</span> <span class="err">#</span><span class="mi">4</span><span class="p">]</span>
+</span><span class='line'><span class="p">...</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu/">在Banana Pi設定WPA2-PSK無線網路</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2015-12-03T20:50:34+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>3</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>8:50 pm</span></time>
+        
+           | <a href="/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2015/12/03/bananapi-she-ding-wu-xian-wang-lu/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>Banana Pi是一套ARMv7為處理器的開發版。一般來說照官方網頁把IMAGE燒到SD卡，外接鍵盤、滑鼠、HDMI螢幕，再通電即可透過GUI設定網路。</p>
+
+<p>由於手上沒有任何外接設備，只有USB轉RS232線和USB WiFi。因此我只能在這樣的設備上設定網路，設定完成後就可以透過ssh server從外面連進去版子了。</p>
+
+<p>照例先描述環境</p>
+
+<p>HOST端</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty
+</span><span class='line'>
+</span><span class='line'>$ minicom --version
+</span><span class='line'>minicom version 2.7 (compiled Jan  1 2014)
+</span><span class='line'>...</span></code></pre></td></tr></table></div></figure>
+
+
+<p>設備端，假設你已經將系統燒入到SD卡中</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.3 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
+
+
+<p></p>
+
+<h2>接上TTY</h2>
+
+<p>首先你要有一條RS232轉USB的設備，上頭有TX/RX/GND/VCC，VCC在這邊用不到。
+<img src="/files/banana_pi/DSC_0026.jpg" title="RS232轉USB線"></p>
+
+<p>版子上面其實已經幫你把腳位標示好了，上面有TX/RX和GND如下：
+<img src="/files/banana_pi/DSC_0030.jpg" title="Banana Pi RS232接腳"></p>
+
+<p>剩下的就是把線路接起來。由於版子已經裝上外框，我有用鑷子協助連接線路。
+<img src="/files/banana_pi/DSC_0024.jpg" title="接上訊號線"></p>
+
+<p>線路接完後，將USB接上你的HOST，檢查下面幾項</p>
+
+<ul>
+<li>下<code>dmesg</code>確認HOST找到<code>/dev/ttyUSBn</code>（n為0開始的正整數）</li>
+<li>確認你的終端機（我用minicom）設備指定<code>/dev/ttyUSBn</code>（n為0開始的正整數）</li>
+<li>確認你的終端機（我用minicom）參數為115200 BPS，8N1，軟體硬體流量控制關閉</li>
+</ul>
+
+
+<p>開啟你的終端機軟體，然後版子通電。當終端機畫面進入提示符號，請輸入帳號密碼。Banana Pi有預設的帳號密碼請自行上網查詢。</p>
+
+<h2>設定無線網路</h2>
+
+<p>Ubuntu 是透過<code>/etc/network/interface</code>去設定網路介面。這邊我們可以分成兩個部份討論</p>
+
+<h3>設定無線網路介面</h3>
+
+<p>首先你要下<code>ifconfig -a</code>看看你的無線網路介面名稱是什麼。我這邊是<code>wlan2</code>，為什麼不是<code>wlan0</code>，不要問我。</p>
+
+<p>接下來就是修改<code>/etc/network/interface</code>，先貼上我網路參考的部份</p>
+
+<figure class='code'><figcaption><span>/etc/network/interface</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>auto wlan2
+</span><span class='line'>
+</span><span class='line'>allow-hotplug wlan2
+</span><span class='line'>iface wlan2 inet dhcp
+</span><span class='line'>wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>大概解釋一下</p>
+
+<ul>
+<li><code>auto</code>：<code>ifup</code>指令有<code>-a</code>參數會把有<code>auto</code>的網路介面全部bring up (bring up請自行估狗)</li>
+<li><code>allow-hotplug</code>：當kernel偵測到該網路介面被接上會自動bring up該網路介面，<a href="https://www.debian.org/doc/manuals/debian-reference/ch05.en.html">出處</a></li>
+<li><code>iface wlan2 inet dhcp</code>：指定網路介面<code>wlan2</code>使用<code>TCP/IP</code>，動態分配IP</li>
+<li><code>wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf</code>：找不到最原始出處，網路上就算是<a href="https://wiki.debian.org/WiFi/HowToUse">Debian官方文件</a>也直接拿來用而已，<code>man -K wpa-conf</code>也找不到。不過字面上不太難猜，就是指定wpa 會吃的config檔案路徑。</li>
+</ul>
+
+
+<h3>設定無線網路連線</h3>
+
+<p>前面有看到設定wpa的config檔案，接下來就來設定吧。我這邊是沒有該config檔，所以要自己新增一個。基本上就是設定SSID，密碼，加密方式，以及說明是否你要連的AP是否沒有broadcast SSID等。這邊我只是<a href="https://coderwall.com/p/v290ta/raspberry-pi-wifi-setup-with-wpa2-psk-aes">參考這邊</a>，有興趣的人可以自行鑽研。</p>
+
+<figure class='code'><figcaption><span>/etc/wpa_supplicant/wpa_supplicant.conf</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='text'><span class='line'>ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+</span><span class='line'>update_config=1
+</span><span class='line'>
+</span><span class='line'>network={
+</span><span class='line'>ssid=&quot;AP的SSID&quot;
+</span><span class='line'>scan_ssid=1 # 如果你的AP 是沒有broadcast SSID就要加這個
+</span><span class='line'>psk=&quot;你的AP 密碼(passphase)&quot;
+</span><span class='line'>proto=RSN
+</span><span class='line'>key_mgmt=WPA-PSK
+</span><span class='line'>pairwise=CCMP
+</span><span class='line'>auth_alg=OPEN
+</span><span class='line'>}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>設定完畢確認連線正常、有安裝sshd後，剩下就透過ssh操作版子了。祝好運！</p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2179,224 +3820,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/08/30/using-as-slide-is-online/">GNU as 投影片上線</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-08-30T11:44:36+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:44 am</span></time>
-        
-           | <a href="/blog/2015/08/30/using-as-slide-is-online/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/30/using-as-slide-is-online/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/key/vAKND86uAQxxJj" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
-
-
-<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/gnu-as" title="GNU AS簡介" target="_blank">GNU AS簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
-
-<script async class="speakerdeck-embed" data-id="161641ad32e84a3893c81b2c65437720" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/08/30/upnp-slide-is-online/">UPnP 投影片上線</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-08-30T11:32:31+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>30</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>11:32 am</span></time>
-        
-           | <a href="/blog/2015/08/30/upnp-slide-is-online/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/30/upnp-slide-is-online/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/key/2NbiO9hlIL8aXu" width="720" height="560" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
-
-
-<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/upnp-10" title="UPnP 1.0 簡介" target="_blank">UPnP 1.0 簡介</a> </strong> from <strong><a href="//www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
-
-<script async class="speakerdeck-embed" data-id="0461edaf0ae947e8b989cfb9ef670ab0" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/08/27/use-dbdoclet-to-create-manual/">Ubuntu 14.04下使用dbdoclet 產生pdf手冊</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-08-27T21:48:07+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>27</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>9:48 pm</span></time>
-        
-           | <a href="/blog/2015/08/27/use-dbdoclet-to-create-manual/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2015/08/27/use-dbdoclet-to-create-manual/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>Sept/1/2015 更新：下面的方法有個問題，目錄的頁面會有從<code>ii</code>開始的羅馬數字頁碼。當known issue吧，猜測要從xsl修正，<code>/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl</code>應該有線索。</p>
-
-<h2>前言</h2>
-
-<p>Javadoc是一個掃描Java原始碼自動產生網頁文件的工具。除此之外，Javadoc還提供了API讓人實作doclet的功能。Javadoc把產出資料餵給doclet，doclet自行決定該怎麼處理，如</p>
-
-<ul>
-<li>轉成pdf文件</li>
-<li>轉成LaTeX文件</li>
-<li>轉成docbook文件</li>
-<li>&hellip;</li>
-</ul>
-
-
-<p>回到主題，為了要產生PDF手冊，並且需要符合下面的要求：</p>
-
-<ul>
-<li>封面</li>
-<li>版權宣告、版本變動紀錄</li>
-<li>目錄</li>
-<li>SDK簡介，包含方塊圖</li>
-<li>API使用方式</li>
-<li>範例</li>
-</ul>
-
-
-<h2>doclet 評估</h2>
-
-<p>目前找到幾個免費產生pdf的doclet，簡單的試玩結果如下</p>
-
-<ul>
-<li>pdfdoclet
-
-<ul>
-<li>直接輸出pdf，沒有目錄、針對手冊需求增加修改資料極度困難</li>
-</ul>
-</li>
-<li>AurigaDoclet
-
-<ul>
-<li>和樓上的主要差別在多了目錄</li>
-</ul>
-</li>
-<li>ltxdoclet
-
-<ul>
-<li>產出LaTeX檔案，可透過pdflatex輸出pdf。有亂碼，美觀程度不如上面兩個</li>
-</ul>
-</li>
-<li>TeXdoclet
-
-<ul>
-<li>產出LaTeX，不支援pdflatex，直接放棄。</li>
-</ul>
-</li>
-<li>dbdoclet
-
-<ul>
-<li>產出docbook，透過一些方式可以達到目標，雖然美觀程度還是比不上pdfdoclet和AurigaDoclet，但是比doxygen和ltxdoclet好，最後用這個產生手冊。</li>
-</ul>
-</li>
-<li>其他族繁不及記載
-
-<h2>使用dbdoclet 產生pdf手冊步驟</h2></li>
-</ul>
-
-
-<p>詳細指令大家自行估狗，這邊單純提供key word。大略步驟如下：</p>
-
-<ol>
-<li>透過任何方式(openoffice, LaTeX, etc)產生封面、版權宣告的pdf的檔案，假設為<code>cover.pdf</code>。</li>
-<li>撰寫針對你要產出手冊的XSL style sheet，我寫了三個東西。這邊要注意的是建議直接在XSL import docbook.xsl。
-
-<ul>
-<li>人肉產生page break的指令，原因docbook不夠聰明，有些東西還是得人肉加page break。如一個段落之後就是範例程式的程式碼。這時候範例程式的程式碼放在頁面開頭的話，閱讀應該比較輕鬆。</li>
-<li>header的描述</li>
-<li>footer的描述，可塞入圖片</li>
-</ul>
-</li>
-<li>以docbook格式撰寫你要塞的內容如
-
-<ul>
-<li>簡介</li>
-<li>範例程式</li>
-</ul>
-</li>
-<li>透過javadoc執行dbdoclet，我這邊跑完會產生<code>Reference.xml</code>。</li>
-<li>使用sed或是你順手的字串工具
-
-<ul>
-<li>修改產出的<code>Reference.xml</code>，找對的地方include自己寫的內容</li>
-<li>如果有必要，修改針對你要產出手冊的XSL style sheet</li>
-</ul>
-</li>
-<li>透過<code>xsltproc</code>產生fo檔。幾點要注意的
-
-<ul>
-<li>要加&ndash;xinclude，不然程式不會去include你自己寫的xml</li>
-<li>/usr/share/xml/docbook/stylesheet/docbook-xsl/fo/docbook.xsl不用指定，因為你自己寫的XSL style sheet已經import了，這個問題卡了我一陣子時間。</li>
-</ul>
-</li>
-<li>使用<code>fop</code>將fo轉成pdf檔，假設為<code>draft.pdf</code>。</li>
-<li>使用<code>pdftk</code>做
-
-<ul>
-<li>把你的<code>draft.pdf</code>目錄前面頁面全部幹掉，另存新檔如<code>temp.pdf</code></li>
-<li>把<code>cover.pdf</code>和<code>temp.pdf</code>合併，就會有封面和含目錄以及你設定的手冊了。</li>
-</ul>
-</li>
-</ol>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/5">&larr; Older</a>
@@ -2414,6 +3837,18 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/08/04/hello-world-disassm/">Hello World 反組譯輸出</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/03/load-elf-binary-trace/">Load_elf_binary Trace</a>
       </li>
     
@@ -2421,32 +3856,20 @@
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (3)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 148.0%'>c(36)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.31914893617021%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.27659574468085%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.55319148936171%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.82978723404256%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.1063829787234%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.27659574468085%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.27659574468085%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.27659574468085%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.14893617021276%'>binutils(15)</a> <a href='/blog/categories/buildroot' style='font-size: 102.55319148936171%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.7872340425532%'>c(39)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.27659574468085%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.55319148936171%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.55319148936171%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.27659574468085%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.27659574468085%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.27659574468085%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.42553191489361%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.27659574468085%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.27659574468085%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.27659574468085%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.55319148936171%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.27659574468085%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.27659574468085%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.27659574468085%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.27659574468085%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.55319148936171%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.1063829787234%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.27659574468085%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.55319148936171%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.1063829787234%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.55319148936171%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.27659574468085%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.27659574468085%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.38297872340425%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.55319148936171%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.27659574468085%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.27659574468085%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.27659574468085%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.27659574468085%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.27659574468085%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.55319148936171%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 103.82978723404256%'>kernel(3)</a> <a href='/blog/categories/ld' style='font-size: 101.27659574468085%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.55319148936171%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.55319148936171%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.38297872340425%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(47)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.82978723404256%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.55319148936171%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.27659574468085%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.27659574468085%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.27659574468085%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.65957446808511%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.55319148936171%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.48936170212767%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.27659574468085%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.27659574468085%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.55319148936171%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.27659574468085%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 117.87234042553192%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.1063829787234%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.38297872340425%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.27659574468085%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.55319148936171%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.27659574468085%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.27659574468085%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.27659574468085%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.1063829787234%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.27659574468085%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.38297872340425%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.27659574468085%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.27659574468085%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.27659574468085%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.27659574468085%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.27659574468085%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.55319148936171%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.38297872340425%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.27659574468085%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.55319148936171%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.27659574468085%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.27659574468085%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.27659574468085%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.27659574468085%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.2127659574468%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.27659574468085%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.55319148936171%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.82978723404256%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.82978723404256%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.82978723404256%'>過期(3)</a> </span>
 </section>
 
 

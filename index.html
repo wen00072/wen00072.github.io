@@ -11,7 +11,7 @@
 
 
   
-  <meta name="description" content="原始檔，請用yED開啟。 下面圖片是svg檔案，需要直接按滑鼠右鍵儲存即可。 ">
+  <meta name="description" content=" Hello world 的一生 from Wen Liao ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,6 +70,1335 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-08-07T21:43:47+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:43 pm</span></time>
+        
+           | <a href="/blog/2019/08/07/hello-world-slides/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2019/08/07/hello-world-slides/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><iframe src="//www.slideshare.net/slideshow/embed_code/key/1nl4PUuvTgsqr9" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-161964384" title="Hello world 的一生" target="_blank">Hello world 的一生</a> </strong> from <strong><a href="https://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-08-05T20:06:25+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>8:06 pm</span></time>
+        
+           | <a href="/blog/2019/08/05/glibc-obj-file-symbols/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2019/08/05/glibc-obj-file-symbols/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>自用</p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 18.04.2 LTS
+</span><span class='line'>Release:  18.04
+</span><span class='line'>Codename: bionic
+</span><span class='line'>
+</span><span class='line'>$ gcc --version
+</span><span class='line'>gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
+</span><span class='line'>
+</span><span class='line'>$ dpkg -l | grep libc6:amd64 
+</span><span class='line'>ii  libc6:amd64                                   2.27-3ubuntu1                                amd64        GNU C Library: Shared libraries</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#obsm-gcc">gcc7</a>
+
+<ul>
+<li><a href="#obsm1">/usr/lib/gcc/x86_64-linux-gnu/7/crtbegin.o</a></li>
+<li><a href="#obsm2">/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o</a></li>
+<li><a href="#obsm3">/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginT.o</a></li>
+<li><a href="#obsm4">/usr/lib/gcc/x86_64-linux-gnu/7/crtend.o</a></li>
+<li><a href="#obsm5">/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o</a></li>
+<li><a href="#obsm6">/usr/lib/gcc/x86_64-linux-gnu/7/crtfastmath.o</a></li>
+<li><a href="#obsm7">/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadbegin.o</a></li>
+<li><a href="#obsm8">/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadend.o</a></li>
+<li><a href="#obsm9">/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadtable.o</a></li>
+<li><a href="#obsm10">/usr/lib/gcc/x86_64-linux-gnu/7/crtprec32.o</a></li>
+<li><a href="#obsm11">/usr/lib/gcc/x86_64-linux-gnu/7/crtprec64.o</a></li>
+<li><a href="#obsm12">/usr/lib/gcc/x86_64-linux-gnu/7/crtprec80.o</a></li>
+<li><a href="#obsm13">/usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o</a></li>
+</ul>
+</li>
+<li><a href="#obsm-glibc">glibc6</a>
+
+<ul>
+<li><a href="#obsm21">/usr/lib/x86_64-linux-gnu/crt1.o</a></li>
+<li><a href="#obsm22">/usr/lib/x86_64-linux-gnu/crti.o</a></li>
+<li><a href="#obsm23">/usr/lib/x86_64-linux-gnu/crtn.o</a></li>
+<li><a href="#obsm24">/usr/lib/x86_64-linux-gnu/gcrt1.o</a></li>
+<li><a href="#obsm25">/usr/lib/x86_64-linux-gnu/grcrt1.o</a></li>
+<li><a href="#obsm26">/usr/lib/x86_64-linux-gnu/libtsan_preinit.o</a></li>
+<li><a href="#obsm27">/usr/lib/x86_64-linux-gnu/Mcrt1.o</a></li>
+<li><a href="#obsm28">/usr/lib/x86_64-linux-gnu/rcrt1.o</a></li>
+<li><a href="#obsm29">/usr/lib/x86_64-linux-gnu/Scrt1.o</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="obsm-gcc"></a></p>
+
+<h2>gcc 7</h2>
+
+<p><a name="obsm1"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbegin.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 b completed.7697
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 t deregister_tm_clones
+</span><span class='line'>0000000000000070 t __do_global_dtors_aux
+</span><span class='line'>0000000000000000 t __do_global_dtors_aux_fini_array_entry
+</span><span class='line'>0000000000000000 D __dso_handle
+</span><span class='line'>0000000000000000 t .fini_array
+</span><span class='line'>00000000000000a0 t frame_dummy
+</span><span class='line'>0000000000000000 t __frame_dummy_init_array_entry
+</span><span class='line'>0000000000000000 t .init_array
+</span><span class='line'>                 w _ITM_deregisterTMCloneTable
+</span><span class='line'>                 w _ITM_registerTMCloneTable
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000030 t register_tm_clones
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>                 U __TMC_END__
+</span><span class='line'>0000000000000000 d __TMC_LIST__
+</span><span class='line'>0000000000000000 d .tm_clone_table</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm2"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 b completed.7697
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>                 w __cxa_finalize
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 d .data.rel.local
+</span><span class='line'>0000000000000000 t deregister_tm_clones
+</span><span class='line'>0000000000000090 t __do_global_dtors_aux
+</span><span class='line'>0000000000000000 t __do_global_dtors_aux_fini_array_entry
+</span><span class='line'>0000000000000000 D __dso_handle
+</span><span class='line'>0000000000000000 t .fini_array
+</span><span class='line'>00000000000000d0 t frame_dummy
+</span><span class='line'>0000000000000000 t __frame_dummy_init_array_entry
+</span><span class='line'>                 U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000000 t .init_array
+</span><span class='line'>                 w _ITM_deregisterTMCloneTable
+</span><span class='line'>                 w _ITM_registerTMCloneTable
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000040 t register_tm_clones
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>                 U __TMC_END__
+</span><span class='line'>0000000000000000 d __TMC_LIST__
+</span><span class='line'>0000000000000000 d .tm_clone_table</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm3"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginT.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 b completed.7146
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>                 w __deregister_frame_info
+</span><span class='line'>0000000000000000 t deregister_tm_clones
+</span><span class='line'>0000000000000070 t __do_global_dtors_aux
+</span><span class='line'>0000000000000000 t __do_global_dtors_aux_fini_array_entry
+</span><span class='line'>0000000000000000 D __dso_handle
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 r __EH_FRAME_BEGIN__
+</span><span class='line'>0000000000000000 t .fini_array
+</span><span class='line'>00000000000000b0 t frame_dummy
+</span><span class='line'>0000000000000000 t __frame_dummy_init_array_entry
+</span><span class='line'>0000000000000000 t .init_array
+</span><span class='line'>                 w _ITM_deregisterTMCloneTable
+</span><span class='line'>                 w _ITM_registerTMCloneTable
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000020 b object.7151
+</span><span class='line'>                 w __register_frame_info
+</span><span class='line'>0000000000000030 t register_tm_clones
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>                 U __TMC_END__
+</span><span class='line'>0000000000000000 d __TMC_LIST__
+</span><span class='line'>0000000000000000 d .tm_clone_table</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm4"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtend.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 r __FRAME_END__
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>0000000000000000 D __TMC_END__
+</span><span class='line'>0000000000000000 d .tm_clone_table</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm5"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 a crtstuff.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 r __FRAME_END__
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>0000000000000000 D __TMC_END__
+</span><span class='line'>0000000000000000 d .tm_clone_table</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm6"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtfastmath.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 a crtfastmath.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_loc
+</span><span class='line'>0000000000000000 N .debug_ranges
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 t .init_array
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 t set_fast_math
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>0000000000000000 t .text.startup</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm7"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadbegin.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 r .gnu.offload_funcs
+</span><span class='line'>0000000000000000 r .gnu.offload_vars
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 R __offload_func_table
+</span><span class='line'>0000000000000000 a offloadstuff.c
+</span><span class='line'>0000000000000000 R __offload_var_table
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm8"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadend.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 r .gnu.offload_funcs
+</span><span class='line'>0000000000000000 r .gnu.offload_vars
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 R __offload_funcs_end
+</span><span class='line'>0000000000000000 a offloadstuff.c
+</span><span class='line'>0000000000000000 R __offload_vars_end
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm9"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadtable.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>                 U __offload_funcs_end
+</span><span class='line'>                 U __offload_func_table
+</span><span class='line'>0000000000000000 a offloadstuff.c
+</span><span class='line'>0000000000000000 R __OFFLOAD_TABLE__
+</span><span class='line'>                 U __offload_vars_end
+</span><span class='line'>                 U __offload_var_table
+</span><span class='line'>0000000000000000 r .rodata
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm10"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec32.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 a crtprec.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_ranges
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 t .init_array
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 t set_precision
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>0000000000000000 t .text.startup</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm11"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec64.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 a crtprec.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_ranges
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 t .init_array
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 t set_precision
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>0000000000000000 t .text.startup</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm12"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec80.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 a crtprec.c
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_ranges
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>0000000000000000 t .init_array
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 t set_precision
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>0000000000000000 t .text.startup</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm13"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>             U __asan_init
+</span><span class='line'>0000000000000000 a asan_preinit.cc
+</span><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000000 D __local_asan_preinit
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 d .preinit_array
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm-glibc"></a></p>
+
+<h2>glibc6</h2>
+
+<p><a name="obsm21"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crt1.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 D __data_start
+</span><span class='line'>0000000000000000 W data_start
+</span><span class='line'>0000000000000030 T _dl_relocate_static_pie
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>                 U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000000 R _IO_stdin_used
+</span><span class='line'>                 U __libc_csu_fini
+</span><span class='line'>                 U __libc_csu_init
+</span><span class='line'>                 U __libc_start_main
+</span><span class='line'>                 U main
+</span><span class='line'>0000000000000000 r .note.ABI-tag
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 r .rodata.cst4
+</span><span class='line'>0000000000000000 T _start
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm22"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crti.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 T _fini
+</span><span class='line'>0000000000000000 t .fini
+</span><span class='line'>                 U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>                 w __gmon_start__
+</span><span class='line'>0000000000000000 T _init
+</span><span class='line'>0000000000000000 t .init
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm23"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crtn.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>nm: /usr/lib/x86_64-linux-gnu/crtn.o: no symbols</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm24"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/gcrt1.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>             U atexit
+</span><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 b called.4604
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 D __data_start
+</span><span class='line'>0000000000000000 W data_start
+</span><span class='line'>0000000000000080 T _dl_relocate_static_pie
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>             U etext
+</span><span class='line'>             U __GI_memcpy
+</span><span class='line'>             U __GI_memmove
+</span><span class='line'>             U __GI_memset
+</span><span class='line'>             U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000030 T __gmon_start__
+</span><span class='line'>0000000000000000 R _IO_stdin_used
+</span><span class='line'>             U __libc_csu_fini
+</span><span class='line'>             U __libc_csu_init
+</span><span class='line'>             U __libc_start_main
+</span><span class='line'>             U main
+</span><span class='line'>             U _mcleanup
+</span><span class='line'>             U __monstartup
+</span><span class='line'>0000000000000000 r .note.ABI-tag
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 r .rodata.cst4
+</span><span class='line'>0000000000000000 T _start
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm25"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/grcrt1.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>             U atexit
+</span><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 b called.4604
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 D __data_start
+</span><span class='line'>0000000000000000 W data_start
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>             U etext
+</span><span class='line'>             U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000030 T __gmon_start__
+</span><span class='line'>0000000000000000 R _IO_stdin_used
+</span><span class='line'>             U __libc_csu_fini
+</span><span class='line'>             U __libc_csu_init
+</span><span class='line'>             U __libc_start_main
+</span><span class='line'>             U main
+</span><span class='line'>             U _mcleanup
+</span><span class='line'>             U __monstartup
+</span><span class='line'>0000000000000000 r .note.ABI-tag
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 r .rodata.cst4
+</span><span class='line'>0000000000000000 T _start
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm26"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/libtsan_preinit.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 n .comment
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 N .debug_abbrev
+</span><span class='line'>0000000000000000 N .debug_aranges
+</span><span class='line'>0000000000000000 N .debug_info
+</span><span class='line'>0000000000000000 N .debug_line
+</span><span class='line'>0000000000000000 N .debug_str
+</span><span class='line'>0000000000000000 D __local_tsan_preinit
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 d .preinit_array
+</span><span class='line'>0000000000000000 t .text
+</span><span class='line'>                 U __tsan_init
+</span><span class='line'>0000000000000000 a tsan_preinit.cc</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm27"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/Mcrt1.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>nm: /usr/lib/x86_64-linux-gnu/Mcrt1.o: no symbols</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm28"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/rcrt1.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 D __data_start
+</span><span class='line'>0000000000000000 W data_start
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>                 U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000000 R _IO_stdin_used
+</span><span class='line'>                 U __libc_csu_fini
+</span><span class='line'>                 U __libc_csu_init
+</span><span class='line'>                 U __libc_start_main
+</span><span class='line'>                 U main
+</span><span class='line'>0000000000000000 r .note.ABI-tag
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 r .rodata.cst4
+</span><span class='line'>0000000000000000 T _start
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="obsm29"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/Scrt1.o:</h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>0000000000000000 b .bss
+</span><span class='line'>0000000000000000 d .data
+</span><span class='line'>0000000000000000 D __data_start
+</span><span class='line'>0000000000000000 W data_start
+</span><span class='line'>0000000000000000 r .eh_frame
+</span><span class='line'>                 U _GLOBAL_OFFSET_TABLE_
+</span><span class='line'>0000000000000000 R _IO_stdin_used
+</span><span class='line'>                 U __libc_csu_fini
+</span><span class='line'>                 U __libc_csu_init
+</span><span class='line'>                 U __libc_start_main
+</span><span class='line'>                 U main
+</span><span class='line'>0000000000000000 r .note.ABI-tag
+</span><span class='line'>0000000000000000 n .note.GNU-stack
+</span><span class='line'>0000000000000000 r .rodata.cst4
+</span><span class='line'>0000000000000000 T _start
+</span><span class='line'>0000000000000000 t .text</span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/08/04/hello-world-disassm/">Hello World 反組譯輸出</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-08-04T21:07:11+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>4</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:07 pm</span></time>
+        
+           | <a href="/blog/2019/08/04/hello-world-disassm/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>單純以後剪貼用的。有興趣的朋友可以注意以下觀察重點</p>
+
+<ul>
+<li><code>_init</code> section</li>
+<li><code>text</code> section 開頭symbol 為<code>_start</code></li>
+<li><code>_start</code>呼叫<code>__libc_start_main</code></li>
+<li><code>__libc_csu_init</code> section</li>
+<li><code>__libc_csu_fini</code> section</li>
+<li><code>_fini</code> section</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
+<span class='line-number'>160</span>
+<span class='line-number'>161</span>
+<span class='line-number'>162</span>
+<span class='line-number'>163</span>
+<span class='line-number'>164</span>
+<span class='line-number'>165</span>
+<span class='line-number'>166</span>
+<span class='line-number'>167</span>
+<span class='line-number'>168</span>
+<span class='line-number'>169</span>
+<span class='line-number'>170</span>
+<span class='line-number'>171</span>
+<span class='line-number'>172</span>
+<span class='line-number'>173</span>
+<span class='line-number'>174</span>
+<span class='line-number'>175</span>
+<span class='line-number'>176</span>
+<span class='line-number'>177</span>
+<span class='line-number'>178</span>
+<span class='line-number'>179</span>
+<span class='line-number'>180</span>
+<span class='line-number'>181</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ objdump -d hello
+</span><span class='line'>
+</span><span class='line'>hello:     file format elf64-x86-64
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .init:
+</span><span class='line'>
+</span><span class='line'>00000000000004f0 &lt;_init&gt;:
+</span><span class='line'> 4f0: 48 83 ec 08             sub    $0x8,%rsp
+</span><span class='line'> 4f4: 48 8b 05 ed 0a 20 00    mov    0x200aed(%rip),%rax        # 200fe8 &lt;__gmon_start__&gt;
+</span><span class='line'> 4fb: 48 85 c0                test   %rax,%rax
+</span><span class='line'> 4fe: 74 02                   je     502 &lt;_init+0x12&gt;
+</span><span class='line'> 500: ff d0                   callq  *%rax
+</span><span class='line'> 502: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'> 506: c3                      retq   
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .plt:
+</span><span class='line'>
+</span><span class='line'>0000000000000510 &lt;.plt&gt;:
+</span><span class='line'> 510: ff 35 aa 0a 20 00       pushq  0x200aaa(%rip)        # 200fc0 &lt;_GLOBAL_OFFSET_TABLE_+0x8&gt;
+</span><span class='line'> 516: ff 25 ac 0a 20 00       jmpq   *0x200aac(%rip)        # 200fc8 &lt;_GLOBAL_OFFSET_TABLE_+0x10&gt;
+</span><span class='line'> 51c: 0f 1f 40 00             nopl   0x0(%rax)
+</span><span class='line'>
+</span><span class='line'>0000000000000520 &lt;printf@plt&gt;:
+</span><span class='line'> 520: ff 25 aa 0a 20 00       jmpq   *0x200aaa(%rip)        # 200fd0 &lt;printf@GLIBC_2.2.5&gt;
+</span><span class='line'> 526: 68 00 00 00 00          pushq  $0x0
+</span><span class='line'> 52b: e9 e0 ff ff ff          jmpq   510 &lt;.plt&gt;
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .plt.got:
+</span><span class='line'>
+</span><span class='line'>0000000000000530 &lt;__cxa_finalize@plt&gt;:
+</span><span class='line'> 530: ff 25 c2 0a 20 00       jmpq   *0x200ac2(%rip)        # 200ff8 &lt;__cxa_finalize@GLIBC_2.2.5&gt;
+</span><span class='line'> 536: 66 90                   xchg   %ax,%ax
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .text:
+</span><span class='line'>
+</span><span class='line'>0000000000000540 &lt;_start&gt;:
+</span><span class='line'> 540: 31 ed                   xor    %ebp,%ebp
+</span><span class='line'> 542: 49 89 d1                mov    %rdx,%r9
+</span><span class='line'> 545: 5e                      pop    %rsi
+</span><span class='line'> 546: 48 89 e2                mov    %rsp,%rdx
+</span><span class='line'> 549: 48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+</span><span class='line'> 54d: 50                      push   %rax
+</span><span class='line'> 54e: 54                      push   %rsp
+</span><span class='line'> 54f: 4c 8d 05 8a 01 00 00    lea    0x18a(%rip),%r8        # 6e0 &lt;__libc_csu_fini&gt;
+</span><span class='line'> 556: 48 8d 0d 13 01 00 00    lea    0x113(%rip),%rcx        # 670 &lt;__libc_csu_init&gt;
+</span><span class='line'> 55d: 48 8d 3d e6 00 00 00    lea    0xe6(%rip),%rdi        # 64a &lt;main&gt;
+</span><span class='line'> 564: ff 15 76 0a 20 00       callq  *0x200a76(%rip)        # 200fe0 &lt;__libc_start_main@GLIBC_2.2.5&gt;
+</span><span class='line'> 56a: f4                      hlt    
+</span><span class='line'> 56b: 0f 1f 44 00 00          nopl   0x0(%rax,%rax,1)
+</span><span class='line'>
+</span><span class='line'>0000000000000570 &lt;deregister_tm_clones&gt;:
+</span><span class='line'> 570: 48 8d 3d 99 0a 20 00    lea    0x200a99(%rip),%rdi        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 577: 55                      push   %rbp
+</span><span class='line'> 578: 48 8d 05 91 0a 20 00    lea    0x200a91(%rip),%rax        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 57f: 48 39 f8                cmp    %rdi,%rax
+</span><span class='line'> 582: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 585: 74 19                   je     5a0 &lt;deregister_tm_clones+0x30&gt;
+</span><span class='line'> 587: 48 8b 05 4a 0a 20 00    mov    0x200a4a(%rip),%rax        # 200fd8 &lt;_ITM_deregisterTMCloneTable&gt;
+</span><span class='line'> 58e: 48 85 c0                test   %rax,%rax
+</span><span class='line'> 591: 74 0d                   je     5a0 &lt;deregister_tm_clones+0x30&gt;
+</span><span class='line'> 593: 5d                      pop    %rbp
+</span><span class='line'> 594: ff e0                   jmpq   *%rax
+</span><span class='line'> 596: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 59d: 00 00 00 
+</span><span class='line'> 5a0: 5d                      pop    %rbp
+</span><span class='line'> 5a1: c3                      retq   
+</span><span class='line'> 5a2: 0f 1f 40 00             nopl   0x0(%rax)
+</span><span class='line'> 5a6: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 5ad: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>00000000000005b0 &lt;register_tm_clones&gt;:
+</span><span class='line'> 5b0: 48 8d 3d 59 0a 20 00    lea    0x200a59(%rip),%rdi        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 5b7: 48 8d 35 52 0a 20 00    lea    0x200a52(%rip),%rsi        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 5be: 55                      push   %rbp
+</span><span class='line'> 5bf: 48 29 fe                sub    %rdi,%rsi
+</span><span class='line'> 5c2: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 5c5: 48 c1 fe 03             sar    $0x3,%rsi
+</span><span class='line'> 5c9: 48 89 f0                mov    %rsi,%rax
+</span><span class='line'> 5cc: 48 c1 e8 3f             shr    $0x3f,%rax
+</span><span class='line'> 5d0: 48 01 c6                add    %rax,%rsi
+</span><span class='line'> 5d3: 48 d1 fe                sar    %rsi
+</span><span class='line'> 5d6: 74 18                   je     5f0 &lt;register_tm_clones+0x40&gt;
+</span><span class='line'> 5d8: 48 8b 05 11 0a 20 00    mov    0x200a11(%rip),%rax        # 200ff0 &lt;_ITM_registerTMCloneTable&gt;
+</span><span class='line'> 5df: 48 85 c0                test   %rax,%rax
+</span><span class='line'> 5e2: 74 0c                   je     5f0 &lt;register_tm_clones+0x40&gt;
+</span><span class='line'> 5e4: 5d                      pop    %rbp
+</span><span class='line'> 5e5: ff e0                   jmpq   *%rax
+</span><span class='line'> 5e7: 66 0f 1f 84 00 00 00    nopw   0x0(%rax,%rax,1)
+</span><span class='line'> 5ee: 00 00 
+</span><span class='line'> 5f0: 5d                      pop    %rbp
+</span><span class='line'> 5f1: c3                      retq   
+</span><span class='line'> 5f2: 0f 1f 40 00             nopl   0x0(%rax)
+</span><span class='line'> 5f6: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 5fd: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>0000000000000600 &lt;__do_global_dtors_aux&gt;:
+</span><span class='line'> 600: 80 3d 09 0a 20 00 00    cmpb   $0x0,0x200a09(%rip)        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 607: 75 2f                   jne    638 &lt;__do_global_dtors_aux+0x38&gt;
+</span><span class='line'> 609: 48 83 3d e7 09 20 00    cmpq   $0x0,0x2009e7(%rip)        # 200ff8 &lt;__cxa_finalize@GLIBC_2.2.5&gt;
+</span><span class='line'> 610: 00 
+</span><span class='line'> 611: 55                      push   %rbp
+</span><span class='line'> 612: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 615: 74 0c                   je     623 &lt;__do_global_dtors_aux+0x23&gt;
+</span><span class='line'> 617: 48 8b 3d ea 09 20 00    mov    0x2009ea(%rip),%rdi        # 201008 &lt;__dso_handle&gt;
+</span><span class='line'> 61e: e8 0d ff ff ff          callq  530 &lt;__cxa_finalize@plt&gt;
+</span><span class='line'> 623: e8 48 ff ff ff          callq  570 &lt;deregister_tm_clones&gt;
+</span><span class='line'> 628: c6 05 e1 09 20 00 01    movb   $0x1,0x2009e1(%rip)        # 201010 &lt;__TMC_END__&gt;
+</span><span class='line'> 62f: 5d                      pop    %rbp
+</span><span class='line'> 630: c3                      retq   
+</span><span class='line'> 631: 0f 1f 80 00 00 00 00    nopl   0x0(%rax)
+</span><span class='line'> 638: f3 c3                   repz retq 
+</span><span class='line'> 63a: 66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+</span><span class='line'>
+</span><span class='line'>0000000000000640 &lt;frame_dummy&gt;:
+</span><span class='line'> 640: 55                      push   %rbp
+</span><span class='line'> 641: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 644: 5d                      pop    %rbp
+</span><span class='line'> 645: e9 66 ff ff ff          jmpq   5b0 &lt;register_tm_clones&gt;
+</span><span class='line'>
+</span><span class='line'>000000000000064a &lt;main&gt;:
+</span><span class='line'> 64a: 55                      push   %rbp
+</span><span class='line'> 64b: 48 89 e5                mov    %rsp,%rbp
+</span><span class='line'> 64e: 48 8d 3d 9f 00 00 00    lea    0x9f(%rip),%rdi        # 6f4 &lt;_IO_stdin_used+0x4&gt;
+</span><span class='line'> 655: b8 00 00 00 00          mov    $0x0,%eax
+</span><span class='line'> 65a: e8 c1 fe ff ff          callq  520 &lt;printf@plt&gt;
+</span><span class='line'> 65f: b8 00 00 00 00          mov    $0x0,%eax
+</span><span class='line'> 664: 5d                      pop    %rbp
+</span><span class='line'> 665: c3                      retq   
+</span><span class='line'> 666: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 66d: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>0000000000000670 &lt;__libc_csu_init&gt;:
+</span><span class='line'> 670: 41 57                   push   %r15
+</span><span class='line'> 672: 41 56                   push   %r14
+</span><span class='line'> 674: 49 89 d7                mov    %rdx,%r15
+</span><span class='line'> 677: 41 55                   push   %r13
+</span><span class='line'> 679: 41 54                   push   %r12
+</span><span class='line'> 67b: 4c 8d 25 36 07 20 00    lea    0x200736(%rip),%r12        # 200db8 &lt;__frame_dummy_init_array_entry&gt;
+</span><span class='line'> 682: 55                      push   %rbp
+</span><span class='line'> 683: 48 8d 2d 36 07 20 00    lea    0x200736(%rip),%rbp        # 200dc0 &lt;__init_array_end&gt;
+</span><span class='line'> 68a: 53                      push   %rbx
+</span><span class='line'> 68b: 41 89 fd                mov    %edi,%r13d
+</span><span class='line'> 68e: 49 89 f6                mov    %rsi,%r14
+</span><span class='line'> 691: 4c 29 e5                sub    %r12,%rbp
+</span><span class='line'> 694: 48 83 ec 08             sub    $0x8,%rsp
+</span><span class='line'> 698: 48 c1 fd 03             sar    $0x3,%rbp
+</span><span class='line'> 69c: e8 4f fe ff ff          callq  4f0 &lt;_init&gt;
+</span><span class='line'> 6a1: 48 85 ed                test   %rbp,%rbp
+</span><span class='line'> 6a4: 74 20                   je     6c6 &lt;__libc_csu_init+0x56&gt;
+</span><span class='line'> 6a6: 31 db                   xor    %ebx,%ebx
+</span><span class='line'> 6a8: 0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)
+</span><span class='line'> 6af: 00 
+</span><span class='line'> 6b0: 4c 89 fa                mov    %r15,%rdx
+</span><span class='line'> 6b3: 4c 89 f6                mov    %r14,%rsi
+</span><span class='line'> 6b6: 44 89 ef                mov    %r13d,%edi
+</span><span class='line'> 6b9: 41 ff 14 dc             callq  *(%r12,%rbx,8)
+</span><span class='line'> 6bd: 48 83 c3 01             add    $0x1,%rbx
+</span><span class='line'> 6c1: 48 39 dd                cmp    %rbx,%rbp
+</span><span class='line'> 6c4: 75 ea                   jne    6b0 &lt;__libc_csu_init+0x40&gt;
+</span><span class='line'> 6c6: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'> 6ca: 5b                      pop    %rbx
+</span><span class='line'> 6cb: 5d                      pop    %rbp
+</span><span class='line'> 6cc: 41 5c                   pop    %r12
+</span><span class='line'> 6ce: 41 5d                   pop    %r13
+</span><span class='line'> 6d0: 41 5e                   pop    %r14
+</span><span class='line'> 6d2: 41 5f                   pop    %r15
+</span><span class='line'> 6d4: c3                      retq   
+</span><span class='line'> 6d5: 90                      nop
+</span><span class='line'> 6d6: 66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+</span><span class='line'> 6dd: 00 00 00 
+</span><span class='line'>
+</span><span class='line'>00000000000006e0 &lt;__libc_csu_fini&gt;:
+</span><span class='line'> 6e0: f3 c3                   repz retq 
+</span><span class='line'>
+</span><span class='line'>Disassembly of section .fini:
+</span><span class='line'>
+</span><span class='line'>00000000000006e4 &lt;_fini&gt;:
+</span><span class='line'> 6e4: 48 83 ec 08             sub    $0x8,%rsp
+</span><span class='line'> 6e8: 48 83 c4 08             add    $0x8,%rsp
+</span><span class='line'> 6ec: c3   </span></code></pre></td></tr></table></div></figure>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -2617,1488 +3946,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/08/26/vim-posix-group-regex/">Vim POSIX Group Regex 使用方式</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-08-26T16:22:09+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>26</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>4:22 pm</span></time>
-        
-           | <a href="/blog/2018/08/26/vim-posix-group-regex/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2018/08/26/vim-posix-group-regex/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>由於個人需求，需要在<code>vim</code>下面使用稍微複雜的字串搜尋取代。故整理這篇以後可以參考。</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#vreg-grp-env">測試環境</a></li>
-<li><a href="#vreg-grp-intro">問題描述以及POSIX regex grouping 簡介</a></li>
-<li><a href="#vreg-grp-syn">參考語法</a></li>
-<li><a href="#vreg-grp-ex">範例</a></li>
-</ul>
-
-
-<p><a name="vreg-grp-env"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 18.04.1 LTS
-</span><span class='line'>Release:  18.04
-</span><span class='line'>Codename: bionic
-</span><span class='line'>
-</span><span class='line'>$ vim --version
-</span><span class='line'>VIM - Vi IMproved 8.0 (2016 Sep 12, compiled Apr 10 2018 21:31:58)</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vreg-grp-intro"></a></p>
-
-<h2>問題描述以及POSIX regex grouping 簡介</h2>
-
-<p>Regular express 的特色是他可以match不同的pattern，所以用於搜尋和取代是非常的方便，然而當要把<strong>符合條件的字串前面或後面加上字串</strong>就會有一個問題，那就是<strong>符合的字串要怎麼表示？</strong>舉例來說，當我們想要在下面log<code>[mem....]</code> 之後放入<code>test</code>，要怎麼做到? 這時候我們就可以使用<code>reguler expression</code>的<code>group</code> 功能了</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] usable
-</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] reserved
-</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] usable</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vreg-grp-syn"></a></p>
-
-<h2>參考語法</h2>
-
-<ul>
-<li>指定<code>group</code>，一組regex可以指定零到多個<code>group</code>
-
-<ul>
-<li><code>\(match_patter\)</code></li>
-</ul>
-</li>
-<li>取值
-
-<ul>
-<li><code>\0</code>
-
-<ul>
-<li>前項所有的<code>group</code></li>
-</ul>
-</li>
-<li><code>\1</code>
-
-<ul>
-<li>第一組<code>group</code></li>
-</ul>
-</li>
-<li><code>\2</code>
-
-<ul>
-<li>第二組<code>group</code></li>
-</ul>
-</li>
-<li><code>\3</code>
-
-<ul>
-<li>第三組<code>group</code></li>
-</ul>
-</li>
-<li>千秋萬世直到永遠</li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vreg-grp-ex"></a></p>
-
-<h2>範例</h2>
-
-<p>就用上面的訊息當範例吧</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] usable
-</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] reserved
-</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] usable</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>範例一： 在[mem &hellip;]之後插入test</h3>
-
-<ul>
-<li>指令: <code>:%s/\(\[mem.*\]\)/\1 test/g</code></li>
-</ul>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000000000-0x0000000000057fff] test usable
-</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000058000-0x0000000000058fff] test reserved
-</span><span class='line'>[    0.000000] BIOS-e820: [mem 0x0000000000059000-0x000000000009dfff] test usable</span></code></pre></td></tr></table></div></figure>
-
-
-<h3>範例二： 設定三組<code>group</code>，都插入<code>test</code></h3>
-
-<ul>
-<li>指令: <code>:%s/\(^\[.*\]\) \(\BIOS-e820:\) \(\[mem.*\]\)/\1 test1 \2 test2 \3 test3 /g</code></li>
-</ul>
-
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000000000-0x0000000000057fff] test3  usable
-</span><span class='line'>[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000058000-0x0000000000058fff] test3  reserved
-</span><span class='line'>[    0.000000] test1 BIOS-e820: test2 [mem 0x0000000000059000-0x000000000009dfff] test3  usable</span></code></pre></td></tr></table></div></figure>
-
-
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/07/24/notes-on-how-to-c-2016/">Notes on How to C 2016</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-07-24T20:43:52+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>24</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>8:43 pm</span></time>
-        
-           | <a href="/blog/2018/07/24/notes-on-how-to-c-2016/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2018/07/24/notes-on-how-to-c-2016/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>最近看了<a href="https://matt.sh/howto-c">How to C 2016</a>，反正很多記不起來乾脆寫起來以後剪貼。</p>
-
-<h2>GNU Flags</h2>
-
-<ul>
-<li><code>-std=c99</code></li>
-</ul>
-
-
-<h3>Warning flags</h3>
-
-<p><code>-Wall -Wextra -Werror -Wshadow -Wno-missing-field-initializers -Wstrict-overflow -fno-strict-aliasing</code></p>
-
-<ul>
-<li>延伸：<a href="https://stackoverflow.com/questions/3375697/useful-gcc-flags-for-c">Stackoverflow: Useful gcc flag for C</a></li>
-</ul>
-
-
-<h3>Links</h3>
-
-<ul>
-<li><a href="http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/stdint.h.html">stdint.h</a>
-
-<ul>
-<li><code>intmax_t</code>，&hellip;</li>
-<li><code>intptr_t</code>
-
-<ul>
-<li>根據platform int size 調整</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/stddef.h.html">stdtype.h</a>
-
-<ul>
-<li><code>ptr_diff_t</code></li>
-</ul>
-</li>
-</ul>
-
-
-<h2>其他</h2>
-
-<ul>
-<li><code>size_t</code>和<code>ssize_t</code>差別：<code>s</code>->signed，當有錯誤時會為<code>-1</code></li>
-<li><code>#pragma once</code> 可用來取代Header guard</li>
-</ul>
-
-
-<h3>名詞</h3>
-
-<ul>
-<li><a href="https://gcc.gnu.org/onlinedocs/gccint/LTO-Overview.html">LTO</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2018/02/15/vim-setup-for-trace-c-code/">給自己剪貼用的vim設定</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2018-02-15T04:03:41+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>15</span><span class='date-suffix'>th</span>, <span class='date-year'>2018</span></span> <span class='time'>4:03 am</span></time>
-        
-           | <a href="/blog/2018/02/15/vim-setup-for-trace-c-code/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2018/02/15/vim-setup-for-trace-c-code/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>分享使用<code>vim</code> 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體<code>cscope</code>和<code>ctags</code>來trace <code>C</code>語言的程式碼以及編輯<code>Python</code>程式碼相關設定。</p>
-
-<ul>
-<li>致謝，感謝網友<a href="http://scottt.tw/">Scott</a>介紹vim register概念，<a href="http://yodalee.blogspot.tw/">葉闆</a>介紹的tagbar，和Kyle Lin介紹的airline。</li>
-</ul>
-
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#vtr-env">測試環境</a></li>
-<li><a href="#vtr-pkg">懶人包</a></li>
-<li><a href="#vtr-set">設定.vimrc以及Vundle plugins</a>
-
-<ul>
-<li>  <a href="#vtr-set-prep">事前準備</a></li>
-<li>  <a href="#vtr-set-insvd">安裝Vundle</a></li>
-<li>  <a href="#vtr-set-vdplg">我安裝的Vundle Plugins</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-ed">編輯器相關</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-al">airline</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-al-pre">安裝準備</a></li>
-<li><a href="#vtr-set-vdplg-al-set">設定airline</a></li>
-</ul>
-</li>
-<li><a href="#vtr-set-vdplg-ed-itl">indentLine</a></li>
-<li><a href="#vtr-set-vdplg-vbw">vim-better-whitespace</a></li>
-</ul>
-</li>
-<li><a href="#vtr-set-vdplg-tr">Trace C語言程式碼相關</a>
-
-<ul>
-<li><a href="#vtr-set-vdplg-tr-cm">cscope_maps</a></li>
-<li><a href="#vtr-set-vdplg-tr-se">SrcExpl</a></li>
-<li><a href="#vtr-set-vdplg-tr-tl">taglist</a></li>
-<li><a href="#vtr-set-vdplg-tr-nd">nerdtree</a></li>
-<li><a href="#vtr-set-vdplg-tr-tri">Trinity</a></li>
-<li><a href="#vtr-set-vdplg-tr-tgb">tagbar</a></li>
-</ul>
-</li>
-<li><a href="#vtr-set-md">Markdown 語法支援</a>
-
-<ul>
-<li><a href="#vtr-set-md-pdoc">vim-pandoc-syntax</a></li>
-</ul>
-</li>
-<li><a href="#vtr-set-py">Python開發相關</a>
-
-<ul>
-<li><a href="#vtr-set-py-prepare">準備工作</a></li>
-<li><a href="#vtr-set-py-pm">python-mode</a></li>
-<li><a href="#vtr-set-py-sc">syntastic</a></li>
-<li><a href="#vtr-set-py-pt">python_match</a></li>
-<li><a href="#vtr-set-py-id">indentpython</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>  <a href="#vtr-set-misc">和Plugin 無關的設定</a>
-
-<ul>
-<li><a href="#vtr-set-misc-ed">編輯器和顯示特殊字元相關設定</a></li>
-<li><a href="#vtr-set-misc-ind">Indent相關設定</a></li>
-<li><a href="#vtr-set-misc-msc">其他</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="#vtr-test">參考資料</a></li>
-</ul>
-
-
-<p><a name="vtr-env"></a></p>
-
-<h2>測試環境</h2>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release  -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Ubuntu
-</span><span class='line'>Description:  Ubuntu 16.04.3 LTS
-</span><span class='line'>Release:  16.04
-</span><span class='line'>Codename: xenial
-</span><span class='line'>
-</span><span class='line'>
-</span><span class='line'>$ ctags --version
-</span><span class='line'>Exuberant Ctags 5.9~svn20110310, Copyright (C) 1996-2009 Darren Hiebert
-</span><span class='line'>...
-</span><span class='line'>
-</span><span class='line'>$ cscope --version
-</span><span class='line'>cscope: version 15.8b
-</span><span class='line'>
-</span><span class='line'>$ vim --version
-</span><span class='line'>VIM - Vi IMproved 7.4 (2013 Aug 10, compiled Nov 24 2016 16:44:48)
-</span><span class='line'>Included patches: 1-1689
-</span><span class='line'>...
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vtr-set"></a></p>
-
-<h2>設定.vimrc以及Vundle plugins</h2>
-
-<p><a name="vtr-set-prep"></a></p>
-
-<h3>事前準備</h3>
-
-<p>您需要確認</p>
-
-<ul>
-<li>vim版本為7.4以上</li>
-<li>安裝ctags和cscope，指令如下
-<code>sudo apt-get install exuberant-ctags cscope</code></li>
-</ul>
-
-
-<p><a name="vtr-set-insvd"></a></p>
-
-<h3>安裝Vundle</h3>
-
-<p><code>Vundle</code>是vim plugin 管理工具，他可以透過URL, github, 以及local FS等方式安裝甚至更新Plugin。類似的工具還有不少，我只是挑看到的第一個而已。</p>
-
-<p><code>Vundle</code>常用的指令如下，還蠻容易望文生義所以我就不解釋了</p>
-
-<ul>
-<li><code>:PluginList</code></li>
-<li><code>:PluginInstall</code></li>
-<li><code>:PluginClean</code></li>
-<li><code>:PluginUpdate</code></li>
-</ul>
-
-
-<p>安裝方式如下</p>
-
-<ul>
-<li><p>首先你要下載<code>Vundle</code>，指令如下
-<code>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim</code></p></li>
-<li><p>接下來在你的.vimrc加入下面這段，我是從<a href="https://github.com/VundleVim/Vundle.vim">官方網頁</a>改的，其實只是把他的範例Plugin幹掉並加上分隔線及分隔線內的註解而已</p></li>
-</ul>
-
-
-<figure class='code'><figcaption><span>.vimrc 要加的部份</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Start vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>set nocompatible              &quot; be iMproved, required
-</span><span class='line'>filetype off                  &quot; required
-</span><span class='line'>
-</span><span class='line'>&quot; set the runtime path to include Vundle and initialize
-</span><span class='line'>set rtp+=~/.vim/bundle/Vundle.vim
-</span><span class='line'>call vundle#begin()
-</span><span class='line'>
-</span><span class='line'>&quot; alternatively, pass a path where Vundle should install plugins
-</span><span class='line'>&quot;call vundle#begin(&#39;~/some/path/here&#39;)
-</span><span class='line'>
-</span><span class='line'>&quot; let Vundle manage Vundle, required
-</span><span class='line'>Plugin &#39;VundleVim/Vundle.vim&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>&quot; Write your plugins here
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Run vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; All of your Plugins must be added before the following line
-</span><span class='line'>call vundle#end()            &quot; required
-</span><span class='line'>filetype plugin indent on    &quot; required
-</span><span class='line'>&quot; To ignore plugin indent changes, instead use:
-</span><span class='line'>&quot;filetype plugin on
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; Brief help
-</span><span class='line'>&quot; :PluginList       - lists configured plugins
-</span><span class='line'>&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-</span><span class='line'>&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
-</span><span class='line'>&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; see :h vundle for more details or wiki for FAQ
-</span><span class='line'>&quot; Put your non-Plugin stuff after this line
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>注意下面列出的這幾行statements，你要新增或移除Plugin就是改這個地方。這些Plugin將會在後面介紹。剛好我要安裝的Plugin都是在<a href="https://github.com">GitHub</a>上開發或有mirror。而<code>Vundle</code>可以用直接指定Plugin 專案在GitHub相對路徑即可安裝。這些描述也是<code>Vundle</code>載入Plugin　的順序，沒寫對順序有可能有相依問題請自行注意。</p>
-
-<p>例如<code>https://github.com/Yggdroot/indentLine</code> 就寫成<code>Yggdroot/indentLine</code></p>
-
-<figure class='code'><figcaption><span>我安裝的Plugin</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;===============================================================
-</span><span class='line'>&quot; Write your plugins here
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
-</span><span class='line'>Plugin &#39;ntpeters/vim-better-whitespace&#39;
-</span><span class='line'>Plugin &#39;vim-airline/vim-airline&#39;
-</span><span class='line'>Plugin &#39;tpope/vim-fugitive&#39;
-</span><span class='line'>Plugin &#39;chazy/cscope_maps&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/taglist.vim&#39;
-</span><span class='line'>Plugin &#39;scrooloose/nerdtree&#39;
-</span><span class='line'>Plugin &#39;wesleyche/SrcExpl&#39;
-</span><span class='line'>Plugin &#39;wesleyche/Trinity&#39;
-</span><span class='line'>Plugin &#39;majutsushi/tagbar&#39;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>確定新增/刪除Plugin後，就可以執行vim/gvim，使用下面命令
-
-<ul>
-<li><code>:PluginInstall</code></li>
-<li><code>:PluginClean</code></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-set-vdplg"></a></p>
-
-<h3>我安裝的Vundle Plugins</h3>
-
-<p>因為安裝方式已經在上面了，這邊就以介紹為主</p>
-
-<p><a name="vtr-set-vdplg-ed"></a></p>
-
-<h4>編輯器相關</h4>
-
-<p><a name="vtr-set-vdplg-al"></a></p>
-
-<h5>airline</h5>
-
-<p><a name="vtr-set-vdplg-al-pre"></a></p>
-
-<h6>安裝準備</h6>
-
-<p>先看圖，圖中最下方的那行就是airline，可以顯示一些有用的資訊
-<img src=/images/vim_ind11.jpg></p>
-
-<p>由左到右我們可以看到Vim 模式，Git branch 等資訊。以及一些比較特別的符號，這表示我們需要</p>
-
-<ul>
-<li>讓airline取得git資訊</li>
-<li>讓airline取得特別符號</li>
-</ul>
-
-
-<p>也就是說，在安裝<code>airline</code>前要做一些前置動作如下</p>
-
-<ul>
-<li>讓airline取得git資訊
-
-<ul>
-<li>很簡單，安裝<code>vim-fugitive</code> plugin即可</li>
-</ul>
-</li>
-<li>讓airline取得特別符號
-這也不難，就是安裝特殊字型，並且設定GUI時存取這些字型。方式如下</li>
-</ul>
-
-
-<p><strong>取得字型</strong></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>git clone https://github.com/powerline/fonts
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong>安裝字型</strong></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>cd fonts &amp;&amp; ./install.sh
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><strong> .vimrc中指定安裝的字型 </strong></p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>set guifont=Inconsolata\ for\ Powerline\ 20
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vtr-set-vdplg-al-set"></a></p>
-
-<h6>設定airline</h6>
-
-<p>把下面的資料放入<code>.vimrc</code>即可</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>let g:airline_powerline_fonts = 1
-</span><span class='line'>set laststatus=2
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vtr-set-vdplg-ed-itl"></a></p>
-
-<h5>indentLine</h5>
-
-<p>當Ident為空白增加以下的Indent 對齊參考資線
-<img src=/images/vim_ind2.jpg></p>
-
-<p><strong>注意此Plugin在Ident為tab同時又加上顯示tab字元時自動失效，目前workaround就是顯示tab字元為<code>|</code>，接下來以<code>.</code>延伸作為辨別。範例如下：</strong>
-<img src=/images/vim_ind1.jpg></p>
-
-<p><a name="vtr-set-vdplg-vbw"></a></p>
-
-<h5>vim-better-whitespace</h5>
-
-<p>將<a href="http://stackoverflow.com/questions/22273233/what-is-meant-by-%0Atrailing-space-and-whats-the-difference-between-it-and-a-blank">trailing space</a>顯示成明顯的紅色
-<img src=/images/vim_ind3.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr"></a></p>
-
-<h4>Trace 程式碼相關</h4>
-
-<p><a name="vtr-set-vdplg-tr-cm"></a></p>
-
-<h5>cscope_maps</h5>
-
-<p>簡單來說，就是把cscope指令對應到Hot key</p>
-
-<p>先列出find部份的指令</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>find : Query for a pattern            (Usage: find c|d|e|f|g|i|s|t name)
-</span><span class='line'>       c: Find functions calling this function
-</span><span class='line'>       d: Find functions called by this function
-</span><span class='line'>       e: Find this egrep pattern
-</span><span class='line'>       f: Find this file
-</span><span class='line'>       g: Find this definition
-</span><span class='line'>       i: Find files #including this file
-</span><span class='line'>       s: Find this C symbol
-</span><span class='line'>       t: Find this text string
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>他的使用方法也很簡單，就是先把游標移動到你要查的statement，再按<code>ctrl</code> + <code>\</code> + <code>c|d|e|f|g|i|s|t 其中一個</code>。</p>
-
-<p>舉例來說，我在下圖中把游標移動到<code>core_sys_select</code>函數後按下<code>ctrl</code> + <code>\</code> + <code>c</code>的結果如下
-<img src=/images/vim_ind4.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-se"></a></p>
-
-<h5>SrcExpl</h5>
-
-<p>當啟動時，您的游標在那個敘述，Source explorer 會切割視窗，印出該敘述的定義。舉例來說，當我游標在138行的<code>free_poll_entry</code>的話，顯示的畫面如下。</p>
-
-<p><img src=/images/vim_ind5.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-tl"></a></p>
-
-<h5>taglist</h5>
-
-<p>列出目前檔案所有symbol並且可以選擇symbol切換到該symbol在檔案中的位置
-<img src=/images/vim_ind6.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-nd"></a></p>
-
-<h5>nerdtree</h5>
-
-<p>以樹狀顯示目前檔案所在目錄結構，看圖就知道
-<img src=/images/vim_ind7.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-tri"></a></p>
-
-<h5>Trinity</h5>
-
-<p>看完以上三個，你可能會覺得奇怪好像沒提到怎麼啟動。這就是<code>Trinity</code>大顯身手的地方了。你安裝Trinity後，再Vundle後面加上下面的敘述就可以有</p>
-
-<ul>
-<li><code>F8</code> : 同時打開或關閉<code>nerdtree</code>, <code>Source explorer</code>, 以及<code>tag list</code></li>
-<li><code>F9</code> : 打開或關閉<code>Source explorer</code></li>
-<li><code>F10</code>: 打開或關閉<code>tag list</code></li>
-<li><code>F11</code>: 打開或關閉<code>nerdtree</code></li>
-</ul>
-
-
-<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Trinity Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close all the three plugins on the same time
-</span><span class='line'>nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Source Explorer separately
-</span><span class='line'>nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Taglist separately
-</span><span class='line'>nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the NERD Tree separately
-</span><span class='line'>nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>以下是按下<code>F8</code> 的畫面
-<img src=/images/vim_ind8.jpg></p>
-
-<p><a name="vtr-set-vdplg-tr-tgb"></a></p>
-
-<h5>tagbar</h5>
-
-<p>網友推荐的taglist改良版 plugin，為什麼不換掉taglist呢？因為我喜歡source explorer。除了安裝Plugin外，我也順便設定按下<code>F7</code>可以切換，設定如下。</p>
-
-<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Tagbar Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close the tagbar separately
-</span><span class='line'>nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>以下是按下<code>F7</code> 的畫面，可以注意右邊視窗會更進一步地顯示資料結構的成員名稱
-<img src=/images/vim_ind10.jpg></p>
-
-<p><a name="vtr-set-md"></a></p>
-
-<h3>Markdown 語法支援</h3>
-
-<p><a name="vtr-set-md-pdoc"></a></p>
-
-<h4>vim-pandoc-syntax</h4>
-
-<p>單純就是讓<code>vim</code>可以顯示<code>Markdown</code> syntax highlight，範例如下圖:
-<img src=/images/vim_ind12.jpg></p>
-
-<p><a name="vtr-set-py"></a></p>
-
-<h3>Python開發相關</h3>
-
-<p><a name="vtr-set-py-prepare"></a></p>
-
-<h4>準備工作</h4>
-
-<p>主要是語法檢查套件相關安裝，指令如下</p>
-
-<figure class='code'><figcaption><span>.vimrc 的Trinity設定</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt install -y flake8 python-rope pylint
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p><a name="vtr-set-py-pm"></a></p>
-
-<h4>python-mode</h4>
-
-<p><a href="blog/2014/12/06/introduction-to-python-mode-for-vim/">之前</a>有介紹過，偷懶跳過。也許Python用到一陣子可以上手後可以再分享心得。</p>
-
-<p><a name="vtr-set-py-sc"></a></p>
-
-<h4>syntastic</h4>
-
-<p>泛用形語法檢查工具，請參考<a href="https://github.com/vim-syntastic/syntastic">Syntax checking hacks for vim</a>說明。
-目前是我靠他幫忙檢查寫的程式是否符合<a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>規範，要注意的是Ubuntu 16.04中<code>vim</code> 套件預設只支援<code>Python 3</code>，要使用vim 編寫<code>Python 2</code>的朋友請自行估狗。我之前是自行編譯<code>vim</code>解決的。</p>
-
-<p>語法檢查範例如下圖
-<img src=/images/vim_ind13.jpg></p>
-
-<p><a name="vtr-set-py-pt"></a></p>
-
-<h4>python_match</h4>
-
-<p>讓Python 也可以使用<code>vim</code>中切換配對的快捷鍵<code>%</code></p>
-
-<p><a name="vtr-set-py-py"></a></p>
-
-<h4>python</h4>
-
-<p>提供下列快捷鍵，節錄自Plugin註解:</p>
-
-<ul>
-<li><code>]t</code>      &ndash; Jump to beginning of block</li>
-<li><code>]e</code>      &ndash; Jump to end of block</li>
-<li><code>]v</code>      &ndash; Select (Visual Line Mode) block</li>
-<li><code>]&lt;</code>      &ndash; Shift block to left</li>
-<li><code>]&gt;</code>      &ndash; Shift block to right</li>
-<li><code>]#</code>      &ndash; Comment selection</li>
-<li><code>]u</code>      &ndash; Uncomment selection</li>
-<li><code>]c</code>      &ndash; Select current/previous class</li>
-<li><code>]d</code>      &ndash; Select current/previous function</li>
-<li><code>]&lt;up&gt;</code>   &ndash; Jump to previous line with the same/lower indentation</li>
-<li><code>]&lt;down&gt;</code> &ndash; Jump to next line with the same/lower indentation</li>
-</ul>
-
-
-<p><a name="vtr-set-py-id"></a></p>
-
-<h4>indentpython</h4>
-
-<p>確保你的程式碼符合<a href="https://www.python.org/dev/peps/pep-0008/">PEP8</a>的indent規範</p>
-
-<p><a name="vtr-set-misc"></a></p>
-
-<h3>和Plugin 無關的設定</h3>
-
-<p>以下都加在<code>.vimrc中</code>，建議加到<code>Vundle</code>設定結束後以確保可能會用到的Plugin已經啟動</p>
-
-<p><a name="vtr-set-misc-ed"></a></p>
-
-<h4>編輯器和顯示特殊字元相關設定</h4>
-
-<ul>
-<li>設定gvim 的配色，請自行找Color scheme
-
-<ul>
-<li><code>colorscheme koehler</code></li>
-</ul>
-</li>
-<li>設定gvim 的字型和大小
-
-<ul>
-<li><code>set guifont=Inconsolata\ for\ Powerline\ 32</code></li>
-</ul>
-</li>
-<li>將找到的字串設成高亮度
-
-<ul>
-<li><code>set hlsearch</code></li>
-</ul>
-</li>
-<li>游標在的該行背景高亮度
-
-<ul>
-<li><code>set cursorline</code></li>
-</ul>
-</li>
-<li>顯示行號
-
-<ul>
-<li><code>set nu</code></li>
-</ul>
-</li>
-<li>第八十字元地方顯示高亮度區塊（這是連續兩個描述)
-
-<ul>
-<li><code>set colorcolumn=80</code></li>
-<li><code>highlight ColorColumn guibg=#202020</code></li>
-</ul>
-</li>
-<li>顯示tab （這是連續兩個描述)
-
-<ul>
-<li><code>set listchars=tab:»\</code>
-
-<ul>
-<li><strong>注意<code>\</code>後面有一個空白</strong></li>
-</ul>
-</li>
-<li><code>set list</code></li>
-</ul>
-</li>
-</ul>
-
-
-<p>效果如下圖
-<img src=/images/vim_ind9.jpg></p>
-
-<p><a name="vtr-set-misc-ind"></a></p>
-
-<h4>Indent相關設定</h4>
-
-<ul>
-<li>Tab相關設定
-
-<ul>
-<li><code>set ts=4</code>
-
-<ul>
-<li>tab space 為4個字元</li>
-</ul>
-</li>
-<li><code>set expandtab</code>
-
-<ul>
-<li>不使用tab，用空白字元代替</li>
-</ul>
-</li>
-<li><code>set shiftwidth=4</code>
-
-<ul>
-<li>Auto indent的移動字元數量</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>visual 模式下一次移動一個indent
-
-<ul>
-<li><code>vnoremap &lt; &lt;gv</code>
-
-<ul>
-<li>往左移動一個indent</li>
-</ul>
-</li>
-<li><code>vnoremap &gt; &gt;gv</code>
-
-<ul>
-<li>往右移動一個indent</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-set-misc-msc"></a></p>
-
-<h4>其他</h4>
-
-<ul>
-<li><code>set clipboard+=unnamed</code>
-
-<ul>
-<li>PRIMARY selection的register <code>"*</code>包含vim的unnamed register。白話講就是其他的APP如gedit中滑鼠選字後可以用<code>"*p</code>貼到vim，同樣的<code>"*y6y</code>的結果可以貼在其他的APP如gedit上。這部份有vim <code>register</code>副本，建議到參考資料的副本區一讀。再次感謝<a href="http://scottt.tw/">Scott</a>大大。</li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="https://github.com/VundleVim/Vundle.vim">Vundle Github</a></li>
-<li><a href="https://github.com/vim-airline/vim-airline">vim-airline</a></li>
-<li><a href="https://github.com/tpope/vim-fugitive">vim-fugitive</a></li>
-<li><a href="https://github.com/powerline/fonts">Powerline fonts</a></li>
-<li><a href="https://majutsushi.github.io/tagbar/">Tagbar</a></li>
-<li><a href="https://github.com/Yggdroot/indentLine">indentLine</a></li>
-<li><a href="https://github.com/ntpeters/vim-better-whitespace">Vim Better Whitespace Plugin</a></li>
-<li><a href="https://github.com/chazy/cscope_maps">cscope maps</a></li>
-<li><a href="https://github.com/vim-scripts/taglist.vim">taglist</a></li>
-<li><a href="https://github.com/scrooloose/nerdtree">Nerd Tree</a></li>
-<li><a href="https://github.com/wesleyche/SrcExpl">Source Explorer</a></li>
-<li><a href="https://github.com/wesleyche/Trinity">Trinity</a></li>
-<li><a href="http://stackoverflow.com/questions/4998582/show-whitespace-characters-in-gvim">Stackoverflow: Show white space and tab in vim</a></li>
-<li>Python 相關
-
-<ul>
-<li>Plugins
-
-<ul>
-<li><a href="https://github.com/python-mode/python-mode">Python Mode</a></li>
-<li><a href="https://github.com/vim-scripts/python.vim">Python</a></li>
-<li><a href="https://github.com/vim-scripts/indentpython.vim">Indent Python</a></li>
-<li><a href="https://github.com/vim-syntastic/syntastic">Syntax checking hacks for vim</a></li>
-<li><a href="https://github.com/vim-scripts/python_match.vim">python_match</a></li>
-<li><a href="https://stackoverflow.com/questions/19209139/syntastic-and-python-mode-together">Stackoverflow: Syntastic and Python-mode together?
-</a></li>
-</ul>
-</li>
-<li><code>vim</code>設定相關
-
-<ul>
-<li><a href="https://wiki.python.org/moin/Vim">Python Wiki: vim</a></li>
-<li><a href="https://realpython.com/vim-and-python-a-match-made-in-heaven/">VIM and Python – A Match Made in Heaven</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li>和plugin無關的vim trace code資料
-
-<ul>
-<li><a href="http://blog.vgod.tw/2009/12/08/vim-cheat-sheet-for-programmers/">給程式設計師的Vim入門圖解說明</a></li>
-<li><a href="http://wen00072.github.io/blog/2014/11/24/the-skin-slides-to-trace-code-on-line/">Trace 程式碼之皮投影片上線</a></li>
-</ul>
-</li>
-<li>副本: vim 的register概念
-
-<ul>
-<li><a href="http://usevim.com/2012/04/13/registers/">usevim: Vim 101: Registers</a></li>
-<li><a href="http://stackoverflow.com/questions/11489428/how-to-make-vim-paste-from-and-copy-to-systems-clipboard">Stackoverflow: How to make vim paste from (and copy to) system&rsquo;s clipboard?</a></li>
-</ul>
-</li>
-</ul>
-
-
-<p><a name="vtr-pkg"></a></p>
-
-<h2>懶人包</h2>
-
-<ul>
-<li>安裝相關軟體，Vundle和airline字型</li>
-</ul>
-
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>sudo apt-get install -y exuberant-ctags cscope vim-gtk git flake8 python-rope pylint
-</span><span class='line'>git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
-</span><span class='line'>git clone https://github.com/powerline/fonts
-</span><span class='line'>cd fonts &amp;&amp; ./install.sh
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>剪貼下面的文字並存放到 ~/.vimrc</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>.vimrc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-<span class='line-number'>29</span>
-<span class='line-number'>30</span>
-<span class='line-number'>31</span>
-<span class='line-number'>32</span>
-<span class='line-number'>33</span>
-<span class='line-number'>34</span>
-<span class='line-number'>35</span>
-<span class='line-number'>36</span>
-<span class='line-number'>37</span>
-<span class='line-number'>38</span>
-<span class='line-number'>39</span>
-<span class='line-number'>40</span>
-<span class='line-number'>41</span>
-<span class='line-number'>42</span>
-<span class='line-number'>43</span>
-<span class='line-number'>44</span>
-<span class='line-number'>45</span>
-<span class='line-number'>46</span>
-<span class='line-number'>47</span>
-<span class='line-number'>48</span>
-<span class='line-number'>49</span>
-<span class='line-number'>50</span>
-<span class='line-number'>51</span>
-<span class='line-number'>52</span>
-<span class='line-number'>53</span>
-<span class='line-number'>54</span>
-<span class='line-number'>55</span>
-<span class='line-number'>56</span>
-<span class='line-number'>57</span>
-<span class='line-number'>58</span>
-<span class='line-number'>59</span>
-<span class='line-number'>60</span>
-<span class='line-number'>61</span>
-<span class='line-number'>62</span>
-<span class='line-number'>63</span>
-<span class='line-number'>64</span>
-<span class='line-number'>65</span>
-<span class='line-number'>66</span>
-<span class='line-number'>67</span>
-<span class='line-number'>68</span>
-<span class='line-number'>69</span>
-<span class='line-number'>70</span>
-<span class='line-number'>71</span>
-<span class='line-number'>72</span>
-<span class='line-number'>73</span>
-<span class='line-number'>74</span>
-<span class='line-number'>75</span>
-<span class='line-number'>76</span>
-<span class='line-number'>77</span>
-<span class='line-number'>78</span>
-<span class='line-number'>79</span>
-<span class='line-number'>80</span>
-<span class='line-number'>81</span>
-<span class='line-number'>82</span>
-<span class='line-number'>83</span>
-<span class='line-number'>84</span>
-<span class='line-number'>85</span>
-<span class='line-number'>86</span>
-<span class='line-number'>87</span>
-<span class='line-number'>88</span>
-<span class='line-number'>89</span>
-<span class='line-number'>90</span>
-<span class='line-number'>91</span>
-<span class='line-number'>92</span>
-<span class='line-number'>93</span>
-<span class='line-number'>94</span>
-<span class='line-number'>95</span>
-<span class='line-number'>96</span>
-<span class='line-number'>97</span>
-<span class='line-number'>98</span>
-<span class='line-number'>99</span>
-<span class='line-number'>100</span>
-<span class='line-number'>101</span>
-<span class='line-number'>102</span>
-<span class='line-number'>103</span>
-<span class='line-number'>104</span>
-<span class='line-number'>105</span>
-<span class='line-number'>106</span>
-<span class='line-number'>107</span>
-<span class='line-number'>108</span>
-<span class='line-number'>109</span>
-<span class='line-number'>110</span>
-<span class='line-number'>111</span>
-<span class='line-number'>112</span>
-<span class='line-number'>113</span>
-<span class='line-number'>114</span>
-<span class='line-number'>115</span>
-<span class='line-number'>116</span>
-<span class='line-number'>117</span>
-<span class='line-number'>118</span>
-<span class='line-number'>119</span>
-<span class='line-number'>120</span>
-<span class='line-number'>121</span>
-<span class='line-number'>122</span>
-<span class='line-number'>123</span>
-<span class='line-number'>124</span>
-<span class='line-number'>125</span>
-<span class='line-number'>126</span>
-<span class='line-number'>127</span>
-<span class='line-number'>128</span>
-<span class='line-number'>129</span>
-<span class='line-number'>130</span>
-<span class='line-number'>131</span>
-<span class='line-number'>132</span>
-<span class='line-number'>133</span>
-<span class='line-number'>134</span>
-<span class='line-number'>135</span>
-<span class='line-number'>136</span>
-<span class='line-number'>137</span>
-<span class='line-number'>138</span>
-<span class='line-number'>139</span>
-<span class='line-number'>140</span>
-<span class='line-number'>141</span>
-<span class='line-number'>142</span>
-<span class='line-number'>143</span>
-<span class='line-number'>144</span>
-<span class='line-number'>145</span>
-<span class='line-number'>146</span>
-<span class='line-number'>147</span>
-<span class='line-number'>148</span>
-<span class='line-number'>149</span>
-<span class='line-number'>150</span>
-<span class='line-number'>151</span>
-<span class='line-number'>152</span>
-<span class='line-number'>153</span>
-<span class='line-number'>154</span>
-<span class='line-number'>155</span>
-<span class='line-number'>156</span>
-<span class='line-number'>157</span>
-<span class='line-number'>158</span>
-<span class='line-number'>159</span>
-<span class='line-number'>160</span>
-<span class='line-number'>161</span>
-<span class='line-number'>162</span>
-<span class='line-number'>163</span>
-<span class='line-number'>164</span>
-<span class='line-number'>165</span>
-<span class='line-number'>166</span>
-<span class='line-number'>167</span>
-<span class='line-number'>168</span>
-<span class='line-number'>169</span>
-<span class='line-number'>170</span>
-<span class='line-number'>171</span>
-<span class='line-number'>172</span>
-<span class='line-number'>173</span>
-<span class='line-number'>174</span>
-<span class='line-number'>175</span>
-<span class='line-number'>176</span>
-<span class='line-number'>177</span>
-<span class='line-number'>178</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Start vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>set nocompatible              &quot; be iMproved, required
-</span><span class='line'>filetype off                  &quot; required
-</span><span class='line'>
-</span><span class='line'>&quot; set the runtime path to include Vundle and initialize
-</span><span class='line'>set rtp+=~/.vim/bundle/Vundle.vim
-</span><span class='line'>call vundle#begin()
-</span><span class='line'>
-</span><span class='line'>&quot; alternatively, pass a path where Vundle should install plugins
-</span><span class='line'>&quot;call vundle#begin(&#39;~/some/path/here&#39;)
-</span><span class='line'>
-</span><span class='line'>&quot; let Vundle manage Vundle, required
-</span><span class='line'>Plugin &#39;VundleVim/Vundle.vim&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>&quot; Write your plugins here
-</span><span class='line'>&quot;===============================================================
-</span><span class='line'>&quot; Layouts
-</span><span class='line'>Plugin &#39;Yggdroot/indentLine&#39;
-</span><span class='line'>Plugin &#39;ntpeters/vim-better-whitespace&#39;
-</span><span class='line'>
-</span><span class='line'>&quot; Markdown
-</span><span class='line'>Plugin &#39;vim-pandoc/vim-pandoc-syntax&#39;
-</span><span class='line'>
-</span><span class='line'>&quot; Python related
-</span><span class='line'>Plugin &#39;python-mode/python-mode&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/indentpython.vim&#39;
-</span><span class='line'>Plugin &#39;vim-syntastic/syntastic&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/python_match.vim&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/python.vim&#39;
-</span><span class='line'>
-</span><span class='line'>&quot; Misc tools
-</span><span class='line'>Plugin &#39;kien/ctrlp.vim&#39;
-</span><span class='line'>Plugin &#39;vim-airline/vim-airline&#39;
-</span><span class='line'>Plugin &#39;tpope/vim-fugitive&#39;
-</span><span class='line'>Plugin &#39;Valloric/YouCompleteMe&#39;
-</span><span class='line'>Plugin &#39;chazy/cscope_maps&#39;
-</span><span class='line'>Plugin &#39;vim-scripts/taglist.vim&#39;
-</span><span class='line'>Plugin &#39;scrooloose/nerdtree&#39;
-</span><span class='line'>Plugin &#39;wesleyche/SrcExpl&#39;
-</span><span class='line'>Plugin &#39;wesleyche/Trinity&#39;
-</span><span class='line'>Plugin &#39;majutsushi/tagbar&#39;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Run vundle
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; All of your Plugins must be added before the following line
-</span><span class='line'>call vundle#end()            &quot; required
-</span><span class='line'>filetype plugin indent on    &quot; required
-</span><span class='line'>&quot; To ignore plugin indent changes, instead use:
-</span><span class='line'>&quot;filetype plugin on
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; Brief help
-</span><span class='line'>&quot; :PluginList       - lists configured plugins
-</span><span class='line'>&quot; :PluginInstall    - installs plugins; append `!` to update or just :PluginUpdate
-</span><span class='line'>&quot; :PluginSearch foo - searches for foo; append `!` to refresh local cache
-</span><span class='line'>&quot; :PluginClean      - confirms removal of unused plugins; append `!` to auto-approve removal
-</span><span class='line'>&quot;
-</span><span class='line'>&quot; see :h vundle for more details or wiki for FAQ
-</span><span class='line'>&quot; Put your non-Plugin stuff after this line
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Tagbar Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close the tagbar separately
-</span><span class='line'>nmap &lt;F7&gt; :TagbarToggle&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Trinity Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Open and close all the three plugins on the same time
-</span><span class='line'>nmap &lt;F8&gt;  :TrinityToggleAll&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Source Explorer separately
-</span><span class='line'>nmap &lt;F9&gt;  :TrinityToggleSourceExplorer&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the Taglist separately
-</span><span class='line'>nmap &lt;F10&gt; :TrinityToggleTagList&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot; Open and close the NERD Tree separately
-</span><span class='line'>nmap &lt;F11&gt; :TrinityToggleNERDTree&lt;CR&gt;
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Airline settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>let g:airline_powerline_fonts = 1
-</span><span class='line'>set laststatus=2
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; syntastic settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>set statusline+=%#warningmsg#
-</span><span class='line'>set statusline+=%{SyntasticStatuslineFlag()}
-</span><span class='line'>set statusline+=%*
-</span><span class='line'>
-</span><span class='line'>let g:loaded_syntastic_c_checker = 1
-</span><span class='line'>let g:loaded_syntastic_cpp_checker = 1
-</span><span class='line'>let g:syntastic_always_populate_loc_list = 1
-</span><span class='line'>let g:syntastic_auto_loc_list = 1
-</span><span class='line'>let g:syntastic_check_on_open = 1
-</span><span class='line'>let g:syntastic_check_on_wq = 0
-</span><span class='line'>
-</span><span class='line'>autocmd VimEnter * SyntasticToggleMode &quot; disable syntastic by default
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; pymode settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>let g:pymode_lint = 1    &quot; Prefer to use syntastic to check lint
-</span><span class='line'>let g:pymode_folding = 0 &quot; Unfold all
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Editor and display Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>colorscheme koehler         &quot; Color for gvim
-</span><span class='line'>
-</span><span class='line'>set hlsearch                &quot; Highlight search
-</span><span class='line'>set guifont=Inconsolata\ for\ Powerline\ 32 &quot; Font
-</span><span class='line'>set cursorline              &quot; Hight background at current cursor line
-</span><span class='line'>set nu                      &quot; Display line numbers
-</span><span class='line'>
-</span><span class='line'>&quot; Set background color at colum 80
-</span><span class='line'>set colorcolumn=80
-</span><span class='line'>highlight ColorColumn guibg=#202020
-</span><span class='line'>
-</span><span class='line'>&quot; Show tabs
-</span><span class='line'>set listchars=tab:\|.
-</span><span class='line'>set list
-</span><span class='line'>
-</span><span class='line'>&quot; Ensure syntax is on
-</span><span class='line'>syntax on
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Indent Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Tabs
-</span><span class='line'>set ts=4
-</span><span class='line'>set expandtab
-</span><span class='line'>set shiftwidth=4
-</span><span class='line'>
-</span><span class='line'>&quot; visual indent shift
-</span><span class='line'>vnoremap &lt; &lt;gv
-</span><span class='line'>vnoremap &gt; &gt;gv
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; MISC Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Shared unamed regitered with primary selection
-</span><span class='line'>set clipboard+=unnamed
-</span><span class='line'>
-</span><span class='line'>&quot; uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
-</span><span class='line'>set encoding=utf-8
-</span><span class='line'>set fileencoding=utf-8a
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; Python Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>au BufNewFile,BufRead *.py
-</span><span class='line'>    \ set tabstop=4 |
-</span><span class='line'>    \ set softtabstop=4 |
-</span><span class='line'>    \ set shiftwidth=4 |
-</span><span class='line'>    \ set textwidth=79 |
-</span><span class='line'>    \ set expandtab |
-</span><span class='line'>    \ set autoindent |
-</span><span class='line'>    \ set fileformat=unix
-</span><span class='line'>let python_highlight_all=1
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; pandoc Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>let g:pandoc#syntax#conceal#use = 0
-</span><span class='line'>
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>&quot; YCM Settings
-</span><span class='line'>&quot;====================================================================
-</span><span class='line'>let g:ycm_global_ycm_extra_conf = &#39;~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py&#39;
-</span><span class='line'>let g:ycm_show_diagnostics_ui = 0
-</span></code></pre></td></tr></table></div></figure>
-
-
-<ul>
-<li>gvim -> <code>:PluginInstall</code> 安裝Plugin重新開啟收工</li>
-</ul>
-
-
-<h3>其他</h3>
-
-<ul>
-<li>cscope產生database供vim使用
-
-<ul>
-<li><code>cscope -bqkR</code>
-
-<ul>
-<li>k表示使用kernel mode，不把/usr/include之類的加入資料庫。Cross compile也不會使用host 的header file，所以請自行斟酌。其他參數請自己問男人。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>ctags產生database供vim使用
-
-<ul>
-<li><code>ctags -R</code></li>
-</ul>
-</li>
-<li>要在vim使用到ctags和cscope的話，請記得<strong>vim一定要開在database同一層目錄!</strong></li>
-</ul>
-
-
-<p>舉例來說，你在/tmp/linux-stable目錄下了上面兩個指令。要開啟檔案請在/tmp/linux-stable目錄中指定對應路徑。範例如下</p>
-
-<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>user@host:/tmp/linux-stable$ gvim fs/select.c
-</span></code></pre></td></tr></table></div></figure>
-
-
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -4114,6 +3961,18 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/08/04/hello-world-disassm/">Hello World 反組譯輸出</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/03/load-elf-binary-trace/">Load_elf_binary Trace</a>
       </li>
     
@@ -4121,32 +3980,20 @@
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (3)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 148.0%'>c(36)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.31914893617021%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.27659574468085%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.55319148936171%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.82978723404256%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.1063829787234%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.27659574468085%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.27659574468085%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.27659574468085%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.14893617021276%'>binutils(15)</a> <a href='/blog/categories/buildroot' style='font-size: 102.55319148936171%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.7872340425532%'>c(39)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.27659574468085%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.55319148936171%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.55319148936171%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.27659574468085%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.27659574468085%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.27659574468085%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.42553191489361%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.27659574468085%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.27659574468085%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.27659574468085%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.55319148936171%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.27659574468085%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.27659574468085%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.27659574468085%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.27659574468085%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.55319148936171%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.1063829787234%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.27659574468085%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.55319148936171%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.1063829787234%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.55319148936171%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.27659574468085%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.27659574468085%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.38297872340425%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.55319148936171%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.27659574468085%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.27659574468085%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.27659574468085%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.27659574468085%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.27659574468085%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.55319148936171%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 103.82978723404256%'>kernel(3)</a> <a href='/blog/categories/ld' style='font-size: 101.27659574468085%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.55319148936171%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.55319148936171%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.38297872340425%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(47)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.82978723404256%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.55319148936171%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.27659574468085%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.27659574468085%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.27659574468085%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.65957446808511%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.55319148936171%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.48936170212767%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.27659574468085%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.27659574468085%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.55319148936171%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.27659574468085%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 117.87234042553192%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.1063829787234%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.38297872340425%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.27659574468085%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.55319148936171%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.27659574468085%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.27659574468085%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.27659574468085%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.1063829787234%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.27659574468085%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.38297872340425%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.27659574468085%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.27659574468085%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.27659574468085%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.27659574468085%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.27659574468085%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.55319148936171%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.38297872340425%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.27659574468085%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.55319148936171%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.27659574468085%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.27659574468085%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.27659574468085%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.27659574468085%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.2127659574468%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.27659574468085%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.55319148936171%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.82978723404256%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.82978723404256%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.82978723404256%'>過期(3)</a> </span>
 </section>
 
 

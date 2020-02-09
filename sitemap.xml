@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://wen00072.github.io/blog/2019/08/07/hello-world-slides/</loc>
+<lastmod>2019-08-07T21:43:47+08:00</lastmod>
+</url>
+<url>
+<loc>http://wen00072.github.io/blog/2019/08/05/glibc-obj-file-symbols/</loc>
+<lastmod>2019-08-05T20:06:25+08:00</lastmod>
+</url>
+<url>
+<loc>http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/</loc>
+<lastmod>2019-08-04T21:07:11+08:00</lastmod>
+</url>
+<url>
 <loc>http://wen00072.github.io/blog/2019/08/03/load-elf-binary-trace/</loc>
 <lastmod>2019-08-03T18:11:05+08:00</lastmod>
 </url>
@@ -627,10 +639,10 @@
 <loc>http://wen00072.github.io/blog/archives/</loc>
 </url>
 <url>
-<loc>http://wen00072.github.io/categories/</loc>
+<loc>http://wen00072.github.io/about/</loc>
 </url>
 <url>
-<loc>http://wen00072.github.io/about/</loc>
+<loc>http://wen00072.github.io/categories/</loc>
 </url>
 <url>
 <loc>http://wen00072.github.io/blog/categories/git/</loc>
@@ -903,15 +915,15 @@
 <loc>http://wen00072.github.io/blog/categories/glibc/</loc>
 </url>
 <url>
-<loc>http://wen00072.github.io/files/javadoc-20150830/test_overview_package_info.pdf</loc>
-<lastmod>2020-01-26T14:20:53+08:00</lastmod>
+<loc>http://wen00072.github.io/files/javadoc-20150830/test_final.pdf</loc>
+<lastmod>2018-12-06T22:19:10+08:00</lastmod>
 </url>
 <url>
-<loc>http://wen00072.github.io/files/javadoc-20150830/test_final.pdf</loc>
-<lastmod>2020-01-26T14:20:53+08:00</lastmod>
+<loc>http://wen00072.github.io/files/javadoc-20150830/test_overview_package_info.pdf</loc>
+<lastmod>2018-12-06T22:19:10+08:00</lastmod>
 </url>
 <url>
 <loc>http://wen00072.github.io/files/javadoc-20150830/test_init.pdf</loc>
-<lastmod>2020-01-26T14:20:53+08:00</lastmod>
+<lastmod>2018-12-06T22:19:10+08:00</lastmod>
 </url>
 </urlset>

@@ -11,7 +11,9 @@
 
 
   
-  <meta name="description" content="接續前一篇的話題。在查資料的時候看到valgrind可以和gdb合作，試了一下發現他的作法和我想的不一樣。原本以為是valgrind跑出來以後直接把漏掉的call stack和program counter傳給gdb，而gdb把他當成一種中斷點。結果完全不是，他的用法是： 跑valgrind， &hellip;">
+  <meta name="description" content="印象中以前學過C語言中跨檔案的全域變數是這樣宣告的。
+檔案一：int g_var1;
+檔案二：extern int g_val1; 然而，我從來沒有想過如果沒有extern的情況會發生什麼狀況。加上之前看過的objdump和nm後手癢，所以把可能的排列組合看看可能發生什麼事。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -70,6 +72,1478 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/12/09/global-variables-from-common-symbol-on-the-c-programming-language/">談談C語言的全域變數和 Linux Object 檔案的關係</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-12-09T03:04:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>3:04 am</span></time>
+        
+           | <a href="/blog/2014/12/09/global-variables-from-common-symbol-on-the-c-programming-language/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/12/09/global-variables-from-common-symbol-on-the-c-programming-language/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>印象中以前學過C語言中跨檔案的全域變數是這樣宣告的。
+檔案一：<code>int g_var1;</code>
+檔案二：<code>extern int g_val1;</code></p>
+
+<p>然而，我從來沒有想過如果沒有extern的情況會發生什麼狀況。加上之前看過的objdump和nm後手癢，所以把可能的排列組合看看可能發生什麼事。</p>
+
+<p>這邊要先知道common object表示object檔案已經紀錄下這個symbol，最後link的時候才會決定要怎麼處理。會放在common section <a href="http://stackoverflow.com/questions/18335256/what-does-com-stand-for-in-objdump-symbol-table">出處</a>。</p>
+
+<p>由於結果和分析又臭又長，連我自己都不太想回去看。建議先看<a href="#elf-concl">結論</a>，有疑惑再回來看結果和分析吧。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#elf-env">測試環境</a></li>
+<li><a href="#elf-ex">測試程式</a></li>
+<li><a href="#elf-res">測試結果</a></li>
+<li><a href="#elf-concl">結論</a></li>
+<li><a href="#elf-ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="elf-env"></a></p>
+
+<h2>測試環境</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ lsb_release -a
+</span><span class='line'>No LSB modules are available.
+</span><span class='line'>Distributor ID:   Ubuntu
+</span><span class='line'>Description:  Ubuntu 14.04.1 LTS
+</span><span class='line'>Release:  14.04
+</span><span class='line'>Codename: trusty</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>GNU objdump (GNU Binutils for Ubuntu) 2.24</li>
+<li>GNU nm (GNU Binutils for Ubuntu) 2.24</li>
+</ul>
+
+
+<p><a name="elf-ex"></a></p>
+
+<h2>測試程式</h2>
+
+<p>非常簡單，就是有兩個檔案存放全域變數，每次測試時先更改全域變數
+* 是否有初始值
+* 宣告方式是否有<code>extern</code>
+全部的排列組合放在<a href="#elf-res">這邊</a></p>
+
+<figure class='code'><figcaption><span>var1.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="n">g_var1</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>var2.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int</span> <span class="n">g_var1</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>main.c</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="cp">#include &lt;stdio.h&gt;</span>
+</span><span class='line'><span class="k">extern</span> <span class="kt">int</span> <span class="n">g_var1</span><span class="p">;</span>
+</span><span class='line'><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Hello %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">g_var1</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nv">TARGET</span><span class="o">=</span>glvar
+</span><span class='line'><span class="nv">SRCS</span><span class="o">=</span>var_1.c var_2.c main.c
+</span><span class='line'><span class="nv">OBJS</span><span class="o">=</span><span class="k">$(</span>patsubst %.c, %.o, <span class="k">$(</span>SRCS<span class="k">))</span>
+</span><span class='line'><span class="nv">CFLAGS</span><span class="o">=</span>-g
+</span><span class='line'>
+</span><span class='line'><span class="nf">$(TARGET)</span><span class="o">:</span> <span class="k">$(</span><span class="nv">OBJS</span><span class="k">)</span>
+</span><span class='line'>  <span class="k">$(</span>CC<span class="k">)</span> -o <span class="nv">$@</span> <span class="nv">$^</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">test</span><span class="o">:</span> <span class="k">$(</span><span class="nv">TARGET</span><span class="k">)</span>
+</span><span class='line'>  objdump -t <span class="k">$(</span>OBJS<span class="k">)</span> <span class="k">$(</span>TARGET<span class="k">)</span>
+</span><span class='line'>  nm -A <span class="k">$(</span>OBJS<span class="k">)</span> <span class="k">$(</span>TARGET<span class="k">)</span>
+</span><span class='line'>  ./<span class="k">$(</span>TARGET<span class="k">)</span>
+</span><span class='line'>
+</span><span class='line'><span class="nf">clean</span><span class="o">:</span>
+</span><span class='line'>  rm -f <span class="k">$(</span>TARGET<span class="k">)</span> <span class="k">$(</span>OBJS<span class="k">)</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="elf-res"></a></p>
+
+<h2>測試結果</h2>
+
+<table>
+<thead>
+<tr>
+<th> var1.c 宣告方式         </th>
+<th> var2.c宣告方式         </th>
+<th> 編譯結果  </th>
+<th style="text-align:right;"> nm 和 objdump 分析  </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> int g_var;            </td>
+<td> int g_var;            </td>
+<td>  成功     </td>
+<td style="text-align:right;"> <a href="#elf-res1">分析</a>  </td>
+</tr>
+<tr>
+<td> int g_var = 2;        </td>
+<td> int g_var;            </td>
+<td>  成功     </td>
+<td style="text-align:right;"> <a href="#elf-res2">分析</a>  </td>
+</tr>
+<tr>
+<td> int g_var;            </td>
+<td> int g_var = 3;        </td>
+<td>  成功     </td>
+<td style="text-align:right;"> <a href="#elf-res3">分析</a>  </td>
+</tr>
+<tr>
+<td> int g_var = 2;        </td>
+<td> int g_var = 3;        </td>
+<td>  失敗     </td>
+<td style="text-align:right;"> <a href="#elf-res4">分析</a>  </td>
+</tr>
+</tbody>
+</table>
+
+
+<table>
+<thead>
+<tr>
+<th> var1.c 宣告方式         </th>
+<th> var2.c宣告方式             </th>
+<th> 編譯結果  </th>
+<th style="text-align:right;"> nm 和 objdump 分析  </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> int g_var;            </td>
+<td> extern <br>int g_var;     </td>
+<td> 成功      </td>
+<td style="text-align:right;"> <a href="#elf-res5">分析</a>  </td>
+</tr>
+<tr>
+<td> int g_var = 2;        </td>
+<td> extern <br>int g_var;     </td>
+<td> 成功      </td>
+<td style="text-align:right;"> <a href="#elf-res6">分析</a>  </td>
+</tr>
+<tr>
+<td> int g_var;            </td>
+<td> extern <br>int g_var = 3; </td>
+<td> 有警告    </td>
+<td style="text-align:right;"> <a href="#elf-res7">分析</a>  </td>
+</tr>
+<tr>
+<td> int g_var = 2;        </td>
+<td> extern <br>int g_var = 3; </td>
+<td> 失敗      </td>
+<td style="text-align:right;"> <a href="#elf-res8">分析</a>  </td>
+</tr>
+</tbody>
+</table>
+
+
+<table>
+<thead>
+<tr>
+<th> var1.c 宣告方式            </th>
+<th> var2.c宣告方式              </th>
+<th> 編譯結果  </th>
+<th style="text-align:right;"> nm 和 objdump 分析  </th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td> extern <br>int g_var;     </td>
+<td> extern <br>int g_var;     </td>
+<td> link失敗  </td>
+<td style="text-align:right;"> <a href="#elf-res9">分析</a>  </td>
+</tr>
+<tr>
+<td> extern <br>int g_var = 2; </td>
+<td> extern <br>int g_var;     </td>
+<td> 有警告    </td>
+<td style="text-align:right;"> <a href="#elf-res10">分析</a>  </td>
+</tr>
+<tr>
+<td> extern <br>int g_var      </td>
+<td> extern <br>int g_var = 3; </td>
+<td> 有警告    </td>
+<td style="text-align:right;"> <a href="#elf-res11">分析</a>  </td>
+</tr>
+<tr>
+<td> extern <br>int g_var = 2; </td>
+<td> extern <br>int g_var = 3; </td>
+<td> link失敗  </td>
+<td style="text-align:right;"> <a href="#elf-res12">分析</a>  </td>
+</tr>
+</tbody>
+</table>
+
+
+<p><a name="elf-res1"></a></p>
+
+<h2>分析 var1.c: int g_var; var2.c: int g_var; 的結果</h2>
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000004       O <em>COM</em>  0000000000000004 g_var1
+
+<ul>
+<li>這是一個object，放在commom section</li>
+</ul>
+</li>
+<li>var2.o: 0000000000000004       O <em>COM</em>  0000000000000004 g_var1
+
+<ul>
+<li>這是一個object，放在commom section。</li>
+</ul>
+</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar: 0000000000601044 g     O .bss   0000000000000004              g_var1
+
+<ul>
+<li>這個symbol放在<code>.bss</code>，也就是未初始化的全域變數</li>
+<li>這是最後產生的executable object</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000004 C g_var1
+
+<ul>
+<li>這是一個common symbol。</li>
+</ul>
+</li>
+<li>var_2.o:0000000000000004 C g_var1
+
+<ul>
+<li>這是一個common symbol。</li>
+</ul>
+</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar: <code>glvar:0000000000601044 B g_var1</code>
+
+<ul>
+<li>這是最後產生的executable object</li>
+<li>這個symbol放在<code>.bss</code>，也就是未初始化的全域變數</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res2"></a></p>
+
+<h2>分析 var1.c: int g_var = 2; var2.c: int g_var; 的結果</h2>
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>var2.o: 0000000000000004       O <em>COM</em>  0000000000000004 g_var1
+
+<ul>
+<li>這是一個object，放在commom section</li>
+</ul>
+</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar: 0000000000601040 g     O .data   0000000000000004              g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+<li>這是最後產生的executable object</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>var_2.o:0000000000000004 C g_var1
+
+<ul>
+<li>這是一個common symbol。</li>
+</ul>
+</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar:0000000000601040 D g_var1
+
+<ul>
+<li>這是最後產生的executable object</li>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res3"></a></p>
+
+<h2>分析 var1.c: int g_var2 = 2; var2.c:  int g_var; 的結果</h2>
+
+<p>和上面的差別只有var1.o和var2.o的結果對調而已。</p>
+
+<p><a name="elf-res4"></a></p>
+
+<h2>分析 var1.c: int g_var2 = 2; var2.c:  int g_var = 3; 的結果</h2>
+
+<ul>
+<li>錯誤訊息： g_var1重複定義</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">$</span> <span class="err">make</span> <span class="err">test</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_1.o</span> <span class="err">var_1.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_2.o</span> <span class="err">var_2.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">main.o</span> <span class="err">main.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-o</span> <span class="err">glvar</span> <span class="err">var_1.o</span> <span class="err">var_2.o</span> <span class="err">main.o</span>
+</span><span class='line'><span class="nf">var_2.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">multiple</span> <span class="n">definition</span> <span class="n">of</span> `<span class="n">g_var</span>1&#39;
+</span><span class='line'><span class="nf">var_1.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">first</span> <span class="n">defined</span> <span class="n">here</span>
+</span><span class='line'><span class="nf">collect2</span><span class="o">:</span> <span class="n">error</span>: <span class="n">ld</span> <span class="n">returned</span> 1 <span class="n">exit</span> <span class="n">status</span>
+</span><span class='line'><span class="nf">make</span><span class="o">:</span> *** [<span class="n">glvar</span>] <span class="n">Error</span> 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>var2.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>var_2.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res5"></a></p>
+
+<h2>分析 var1.c: int g_var; var2.c: extern int g_var; 的結果</h2>
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000004       O <em>COM</em>  0000000000000004 g_var1
+
+<ul>
+<li>這是一個object，放在commom section</li>
+</ul>
+</li>
+<li>var2.o: 沒有g_var1這個entry</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar: 0000000000601040 g     O .data   0000000000000004              g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+<li>這是最後產生的executable object</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000004 C g_var1
+
+<ul>
+<li>這是一個common symbol</li>
+</ul>
+</li>
+<li>var_2.o: 沒有symbol</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar:0000000000601040 B g_var1
+
+<ul>
+<li>這是最後產生的executable object</li>
+<li>這個symbol是全域變數，並且放在沒有初始值的資料section</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res6"></a></p>
+
+<h2>分析 var1.c: int g_var = 2; var2.c: extern int g_var; 的結果</h2>
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>var2.o: 沒有g_var1這個entry</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar: 0000000000601040 g     O .data   0000000000000004              g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+<li>這是最後產生的executable object</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>var_2.o: 沒有symbol</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar:0000000000601040 D g_var1
+
+<ul>
+<li>這是最後產生的executable object</li>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res7"></a></p>
+
+<h2>分析 var1.c: int g_var; var2.c: extern int g_var = 3; 的結果</h2>
+
+<ul>
+<li>得到警告和錯誤：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">$</span> <span class="err">make</span> <span class="err">test</span>
+</span><span class='line'><span class="err">rm</span> <span class="err">-f</span> <span class="err">glvar</span>  <span class="err">var_1.o</span>  <span class="err">var_2.o</span>  <span class="err">main.o</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_1.o</span> <span class="err">var_1.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_2.o</span> <span class="err">var_2.c</span>
+</span><span class='line'><span class="nf">var_2.c</span><span class="o">:</span>1:12: <span class="n">warning</span>: ‘<span class="n">g_var</span>1’ <span class="n">initialized</span> <span class="n">and</span> <span class="n">declared</span> ‘<span class="n">extern</span>’ [<span class="n">enabled</span> <span class="n">by</span> <span class="n">default</span>]
+</span><span class='line'> extern int <span class="nv">g_var1</span> <span class="o">=</span> 3<span class="p">;</span>
+</span><span class='line'>            ^
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">main.o</span> <span class="err">main.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-o</span> <span class="err">glvar</span> <span class="err">var_1.o</span> <span class="err">var_2.o</span> <span class="err">main.o</span>
+</span><span class='line'><span class="nf">var_2.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">multiple</span> <span class="n">definition</span> <span class="n">of</span> `<span class="n">g_var</span>1&#39;
+</span><span class='line'><span class="nf">var_1.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">first</span> <span class="n">defined</span> <span class="n">here</span>
+</span><span class='line'><span class="nf">collect2</span><span class="o">:</span> <span class="n">error</span>: <span class="n">ld</span> <span class="n">returned</span> 1 <span class="n">exit</span> <span class="n">status</span>
+</span><span class='line'><span class="nf">make</span><span class="o">:</span> *** [<span class="n">glvar</span>] <span class="n">Error</span> 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000004       O <em>COM</em>  0000000000000004 g_var1
+
+<ul>
+<li>這是一個object，放在commom section</li>
+</ul>
+</li>
+<li>var2.o: <strong>0000000000000000 g     O .data    0000000000000004 g_var1</strong>
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> sectio</li>
+</ul>
+</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar: 0000000000601040 g     O .data   0000000000000004              g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+<li>這是最後產生的executable object</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000000 D g_var1
+
+<ul>
+<li>這是一個common symbol</li>
+</ul>
+</li>
+<li>var_2.o:0000000000000000 D g_var1
+
+<ul>
+<li><strong>這個symbol是全域變數，並且放在有初始值的資料section</strong></li>
+</ul>
+</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+<li>glvar:0000000000601040 D g_var1
+
+<ul>
+<li>這是最後產生的executable object</li>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res8"></a></p>
+
+<h2>分析 var1.c: int g_var = 2; var2.c: extern int g_var = 3; 的結果</h2>
+
+<ul>
+<li>得到警告和link錯誤：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">$</span>  <span class="err">make</span> <span class="err">test</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_1.o</span> <span class="err">var_1.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_2.o</span> <span class="err">var_2.c</span>
+</span><span class='line'><span class="nf">var_2.c</span><span class="o">:</span>1:12: <span class="n">warning</span>: ‘<span class="n">g_var</span>1’ <span class="n">initialized</span> <span class="n">and</span> <span class="n">declared</span> ‘<span class="n">extern</span>’ [<span class="n">enabled</span> <span class="n">by</span> <span class="n">default</span>]
+</span><span class='line'> extern int <span class="nv">g_var1</span> <span class="o">=</span> 3<span class="p">;</span>
+</span><span class='line'>            ^
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">main.o</span> <span class="err">main.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-o</span> <span class="err">glvar</span> <span class="err">var_1.o</span> <span class="err">var_2.o</span> <span class="err">main.o</span>
+</span><span class='line'><span class="nf">var_2.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">multiple</span> <span class="n">definition</span> <span class="n">of</span> `<span class="n">g_var</span>1&#39;
+</span><span class='line'><span class="nf">var_1.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">first</span> <span class="n">defined</span> <span class="n">here</span>
+</span><span class='line'><span class="nf">collect2</span><span class="o">:</span> <span class="n">error</span>: <span class="n">ld</span> <span class="n">returned</span> 1 <span class="n">exit</span> <span class="n">status</span>
+</span><span class='line'><span class="nf">make</span><span class="o">:</span> *** [<span class="n">glvar</span>] <span class="n">Error</span> 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>var2.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>var_2.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res9"></a></p>
+
+<h2>分析 var1.c: extern int g_var; var2.c: extern int g_var; 的結果</h2>
+
+<ul>
+<li>link時發生錯誤</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">$</span> <span class="err">make</span> <span class="err">test</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_1.o</span> <span class="err">var_1.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_2.o</span> <span class="err">var_2.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">main.o</span> <span class="err">main.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-o</span> <span class="err">glvar</span> <span class="err">var_1.o</span> <span class="err">var_2.o</span> <span class="err">main.o</span>
+</span><span class='line'><span class="nf">main.o</span><span class="o">:</span> <span class="n">In</span> <span class="n">function</span> `<span class="n">main</span>&#39;:
+</span><span class='line'><span class="nf">/home/wen/work/practice/Linux_Programming_Practice/16_global_var/main.c</span><span class="o">:</span>5: <span class="n">undefined</span> <span class="n">reference</span> <span class="n">to</span> `<span class="n">g_var</span>1&#39;
+</span><span class='line'><span class="nf">collect2</span><span class="o">:</span> <span class="n">error</span>: <span class="n">ld</span> <span class="n">returned</span> 1 <span class="n">exit</span> <span class="n">status</span>
+</span><span class='line'><span class="nf">make</span><span class="o">:</span> *** [<span class="n">glvar</span>] <span class="n">Error</span> 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 沒有g_var這個 entry</li>
+<li>var2.o: 沒有g_var這個 entry</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o: 沒有symbol</li>
+<li>var_2.o: 沒有symbol</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res10"></a></p>
+
+<h2>分析 var1.c: extern int g_var = 2; var2.c: extern int g_var; 的結果</h2>
+
+<ul>
+<li>得到警告：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="nf">var_1.c</span><span class="o">:</span>1:12: <span class="n">warning</span>: ‘<span class="n">g_var</span>1’ <span class="n">initialized</span> <span class="n">and</span> <span class="n">declared</span> ‘<span class="n">extern</span>’ [<span class="n">enabled</span> <span class="n">by</span> <span class="n">default</span>]
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>var2.o: 沒有g_var這個 entry</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>var_2.o: 沒有symbol</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-res11"></a></p>
+
+<h2>分析 var1.c: extern int g_var2; var2.c: extern int g_var = 3; 的結果</h2>
+
+<p>和上面的差別只有var1.o和var2.o的結果對調而已。</p>
+
+<p><a name="elf-res12"></a></p>
+
+<h2>分析 var1.c: extern int g_var2 = 2; var2.c: extern int g_var = 3; 的結果</h2>
+
+<ul>
+<li>得到警告和錯誤：</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>Makefile</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class='makefile'><span class='line'><span class="err">$</span> <span class="err">make</span> <span class="err">clean</span> <span class="err">;</span> <span class="err">make</span> <span class="err">test</span>
+</span><span class='line'><span class="err">rm</span> <span class="err">-f</span> <span class="err">glvar</span>  <span class="err">var_1.o</span>  <span class="err">var_2.o</span>  <span class="err">main.o</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_1.o</span> <span class="err">var_1.c</span>
+</span><span class='line'><span class="nf">var_1.c</span><span class="o">:</span>1:12: <span class="n">warning</span>: ‘<span class="n">g_var</span>1’ <span class="n">initialized</span> <span class="n">and</span> <span class="n">declared</span> ‘<span class="n">extern</span>’ [<span class="n">enabled</span> <span class="n">by</span> <span class="n">default</span>]
+</span><span class='line'> extern int <span class="nv">g_var1</span> <span class="o">=</span> 2<span class="p">;</span>
+</span><span class='line'>            ^
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">var_2.o</span> <span class="err">var_2.c</span>
+</span><span class='line'><span class="nf">var_2.c</span><span class="o">:</span>1:12: <span class="n">warning</span>: ‘<span class="n">g_var</span>1’ <span class="n">initialized</span> <span class="n">and</span> <span class="n">declared</span> ‘<span class="n">extern</span>’ [<span class="n">enabled</span> <span class="n">by</span> <span class="n">default</span>]
+</span><span class='line'> extern int <span class="nv">g_var1</span> <span class="o">=</span> 3<span class="p">;</span>
+</span><span class='line'>            ^
+</span><span class='line'><span class="err">cc</span> <span class="err">-g</span>   <span class="err">-c</span> <span class="err">-o</span> <span class="err">main.o</span> <span class="err">main.c</span>
+</span><span class='line'><span class="err">cc</span> <span class="err">-o</span> <span class="err">glvar</span> <span class="err">var_1.o</span> <span class="err">var_2.o</span> <span class="err">main.o</span>
+</span><span class='line'><span class="nf">var_2.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">multiple</span> <span class="n">definition</span> <span class="n">of</span> `<span class="n">g_var</span>1&#39;
+</span><span class='line'><span class="nf">var_1.o</span><span class="o">:</span>(.<span class="n">data</span>+0<span class="n">x</span>0): <span class="n">first</span> <span class="n">defined</span> <span class="n">here</span>
+</span><span class='line'><span class="nf">collect2</span><span class="o">:</span> <span class="n">error</span>: <span class="n">ld</span> <span class="n">returned</span> 1 <span class="n">exit</span> <span class="n">status</span>
+</span><span class='line'><span class="nf">make</span><span class="o">:</span> *** [<span class="n">glvar</span>] <span class="n">Error</span> 1
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>objdump -t</code> 顯示object檔案的symbol table欄位資料：
+
+<ul>
+<li>var1.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>var2.o: 0000000000000000 g     O .data  0000000000000004 g_var1
+
+<ul>
+<li>這是一個全域變數物件，放在有初始值的<code>.data</code> section</li>
+</ul>
+</li>
+<li>main.o: 0000000000000000         <em>UND</em>  0000000000000000 g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><code>nm -A</code> 顯示object檔案的symbol：
+
+<ul>
+<li>var_1.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>var_2.o:0000000000000000 D g_var1
+
+<ul>
+<li>這個symbol是全域變數，並且放在有初始值的資料section</li>
+</ul>
+</li>
+<li>main.o:                 U g_var1
+
+<ul>
+<li>這是一個undefined symbol</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-concl"></a></p>
+
+<h2>結論</h2>
+
+<ul>
+<li>common symbol表示object檔案已經紀錄下這個symbol，先放在common section。最後link的時候才會決定要怎麼處理。 <a href="http://stackoverflow.com/questions/18335256/what-does-com-stand-for-in-objdump-symbol-table">出處</a></li>
+<li><code>gcc -c</code>產生的object檔案中未初始化的全域變數會放在common section而不是<code>.bss</code> section，原因是link時期其他的object可能有相同名稱的symbol，而這些相同的symbol可能有初始化也可能沒有。而linker需要全盤了解後再做出決定要放在<code>.bss</code>還是<code>.data</code> section。</li>
+<li>最後link出來的executable object檔案不會有common symbol</li>
+<li>多個檔案宣告同樣名稱的全域變數時，編譯時會依下面的情況處理
+
+<ul>
+<li>超過兩個檔案有設初始值，噴錯誤</li>
+<li>都沒設定初始值，產生的object檔案放common section。link時放<code>.bss</code> section。</li>
+<li>一個檔案有設定初始值，其他沒有設定初始值的情形
+
+<ul>
+<li>有設定初始值那個檔案的object檔案變數放在<code>.data</code></li>
+<li>其他沒有設定初始值有設定初始值那個檔案的object檔案變數放在common section</li>
+<li>link時放<code>.data</code> section</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>使用<code>extern</code>全域變數的時候
+
+<ul>
+<li>程式碼沒用到該全域變數在未link前的object 檔案不會有該symbol</li>
+<li>程式碼用到該全域變數在未link前的object 檔案該symbol為undefined</li>
+<li>程式碼給初始值會產生警告，並且會被新增到該object 檔案的symbol table，以至於其他檔案宣告該全域變數會產生重複定義的錯誤。</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="elf-ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="http://stackoverflow.com/questions/18335256/what-does-com-stand-for-in-objdump-symbol-table">stackoverflow: What does <em>COM</em> stand for in objdump symbol table?</a></li>
+<li><a href="http://www.slideshare.net/lubatang/singleton-constructor">從 Singleton 談 constructor</a></li>
+<li><a href="http://stackoverflow.com/questions/16835716/bss-vs-common-what-goes-where">stackoverflow: .bss vs COMMON: what goes where?</a></li>
+<li><a href="http://swaywang.blogspot.tw/2012/06/elfbss-sectioncommon-section.html">Sw@y&rsquo;s Notes: ELF中的.bss section和COMMON section</a></li>
+<li><a href="https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts">GNU linker ld: Linker Scripts</a></li>
+<li><code>man nm</code></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/12/08/nm-field-descriptions/">Nm 的欄位說明</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-12-08T14:45:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>2:45 pm</span></time>
+        
+           | <a href="/blog/2014/12/08/nm-field-descriptions/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/12/08/nm-field-descriptions/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在閱讀ld手冊的時候看到symbol table突然想起來我nm只知道<code>t</code>、<code>U</code>這兩個flag而已。想起來真是慚愧，趕快問一下男人nm顯示出來的欄位意義。一個典型的nm輸出為：
+<code>00000000004005ed T main</code></p>
+
+<p>這些代表什麼呢，整理如下：</p>
+
+<ul>
+<li>symbol存放的值，應該是位址或是offset我猜</li>
+<li>symbol flags，一般來說大寫表示global而小寫表示local</li>
+<li>symbol 名稱</li>
+</ul>
+
+
+<p>symbol flags詳細意義為：</p>
+
+<ul>
+<li><code>A</code>: symbol的值是絕對值，之後的link全部就hardcode不會更動這個symbol的值</li>
+<li><code>B</code>: global symbol。該symbol存放在<strong>沒有初始化</strong>的data section (猜測是<code>.bss</code>)</li>
+<li><code>b</code>: local symbol。該symbol存放在<strong>沒有初始化</strong>的data section (猜測是<code>.bss</code>)</li>
+<li><code>C</code>: common symbol。一種未初始化的資料。<strong>不知道是三小</strong>，男人只有說link多個檔案可能會有不同的common symbol使用相同的名稱，結果還是看不懂。</li>
+<li><code>D</code>: global symbol。該symbol存放在<strong>有初始化</strong>的data section (猜測是<code>.data</code>)</li>
+<li><code>d</code>: local symbol。該symbol存放在<strong>有初始化</strong>的data section (猜測是<code>.data</code>)</li>
+<li><code>G</code>: global symbol。該symbol存放在是針對小量資料做最佳化、<strong>有初始化</strong>的data section(不是<code>.data</code>)</li>
+<li><code>g</code>: local symbol。該symbol存放在是針對小量資料做最佳化、<strong>有初始化</strong>的data section(不是<code>.data</code>)</li>
+<li><code>I</code>:表示這個symbol間接地reference 其他的symbol。不過<strong>我還是沒有搞懂是什麼意義</strong>。</li>
+<li><code>i</code>: 在elf下面的話，表示這個symbol是一個間接的function。這表示當link的時候不會解析位址，而是在runtime才會去呼叫真實的位址function。以下是範例，不過<strong>我還是沒有搞懂是什麼意義</strong>。</li>
+</ul>
+
+
+<figure class='code'><figcaption><span>strcat.o</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">/</span><span class="n">libc</span><span class="p">.</span><span class="nl">a</span><span class="p">:</span><span class="n">strcat</span><span class="p">.</span><span class="nl">o</span><span class="p">:</span><span class="mo">0000000000000040</span> <span class="n">T</span> <span class="n">__GI_strcat</span>
+</span><span class='line'><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">/</span><span class="n">libc</span><span class="p">.</span><span class="nl">a</span><span class="p">:</span><span class="n">strcat</span><span class="p">.</span><span class="nl">o</span><span class="p">:</span>                 <span class="n">U</span> <span class="n">__init_cpu_features</span>
+</span><span class='line'><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">/</span><span class="n">libc</span><span class="p">.</span><span class="nl">a</span><span class="p">:</span><span class="n">strcat</span><span class="p">.</span><span class="nl">o</span><span class="p">:</span><span class="mo">0000000000000000</span> <span class="n">i</span> <span class="n">strcat</span>
+</span><span class='line'><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">/</span><span class="n">libc</span><span class="p">.</span><span class="nl">a</span><span class="p">:</span><span class="n">strcat</span><span class="p">.</span><span class="nl">o</span><span class="p">:</span><span class="mo">0000000000000040</span> <span class="n">T</span> <span class="n">__strcat_sse2</span>
+</span><span class='line'><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">/</span><span class="n">libc</span><span class="p">.</span><span class="nl">a</span><span class="p">:</span><span class="n">strcat</span><span class="p">.</span><span class="nl">o</span><span class="p">:</span>                 <span class="n">U</span> <span class="n">__strcat_sse2_unaligned</span>
+</span><span class='line'><span class="n">x86_64</span><span class="o">-</span><span class="n">linux</span><span class="o">-</span><span class="n">gnu</span><span class="o">/</span><span class="n">libc</span><span class="p">.</span><span class="nl">a</span><span class="p">:</span><span class="n">strcat</span><span class="p">.</span><span class="nl">o</span><span class="p">:</span>                 <span class="n">U</span> <span class="n">__strcat_ssse3</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li><code>N</code>: debug symbol</li>
+<li><code>p</code>: symbol放在<a href="http://en.wikipedia.org/wiki/Call_stack#Unwinding">unwind stack</a> section。 <strong>不知道這邊的stack unwind和nm的意義是不是一樣?</strong></li>
+<li><code>R</code>: global symbol。symbol放在read only data section(猜測是<code>.rodata</code>)。</li>
+<li><code>r</code>: local symbol。symbol放在read only data section(猜測是<code>.rodata</code>)。</li>
+<li><code>S</code>: global symbol。該symbol存放在是針對小量資料做最佳化、<strong>沒有初始化</strong>的data section(不是<code>.bss</code>)</li>
+<li><code>s</code>: local symbol。該symbol存放在是針對小量資料做最佳化、<strong>沒有初始化</strong>的data section(不是<code>.bss</code>)</li>
+<li><code>T</code>: global symbol。symbol放在程式碼section(猜測是<code>.text</code>)。</li>
+<li><code>t</code>: local symbol。symbol放在程式碼section(猜測是<code>.text</code>)。</li>
+<li><code>U</code>: undefined symbol</li>
+<li><code>u</code>: unique symbol，GNU 用於ELF時的 symbol binding extenstion。<strong>我還是沒有搞懂是什麼意義</strong></li>
+<li><code>V</code>: global symbol。weak object，當link時該symbol可以link到正確的symbol就和一般的symbol相同，然而如果link時無法resolve symbol也不會噴錯誤，而是將該symbol的值設成0。(<strong>用在什麼地方？</strong>)</li>
+<li><code>v</code>: local symbol。weak object，當link時該symbol可以link到正確的symbol就和一般的symbol相同，然而如果link時無法resolve symbol也不會噴錯誤，而是將該symbol的值設成0。(<strong>用在什麼地方？</strong>)</li>
+<li><code>W</code>: global symbol。weak defined symbol，weak object的特例。當link時該symbol可以link到正確的symbol就和一般的symbol相同，然而如果link時無法resolve symbol也不會噴錯誤，而是<strong>根據系統實作做適當的處理</strong>。(<strong>用在什麼地方？</strong>)</li>
+<li><code>w</code>: local symbol。weak defined symbol，weak object的特例。當link時該symbol可以link到正確的symbol就和一般的symbol相同，然而如果link時無法resolve symbol也不會噴錯誤，而是<strong>根據系統實作做適當的處理</strong>。(<strong>用在什麼地方？</strong>)</li>
+<li><code>-</code>: stabs symbol，用於a.out格式，<strong>看不懂又和elf無關故跳過</strong>。</li>
+<li><code>?</code>: 不明的symbol</li>
+</ul>
+
+
+<h2>待釐清</h2>
+
+<ul>
+<li>名詞解釋
+
+<ul>
+<li>common symbol</li>
+<li>indirect reference</li>
+<li>indirect function</li>
+<li>unwind stack section</li>
+<li>unique symbol</li>
+</ul>
+</li>
+<li>用法不明
+
+<ul>
+<li>weak object</li>
+<li>weak defined symbol</li>
+</ul>
+</li>
+</ul>
+
+
+<h2>參考資料</h2>
+
+<ul>
+<li><code>man nm</code></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/12/06/introduction-to-python-mode-for-vim/">Python Mode for Vim簡介</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-12-06T13:49:00+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>1:49 pm</span></time>
+        
+           | <a href="/blog/2014/12/06/introduction-to-python-mode-for-vim/#disqus_thread"
+             data-disqus-identifier="http://wen00072.github.io/blog/2014/12/06/introduction-to-python-mode-for-vim/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p><a href="https://github.com/klen/python-mode">Python Mode</a>是一個vim下面關於Python 的plugin，快速整理一下以前看的文件。</p>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#install">安裝</a></li>
+<li><a href="#use">使用</a></li>
+<li><a href="#vim-settings">.vimrc 設定更動</a></li>
+<li><a href="#remarks">Remarks</a></li>
+<li><a href="#ref">參考資料</a></li>
+</ul>
+
+
+<p><a name="install"></a></p>
+
+<h2>安裝</h2>
+
+<h2>使用vundle</h2>
+
+<ul>
+<li>在.vim 加入</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Bundle 'klen/python-mode'</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>在vim下打:BundleInstall
+*（不確定是否必要）離開vim 再重新啟動vim</li>
+<li>執行下面命令</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>:helptags ~/.vim/bundle/python-mode/doc</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>使用Pathogen管理下的安裝</h2>
+
+<ul>
+<li>下載套件</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>$ cd ~/.vim/bundle
+</span><span class='line'>$ git clone git://github.com/klen/python-mode.git</span></code></pre></td></tr></table></div></figure>
+
+
+<ul>
+<li>在.vimrc啟動，加入以下內容</li>
+</ul>
+
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>" Pathogen load
+</span><span class='line'>filetype off
+</span><span class='line'>
+</span><span class='line'>call pathogen#infect()
+</span><span class='line'>call pathogen#helptags()
+</span><span class='line'>
+</span><span class='line'>filetype plugin indent on
+</span><span class='line'>syntax on</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a name="use"></a></p>
+
+<h2>使用</h2>
+
+<ul>
+<li>執行
+
+<ul>
+<li><code>\r</code>
+
+<ul>
+<li><code>\</code>為<code>&lt;leader&gt;</code> key的預設值</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>除錯
+
+<ul>
+<li><code>\b</code>
+
+<ul>
+<li>設定中斷點，python mode會自動偵測除錯器，我使用pdb。不過設中斷點後執行之後那些除錯命令要在那邊下還不清楚。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>查詢
+
+<ul>
+<li>游標到要查詢的keyword按<code>K</code>
+
+<ul>
+<li>查詢目前statement使用方式</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>查詢PyDoc資料
+
+<ul>
+<li><code>:PymodeDoc</code> 你要查詢的東西
+
+<ul>
+<li>ex: <code>:PymodeDoc print</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>區塊折疊/展開
+
+<ul>
+<li><code>zo</code>
+
+<ul>
+<li>展開區塊</li>
+</ul>
+</li>
+<li><code>zc</code>
+
+<ul>
+<li>折疊區塊</li>
+</ul>
+</li>
+<li><code>za</code>
+
+<ul>
+<li>toggle區塊</li>
+</ul>
+</li>
+<li>以上的操作<code>o</code>, <code>c</code>，<code>a</code>換成<code>O</code>, <code>C</code>, <code>A</code>的話表示Apply到目前區塊下面所有的子區塊</li>
+</ul>
+</li>
+<li>移動
+
+<ul>
+<li><code>[[</code>
+
+<ul>
+<li>移動到游標上方第一層的block，通常是在查詢目前trace到哪個function或是class</li>
+</ul>
+</li>
+<li><code>]]</code>
+
+<ul>
+<li>移動到游標下方第一層的block，通常是用於切換下一個function或是class</li>
+</ul>
+</li>
+<li><code>[m</code>
+
+<ul>
+<li>移動到游標上方class 第一個method</li>
+</ul>
+</li>
+<li><code>]m</code>
+
+<ul>
+<li>移動到游標下方class 第一個method</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>移動到定義(函數、class）
+
+<ul>
+<li><code>CTRL + C 後按g</code></li>
+</ul>
+</li>
+<li>區塊處理
+
+<ul>
+<li>先定義處理方式x&#8217;, x&#8217;可代換複製(y)，刪除(d)，選取(v)等</li>
+<li><code>x'aC</code>
+
+<ul>
+<li>處理整個class</li>
+</ul>
+</li>
+<li><code>x'iC</code>
+
+<ul>
+<li>inner, 處理目前游標包含的那整個class</li>
+</ul>
+</li>
+<li><code>x'aM</code>
+
+<ul>
+<li>處理一個整個method</li>
+</ul>
+</li>
+<li><code>x'iM</code>
+
+<ul>
+<li>inner, 處理目前游標包含的那整個method</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="vim-settings"></a></p>
+
+<h2>.vimrc 設定更動</h2>
+
+<ul>
+<li><p>預設使用Python 2，更改使用Python 3</p>
+
+<ul>
+<li><code>let g:pymode_python = 'python3'</code>
+
+<ul>
+<li>注意！這招要確認你的vim已經支援Python3，確認方式</li>
+<li><code>$ vim --version | grep python3</code> 應該要有+python3，目前Ubuntu 14.04.1沒有看到設定語法檢查工具，放這邊主要是可以檢查是否已經裝了相關套件了。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>let g:pymode_lint_checkers = [&lsquo;pyflakes&rsquo;, &lsquo;pep8&rsquo;, &lsquo;mccabe&rsquo;]</p>
+
+<ul>
+<li>Refactor，使用rope，我沒使用過rope，故跳過</li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="remarks"></a></p>
+
+<h2>Remarks</h2>
+
+<p>我安裝了下面兩個套件，用來讓Python Mode檢查語法。不過可以明顯感覺到用了速度變很慢，目前還沒打算去看是否設定有錯誤。</p>
+
+<ul>
+<li><code>sudo apt-get install python-rope</code></li>
+<li><code>sudo apt-get install pylint</code></li>
+</ul>
+
+
+<p><a name="ref"></a></p>
+
+<h2>參考資料</h2>
+
+<ul>
+<li><a href="https://github.com/klen/python-mode/blob/develop/doc/pymode.txt">Python Mode說明</a></li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -1340,660 +2814,6 @@
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/">[Debian套件打包] 使用pbuilder驗證套件</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-07-31T03:57:00+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2014</span></span> <span class='time'>3:57 am</span></time>
-        
-           | <a href="/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/07/31/package-debian-packages-discussion-on-pbuilder/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>之前的<a href="http://wen00072.github.io/blog/2014/06/12/package-debian-packages-set-after-list-of-debian-packages">文章</a>有提到使用pbuilder驗證套件。最近抽空玩了一下。整理到這邊。</p>
-
-<p>[回收以前文章]
-pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來產生並測是套件。如此一來可以確認是否debian目錄下面的設定是否真的可以在這些乾淨的環境被編譯和安裝。</p>
-
-<h2>目錄：</h2>
-
-<ul>
-<li><a href="#env">環境設定並建立image</a></li>
-<li><a href="#pkg">使用pbuilder打包source package</a></li>
-<li><a href="#ref">參考資料</a></li>
-</ul>
-
-
-<hr />
-
-<p><a name="env"></a></p>
-
-<h2>環境設定並建立image</h2>
-
-<ul>
-<li>測試環境</li>
-</ul>
-
-
-<figure class='code'><figcaption><span>lsb_release -a畫面</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ lsb_release -a
-</span><span class='line'>No LSB modules are available.
-</span><span class='line'>Distributor ID:   Debian
-</span><span class='line'>Description:  Debian GNU/Linux unstable (sid)
-</span><span class='line'>Release:  unstable
-</span><span class='line'>Codename: sid
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>先使用下面指令產生乾淨的Linux環境所對應的tarball，之後會用chroot切換到該環境中。</p>
-
-<ul>
-<li><code>sudo pbuilder create</code></li>
-</ul>
-
-
-<figure class='code'><figcaption><span>執行畫面</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ sudo pbuilder create
-</span><span class='line'>W: /root/.pbuilderrc does not exist
-</span><span class='line'>I: Distribution is sid.
-</span><span class='line'>I: Current time: Thu Jul 31 12:44:44 CST 2014
-</span><span class='line'>I: pbuilder-time-stamp: 1406781884
-</span><span class='line'>I: Building the build environment
-</span><span class='line'>I: running debootstrap
-</span><span class='line'>...
-</span><span class='line'>I: new cache content grep_2.18-2_amd64.deb added
-</span><span class='line'>I: unmounting dev/pts filesystem
-</span><span class='line'>I: unmounting run/shm filesystem
-</span><span class='line'>I: unmounting proc filesystem
-</span><span class='line'>I: creating base tarball [/var/cache/pbuilder/base.tgz]
-</span><span class='line'>I: cleaning the build env
-</span><span class='line'>I: removing directory /var/cache/pbuilder/build//27394 and its subdirectories
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>從log中可以看到處理的時候會暫時放在<code>/var/cache/pbuilder/build//27394</code>中，當執行結束的時候會刪除。</p>
-
-<p>我們可以更進一步看一下<code>/var/cache/pbuilder</code>目錄：</p>
-
-<figure class='code'><figcaption><span>/var/cache/pbuilder</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>#  tree -d /var/cache/pbuilder
-</span><span class='line'>.
-</span><span class='line'>|-- aptcache
-</span><span class='line'>|-- build
-</span><span class='line'>|-- ccache
-</span><span class='line'>|-- pbuildd
-</span><span class='line'>|-- pbuilder-mnt
-</span><span class='line'>|-- pbuilder-umlresult
-</span><span class='line'>`-- result
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>aptcache目錄可以看到裡面就是一堆deb檔案。我們可以合理的推論當測試十有需要額外安裝相依套件下載後會先存放在這邊。</p>
-
-<p>接下來我們可以使用下面的方式玩一下</p>
-
-<ul>
-<li><code>sudo pbuilder --login</code></li>
-</ul>
-
-
-<figure class='code'><figcaption><span>sudo pbuilder &#8211;login 執行畫面</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>$ sudo pbuilder --login
-</span><span class='line'>W: /root/.pbuilderrc does not exist
-</span><span class='line'>I: Building the build Environment
-</span><span class='line'>I: extracting base tarball [/var/cache/pbuilder/base.tgz]
-</span><span class='line'>I: creating local configuration
-</span><span class='line'>I: copying local configuration
-</span><span class='line'>I: mounting /proc filesystem
-</span><span class='line'>I: mounting /run/shm filesystem
-</span><span class='line'>I: mounting /dev/pts filesystem
-</span><span class='line'>I: policy-rc.d already exists
-</span><span class='line'>I: Obtaining the cached apt archive contents
-</span><span class='line'>I: entering the shell
-</span><span class='line'>File extracted to: /var/cache/pbuilder/build//10030
-</span><span class='line'>
-</span><span class='line'>root@debian:/#
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>重點是<code>File extracted to: /var/cache/pbuilder/build//10030</code>，所以我們可以在本機中去看<code>/var/cache/pbuilder/build/10030</code>，裡面就是一個完整的Linux root</p>
-
-<figure class='code'><figcaption><span>列出目錄：/var/cache/pbuilder/build/10030</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>##  ls /var/cache/pbuilder/build/10030
-</span><span class='line'>bin  boot  dev    etc  home  lib  lib64  media  mnt  opt  proc  root  run  sbin  srv  sys  tmp  usr  var
-</span></code></pre></td></tr></table></div></figure>
-
-
-<p>當我們離開pbuilder shell後，可以看到該root目錄也隨之消失。如此一來，可以確保所有的資料一開始都會是從<code>/var/cache/pbuilder/base.tgz</code>解出來最乾淨的狀態。</p>
-
-<figure class='code'><figcaption><span>離開pbuilder &#8211;login</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>root@debian:/# exit
-</span><span class='line'>logout
-</span><span class='line'>I: Copying back the cached apt archive contents
-</span><span class='line'>I: unmounting dev/pts filesystem
-</span><span class='line'>I: unmounting run/shm filesystem
-</span><span class='line'>I: unmounting proc filesystem
-</span><span class='line'>I: cleaning the build env
-</span><span class='line'>I: removing directory /var/cache/pbuilder/build//10030 and its subdirectories
-</span></code></pre></td></tr></table></div></figure>
-
-
-<hr />
-
-<p><a name="pkg"></a></p>
-
-<h2>使用pbuilder打包驗證source package</h2>
-
-<p>我自己的方式是先用<code>debbuild -S</code>或是<code>dpkg-buildpackage -S</code>產生dsc檔案。在同一個目錄下面下下面的指令。</p>
-
-<ul>
-<li><code>sudo pbuilder --build 你的套件.dsc</code></li>
-</ul>
-
-
-<p>當你原始套件debian/control的depend沒寫好，pbuilder乾淨的環境就不會安裝depend的套件而執行失敗。這時候你就要加入缺少的depend套件到debian/control。最後產生的套件會放在<code>/var/cache/pbuilder/result/</code>中</p>
-
-<p>執行畫面如下：</p>
-
-<figure class='code'><figcaption><span>sudo pbuilder &#8211;build testautotools_0-1.dsc</span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-<span class='line-number'>2</span>
-<span class='line-number'>3</span>
-<span class='line-number'>4</span>
-<span class='line-number'>5</span>
-<span class='line-number'>6</span>
-<span class='line-number'>7</span>
-<span class='line-number'>8</span>
-<span class='line-number'>9</span>
-<span class='line-number'>10</span>
-<span class='line-number'>11</span>
-<span class='line-number'>12</span>
-<span class='line-number'>13</span>
-<span class='line-number'>14</span>
-<span class='line-number'>15</span>
-<span class='line-number'>16</span>
-<span class='line-number'>17</span>
-<span class='line-number'>18</span>
-<span class='line-number'>19</span>
-<span class='line-number'>20</span>
-<span class='line-number'>21</span>
-<span class='line-number'>22</span>
-<span class='line-number'>23</span>
-<span class='line-number'>24</span>
-<span class='line-number'>25</span>
-<span class='line-number'>26</span>
-<span class='line-number'>27</span>
-<span class='line-number'>28</span>
-</pre></td><td class='code'><pre><code class='text'><span class='line'>W: /root/.pbuilderrc does not exist
-</span><span class='line'>I: using fakeroot in build.
-</span><span class='line'>I: pbuilder: network access will be disabled during build
-</span><span class='line'>I: Current time: Thu Jul 31 15:28:32 CST 2014
-</span><span class='line'>I: pbuilder-time-stamp: 1406791712
-</span><span class='line'>I: Building the build Environment
-</span><span class='line'>...
-</span><span class='line'>I: Obtaining the cached apt archive contents
-</span><span class='line'>I: Installing the build-deps
-</span><span class='line'> -&gt; Attempting to satisfy build-dependencies
-</span><span class='line'> -&gt; Creating pbuilder-satisfydepends-dummy package
-</span><span class='line'>...
-</span><span class='line'>I: Extracting source
-</span><span class='line'>dpkg-source: warning: extracting unsigned source package (testautotools_0-1.dsc)
-</span><span class='line'>dpkg-source: info: extracting testautotools in testautotools-0
-</span><span class='line'>dpkg-source: info: unpacking testautotools_0.orig.tar.xz
-</span><span class='line'>dpkg-source: info: unpacking testautotools_0-1.debian.tar.xz
-</span><span class='line'>I: Building the package
-</span><span class='line'>I: Running cd tmp/buildd/*/ &amp;&amp; env PATH=&quot;/usr/sbin:/usr/bin:/sbin:/bin&quot; dpkg-buildpackage -us -uc  -rfakeroot
-</span><span class='line'>...
-</span><span class='line'>I: Copying back the cached apt archive contents
-</span><span class='line'>I: unmounting dev/pts filesystem
-</span><span class='line'>I: unmounting run/shm filesystem
-</span><span class='line'>I: unmounting proc filesystem
-</span><span class='line'>I: cleaning the build env
-</span><span class='line'>I: removing directory /var/cache/pbuilder/build//18912 and its subdirectories
-</span><span class='line'>I: Current time: Thu Jul 31 15:29:09 CST 2014
-</span><span class='line'>I: pbuilder-time-stamp: 1406791749
-</span></code></pre></td></tr></table></div></figure>
-
-
-<hr />
-
-<p><a name="ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="https://wiki.ubuntu.com/PbuilderHowto">PbuilderHowto </a></li>
-<li><a href="https://wiki.debian.org/Diaspora/Packaging/pbuilder">Debian: Pbuilder</a></li>
-<li><a href="https://www.debian.org/doc/manuals/maint-guide/build.en.html">Debian New Maintainers&#8217; Guide: Chapter 6. Building the package</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/07/09/gnu-make-autotools-and-cmake-introduction-slides-on-line/">GNU Make, Autotools, CMake 簡介投影片上線</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-07-09T17:39:00+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>9</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>5:39 pm</span></time>
-        
-           | <a href="/blog/2014/07/09/gnu-make-autotools-and-cmake-introduction-slides-on-line/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/07/09/gnu-make-autotools-and-cmake-introduction-slides-on-line/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><ul>
-<li>Slideshare</li>
-</ul>
-
-
-<iframe src="//www.slideshare.net/slideshow/embed_code/36801801" width="427" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px 1px 0; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
-
-
-<p> <div style="margin-bottom:5px"> <strong> <a href="https://www.slideshare.net/zzz00072/gnu-make-autotools-cmake" title="GNU Make, Autotools, CMake 簡介" target="_blank">GNU Make, Autotools, CMake 簡介</a> </strong> from <strong><a href="http://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
-
-<ul>
-<li>Speaker Deck</li>
-</ul>
-
-
-<script async class="speakerdeck-embed" data-id="46ad0fc0e9c001313be5762c67c15dde" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-</div>
-  
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/07/06/zen-and-the-art-of-motorcycle-maintenance-books-focus-on-finishing/">閱讀心得： Zen and the Art of Motorcycle Maintenance (CH1 ~ CH27)</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-07-06T02:48:00+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>6</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>2:48 am</span></time>
-        
-           | <a href="/blog/2014/07/06/zen-and-the-art-of-motorcycle-maintenance-books-focus-on-finishing/#disqus_thread"
-             data-disqus-identifier="http://wen00072.github.io/blog/2014/07/06/zen-and-the-art-of-motorcycle-maintenance-books-focus-on-finishing/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>書本資訊：<a href="http://flaneur.tw/?p=1865">禪與摩托車維修的藝術 - 行人出版社</a></p>
-
-<hr />
-
-<h2>前言</h2>
-
-<p>對於Zen and the Art of Motorcycle Maintenance這本書的印象是在看軟工書籍時一直提到這本書。最近終於把他看完了。這本小說做了許多哲學思考，書中可以看出作者反對「主客分離」的二元式思考方式，並且建構出自己看待事物的哲學model。書中並且反思了當代社會偏重於理性思考產生的副作用。因為這是自己的心得感想，表示這是個人主觀認定書本的意義，也就是說我看到和想像的，不一定是真正作者想要表達的意念和思想，請讀者自行參考原書，思考一下作者的結論，而不是把這邊的內容當作作者講的話。</p>
-
-<hr />
-
-<h2>Quality:</h2>
-
-<ul>
-<li>判斷事物好壞美醜的直覺，無法定義。如果沒有這樣的直覺，噴和美食將沒有什麼差別、比賽只剩數字的加減法而已。
-
-<ul>
-<li>Wen: Quality是絕對的還是相對的？要如何證明沒有定義的東西存在？</li>
-</ul>
-</li>
-<li>一般的判斷感受一定是始於感官知覺，接下來判斷決定這些接收的資料為何。作者認為介於接受感官知覺的資訊透過Quality後，產生判斷做出結論。浪漫quailty 是眼前立即感受到的事物，古典quailty是眼前的事物作為過去現在未來時間空間下可預測的model。</li>
-<li>做出目前感知的對象對應的判斷決策是基於相似可以類比的經驗。因此面對無可對比經驗的事物時，就很難判斷決定；例如沒接觸華語的人對於捲舌和平上去入發音的感受度就很低。同樣的，一群經驗背景類似的人同時接觸新的事物，那麼他們的判斷決定應該相近而不會差異太多。</li>
-<li>所有語言的名詞只是一個分類的概念，沒有和對象產生連結前他們只是抽象概念。所以可以說我們發明出存在、貓、狗、、顏色、重量、以及所有可以使用言語描述的東西和他們對應的屬性。而作者認為Quailty就是針對這些抽象概念類比產生名詞的起源，因此他的世界論是一元論，也就是說所有的東西透過Quailty產生意義，所以真正確認存在的事物為Quailty。</li>
-<li>突然出現的靈感，照作者的解釋，就是Quailty的產出。Quailty不只有意識的判斷，也會在無意識下觸發靈感。這是因為Quality讓人決定美醜善惡，因此Quality覺得美的的東西(數學美、規律美等)也可以在無意識中進入人的思想中。
-
-<ul>
-<li>Wen: 有點神祕主義的感覺，雖然作者有解釋到這部份，不過我實在沒印象他怎麼解釋。</li>
-</ul>
-</li>
-<li>對現實現象和想法判斷決策是一種評價的行為，也就是說內心有一種標準決定好壞對錯。而我們對事物的是非對錯好壞美醜的判斷，隨者理性分析觀察後隨時變動。</li>
-<li>做事情除了知識外，對於衡量工作品質的敏感度也是決定做事成功失敗的決勝關鍵。而這些好壞品質的敏感度和Quaility有直接的關係。</li>
-</ul>
-
-
-<hr />
-
-<h2>古典理性與浪漫模式</h2>
-
-<ul>
-<li>感官感覺到的對象的本身和對象意義的是不同的。</li>
-<li>浪漫模式講求感官上的美，而古典理性講求規則和限制的條件下的約束美。</li>
-<li>古典理性強調Model，也就是將觀察的對象依特定目的切割並分析，希望能夠從中找到這些切割出來的「零件」彼此之間的關係、以及「零件」和觀察對象的關係，進而建立一套標準規格用來預測這類的事物。分析到最後缺點就是<strong>無趣</strong>、沒有好壞觀點、並且人逐漸和<strong>分析對象</strong>的感情分離以及缺乏認同，最終只剩下冷冰冰的數學公式和假設。這就是主客分離必然的現象。</li>
-<li>浪漫模式看的是<strong>零件</strong>，而古典理性看到的則是<strong>系統</strong>和<strong>功能</strong>。因此修理物品並不是拆拆裝裝零件，而是從狀況產生<strong>想法</strong>，透過拆解系統、分析驗證<strong>概念</strong>的來解決問題。</li>
-<li>主客分離是很奇怪的事，處理事情的情況一定是人和對象（機器，程式等）一同參與，對象的本質決定人要採取的動作，進而改變對象，最終讓對象接近或達到對象應該扮演的本質。</li>
-</ul>
-
-
-<hr />
-
-<h2>系統</h2>
-
-<ul>
-<li>系統是個很有趣的概念。從系統的角度，零件的價值就是提供功能，其他的特性一點都不重要。而最大的系統是人的「思考模式」。如果思考模式沒有更動，推翻掉外在的系統，砍掉重練的外在系統可能最後的宿命仍然相同。</li>
-<li>人們很容易認為系統是一個硬梆梆的東西，每個元件都有其必要的功能，不可侵犯。然而系統其實是心理投射的對象，而不是單純的零件組合。以機車來說，一般人會認為機車零件就是由金屬、塑膠等依不同功能需求型塑出來的外型。然而形狀，是先有想法概念後製造出來的。也就是說你可以宣稱金屬塑膠是沒有外型的，一切都是人隨心所欲製作出來的。外在的世界只是提供這些概念的材質而已。</li>
-</ul>
-
-
-<hr />
-
-<h2>科學方法</h2>
-
-<ul>
-<li>邏輯思考分為歸納法和推論法。前者是觀察現象找出pattern，後者是依據model推測原因。</li>
-<li>問題釐清筆記，協助解決問題。需要細心觀察，精確思考。
-
-<ul>
-<li>問題描述</li>
-<li>使用奧坎剃刀！</li>
-<li>問蠢問題是為了防止犯蠢錯誤</li>
-<li>猜測的原因，以及猜測原因背後的假設</li>
-<li>針對上面的原因，設計測試方式。
-
-<ul>
-<li>要小心變因的控制
-
-<ul>
-<li>實驗真正失敗是「數據」無法被解釋或分析任何事實？</li>
-</ul>
-</li>
-<li>要注意測試步驟的因果關係，推論是否合邏輯</li>
-<li>測試的預期結果</li>
-</ul>
-</li>
-<li>觀察到的測試結果</li>
-<li>結論</li>
-</ul>
-</li>
-<li>假設是所有理性思考中最不可思議的因素，往往要訴諸直覺和人肉模擬model後才會蹦出假設。</li>
-<li>透過觀察、假設產生的model會愈精確。這暗示不存在絕對的真理，因為隨時有新的現象和假設出現，這造成一個科學model被推翻、補強的iteration次數多到一般人思想和價值觀無所適從，反應在社會上就會出現「無感情」、「沒有美醜善惡等主觀判斷」、「空虛」。</li>
-<li>Model建立是基於pattern，也就是共同出現，有規律的特徵。科學界傾向以宏觀或微觀的角度，觀察現象，進而從觀察到的pattern歸納整理成model。建立model後，需要想辦法「擴充」model的適用性。擴充適用性可以經由找出model的limiataion如無法解釋的現象、無法處理哪些特異情況、或是照model演譯後和觀察的現象矛盾的地方下手。</li>
-</ul>
-
-
-<hr />
-
-<h2>說明論述</h2>
-
-<ul>
-<li>說明論述文的常見的問題是缺乏藝術聯貫性。另外連續性也是個問題，如果需要反覆翻頁參照才能弄懂那麼就不是好的論述方式了。</li>
-<li>維修時要心平氣和，否則個人情緒會影響到處理的對象。如果機器讓你心平氣和，那就是一台好機器；讓你心浮氣躁的就是壞機器。而好壞是取決於於使用者的心，也就是說可以透過行動，改變機器或是使用方式讓人心平氣和，讓壞機器變成好機器。</li>
-<li>當寫使用手冊的時候，如果沒有描述整體狀況直接切入步驟。就會發生安裝時要嘛裝完不知道對象為何這樣動作，或是出問題完全不知道如何處理。手冊上的步驟只是官方的建議方法，然而安裝方法也不一定只有這種方式。
-
-<ul>
-<li>Wen: 同樣的狀況更可能發生在就算有描述，但是安裝的人沒有也不想去了解而直接跳到安裝的步驟去而有一樣的悲劇。</li>
-</ul>
-</li>
-</ul>
-
-
-<hr />
-
-<h2>知識論？</h2>
-
-<ul>
-<li>所有實質的物質是透過感官感知的，也就是說外在世界我們只能體驗到我們能感知到的部份。另一方面，我們以為的外在世界事實上是從感覺中鉤勒出來的想像世界。</li>
-<li>知識是始於經驗。但是知識不一定全部從經驗中得出。</li>
-<li>康得的「先驗」：人在感官感知時同時附加的屬性，如時間、因果關係等。透過經驗、感官、和先驗，人在也就是說玩頭腦中產生特定事物的model，用來理解、分析、和預測該事物的發展。</li>
-</ul>
-
-
-<hr />
-
-<h2>教堂啤酒屋比喻</h2>
-
-<p>一個教堂因為教會經濟理由被賣出，內部重新裝潢後改為啤酒屋。有人會因此而反對營業，原因是褻瀆宗教。然而維持宗教神聖性的並非實體的房屋，而是精神層次的東西；特殊外型的房屋不過是這樣精神概念延伸出來的實體物質罷了。這樣的精神概念性質的東西可以稱為「本質」。</p>
-
-<p>了解了本質以後，面對衝突矛盾的時候比較容易看得出衝突的本質。舉例來說，執法單位遇到民意代表以預算邀脅反對執法，負責人如果深刻體會並認同執法本質是維護法律的話，自然會為法律而不是預算或是自己前途服務。</p>
-
-<hr />
-
-<h2>學習和模仿</h2>
-
-<ul>
-<li>很多時候遇到問題或是被指定描述特定事物時第一個遇到的問題是不知道從那邊開始。這是因為被學習經驗受限，如果沒有找到記憶中類似的經驗或是可以<strong>模仿</strong>的對象，就卡住了。也就是說缺少自信，不習慣使用自己的角度檢視、看待、認識對象，反而把精力放在別人說過的話上面。簡而言之，就是沒有原創力的表現。</li>
-<li>學校學習的型態讓評分者以為學生沒有在模仿，而以為學生學到精髓、用自己方式表達，但是這還是模仿。發揮原創性不理會原則達到目的得到分數的方式變異性會超大，從滿分到不及格都有可能。</li>
-<li>主流的學問教學方式是把對象抽出來，學習對象的定義，整理出來的抽象model。而不是先觀察、使用、操作對象，這也是疏離感產生的原因。而解決問題的能力就再這樣的濃縮還原中漸漸消失。另外當代教育的問題是「成績評量」，成績評量的目的是量化以及讓學生評估自己對於特定對象的判別能力，但是這樣的方式有很致命的缺點–奴隸心態。因為主流的教學以成績評量作為懲罰獎賞的機制。而這樣的方式造成對很多學生來說，沒有懲罰獎賞就沒有進度。也就是說需要有人踢你的屁股才會前進。更慘的是，降低了分辨對於該堂知識討論的對象優劣的能力，而這是管理者的主要責任以及學生最該學到的東西。</li>
-</ul>
-
-
-<hr />
-
-<h2>腦筋打結</h2>
-
-<ul>
-<li>一次想做太多事腦筋會打結。不要想同時要做什麼又想先做什麼。依順序來，先列出事項，再決定要做事情。</li>
-<li>另外一種情況就是處理事情時進度卡住時的狀況。卡住的事情是極微小的事項的話會讓人更加煩躁。可惜這時候你學到的東西都是model或是經驗都是<strong>後知之明</strong>，無法告訴你現在應該怎麼做。如果意識不到你的狀況和你經驗知識的關聯性，那麼就會腦筋打結了。創意、原創性、inventiveness、直覺、想像力這些解開問題的特性，完全不在科學方法理面。</li>
-<li>打結時如果不去<strong>主動</strong>地觀察對象、發覺新的線索的話，永遠不會有新的突破。</li>
-<li>禪宗花了很多功夫研究打結的狀況。他們透過呼吸打坐、參公案等方式追求頓悟，跳出頭腦打結的心理狀況，並且reset個人思緒，考慮各種可能。
-
-<ul>
-<li>Wen: 自己的解釋，不一定理解正確。</li>
-</ul>
-</li>
-<li>打結是面對真理前的一關。這也是為何自學成功的人士有時會比專業訓練的人表現還佳。原因是專業訓練是狀況，解法這樣的訓練；而很少教到應付新的狀況。</li>
-</ul>
-
-
-<hr />
-
-<h2>當代產品和美醜的關係</h2>
-
-<ul>
-<li>藝術和製造本為一體。在主流的古典理性思考和藝術二分法下，造成一般人不願意理解使用古典理性思考產出的物品運作法則。所以他們認為科技產品醜陋，原因是就是他們這無法使用些產品背後原理的辨別這些的產品美醜好壞。</li>
-<li>作者認為當代產品之所以醜主要的原因是缺少identity。製造產品的人和產品沒有identity、消費者和產產品也沒有identity。這樣的identity正是主客分離的二元論式科學方法所欠缺的。科技並不是剝削大自然的產品，而是天人合一的結果。</li>
-<li>想要達使用優美的方式解決問題，需要有分辨好壞的能力，以及達到好的境界的基礎方法。現在的知識和方式有意無意地讓人尋求標準答案。這個標準答案非常可能達到「好」的境界的方法之一，然而如何判別體會什麼叫作「好」，這些標準答案可沒有辦法幫得上忙。</li>
-<li>由於缺少identity，現代產品外表顯現出來的特性就是枯燥。而製造者也發現這樣的現象，他們的workaround就是使用設計將產品加上「風格」美化。然而這樣的workaround最壞的狀況會讓枯燥的外表加上虛偽的感覺。到處充滿人工美化的造型產品並不會讓人感覺生活在美好的生活中。這樣的科技雖然帶來物質上好處，卻把整個世界變成美化的垃圾場。</li>
-</ul>
-
-
-<h2>內心寧靜</h2>
-
-<ul>
-<li>保持內心寧靜是很重要的評價方式。能夠讓人保持內心平靜的產品或是方式就是好的，反之則是壞的。所有的外在事物的目的是協助人心平氣和。只有心平氣和的情況才能夠體會Quailty，也就是說心平氣和後才能夠從理性以及藝術的角度體會Quailty。</li>
-<li>當內心平靜後，非自我意識能夠產生對外環境完全自我認同的感覺。這樣的寧靜有三種層次
-
-<ol>
-<li>肉體上的平靜</li>
-<li>心靈上的平靜</li>
-<li>在平常生活中也能排除雜念</li>
-</ol>
-</li>
-<li>心靈雜亂時的活動產生出來的品質不可能好。</li>
-<li>工作時內心平靜，做事就能夠流暢平順。「感興趣」、「投入」、「有感覺」就是形容這樣的狀態。</li>
-<li>作者提倡做事情應該要關心自己處理的對象，不要有心物分離的現象。</li>
-<li>內心寧靜產生正確的價值，正確的價值產生正確的想法，正確的想法產稱正確的行動。</li>
-</ul>
-
-
-<hr />
-
-<h2>Gumption</h2>
-
-<ul>
-<li>Gumption中文對應的概念是「選擇、做決定並施行的能力」。作者認為Gumption是心靈汽油，對應到書上的描述，中文也許翻譯成「氣勢」、「士氣」、「幹勁」比較符合作者的意念的感覺。</li>
-<li>做事情或是解決問題最重要的就是要有Gumption，沒有這個東西，乾脆收工回家好了。所以做事的過程，保持足夠的Gumption是最重要的事情。為了保持足夠的Gumption，我們要隨時注意Gumption的水位，是否有太多消耗Gumption的事情發生。</li>
-</ul>
-
-
-<p><a href="http://en.wikipedia.org/wiki/Gumption_trap">Gumption Trap</a>: review和體會Quailty 遭遇到的各種阻礙：</p>
-
-<ul>
-<li>Setbacks: 外在因素讓人脫離Quailty。
-
-<ul>
-<li>拆了裝不回去。多善用筆記，沈穩思考定立方式防止在犯。</li>
-<li>錯誤發生的情況不固定，找不出reproduce的步驟。</li>
-<li>零件可能不齊全，或是規格不符。或是買到貴又不好的零件。</li>
-</ul>
-</li>
-<li>Hang-ups: 內在因素讓人脫離Quailty
-
-<ul>
-<li>value trap: 重點是陷入其中時要仔細觀察看自己價值觀那邊需要修正。列是作者自己發現體會到的，也許對於每個人都有自己的value trap，有些可能不在下面。
-
-<ul>
-<li>value rigidity, 價值僵化，固守以前的經驗以至於無法發現新的事實。更精確的說，由於以前的經驗，造成眼前的事實對於你無法給予他們正確的評價，也就是有意無意的覺得眼前看到的事實不重要而視而不見。當你對於一個問題過早判斷，而判斷失物時，就要記得reset自己的結論，避免進入這個trap。新的事實發現，剛開始一定價值低到無法被注意到，隨者觀察者的注意，價值才會被提高，或是確認無益而降低。面對value trap的情況，一定要放慢腳步，像釣魚一樣，用心體會感受魚竿的的狀況，感受當魚吃餌釣竿的細微變化。另外面對新的事實，請避免使用原本假設和價值觀去判斷這個新事實，而是從新的事實出發看看有什麼其他的發現。</li>
-<li>ego, 自負：為了自負唬爛不能夠解決問題，而且可以因為拒絕承認錯誤而讓你遠離發現新事實以及朝向解決問題的路上行進。</li>
-<li>anxiety, 焦慮：焦慮是解決問題一開始最常見的trap，通常原因是動機太強烈，太過拘泥在無意的細節、產生更多的錯誤而嚇壞自己，形成惡性循環。這時候可以多讀相關領域書籍增加自信心，並且牢記<strong>追求的是心平氣和，而不是把痛苦解除</strong>。作者建議可以先列出想做的事情，再排列決定要做的順序。另外也要說服自己面對失手是會出現的。</li>
-<li>Boredom, 無聊: 無聊代表已經失去注意力、不以新的角度看待事物。這時候中斷去做其他事如上網或睡覺後再回來。如果狀況仍然相同，可能要再確認是否有更深層的原因造成無聊。</li>
-<li>Impatience, 缺乏耐心：作者以維修機車的情況認為是低估維修所需的時間，然而放到其他地方顯然並不適用。但是這個問題的確會影響gumption。</li>
-</ul>
-</li>
-<li>truth trap: 作者引用禪宗無的概念，認為狀況並不是只有是、否這樣的狀態。而應該包含無，無代表的是答案不在目前假設的狀況投影出來的範圍內。這表示要修正假設、或是檢查步驟是否違反假設。</li>
-<li>musle trap:
-
-<ul>
-<li>工具不充足</li>
-<li>工作環境不優</li>
-<li>個人體力不足以及肌肉對於器具的感觸不夠靈敏</li>
-</ul>
-</li>
-</ul>
-</li>
-</ul>
-
-
-<hr />
-
-<h2>其他</h2>
-
-<ul>
-<li>幽靈和科學假設是否存在是同樣的情形。因為他們都是的感官無法察覺驗證，但是會有人深信存在的東西。</li>
-<li>意識是從感官進來的資料，經過大腦篩選判定值得注意的事物。</li>
-<li>理性思考<strong>切勿</strong>在精神狀態不佳時使用。</li>
-<li>解決問題時一定會被謎團包圍，但是想要解決<strong>每個</strong>謎團最後就是永遠解決不了最初要處理的問題。</li>
-<li>東方哲學否定西方理性思考的主客分離概念，他們認為思考的人和思考對象是一體的。他們透過消除「肢體活動」、「心理活動」、和「情緒活動」等方式去除思考時主客分離的情況(太玄了)。</li>
-<li>當你對某些事物有絕對的信心，就不會致力於推廣。也就是說對於這些事物信心不足，想要取得自我認同才會致力於推廣。
-
-<ul>
-<li>我個人覺得部份同意，然而如果是這樣有很多好的想法可能就無法用足夠的速度傳播，甚至會變成獨善其身而任由好的想法出現卻沒有辦法造福全人類。</li>
-</ul>
-</li>
-<li>目前的model遇到無法預測的事物，必須要停下來review，try-and-error後才可能做出改正。也許是砍掉重練或是擴充目前的model。這段時間會上讓人心不穩定，陷入恐懼或焦慮的情形。</li>
-<li>理性思考，切割分析整理出來的model並無法套用到藝術，美感上面。這也是理性的限制。
-
-<ul>
-<li>Wen: 康得好像有關於美的一些思考，不過作者只有隱約提到那些很「醜」。另外康得的作品我也沒讀。</li>
-</ul>
-</li>
-<li>作文評價因素：一貫性、鮮活度、權威性、敏感度、清晰度、強調性、流暢感、懸疑感等。</li>
-<li>證明自我式的登山目的是征服山脈，除了山頂什麼都看不到。人在登山心卻不在裏面，focus在山頂而不是「現在」，每一步都走的很辛苦，因為他的目標想像成外在又遙遠的東西。到了山頂又更不滿足，因為變得還要找到下一個山頂來證明自我。</li>
-<li>邏輯兩難處理方式
-
-<ul>
-<li>承認其中一種定義，據此反駁。</li>
-<li>指出選項以外的情況。</li>
-<li>訴諸權威。</li>
-<li>詭辯法
-
-<ul>
-<li>轉移話題，避重就輕。</li>
-<li>裝死。</li>
-</ul>
-</li>
-</ul>
-</li>
-<li>不精確的描述比不描述還慘。</li>
-<li>知道答案以後，答案才變得簡單。</li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/11">&larr; Older</a>
@@ -2011,6 +2831,18 @@ pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來�
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/08/07/hello-world-slides/">Hello World 的一生投影片</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/08/05/glibc-obj-file-symbols/">Gcc Obj File Symbols</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/08/04/hello-world-disassm/">Hello World 反組譯輸出</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/08/03/load-elf-binary-trace/">Load_elf_binary Trace</a>
       </li>
     
@@ -2018,32 +2850,20 @@ pbuilder透過pbuilder套件中的image以及chroot，使用乾淨的環境來�
         <a href="/blog/2019/06/15/field-investigation-link-objs/">田野調查：Ubuntu 18.04.2 產生執行檔細節</a>
       </li>
     
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-build-observing/">觀察編譯glibc的產出</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/06/08/glibc-surface-observing/">在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2019/03/20/dump-process-memory-block-via-gdb/">從gdb Dump Process 記憶體資料</a>
-      </li>
-    
   </ul>
 </section>
 
 <section>
   <h1>Top Categories</h1>
-    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li></ul>
+    <ul id="top-category-list"><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li></ul>
 </section>
 <section>
   <h1>Categories</h1>
-    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (14)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (36)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (3)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (2)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (45)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
+    <ul id="category-list"><li><a href='/blog/categories/arm'>arm (12)</a></li><li><a href='/blog/categories/asm'>asm (1)</a></li><li><a href='/blog/categories/assembler'>assembler (2)</a></li><li><a href='/blog/categories/assembly'>assembly (3)</a></li><li><a href='/blog/categories/autotools'>autotools (4)</a></li><li><a href='/blog/categories/banana-pi'>banana pi (1)</a></li><li><a href='/blog/categories/bash'>bash (1)</a></li><li><a href='/blog/categories/binutil'>binutil (1)</a></li><li><a href='/blog/categories/binutils'>binutils (15)</a></li><li><a href='/blog/categories/buildroot'>buildroot (2)</a></li><li><a href='/blog/categories/c'>c (39)</a></li><li><a href='/blog/categories/c-preprocessor'>c preprocessor (1)</a></li><li><a href='/blog/categories/c99'>c99 (2)</a></li><li><a href='/blog/categories/cmake'>cmake (2)</a></li><li><a href='/blog/categories/cscope'>cscope (1)</a></li><li><a href='/blog/categories/ctags'>ctags (1)</a></li><li><a href='/blog/categories/dbdoclet'>dbdoclet (1)</a></li><li><a href='/blog/categories/debian'>debian (16)</a></li><li><a href='/blog/categories/debootstrap'>debootstrap (1)</a></li><li><a href='/blog/categories/debug'>debug (1)</a></li><li><a href='/blog/categories/doxygen'>doxygen (1)</a></li><li><a href='/blog/categories/elf'>elf (2)</a></li><li><a href='/blog/categories/f9'>f9 (1)</a></li><li><a href='/blog/categories/free-software'>free software (1)</a></li><li><a href='/blog/categories/freertos'>freertos (1)</a></li><li><a href='/blog/categories/fsf'>fsf (1)</a></li><li><a href='/blog/categories/gcc'>gcc (2)</a></li><li><a href='/blog/categories/gdb'>gdb (4)</a></li><li><a href='/blog/categories/getopt'>getopt (1)</a></li><li><a href='/blog/categories/gettext'>gettext (2)</a></li><li><a href='/blog/categories/git'>git (4)</a></li><li><a href='/blog/categories/git-remote'>git remote (2)</a></li><li><a href='/blog/categories/github-flavored-markdown'>github flavored markdown (1)</a></li><li><a href='/blog/categories/github-pages'>github pages (1)</a></li><li><a href='/blog/categories/glibc'>glibc (5)</a></li><li><a href='/blog/categories/gnu'>gnu (2)</a></li><li><a href='/blog/categories/gnu-as'>gnu as (1)</a></li><li><a href='/blog/categories/gpl'>gpl (1)</a></li><li><a href='/blog/categories/gstreamer'>gstreamer (1)</a></li><li><a href='/blog/categories/hole'>hole (1)</a></li><li><a href='/blog/categories/inline'>inline (1)</a></li><li><a href='/blog/categories/javadoc'>javadoc (2)</a></li><li><a href='/blog/categories/kernel'>kernel (3)</a></li><li><a href='/blog/categories/ld'>ld (1)</a></li><li><a href='/blog/categories/libtool'>libtool (2)</a></li><li><a href='/blog/categories/linker'>linker (2)</a></li><li><a href='/blog/categories/linker-script'>linker script (5)</a></li><li><a href='/blog/categories/linux'>linux (47)</a></li><li><a href='/blog/categories/linux-kernel'>linux kernel (3)</a></li><li><a href='/blog/categories/linux-utilities'>linux utilities (2)</a></li><li><a href='/blog/categories/live-cd'>live cd (1)</a></li><li><a href='/blog/categories/lseek'>lseek (1)</a></li><li><a href='/blog/categories/macro'>macro (1)</a></li><li><a href='/blog/categories/make'>make (6)</a></li><li><a href='/blog/categories/markdown'>markdown (2)</a></li><li><a href='/blog/categories/octopress'>octopress (9)</a></li><li><a href='/blog/categories/osm'>osm (1)</a></li><li><a href='/blog/categories/patch'>patch (1)</a></li><li><a href='/blog/categories/pbuilder'>pbuilder (2)</a></li><li><a href='/blog/categories/pomodoro-technique'>pomodoro technique (1)</a></li><li><a href='/blog/categories/presentation'>presentation (14)</a></li><li><a href='/blog/categories/python'>python (4)</a></li><li><a href='/blog/categories/qemu'>qemu (5)</a></li><li><a href='/blog/categories/quilt'>quilt (1)</a></li><li><a href='/blog/categories/regex'>regex (2)</a></li><li><a href='/blog/categories/rtenv'>rtenv (1)</a></li><li><a href='/blog/categories/rtos'>rtos (1)</a></li><li><a href='/blog/categories/semihosting'>semihosting (1)</a></li><li><a href='/blog/categories/shell-script'>shell script (4)</a></li><li><a href='/blog/categories/software-development'>software development (1)</a></li><li><a href='/blog/categories/stm32'>stm32 (5)</a></li><li><a href='/blog/categories/strip'>strip (1)</a></li><li><a href='/blog/categories/trace'>trace (1)</a></li><li><a href='/blog/categories/ubuntu'>ubuntu (1)</a></li><li><a href='/blog/categories/upnp'>upnp (1)</a></li><li><a href='/blog/categories/usb'>usb (1)</a></li><li><a href='/blog/categories/valgrind'>valgrind (2)</a></li><li><a href='/blog/categories/vim'>vim (5)</a></li><li><a href='/blog/categories/vim-plugin'>vim plugin (1)</a></li><li><a href='/blog/categories/virtualbox'>virtualbox (2)</a></li><li><a href='/blog/categories/vundle'>vundle (1)</a></li><li><a href='/blog/categories/wireless'>wireless (1)</a></li><li><a href='/blog/categories/wpa-supplicant'>wpa_supplicant (1)</a></li><li><a href='/blog/categories/tai-wan-xiao-chi'>台灣小吃 (1)</a></li><li><a href='/blog/categories/gan-xiang'>感想 (8)</a></li><li><a href='/blog/categories/kuang-rou'>爌肉 (1)</a></li><li><a href='/blog/categories/bi-ji'>筆記 (2)</a></li><li><a href='/blog/categories/zu-zhuang'>組裝 (3)</a></li><li><a href='/blog/categories/lao-jian-zhu'>老建築 (3)</a></li><li><a href='/blog/categories/guo-qi'>過期 (3)</a></li></ul>
 </section>
 <section>
   <h1>Category Cloud</h1>
-    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 116.0%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.33333333333333%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.66666666666667%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 104.0%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.33333333333333%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.33333333333333%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.33333333333333%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.33333333333333%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 118.66666666666667%'>binutils(14)</a> <a href='/blog/categories/buildroot' style='font-size: 102.66666666666667%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 148.0%'>c(36)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.33333333333333%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.66666666666667%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.66666666666667%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.33333333333333%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.33333333333333%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.33333333333333%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 121.33333333333333%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.33333333333333%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.33333333333333%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.33333333333333%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.66666666666667%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.33333333333333%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.33333333333333%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.33333333333333%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.33333333333333%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.66666666666667%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.33333333333333%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.33333333333333%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.66666666666667%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.33333333333333%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.66666666666667%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.33333333333333%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.33333333333333%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 104.0%'>glibc(3)</a> <a href='/blog/categories/gnu' style='font-size: 102.66666666666667%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.33333333333333%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.33333333333333%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.33333333333333%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.33333333333333%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.33333333333333%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.66666666666667%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 102.66666666666667%'>kernel(2)</a> <a href='/blog/categories/ld' style='font-size: 101.33333333333333%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.66666666666667%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.66666666666667%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.66666666666667%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(45)</a> <a href='/blog/categories/linux-kernel' style='font-size: 104.0%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.66666666666667%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.33333333333333%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.33333333333333%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.33333333333333%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 108.0%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.66666666666667%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 112.0%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.33333333333333%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.33333333333333%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.66666666666667%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.33333333333333%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 118.66666666666667%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.33333333333333%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.66666666666667%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.33333333333333%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.66666666666667%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.33333333333333%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.33333333333333%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.33333333333333%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.33333333333333%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.33333333333333%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.66666666666667%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.33333333333333%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.33333333333333%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.33333333333333%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.33333333333333%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.33333333333333%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.66666666666667%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.66666666666667%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.33333333333333%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.66666666666667%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.33333333333333%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.33333333333333%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.33333333333333%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.33333333333333%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.66666666666667%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.33333333333333%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.66666666666667%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 104.0%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 104.0%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 104.0%'>過期(3)</a> </span>
+    <span id="tag-cloud"><a href='/blog/categories/arm' style='font-size: 115.31914893617021%'>arm(12)</a> <a href='/blog/categories/asm' style='font-size: 101.27659574468085%'>asm(1)</a> <a href='/blog/categories/assembler' style='font-size: 102.55319148936171%'>assembler(2)</a> <a href='/blog/categories/assembly' style='font-size: 103.82978723404256%'>assembly(3)</a> <a href='/blog/categories/autotools' style='font-size: 105.1063829787234%'>autotools(4)</a> <a href='/blog/categories/banana-pi' style='font-size: 101.27659574468085%'>banana pi(1)</a> <a href='/blog/categories/bash' style='font-size: 101.27659574468085%'>bash(1)</a> <a href='/blog/categories/binutil' style='font-size: 101.27659574468085%'>binutil(1)</a> <a href='/blog/categories/binutils' style='font-size: 119.14893617021276%'>binutils(15)</a> <a href='/blog/categories/buildroot' style='font-size: 102.55319148936171%'>buildroot(2)</a> <a href='/blog/categories/c' style='font-size: 149.7872340425532%'>c(39)</a> <a href='/blog/categories/c-preprocessor' style='font-size: 101.27659574468085%'>c preprocessor(1)</a> <a href='/blog/categories/c99' style='font-size: 102.55319148936171%'>c99(2)</a> <a href='/blog/categories/cmake' style='font-size: 102.55319148936171%'>cmake(2)</a> <a href='/blog/categories/cscope' style='font-size: 101.27659574468085%'>cscope(1)</a> <a href='/blog/categories/ctags' style='font-size: 101.27659574468085%'>ctags(1)</a> <a href='/blog/categories/dbdoclet' style='font-size: 101.27659574468085%'>dbdoclet(1)</a> <a href='/blog/categories/debian' style='font-size: 120.42553191489361%'>debian(16)</a> <a href='/blog/categories/debootstrap' style='font-size: 101.27659574468085%'>debootstrap(1)</a> <a href='/blog/categories/debug' style='font-size: 101.27659574468085%'>debug(1)</a> <a href='/blog/categories/doxygen' style='font-size: 101.27659574468085%'>doxygen(1)</a> <a href='/blog/categories/elf' style='font-size: 102.55319148936171%'>elf(2)</a> <a href='/blog/categories/f9' style='font-size: 101.27659574468085%'>f9(1)</a> <a href='/blog/categories/free-software' style='font-size: 101.27659574468085%'>free software(1)</a> <a href='/blog/categories/freertos' style='font-size: 101.27659574468085%'>freertos(1)</a> <a href='/blog/categories/fsf' style='font-size: 101.27659574468085%'>fsf(1)</a> <a href='/blog/categories/gcc' style='font-size: 102.55319148936171%'>gcc(2)</a> <a href='/blog/categories/gdb' style='font-size: 105.1063829787234%'>gdb(4)</a> <a href='/blog/categories/getopt' style='font-size: 101.27659574468085%'>getopt(1)</a> <a href='/blog/categories/gettext' style='font-size: 102.55319148936171%'>gettext(2)</a> <a href='/blog/categories/git' style='font-size: 105.1063829787234%'>git(4)</a> <a href='/blog/categories/git-remote' style='font-size: 102.55319148936171%'>git remote(2)</a> <a href='/blog/categories/github-flavored-markdown' style='font-size: 101.27659574468085%'>github flavored markdown(1)</a> <a href='/blog/categories/github-pages' style='font-size: 101.27659574468085%'>github pages(1)</a> <a href='/blog/categories/glibc' style='font-size: 106.38297872340425%'>glibc(5)</a> <a href='/blog/categories/gnu' style='font-size: 102.55319148936171%'>gnu(2)</a> <a href='/blog/categories/gnu-as' style='font-size: 101.27659574468085%'>gnu as(1)</a> <a href='/blog/categories/gpl' style='font-size: 101.27659574468085%'>gpl(1)</a> <a href='/blog/categories/gstreamer' style='font-size: 101.27659574468085%'>gstreamer(1)</a> <a href='/blog/categories/hole' style='font-size: 101.27659574468085%'>hole(1)</a> <a href='/blog/categories/inline' style='font-size: 101.27659574468085%'>inline(1)</a> <a href='/blog/categories/javadoc' style='font-size: 102.55319148936171%'>javadoc(2)</a> <a href='/blog/categories/kernel' style='font-size: 103.82978723404256%'>kernel(3)</a> <a href='/blog/categories/ld' style='font-size: 101.27659574468085%'>ld(1)</a> <a href='/blog/categories/libtool' style='font-size: 102.55319148936171%'>libtool(2)</a> <a href='/blog/categories/linker' style='font-size: 102.55319148936171%'>linker(2)</a> <a href='/blog/categories/linker-script' style='font-size: 106.38297872340425%'>linker script(5)</a> <a href='/blog/categories/linux' style='font-size: 160.0%'>linux(47)</a> <a href='/blog/categories/linux-kernel' style='font-size: 103.82978723404256%'>linux kernel(3)</a> <a href='/blog/categories/linux-utilities' style='font-size: 102.55319148936171%'>linux utilities(2)</a> <a href='/blog/categories/live-cd' style='font-size: 101.27659574468085%'>live cd(1)</a> <a href='/blog/categories/lseek' style='font-size: 101.27659574468085%'>lseek(1)</a> <a href='/blog/categories/macro' style='font-size: 101.27659574468085%'>macro(1)</a> <a href='/blog/categories/make' style='font-size: 107.65957446808511%'>make(6)</a> <a href='/blog/categories/markdown' style='font-size: 102.55319148936171%'>markdown(2)</a> <a href='/blog/categories/octopress' style='font-size: 111.48936170212767%'>octopress(9)</a> <a href='/blog/categories/osm' style='font-size: 101.27659574468085%'>osm(1)</a> <a href='/blog/categories/patch' style='font-size: 101.27659574468085%'>patch(1)</a> <a href='/blog/categories/pbuilder' style='font-size: 102.55319148936171%'>pbuilder(2)</a> <a href='/blog/categories/pomodoro-technique' style='font-size: 101.27659574468085%'>pomodoro technique(1)</a> <a href='/blog/categories/presentation' style='font-size: 117.87234042553192%'>presentation(14)</a> <a href='/blog/categories/python' style='font-size: 105.1063829787234%'>python(4)</a> <a href='/blog/categories/qemu' style='font-size: 106.38297872340425%'>qemu(5)</a> <a href='/blog/categories/quilt' style='font-size: 101.27659574468085%'>quilt(1)</a> <a href='/blog/categories/regex' style='font-size: 102.55319148936171%'>regex(2)</a> <a href='/blog/categories/rtenv' style='font-size: 101.27659574468085%'>rtenv(1)</a> <a href='/blog/categories/rtos' style='font-size: 101.27659574468085%'>rtos(1)</a> <a href='/blog/categories/semihosting' style='font-size: 101.27659574468085%'>semihosting(1)</a> <a href='/blog/categories/shell-script' style='font-size: 105.1063829787234%'>shell script(4)</a> <a href='/blog/categories/software-development' style='font-size: 101.27659574468085%'>software development(1)</a> <a href='/blog/categories/stm32' style='font-size: 106.38297872340425%'>stm32(5)</a> <a href='/blog/categories/strip' style='font-size: 101.27659574468085%'>strip(1)</a> <a href='/blog/categories/trace' style='font-size: 101.27659574468085%'>trace(1)</a> <a href='/blog/categories/ubuntu' style='font-size: 101.27659574468085%'>ubuntu(1)</a> <a href='/blog/categories/upnp' style='font-size: 101.27659574468085%'>upnp(1)</a> <a href='/blog/categories/usb' style='font-size: 101.27659574468085%'>usb(1)</a> <a href='/blog/categories/valgrind' style='font-size: 102.55319148936171%'>valgrind(2)</a> <a href='/blog/categories/vim' style='font-size: 106.38297872340425%'>vim(5)</a> <a href='/blog/categories/vim-plugin' style='font-size: 101.27659574468085%'>vim plugin(1)</a> <a href='/blog/categories/virtualbox' style='font-size: 102.55319148936171%'>virtualbox(2)</a> <a href='/blog/categories/vundle' style='font-size: 101.27659574468085%'>vundle(1)</a> <a href='/blog/categories/wireless' style='font-size: 101.27659574468085%'>wireless(1)</a> <a href='/blog/categories/wpa-supplicant' style='font-size: 101.27659574468085%'>wpa_supplicant(1)</a> <a href='/blog/categories/tai-wan-xiao-chi' style='font-size: 101.27659574468085%'>台灣小吃(1)</a> <a href='/blog/categories/gan-xiang' style='font-size: 110.2127659574468%'>感想(8)</a> <a href='/blog/categories/kuang-rou' style='font-size: 101.27659574468085%'>爌肉(1)</a> <a href='/blog/categories/bi-ji' style='font-size: 102.55319148936171%'>筆記(2)</a> <a href='/blog/categories/zu-zhuang' style='font-size: 103.82978723404256%'>組裝(3)</a> <a href='/blog/categories/lao-jian-zhu' style='font-size: 103.82978723404256%'>老建築(3)</a> <a href='/blog/categories/guo-qi' style='font-size: 103.82978723404256%'>過期(3)</a> </span>
 </section>
 
 

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: C | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/c/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2020-01-26T14:27:41+08:00</updated>
+  <updated>2020-02-09T16:29:47+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,748 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Hello World 的一生投影片]]></title>
+    <link href="http://wen00072.github.io/blog/2019/08/07/hello-world-slides/"/>
+    <updated>2019-08-07T21:43:47+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/08/07/hello-world-slides</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/key/1nl4PUuvTgsqr9" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-161964384" title="Hello world 的一生" target="_blank">Hello world 的一生</a> </strong> from <strong><a href="https://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Gcc Obj File Symbols]]></title>
+    <link href="http://wen00072.github.io/blog/2019/08/05/glibc-obj-file-symbols/"/>
+    <updated>2019-08-05T20:06:25+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/08/05/glibc-obj-file-symbols</id>
+    <content type="html"><![CDATA[<p>自用</p>
+
+<h2>測試環境</h2>
+
+<pre><code>$ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 18.04.2 LTS
+Release:    18.04
+Codename:   bionic
+
+$ gcc --version
+gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
+
+$ dpkg -l | grep libc6:amd64 
+ii  libc6:amd64                                   2.27-3ubuntu1                                amd64        GNU C Library: Shared libraries
+</code></pre>
+
+<h2>目錄</h2>
+
+<ul>
+<li><a href="#obsm-gcc">gcc7</a>
+
+<ul>
+<li><a href="#obsm1">/usr/lib/gcc/x86_64-linux-gnu/7/crtbegin.o</a></li>
+<li><a href="#obsm2">/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o</a></li>
+<li><a href="#obsm3">/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginT.o</a></li>
+<li><a href="#obsm4">/usr/lib/gcc/x86_64-linux-gnu/7/crtend.o</a></li>
+<li><a href="#obsm5">/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o</a></li>
+<li><a href="#obsm6">/usr/lib/gcc/x86_64-linux-gnu/7/crtfastmath.o</a></li>
+<li><a href="#obsm7">/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadbegin.o</a></li>
+<li><a href="#obsm8">/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadend.o</a></li>
+<li><a href="#obsm9">/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadtable.o</a></li>
+<li><a href="#obsm10">/usr/lib/gcc/x86_64-linux-gnu/7/crtprec32.o</a></li>
+<li><a href="#obsm11">/usr/lib/gcc/x86_64-linux-gnu/7/crtprec64.o</a></li>
+<li><a href="#obsm12">/usr/lib/gcc/x86_64-linux-gnu/7/crtprec80.o</a></li>
+<li><a href="#obsm13">/usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o</a></li>
+</ul>
+</li>
+<li><a href="#obsm-glibc">glibc6</a>
+
+<ul>
+<li><a href="#obsm21">/usr/lib/x86_64-linux-gnu/crt1.o</a></li>
+<li><a href="#obsm22">/usr/lib/x86_64-linux-gnu/crti.o</a></li>
+<li><a href="#obsm23">/usr/lib/x86_64-linux-gnu/crtn.o</a></li>
+<li><a href="#obsm24">/usr/lib/x86_64-linux-gnu/gcrt1.o</a></li>
+<li><a href="#obsm25">/usr/lib/x86_64-linux-gnu/grcrt1.o</a></li>
+<li><a href="#obsm26">/usr/lib/x86_64-linux-gnu/libtsan_preinit.o</a></li>
+<li><a href="#obsm27">/usr/lib/x86_64-linux-gnu/Mcrt1.o</a></li>
+<li><a href="#obsm28">/usr/lib/x86_64-linux-gnu/rcrt1.o</a></li>
+<li><a href="#obsm29">/usr/lib/x86_64-linux-gnu/Scrt1.o</a></li>
+</ul>
+</li>
+</ul>
+
+
+<p><a name="obsm-gcc"></a></p>
+
+<h2>gcc 7</h2>
+
+<p><a name="obsm1"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbegin.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 b completed.7697
+0000000000000000 a crtstuff.c
+0000000000000000 d .data
+0000000000000000 t deregister_tm_clones
+0000000000000070 t __do_global_dtors_aux
+0000000000000000 t __do_global_dtors_aux_fini_array_entry
+0000000000000000 D __dso_handle
+0000000000000000 t .fini_array
+00000000000000a0 t frame_dummy
+0000000000000000 t __frame_dummy_init_array_entry
+0000000000000000 t .init_array
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+0000000000000000 n .note.GNU-stack
+0000000000000030 t register_tm_clones
+0000000000000000 t .text
+                 U __TMC_END__
+0000000000000000 d __TMC_LIST__
+0000000000000000 d .tm_clone_table
+</code></pre>
+
+<p><a name="obsm2"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 b completed.7697
+0000000000000000 a crtstuff.c
+                 w __cxa_finalize
+0000000000000000 d .data
+0000000000000000 d .data.rel.local
+0000000000000000 t deregister_tm_clones
+0000000000000090 t __do_global_dtors_aux
+0000000000000000 t __do_global_dtors_aux_fini_array_entry
+0000000000000000 D __dso_handle
+0000000000000000 t .fini_array
+00000000000000d0 t frame_dummy
+0000000000000000 t __frame_dummy_init_array_entry
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000000 t .init_array
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+0000000000000000 n .note.GNU-stack
+0000000000000040 t register_tm_clones
+0000000000000000 t .text
+                 U __TMC_END__
+0000000000000000 d __TMC_LIST__
+0000000000000000 d .tm_clone_table
+</code></pre>
+
+<p><a name="obsm3"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtbeginT.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 b completed.7146
+0000000000000000 a crtstuff.c
+0000000000000000 d .data
+                 w __deregister_frame_info
+0000000000000000 t deregister_tm_clones
+0000000000000070 t __do_global_dtors_aux
+0000000000000000 t __do_global_dtors_aux_fini_array_entry
+0000000000000000 D __dso_handle
+0000000000000000 r .eh_frame
+0000000000000000 r __EH_FRAME_BEGIN__
+0000000000000000 t .fini_array
+00000000000000b0 t frame_dummy
+0000000000000000 t __frame_dummy_init_array_entry
+0000000000000000 t .init_array
+                 w _ITM_deregisterTMCloneTable
+                 w _ITM_registerTMCloneTable
+0000000000000000 n .note.GNU-stack
+0000000000000020 b object.7151
+                 w __register_frame_info
+0000000000000030 t register_tm_clones
+0000000000000000 t .text
+                 U __TMC_END__
+0000000000000000 d __TMC_LIST__
+0000000000000000 d .tm_clone_table
+</code></pre>
+
+<p><a name="obsm4"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtend.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 a crtstuff.c
+0000000000000000 d .data
+0000000000000000 r .eh_frame
+0000000000000000 r __FRAME_END__
+0000000000000000 n .note.GNU-stack
+0000000000000000 t .text
+0000000000000000 D __TMC_END__
+0000000000000000 d .tm_clone_table
+</code></pre>
+
+<p><a name="obsm5"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 a crtstuff.c
+0000000000000000 d .data
+0000000000000000 r .eh_frame
+0000000000000000 r __FRAME_END__
+0000000000000000 n .note.GNU-stack
+0000000000000000 t .text
+0000000000000000 D __TMC_END__
+0000000000000000 d .tm_clone_table
+</code></pre>
+
+<p><a name="obsm6"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtfastmath.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 a crtfastmath.c
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_loc
+0000000000000000 N .debug_ranges
+0000000000000000 N .debug_str
+0000000000000000 r .eh_frame
+0000000000000000 t .init_array
+0000000000000000 n .note.GNU-stack
+0000000000000000 t set_fast_math
+0000000000000000 t .text
+0000000000000000 t .text.startup
+</code></pre>
+
+<p><a name="obsm7"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadbegin.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 r .gnu.offload_funcs
+0000000000000000 r .gnu.offload_vars
+0000000000000000 n .note.GNU-stack
+0000000000000000 R __offload_func_table
+0000000000000000 a offloadstuff.c
+0000000000000000 R __offload_var_table
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm8"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadend.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 r .gnu.offload_funcs
+0000000000000000 r .gnu.offload_vars
+0000000000000000 n .note.GNU-stack
+0000000000000000 R __offload_funcs_end
+0000000000000000 a offloadstuff.c
+0000000000000000 R __offload_vars_end
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm9"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtoffloadtable.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 n .note.GNU-stack
+                 U __offload_funcs_end
+                 U __offload_func_table
+0000000000000000 a offloadstuff.c
+0000000000000000 R __OFFLOAD_TABLE__
+                 U __offload_vars_end
+                 U __offload_var_table
+0000000000000000 r .rodata
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm10"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec32.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 a crtprec.c
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_ranges
+0000000000000000 N .debug_str
+0000000000000000 r .eh_frame
+0000000000000000 t .init_array
+0000000000000000 n .note.GNU-stack
+0000000000000000 t set_precision
+0000000000000000 t .text
+0000000000000000 t .text.startup
+</code></pre>
+
+<p><a name="obsm11"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec64.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 a crtprec.c
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_ranges
+0000000000000000 N .debug_str
+0000000000000000 r .eh_frame
+0000000000000000 t .init_array
+0000000000000000 n .note.GNU-stack
+0000000000000000 t set_precision
+0000000000000000 t .text
+0000000000000000 t .text.startup
+</code></pre>
+
+<p><a name="obsm12"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/crtprec80.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 a crtprec.c
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_ranges
+0000000000000000 N .debug_str
+0000000000000000 r .eh_frame
+0000000000000000 t .init_array
+0000000000000000 n .note.GNU-stack
+0000000000000000 t set_precision
+0000000000000000 t .text
+0000000000000000 t .text.startup
+</code></pre>
+
+<p><a name="obsm13"></a></p>
+
+<h3>/usr/lib/gcc/x86_64-linux-gnu/7/libasan_preinit.o:</h3>
+
+<pre><code>                 U __asan_init
+0000000000000000 a asan_preinit.cc
+0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_str
+0000000000000000 D __local_asan_preinit
+0000000000000000 n .note.GNU-stack
+0000000000000000 d .preinit_array
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm-glibc"></a></p>
+
+<h2>glibc6</h2>
+
+<p><a name="obsm21"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crt1.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000030 T _dl_relocate_static_pie
+0000000000000000 r .eh_frame
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm22"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crti.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 T _fini
+0000000000000000 t .fini
+                 U _GLOBAL_OFFSET_TABLE_
+                 w __gmon_start__
+0000000000000000 T _init
+0000000000000000 t .init
+0000000000000000 n .note.GNU-stack
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm23"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/crtn.o:</h3>
+
+<pre><code>nm: /usr/lib/x86_64-linux-gnu/crtn.o: no symbols
+</code></pre>
+
+<p><a name="obsm24"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/gcrt1.o:</h3>
+
+<pre><code>                 U atexit
+0000000000000000 b .bss
+0000000000000000 b called.4604
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000080 T _dl_relocate_static_pie
+0000000000000000 r .eh_frame
+                 U etext
+                 U __GI_memcpy
+                 U __GI_memmove
+                 U __GI_memset
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000030 T __gmon_start__
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+                 U _mcleanup
+                 U __monstartup
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm25"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/grcrt1.o:</h3>
+
+<pre><code>                 U atexit
+0000000000000000 b .bss
+0000000000000000 b called.4604
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000000 r .eh_frame
+                 U etext
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000030 T __gmon_start__
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+                 U _mcleanup
+                 U __monstartup
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm26"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/libtsan_preinit.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 n .comment
+0000000000000000 d .data
+0000000000000000 N .debug_abbrev
+0000000000000000 N .debug_aranges
+0000000000000000 N .debug_info
+0000000000000000 N .debug_line
+0000000000000000 N .debug_str
+0000000000000000 D __local_tsan_preinit
+0000000000000000 n .note.GNU-stack
+0000000000000000 d .preinit_array
+0000000000000000 t .text
+                 U __tsan_init
+0000000000000000 a tsan_preinit.cc
+</code></pre>
+
+<p><a name="obsm27"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/Mcrt1.o:</h3>
+
+<pre><code>nm: /usr/lib/x86_64-linux-gnu/Mcrt1.o: no symbols
+</code></pre>
+
+<p><a name="obsm28"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/rcrt1.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000000 r .eh_frame
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+
+<p><a name="obsm29"></a></p>
+
+<h3>/usr/lib/x86_64-linux-gnu/Scrt1.o:</h3>
+
+<pre><code>0000000000000000 b .bss
+0000000000000000 d .data
+0000000000000000 D __data_start
+0000000000000000 W data_start
+0000000000000000 r .eh_frame
+                 U _GLOBAL_OFFSET_TABLE_
+0000000000000000 R _IO_stdin_used
+                 U __libc_csu_fini
+                 U __libc_csu_init
+                 U __libc_start_main
+                 U main
+0000000000000000 r .note.ABI-tag
+0000000000000000 n .note.GNU-stack
+0000000000000000 r .rodata.cst4
+0000000000000000 T _start
+0000000000000000 t .text
+</code></pre>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Hello World 反組譯輸出]]></title>
+    <link href="http://wen00072.github.io/blog/2019/08/04/hello-world-disassm/"/>
+    <updated>2019-08-04T21:07:11+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/08/04/hello-world-disassm</id>
+    <content type="html"><![CDATA[<p>單純以後剪貼用的。有興趣的朋友可以注意以下觀察重點</p>
+
+<ul>
+<li><code>_init</code> section</li>
+<li><code>text</code> section 開頭symbol 為<code>_start</code></li>
+<li><code>_start</code>呼叫<code>__libc_start_main</code></li>
+<li><code>__libc_csu_init</code> section</li>
+<li><code>__libc_csu_fini</code> section</li>
+<li><code>_fini</code> section</li>
+</ul>
+
+
+<pre><code>$ objdump -d hello
+
+hello:     file format elf64-x86-64
+
+
+Disassembly of section .init:
+
+00000000000004f0 &lt;_init&gt;:
+ 4f0:   48 83 ec 08             sub    $0x8,%rsp
+ 4f4:   48 8b 05 ed 0a 20 00    mov    0x200aed(%rip),%rax        # 200fe8 &lt;__gmon_start__&gt;
+ 4fb:   48 85 c0                test   %rax,%rax
+ 4fe:   74 02                   je     502 &lt;_init+0x12&gt;
+ 500:   ff d0                   callq  *%rax
+ 502:   48 83 c4 08             add    $0x8,%rsp
+ 506:   c3                      retq   
+
+Disassembly of section .plt:
+
+0000000000000510 &lt;.plt&gt;:
+ 510:   ff 35 aa 0a 20 00       pushq  0x200aaa(%rip)        # 200fc0 &lt;_GLOBAL_OFFSET_TABLE_+0x8&gt;
+ 516:   ff 25 ac 0a 20 00       jmpq   *0x200aac(%rip)        # 200fc8 &lt;_GLOBAL_OFFSET_TABLE_+0x10&gt;
+ 51c:   0f 1f 40 00             nopl   0x0(%rax)
+
+0000000000000520 &lt;printf@plt&gt;:
+ 520:   ff 25 aa 0a 20 00       jmpq   *0x200aaa(%rip)        # 200fd0 &lt;printf@GLIBC_2.2.5&gt;
+ 526:   68 00 00 00 00          pushq  $0x0
+ 52b:   e9 e0 ff ff ff          jmpq   510 &lt;.plt&gt;
+
+Disassembly of section .plt.got:
+
+0000000000000530 &lt;__cxa_finalize@plt&gt;:
+ 530:   ff 25 c2 0a 20 00       jmpq   *0x200ac2(%rip)        # 200ff8 &lt;__cxa_finalize@GLIBC_2.2.5&gt;
+ 536:   66 90                   xchg   %ax,%ax
+
+Disassembly of section .text:
+
+0000000000000540 &lt;_start&gt;:
+ 540:   31 ed                   xor    %ebp,%ebp
+ 542:   49 89 d1                mov    %rdx,%r9
+ 545:   5e                      pop    %rsi
+ 546:   48 89 e2                mov    %rsp,%rdx
+ 549:   48 83 e4 f0             and    $0xfffffffffffffff0,%rsp
+ 54d:   50                      push   %rax
+ 54e:   54                      push   %rsp
+ 54f:   4c 8d 05 8a 01 00 00    lea    0x18a(%rip),%r8        # 6e0 &lt;__libc_csu_fini&gt;
+ 556:   48 8d 0d 13 01 00 00    lea    0x113(%rip),%rcx        # 670 &lt;__libc_csu_init&gt;
+ 55d:   48 8d 3d e6 00 00 00    lea    0xe6(%rip),%rdi        # 64a &lt;main&gt;
+ 564:   ff 15 76 0a 20 00       callq  *0x200a76(%rip)        # 200fe0 &lt;__libc_start_main@GLIBC_2.2.5&gt;
+ 56a:   f4                      hlt    
+ 56b:   0f 1f 44 00 00          nopl   0x0(%rax,%rax,1)
+
+0000000000000570 &lt;deregister_tm_clones&gt;:
+ 570:   48 8d 3d 99 0a 20 00    lea    0x200a99(%rip),%rdi        # 201010 &lt;__TMC_END__&gt;
+ 577:   55                      push   %rbp
+ 578:   48 8d 05 91 0a 20 00    lea    0x200a91(%rip),%rax        # 201010 &lt;__TMC_END__&gt;
+ 57f:   48 39 f8                cmp    %rdi,%rax
+ 582:   48 89 e5                mov    %rsp,%rbp
+ 585:   74 19                   je     5a0 &lt;deregister_tm_clones+0x30&gt;
+ 587:   48 8b 05 4a 0a 20 00    mov    0x200a4a(%rip),%rax        # 200fd8 &lt;_ITM_deregisterTMCloneTable&gt;
+ 58e:   48 85 c0                test   %rax,%rax
+ 591:   74 0d                   je     5a0 &lt;deregister_tm_clones+0x30&gt;
+ 593:   5d                      pop    %rbp
+ 594:   ff e0                   jmpq   *%rax
+ 596:   66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+ 59d:   00 00 00 
+ 5a0:   5d                      pop    %rbp
+ 5a1:   c3                      retq   
+ 5a2:   0f 1f 40 00             nopl   0x0(%rax)
+ 5a6:   66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+ 5ad:   00 00 00 
+
+00000000000005b0 &lt;register_tm_clones&gt;:
+ 5b0:   48 8d 3d 59 0a 20 00    lea    0x200a59(%rip),%rdi        # 201010 &lt;__TMC_END__&gt;
+ 5b7:   48 8d 35 52 0a 20 00    lea    0x200a52(%rip),%rsi        # 201010 &lt;__TMC_END__&gt;
+ 5be:   55                      push   %rbp
+ 5bf:   48 29 fe                sub    %rdi,%rsi
+ 5c2:   48 89 e5                mov    %rsp,%rbp
+ 5c5:   48 c1 fe 03             sar    $0x3,%rsi
+ 5c9:   48 89 f0                mov    %rsi,%rax
+ 5cc:   48 c1 e8 3f             shr    $0x3f,%rax
+ 5d0:   48 01 c6                add    %rax,%rsi
+ 5d3:   48 d1 fe                sar    %rsi
+ 5d6:   74 18                   je     5f0 &lt;register_tm_clones+0x40&gt;
+ 5d8:   48 8b 05 11 0a 20 00    mov    0x200a11(%rip),%rax        # 200ff0 &lt;_ITM_registerTMCloneTable&gt;
+ 5df:   48 85 c0                test   %rax,%rax
+ 5e2:   74 0c                   je     5f0 &lt;register_tm_clones+0x40&gt;
+ 5e4:   5d                      pop    %rbp
+ 5e5:   ff e0                   jmpq   *%rax
+ 5e7:   66 0f 1f 84 00 00 00    nopw   0x0(%rax,%rax,1)
+ 5ee:   00 00 
+ 5f0:   5d                      pop    %rbp
+ 5f1:   c3                      retq   
+ 5f2:   0f 1f 40 00             nopl   0x0(%rax)
+ 5f6:   66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+ 5fd:   00 00 00 
+
+0000000000000600 &lt;__do_global_dtors_aux&gt;:
+ 600:   80 3d 09 0a 20 00 00    cmpb   $0x0,0x200a09(%rip)        # 201010 &lt;__TMC_END__&gt;
+ 607:   75 2f                   jne    638 &lt;__do_global_dtors_aux+0x38&gt;
+ 609:   48 83 3d e7 09 20 00    cmpq   $0x0,0x2009e7(%rip)        # 200ff8 &lt;__cxa_finalize@GLIBC_2.2.5&gt;
+ 610:   00 
+ 611:   55                      push   %rbp
+ 612:   48 89 e5                mov    %rsp,%rbp
+ 615:   74 0c                   je     623 &lt;__do_global_dtors_aux+0x23&gt;
+ 617:   48 8b 3d ea 09 20 00    mov    0x2009ea(%rip),%rdi        # 201008 &lt;__dso_handle&gt;
+ 61e:   e8 0d ff ff ff          callq  530 &lt;__cxa_finalize@plt&gt;
+ 623:   e8 48 ff ff ff          callq  570 &lt;deregister_tm_clones&gt;
+ 628:   c6 05 e1 09 20 00 01    movb   $0x1,0x2009e1(%rip)        # 201010 &lt;__TMC_END__&gt;
+ 62f:   5d                      pop    %rbp
+ 630:   c3                      retq   
+ 631:   0f 1f 80 00 00 00 00    nopl   0x0(%rax)
+ 638:   f3 c3                   repz retq 
+ 63a:   66 0f 1f 44 00 00       nopw   0x0(%rax,%rax,1)
+
+0000000000000640 &lt;frame_dummy&gt;:
+ 640:   55                      push   %rbp
+ 641:   48 89 e5                mov    %rsp,%rbp
+ 644:   5d                      pop    %rbp
+ 645:   e9 66 ff ff ff          jmpq   5b0 &lt;register_tm_clones&gt;
+
+000000000000064a &lt;main&gt;:
+ 64a:   55                      push   %rbp
+ 64b:   48 89 e5                mov    %rsp,%rbp
+ 64e:   48 8d 3d 9f 00 00 00    lea    0x9f(%rip),%rdi        # 6f4 &lt;_IO_stdin_used+0x4&gt;
+ 655:   b8 00 00 00 00          mov    $0x0,%eax
+ 65a:   e8 c1 fe ff ff          callq  520 &lt;printf@plt&gt;
+ 65f:   b8 00 00 00 00          mov    $0x0,%eax
+ 664:   5d                      pop    %rbp
+ 665:   c3                      retq   
+ 666:   66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+ 66d:   00 00 00 
+
+0000000000000670 &lt;__libc_csu_init&gt;:
+ 670:   41 57                   push   %r15
+ 672:   41 56                   push   %r14
+ 674:   49 89 d7                mov    %rdx,%r15
+ 677:   41 55                   push   %r13
+ 679:   41 54                   push   %r12
+ 67b:   4c 8d 25 36 07 20 00    lea    0x200736(%rip),%r12        # 200db8 &lt;__frame_dummy_init_array_entry&gt;
+ 682:   55                      push   %rbp
+ 683:   48 8d 2d 36 07 20 00    lea    0x200736(%rip),%rbp        # 200dc0 &lt;__init_array_end&gt;
+ 68a:   53                      push   %rbx
+ 68b:   41 89 fd                mov    %edi,%r13d
+ 68e:   49 89 f6                mov    %rsi,%r14
+ 691:   4c 29 e5                sub    %r12,%rbp
+ 694:   48 83 ec 08             sub    $0x8,%rsp
+ 698:   48 c1 fd 03             sar    $0x3,%rbp
+ 69c:   e8 4f fe ff ff          callq  4f0 &lt;_init&gt;
+ 6a1:   48 85 ed                test   %rbp,%rbp
+ 6a4:   74 20                   je     6c6 &lt;__libc_csu_init+0x56&gt;
+ 6a6:   31 db                   xor    %ebx,%ebx
+ 6a8:   0f 1f 84 00 00 00 00    nopl   0x0(%rax,%rax,1)
+ 6af:   00 
+ 6b0:   4c 89 fa                mov    %r15,%rdx
+ 6b3:   4c 89 f6                mov    %r14,%rsi
+ 6b6:   44 89 ef                mov    %r13d,%edi
+ 6b9:   41 ff 14 dc             callq  *(%r12,%rbx,8)
+ 6bd:   48 83 c3 01             add    $0x1,%rbx
+ 6c1:   48 39 dd                cmp    %rbx,%rbp
+ 6c4:   75 ea                   jne    6b0 &lt;__libc_csu_init+0x40&gt;
+ 6c6:   48 83 c4 08             add    $0x8,%rsp
+ 6ca:   5b                      pop    %rbx
+ 6cb:   5d                      pop    %rbp
+ 6cc:   41 5c                   pop    %r12
+ 6ce:   41 5d                   pop    %r13
+ 6d0:   41 5e                   pop    %r14
+ 6d2:   41 5f                   pop    %r15
+ 6d4:   c3                      retq   
+ 6d5:   90                      nop
+ 6d6:   66 2e 0f 1f 84 00 00    nopw   %cs:0x0(%rax,%rax,1)
+ 6dd:   00 00 00 
+
+00000000000006e0 &lt;__libc_csu_fini&gt;:
+ 6e0:   f3 c3                   repz retq 
+
+Disassembly of section .fini:
+
+00000000000006e4 &lt;_fini&gt;:
+ 6e4:   48 83 ec 08             sub    $0x8,%rsp
+ 6e8:   48 83 c4 08             add    $0x8,%rsp
+ 6ec:   c3   
+</code></pre>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Load_elf_binary Trace]]></title>
@@ -760,535 +1502,6 @@ i386pe:
 
 Report bugs to &lt;http://www.sourceware.org/bugzilla/&gt;
 </code></pre>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[觀察編譯glibc的產出]]></title>
-    <link href="http://wen00072.github.io/blog/2019/06/08/glibc-build-observing/"/>
-    <updated>2019-06-08T18:48:03+08:00</updated>
-    <id>http://wen00072.github.io/blog/2019/06/08/glibc-build-observing</id>
-    <content type="html"><![CDATA[<p>這次介紹編譯glibc 並安裝後的一些發現</p>
-
-<h2>目錄</h2>
-
-<ul>
-<li><a href="#glibc_env">測試環境</a></li>
-<li><a href="#glibc_install">安裝步驟</a></li>
-<li><a href="#glibc_conl">觀察與結論</a>
-
-<ul>
-<li><a href="#glibc_conl_lib">/lib</a></li>
-<li><a href="#glibc_conl_bin">/bin</a></li>
-<li><a href="#glibc_conl_sbin">/sbin</a></li>
-<li><a href="#glibc_conl_etc">/etc</a></li>
-<li><a href="#glibc_conl_share">/share</a></li>
-<li><a href="#glibc_conl_var">/var</a></li>
-<li><a href="#glibc_conl_libexec">/libexec</a></li>
-<li><a href="#glibc_conl_inc">/include</a></li>
-</ul>
-</li>
-<li><a href="#glibc_conl_ref">參考資料</a></li>
-<li><a href="#glibc_conl_ex">附錄</a></li>
-</ul>
-
-
-<p><a name="glibc_env"></a></p>
-
-<h2>測試環境</h2>
-
-<pre><code>$ lsb_release -a
-No LSB modules are available.
-Distributor ID: Ubuntu
-Description:    Ubuntu 18.04.2 LTS
-Release:    18.04
-Codename:   bionic
-</code></pre>
-
-<p><a name="glibc_install"></a></p>
-
-<h2>安裝步驟</h2>
-
-<ul>
-<li>下載套件</li>
-</ul>
-
-
-<pre><code>git clone http://sourceware.org/git/glibc.git
-cd glibc
-git checkout --track origin/release/2.27
-</code></pre>
-
-<ul>
-<li>在新的目錄編譯 glibc，你可以自行指定安裝路徑，<font color=red><strong>一定要指定安裝路徑，以免發生嚴重悲劇。</strong> </font></li>
-</ul>
-
-
-<p>本次設定主要是針對除錯最佳化，以及避免覆蓋系統原本的 <code>glibc</code></p>
-
-<pre><code>cd ../
-mkdir out
-mkdir rootfs
-cd out
-
-# 設定
-CFLAGS=-Og CPPFLAGS=-Og CXXFLAGS=-Og ../glibc/configure  --disable-werror --prefix=/tmp/rootfs/
-
-# 編譯
-make
-
-# 安裝
-make install
-</code></pre>
-
-<p><a name="glibc_conl"></a></p>
-
-<h2>觀察與結論</h2>
-
-<p>本來想說 <code>libc</code> 用來提供 C 標準函式庫的 binary，那麼了不起就是 <code>libc.so</code>和 <code>libc.a</code> 以及對應的 header files。安裝完畢後先看一下目錄，事情果然沒有像本組裝工想的那麼簡單。列出第一層目錄如下，除了預期中的<code>lib</code>和<code>include</code>以外，竟然還有不少預期以外的目錄。</p>
-
-<pre><code>$ tree -L 1 -d /tmp/rootfs
-.
-├── bin
-├── etc
-├── include
-├── lib
-├── libexec
-├── sbin
-├── share
-└── var
-</code></pre>
-
-<p>那麼我們來看一下這些目錄下面有什麼東西吧。</p>
-
-<p><a name="glibc_conl_lib"></a></p>
-
-<h3>/lib</h3>
-
-<p>先來看目錄結構，多了和多國語言相關的函式庫目錄還有 trace shared object PLT (Procedure linkage table) 工具會用到的audio目錄</p>
-
-<pre><code>$ tree lib -d
-lib
-├── audit
-└── gconv
-</code></pre>
-
-<p>接下來看<code>/lib</code>的檔案</p>
-
-<p>列出幾個我有興趣的檔案</p>
-
-<ul>
-<li><p><code>*.o</code></p>
-
-<ul>
-<li>在<code>/lib</code>裏面會發現幾個object file，它們檔名都有<code>crt</code>，crt全名是 <code>C runtime</code>，顯然和執行的時候有關。我有空會再找時間了解。先列出來介紹幾個如下</li>
-</ul>
-</li>
-<li><p><code>Scrt1.o</code>: 這邊我們可以看到<code>T _start</code>以及<code>U main</code>，望文生義按圖說故事我們可以猜測執行程式的起始點其實是<code>_start</code>，做了一些事情後才會去呼叫你寫的<code>main()</code>，我做了一個實驗，想知道一個應用程式會連結哪些系統上的object檔案請參考<a href="#glibc_conl_ex">這邊</a></p></li>
-</ul>
-
-
-<pre><code>$ nm Scrt1.o 
-0000000000000000 D __data_start
-0000000000000000 W data_start
-                 U _GLOBAL_OFFSET_TABLE_
-0000000000000000 R _IO_stdin_used
-                 U __libc_csu_fini
-                 U __libc_csu_init
-                 U __libc_start_main
-                 U main
-0000000000000000 T _start
-</code></pre>
-
-<ul>
-<li><code>crtn.o</code>: 用<code>nm</code>去看會發現沒有<code>symbol</code>，不過反組譯後會發現有兩個<code>section</code>，看起來和main啟動前和使用者程式結束後會有關係。有空會再探討。</li>
-</ul>
-
-
-<pre><code>$ objdump -d crtn.o 
-
-crtn.o:     file format elf64-x86-64
-
-
-Disassembly of section .init:
-
-0000000000000000 &lt;.init&gt;:
-   0:   48 83 c4 08             add    $0x8,%rsp
-   4:   c3                      retq   
-
-Disassembly of section .fini:
-
-0000000000000000 &lt;.fini&gt;:
-   0:   48 83 c4 08             add    $0x8,%rsp
-   4:   c3                      retq   
-</code></pre>
-
-<ul>
-<li><code>ld-linux-x86_64.so.2</code>
-
-<ul>
-<li>就是<code>ld.so</code>，這個檔案有趣的點是他是一個shared object，但是同時又是可以執行。如果我的懶病沒有發作以後會常常看到這個東西。</li>
-</ul>
-</li>
-<li><code>libc.*</code>:
-
-<ul>
-<li>直接看symbol就知道，<code>T</code>, <code>U</code>的定義請翻前面文章，我懶得找。</li>
-</ul>
-</li>
-</ul>
-
-
-<pre><code>$ nm libc.a | grep "^printf.o:" -A 10
-printf.o:
-0000000000000000 T _IO_printf
-0000000000000000 T printf
-0000000000000000 T __printf
-                 U stdout
-                 U __vfprintf_internal
-
-snprintf.o:
-0000000000000000 W snprintf
-0000000000000000 T __snprintf
-                 U __vsnprintf_internal    
-</code></pre>
-
-<ul>
-<li><code>libm.*</code>: 一樣看symbol節錄</li>
-</ul>
-
-
-<pre><code>$ nm libm.so.6 |grep " sin"
-000000000002eb24 i sin
-0000000000034532 W sincos
-00000000000419cc i sincosf
-0000000000054f26 W sincosf128
-00000000000419cc i sincosf32
-0000000000034532 W sincosf32x
-0000000000034532 W sincosf64
-00000000000175c8 W sincosf64x
-00000000000175c8 W sincosl
-000000000004131e i sinf
-0000000000054148 W sinf128
-000000000004131e i sinf32
-000000000002eb24 i sinf32x
-000000000002eb24 i sinf64
-0000000000016ead W sinf64x
-000000000000ed11 W sinh
-000000000001205d W sinhf
-0000000000060407 W sinhf128
-000000000001205d W sinhf32
-000000000000ed11 W sinhf32x
-000000000000ed11 W sinhf64
-000000000000d9a4 W sinhf64x
-000000000000d9a4 W sinhl
-0000000000016ead W sinl
-00000000000144b5 t sin_pi
-0000000000027776 t sin_pi
-</code></pre>
-
-<ul>
-<li><code>libdl</code>
-
-<ul>
-<li>動態載入函式庫相關函數如<code>dlvsym</code>, <code>dlsym</code>,</li>
-</ul>
-</li>
-</ul>
-
-
-<h4>完整檔案如下</h4>
-
-<pre><code>$ ls lib
-audit                         libc.a                 libmemusage.so              libnss_dns.so               librt-2.28.9000.so
-crt1.o                        libc_nonshared.a       libm.so                     libnss_dns.so.2             librt.a
-crti.o                        libcrypt-2.28.9000.so  libm.so.6                   libnss_files-2.28.9000.so   librt.so
-crtn.o                        libcrypt.a             libmvec-2.28.9000.so        libnss_files.so             librt.so.1
-gconv                         libcrypt.so            libmvec.a                   libnss_files.so.2           libSegFault.so
-gcrt1.o                       libcrypt.so.1          libmvec_nonshared.a         libnss_hesiod-2.28.9000.so  libthread_db-1.0.so
-ld-2.28.9000.so               libc.so                libmvec.so                  libnss_hesiod.so            libthread_db.so
-ld-linux-x86-64.so.2          libc.so.6              libmvec.so.1                libnss_hesiod.so.2          libthread_db.so.1
-libanl-2.28.9000.so           libdl-2.28.9000.so     libnsl-2.28.9000.so         libpcprofile.so             libutil-2.28.9000.so
-libanl.a                      libdl.a                libnsl.so.1                 libpthread-2.28.9000.so     libutil.a
-libanl.so                     libdl.so               libnss_compat-2.28.9000.so  libpthread.a                libutil.so
-libanl.so.1                   libdl.so.2             libnss_compat.so            libpthread.so               libutil.so.1
-libBrokenLocale-2.28.9000.so  libg.a                 libnss_compat.so.2          libpthread.so.0             Mcrt1.o
-libBrokenLocale.a             libm-2.28.9000.a       libnss_db-2.28.9000.so      libresolv-2.28.9000.so      Scrt1.o
-libBrokenLocale.so            libm-2.28.9000.so      libnss_db.so                libresolv.a
-libBrokenLocale.so.1          libm.a                 libnss_db.so.2              libresolv.so
-libc-2.28.9000.so             libmcheck.a            libnss_dns-2.28.9000.so     libresolv.so.2
-</code></pre>
-
-<p><a name="glibc_conl_bin"></a></p>
-
-<h3>/bin</h3>
-
-<p>是除了 <code>ldd</code>以外，我全部沒印象。有些甚至不在Ubuntu的預設安裝中。使用者需要另外安裝，如<code>xtrace</code>等。</p>
-
-<p>列出幾個我有興趣的工具</p>
-
-<ul>
-<li><a href="http://man7.org/linux/man-pages/man1/pldd.1.html">pldd</a>: 列出process使用的shared library。奇怪的是我自己用卻只有列出process的執行檔名稱而已。</li>
-<li><a href="http://manpages.org/sotruss">sotruss</a>: 經由PLT (Procedure Linkage Table) trace shared library calls</li>
-<li><a href="http://manpages.org/sprof">sprof</a>: share object 的profile 工具</li>
-</ul>
-
-
-<pre><code>bin
-├── catchsegv
-├── gencat
-├── getconf
-├── getent
-├── iconv
-├── ldd
-├── locale
-├── localedef
-├── makedb
-├── mtrace
-├── pcprofiledump
-├── pldd
-├── sotruss
-├── sprof
-├── tzselect
-└── xtrace
-</code></pre>
-
-<p><a name="glibc_conl_sbin"></a></p>
-
-<h3>/sbin</h3>
-
-<ul>
-<li>除了<code>ldconfig</code>外其他的不認識</li>
-</ul>
-
-
-<pre><code>$ tree sbin/
-sbin/
-├── iconvconfig
-├── ldconfig
-├── nscd
-├── sln
-├── zdump
-etc
-├── ld.so.conf
-└── rpc
-└── zic
-</code></pre>
-
-<p><a name="glibc_conl_etc"></a></p>
-
-<h3>/etc</h3>
-
-<p>很有趣，竟然有<code>rpc</code> (remote procedure call)的檔案，紀錄rpc通訊協定的資訊。</p>
-
-<pre><code>etc
-├── ld.so.conf
-└── rpc
-</code></pre>
-
-<p><a name="glibc_conl_share"></a></p>
-
-<h3>/share</h3>
-
-<ul>
-<li>存放時區以及多國語言相關檔案</li>
-</ul>
-
-
-<p><a name="glibc_conl_var"></a></p>
-
-<h3>/var</h3>
-
-<p>跳過</p>
-
-<p><a name="glibc_conl_libexec"></a></p>
-
-<h3>/libexec</h3>
-
-<p>跳過</p>
-
-<p><a name="glibc_conl_inc"></a></p>
-
-<h3>/include</h3>
-
-<p>跳過</p>
-
-<p><a name="glibc_conl_ref"></a></p>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://dbp-consulting.com/tutorials/debugging/linuxProgramStartup.html">Linux x86 Program Start Up</a></li>
-<li><a href="http://l4u-00.jinr.ru/usoft/WWW/www_debian.org/Documentation/elf/elf.html">ELF: From The Programmer&rsquo;s Perspective: The .init and .fini Sections (1995)</a></li>
-<li><a href="https://stackoverflow.com/questions/29694564/what-is-the-use-of-start-in-c">Stackoverflow: What is the use of _start() in C?</a></li>
-<li><a href="https://stackoverflow.com/questions/32700494/executing-init-and-fini">Stackoverflow: Executing init and fini</a></li>
-</ul>
-
-
-<p><a name="glibc_conl_ex"></a></p>
-
-<h2>附錄</h2>
-
-<ul>
-<li>編譯hello.c 囉唆資訊節錄</li>
-</ul>
-
-
-<pre><code>/usr/lib/gcc/x86_64-linux-gnu/7/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/7/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/7/lto-wrapper -plugin-opt=-fresolution=/tmp/ccnUW8Qj.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --sysroot=/ --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o hello /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/7/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/7 -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/7/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/7/../../.. /tmp/ccTxSMPW.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/7/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/7/../../../x86_64-linux-gnu/crtn.o
-</code></pre>
-
-<ul>
-<li>會連結系統提供的object檔案列出如下
-
-<ul>
-<li>crtn.o</li>
-<li>Scrt1.o</li>
-<li>crti.o</li>
-<li>crtendS.o</li>
-<li>crtbeginS.o</li>
-</ul>
-</li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[在Ubuntu 18.04.2 Trace 程式呼叫 Glibc 函數]]></title>
-    <link href="http://wen00072.github.io/blog/2019/06/08/glibc-surface-observing/"/>
-    <updated>2019-06-08T15:39:12+08:00</updated>
-    <id>http://wen00072.github.io/blog/2019/06/08/glibc-surface-observing</id>
-    <content type="html"><![CDATA[<p>不囉唆，直接上懶人包。</p>
-
-<h2>環境設定</h2>
-
-<pre><code>#!/bin/bash
-# 其實直接在剪下指令貼在終端機就就可以了
-# 安裝套件並下載libcsource code
-DBG_PATH=~/tmp/lib_debug
-sudo apt install -y libc6-dbg
-mkdir -p $DBG_PATH
-cd $DBG_PATH
-apt source libc6-dev
-rm glibc_2.27-3ubuntu1.debian.tar.xz  glibc_2.27.orig.tar.xz glibc_2.27-3ubuntu1.dsc
-
-# 設定load directory
-LIBC_PATH=${DBG_PATH}/glibc-2.27
-EX_FILES=~/tmp/lib_debug/ld_dir.ex
-rm -f $EX_FILES
-for i in $(find ${LIBC_PATH}/* -maxdepth 0 -type d); \
-  do echo "directory $i" &gt;&gt; $EX_FILES ; 
-done
-</code></pre>
-
-<h2>使用方式</h2>
-
-<pre><code>gdb 你的執行檔 -x ~/tmp/lib_debug/ld_dir.ex
-</code></pre>
-
-<h2>範例</h2>
-
-<h3>程式</h3>
-
-<pre><code>#include &lt;stdio.h&gt;
-
-int main(void)
-{
-    printf("Hello world\n");
-
-    return 0;
-}
-</code></pre>
-
-<h3>示範操作</h3>
-
-<pre><code>$ gdb ./hello -x ~/tmp/lib_debug/ld_dir.ex
-GNU gdb (Ubuntu 8.1-0ubuntu3) 8.1.0.20180409-git
-....
-Reading symbols from ./hello...done.
-(gdb) b main
-Breakpoint 1 at 0x63e: file hello.c, line 5.
-(gdb) r
-Starting program: /tmp/hello 
-
-Breakpoint 1, main () at hello.c:5
-5       printf("Hello world\n");
-(gdb) s
-_IO_puts (str=0x5555555546e4 "Hello world") at ioputs.c:33
-33  {
-(gdb) 
-</code></pre>
-
-<h2>參考資料</h2>
-
-<ul>
-<li><a href="http://fcamel-life.blogspot.com/2012/01/glibc.html">fcamel 技術隨手記: 追踪 glibc 裡的程式</a></li>
-</ul>
-
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[Notes on How to C 2016]]></title>
-    <link href="http://wen00072.github.io/blog/2018/07/24/notes-on-how-to-c-2016/"/>
-    <updated>2018-07-24T20:43:52+08:00</updated>
-    <id>http://wen00072.github.io/blog/2018/07/24/notes-on-how-to-c-2016</id>
-    <content type="html"><![CDATA[<p>最近看了<a href="https://matt.sh/howto-c">How to C 2016</a>，反正很多記不起來乾脆寫起來以後剪貼。</p>
-
-<h2>GNU Flags</h2>
-
-<ul>
-<li><code>-std=c99</code></li>
-</ul>
-
-
-<h3>Warning flags</h3>
-
-<p><code>-Wall -Wextra -Werror -Wshadow -Wno-missing-field-initializers -Wstrict-overflow -fno-strict-aliasing</code></p>
-
-<ul>
-<li>延伸：<a href="https://stackoverflow.com/questions/3375697/useful-gcc-flags-for-c">Stackoverflow: Useful gcc flag for C</a></li>
-</ul>
-
-
-<h3>Links</h3>
-
-<ul>
-<li><a href="http://pubs.opengroup.org/onlinepubs/9699919799/basedefs/stdint.h.html">stdint.h</a>
-
-<ul>
-<li><code>intmax_t</code>，&hellip;</li>
-<li><code>intptr_t</code>
-
-<ul>
-<li>根據platform int size 調整</li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/stddef.h.html">stdtype.h</a>
-
-<ul>
-<li><code>ptr_diff_t</code></li>
-</ul>
-</li>
-</ul>
-
-
-<h2>其他</h2>
-
-<ul>
-<li><code>size_t</code>和<code>ssize_t</code>差別：<code>s</code>->signed，當有錯誤時會為<code>-1</code></li>
-<li><code>#pragma once</code> 可用來取代Header guard</li>
-</ul>
-
-
-<h3>名詞</h3>
-
-<ul>
-<li><a href="https://gcc.gnu.org/onlinedocs/gccint/LTO-Overview.html">LTO</a></li>
-</ul>
-
 ]]></content>
   </entry>
   

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Vim Plugin | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/vim-plugin/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2020-01-26T14:27:41+08:00</updated>
+  <updated>2020-02-09T16:29:47+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -21,7 +21,8 @@
     <content type="html"><![CDATA[<p>分享使用<code>vim</code> 的心得，加上使用Vundle plugin管理工具功能配合外部程式碼分享軟體<code>cscope</code>和<code>ctags</code>來trace <code>C</code>語言的程式碼以及編輯<code>Python</code>程式碼相關設定。</p>
 
 <ul>
-<li>致謝，感謝網友<a href="http://scottt.tw/">Scott</a>介紹vim register概念，<a href="http://yodalee.blogspot.tw/">葉闆</a>介紹的tagbar，和Kyle Lin介紹的airline。</li>
+<li><p>致謝，感謝網友<a href="http://scottt.tw/">Scott</a>介紹vim register概念，<a href="http://yodalee.blogspot.tw/">葉闆</a>介紹的tagbar，和Kyle Lin介紹的airline。</p></li>
+<li><p>2020/Feb/09: <font color="red"><strong>由於vimrc 一直在更新，現在我自己用的<code>.vimrc</code>會持續地更新在<a href="https://github.com/wen00072/dev_settings/blob/master/vim/vimrc">這邊</a></strong></font>，這邊的文章就當作示範教學了。</p></li>
 </ul>
 
 
@@ -849,7 +850,7 @@ set clipboard+=unnamed
 
 " uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
 set encoding=utf-8
-set fileencoding=utf-8a
+set fileencoding=utf-8
 
 "====================================================================
 " Python Settings
@@ -867,6 +868,12 @@ let python_highlight_all=1
 "====================================================================
 " pandoc Settings
 "====================================================================
+" Disable autoconeal for markdown
+augroup pandoc_syntax
+    au! BufNewFile,BufFilePre,BufRead *.md set filetype=markdown.pandoc
+    au! BufNewFile,BufFilePre,BufRead *.markdown set filetype=markdown.pandoc
+augroup END
+
 let g:pandoc#syntax#conceal#use = 0
 
 "====================================================================
@@ -874,6 +881,13 @@ let g:pandoc#syntax#conceal#use = 0
 "====================================================================
 let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py'
 let g:ycm_show_diagnostics_ui = 0
+
+"====================================================================
+" Console tab setting:
+" Ref https://superuser.com/questions/410982/in-vim-how-can-i-quickly-switch-between-tabs
+"====================================================================
+nnoremap &lt;S-Left&gt; :tabprevious&lt;CR&gt;
+nnoremap &lt;S-Right&gt; :tabnext&lt;CR&gt;
 </code></pre>
 
 <ul>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Kernel | My code works, I don't know why.]]></title>
   <link href="http://wen00072.github.io/blog/categories/kernel/atom.xml" rel="self"/>
   <link href="http://wen00072.github.io/"/>
-  <updated>2020-01-26T14:27:41+08:00</updated>
+  <updated>2020-02-09T16:29:47+08:00</updated>
   <id>http://wen00072.github.io/</id>
   <author>
     <name><![CDATA[Wen Liao]]></name>
@@ -12,6 +12,18 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Hello World 的一生投影片]]></title>
+    <link href="http://wen00072.github.io/blog/2019/08/07/hello-world-slides/"/>
+    <updated>2019-08-07T21:43:47+08:00</updated>
+    <id>http://wen00072.github.io/blog/2019/08/07/hello-world-slides</id>
+    <content type="html"><![CDATA[<iframe src="//www.slideshare.net/slideshow/embed_code/key/1nl4PUuvTgsqr9" width="595" height="485" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC; border-width:1px; margin-bottom:5px; max-width: 100%;" allowfullscreen> </iframe>
+
+
+<p> <div style="margin-bottom:5px"> <strong> <a href="//www.slideshare.net/zzz00072/hello-world-161964384" title="Hello world 的一生" target="_blank">Hello world 的一生</a> </strong> from <strong><a href="https://www.slideshare.net/zzz00072" target="_blank">Wen Liao</a></strong> </div></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Load_elf_binary Trace]]></title>
