@@ -9,6 +9,8 @@ categories: [C, vim, cscope, ctags, vundle, Vim Plugin, Python]
 
 * 致謝，感謝網友[Scott](http://scottt.tw/)介紹vim register概念，[葉闆](http://yodalee.blogspot.tw/)介紹的tagbar，和Kyle Lin介紹的airline。
 
+* 2020/Feb/09: <font color="red">**由於vimrc 一直在更新，現在我自己用的`.vimrc`會持續地更新在[這邊](https://github.com/wen00072/dev_settings/blob/master/vim/vimrc)**</font>，這邊的文章就當作示範教學了。
+
 ## 目錄
 
 * [測試環境](#vtr-env)
@@ -627,7 +629,7 @@ set clipboard+=unnamed
 
 " uft-8 encoding: https://stackoverflow.com/questions/16507777/set-encoding-and-fileencoding-to-utf-8-in-vim
 set encoding=utf-8
-set fileencoding=utf-8a
+set fileencoding=utf-8
 
 "====================================================================
 " Python Settings
@@ -645,6 +647,12 @@ let python_highlight_all=1
 "====================================================================
 " pandoc Settings
 "====================================================================
+" Disable autoconeal for markdown
+augroup pandoc_syntax
+    au! BufNewFile,BufFilePre,BufRead *.md set filetype=markdown.pandoc
+    au! BufNewFile,BufFilePre,BufRead *.markdown set filetype=markdown.pandoc
+augroup END
+
 let g:pandoc#syntax#conceal#use = 0
 
 "====================================================================
@@ -652,6 +660,13 @@ let g:pandoc#syntax#conceal#use = 0
 "====================================================================
 let g:ycm_global_ycm_extra_conf = '~/.vim/bundle/YouCompleteMe/.ycm_extra_conf.py'
 let g:ycm_show_diagnostics_ui = 0
+
+"====================================================================
+" Console tab setting:
+" Ref https://superuser.com/questions/410982/in-vim-how-can-i-quickly-switch-between-tabs
+"====================================================================
+nnoremap <S-Left> :tabprevious<CR>
+nnoremap <S-Right> :tabnext<CR>
 ```
 
 * gvim -> `:PluginInstall` 安裝Plugin重新開啟收工
